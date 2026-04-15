@@ -1,0 +1,11 @@
+agent_id,day,t,step,stage_name,stage_index,top_negative_tags,top_positive_tags,top_primary_reasons,negative_tag_counts_json,positive_tag_counts_json,primary_reason_counts_json,summary_text
+1,1,21601.0,121601,steady,0,[],[],"[""no_emitted_events""]",{},{},"{""no_emitted_events"": 1}",stage=steady; events=0; top_primary=no_emitted_events; top_negative=none; top_positive=none
+2,1,21601.0,121601,steady,0,[],[],"[""no_emitted_events""]",{},{},"{""no_emitted_events"": 1}",stage=steady; events=0; top_primary=no_emitted_events; top_negative=none; top_positive=none
+3,1,21601.0,121601,steady,0,[],[],"[""no_emitted_events""]",{},{},"{""no_emitted_events"": 1}",stage=steady; events=0; top_primary=no_emitted_events; top_negative=none; top_positive=none
+4,1,21601.0,121601,steady,0,[],[],"[""no_emitted_events""]",{},{},"{""no_emitted_events"": 1}",stage=steady; events=0; top_primary=no_emitted_events; top_negative=none; top_positive=none
+5,1,21601.0,121601,steady,0,[],[],"[""no_emitted_events""]",{},{},"{""no_emitted_events"": 1}",stage=steady; events=0; top_primary=no_emitted_events; top_negative=none; top_positive=none
+6,1,21601.0,121601,steady,0,[],[],"[""no_emitted_events""]",{},{},"{""no_emitted_events"": 1}",stage=steady; events=0; top_primary=no_emitted_events; top_negative=none; top_positive=none
+7,1,21601.0,121601,steady,0,[],[],"[""no_emitted_events""]",{},{},"{""no_emitted_events"": 1}",stage=steady; events=0; top_primary=no_emitted_events; top_negative=none; top_positive=none
+8,1,21601.0,121601,steady,0,[],[],"[""no_emitted_events""]",{},{},"{""no_emitted_events"": 1}",stage=steady; events=0; top_primary=no_emitted_events; top_negative=none; top_positive=none
+9,1,21601.0,121601,steady,0,[],[],"[""no_emitted_events""]",{},{},"{""no_emitted_events"": 1}",stage=steady; events=0; top_primary=no_emitted_events; top_negative=none; top_positive=none
+10,1,21601.0,121601,steady,0,[],[],"[""no_emitted_events""]",{},{},"{""no_emitted_events"": 1}",stage=steady; events=0; top_primary=no_emitted_events; top_negative=none; top_positive=none

@@ -1,0 +1,49 @@
+intention,action,agent_status_status,emitted,outcome
+Prepare shopping list based on needs,准备厨房和食材,我在舒适的家中，外面阳光温暖，当我开始准备饭菜时，我感到一种如释重负的感觉，因为没有任何并发​​症或忧虑笼罩着我的一天。,0,no_event
+Decide on shopping list based on needs,保证舒适的睡眠环境,当我喝着早晨的咖啡，沐浴在阳光明媚的早晨的温暖中时，我感到深深的解脱，因为我知道今天我可以简单地休息并享受家中的宁静，远离技术复杂性的挫折。,0,no_event
+Prepare a shopping list based on needs,离开家前往购物中心,我悠闲地漫步走向购物中心，阳光温暖着我的后背，准备探索新的科技产品，也许还可以和邻居们聊聊。今天，我感到很满足，并期待着这一天的科技冒险和社交互动。,1,positive
+Take regular breaks to rest and stay alert,呆在家里,我舒舒服服地坐在家里，喝着茶享受着阳光明媚的天气。今天，我感到平静，对我正在管理的简单、直接的任务感到满意，从检查我的应用程序到维持家庭运转。,1,positive
+Leave the home and travel to the shopping center,找到购物中心停车场并停放车辆,我正在寻找最近的购物中心停车场，享受着阳光明媚的天气，感受着好奇心和日常生活的舒适感。,0,no_event
+Stay at home,选择适合退休年龄的膳食选项,我正在享受一个宁静的退休早晨，喝着咖啡，考虑吃一顿简单的午餐，在平静、阳光明媚的日子里感到一种轻松的感觉。我的思绪很平静，专注于选择有营养且对眼睛有益的东西。,0,no_event
+"Prepare or order a meal, considering health and preference",找个舒服的位置坐下,现在，我享受着阳光明媚的天气，在社区花园里悠闲地散步，心满意足，没有任何紧迫的任务或担忧。,1,positive
+Locate the shopping center parking and park the vehicle,进入购物中心并开始购物,我在阳光明媚的天空下漫步走进购物中心，对今天可能会发现的新产品或优惠感到好奇，尽管我对看起来过于复杂或具有误导性的新技术功能仍然保持谨慎态度。,0,no_event
+Return home from current location,进入厨房,我在阳光下享受着宁静的正午，二十三度的温暖让我心满意足，准备走进厨房吃饭，心里感觉没有什么异常的事情占据了我的轻松感。,0,no_event
+Enter the kitchen,选择食谱并收集原料,我舒适地躺在家里，看着阳光明媚的天气，一种轻松的感觉笼罩着我。我心情很好，满足于选择晚餐食谱并收集食材，享受这些任务的简单性。,0,no_event
+Verify current location is at home,准备厨房,我坐在家里，阳光从窗户照进来，我正在布置厨房，准备做饭，感觉很舒服，很例行公事。,1,positive
+Retire to the bedroom,检查舒适度并根据需要进行调整,我正在家里放松，太阳正在落山，天气仍然温暖，我正在检查手机是否有更新，并确保一切都已设置好，以便享受舒适的夜间睡眠。我的心情既平静又期待，没有任何紧迫的担忧。,0,no_event
+Stay home due to weather conditions,评估当前的饥饿程度,我悠闲地待在家里，阳光和煦，想着是该准备一顿饭还是点一份外卖，在宁静的夜晚里感受着一种宁静的满足。,1,positive
+Stay home due to late hour,准备简单的家常饭菜,在清晨宁静的阳光下，我在温馨的家中，心满意足地准备着简单的饭菜，感激这安静的一天和它带来的平静。,0,no_event
+Stay at home to prepare a meal,选择适合这个时间进餐的简单易行的食谱,我躺在舒适的家中，周围的宁静与外面熙熙攘攘的城市形成鲜明对比，我筛选着简单、舒缓的一餐食谱，在黎明前的宁静中品尝。,0,no_event
+Enjoy the meal alone as there is no need for social interaction,反思一天的简单,当我舒舒服服地坐在家里，沐浴在清晨的阳光下，我的心情很轻松。今天感觉像是一个平静的休息时间，没有发生任何重大事件，但我在简单的日常生活中找到了安慰。,1,positive
+Check current shopping list,根据天气穿着适当的衣服,我在公园里享受着宁静的早晨，阳光温暖着我的脸，我悠闲地散步，在简单的日子里感到一种轻松的感觉，没有任何紧迫的烦恼。,0,no_event
+Plan the route to the closest store,前往购物地点,我悠闲地漫步在阳光明媚的公园里，在逛购物区时感到一种满足和轻微的焦虑，因为我的眼睛因光线而疲劳，而且我不热衷于复杂的任务。,1,positive
+Travel to the shopping location,查看我的好友联系人列表,在这个阳光明媚的下午，当我在公园里悠闲地漫步时，我感到一种满足和宁静，欣赏着我这一天的简单和它带来的平静。我的思绪飘忽不定，偶尔会翻阅我珍藏的联系人列表，希望能与朋友取得联系。,0,no_event
+Return to kitchen to prepare the meal,选择一个简单而舒适的食谱,我舒舒服服地躺在家里，在阳光明媚的下午的安静简单中感受到一种令人满意的平静，我的思绪反思着这一天缺乏戏剧性的事情以及我在生活中找到的温和平衡。,0,no_event
+Check my contacts list for friends,检查手机通讯录中是否有可用的朋友,我舒适地坐在客厅里，当我查看联系人列表时，一种宁静的感觉笼罩着我，感激这个宁静下午的简单快乐和安静。,1,negative
+Check phone contacts for available friends,定位移动设备,我舒服地坐在公园长椅的树荫下，阳光在我周围投射出温暖的光芒，我回想起这一天的安静简单，因为没有任何紧迫的担忧而感到满足。,1,positive
+Check my current contacts list,选择要打电话或发消息的朋友,我坐在舒适的客厅里，窗外的夕阳洒下温暖的光芒。今天过得很平静，让我在简单的生活中感到满足。,0,no_event
+Select a friend to call or message,检查当前联系人列表中可用的朋友,当阳光洒下温暖的光芒时，我舒适地坐在熟悉的扶手椅上，感觉一种宁静的平静笼罩着我。我怀着一种满足感，浏览着通讯录，寻找许久未联系的朋友，宁静的夜晚在我身边展开。,1,negative
+Prepare a shopping list based on needs,根据当前位置和天气情况选择最近的商店,我享受着阳光明媚的夜晚的宁静，怀着一种轻松和满足的感觉，用心地逛着最近的商店，感激这孤独一天的简单与平静。,0,no_event
+Check current contact list for available friends,检查我的联系人列表以查找可用的朋友,傍晚时分，我舒适地窝在家里，拿着手机，眼睛因滚动联系人而有点疲劳；尽管这一天很简单，但外面阳光明媚的环境中却弥漫着一种温暖的宁静感。,0,no_event
+Choose the nearest store based on the current location and weather conditions,检查商店是否延长营业时间或明天是否营业以供将来光顾,我悠闲地在手机上浏览当天的通知，外面阳光明媚，我思考着商店是稍后营业还是明天营业——在这个宁静的夜晚，我的心在安静的孤独中轻松自在。,1,positive
+Check my contacts list for available friends,选择合适的时间给朋友打电话,我在家里放松，在没有发生任何重大事件的一天中感到如释重负。我正在考虑什么时候给一些朋友打电话，希望能分享这一天的简单宁静。,0,no_event
+Enjoy the meal in a comfortable setting,检查库存并列出购物需求,我正在筛选手机，检查库存并列出购物清单。尽管这一天很平静，但我无法摆脱安静带来的轻松感，平衡我的心情，并有一丝满足感，因为我没有被混乱压倒。,1,negative
+Check if the store has extended hours or if it will be open tomorrow for a future visit,设置早晨起床时间的闹钟，以便在一天的高峰之前开始购物,当我躺在床上时，夜间宁静天气的安静嗡嗡声笼罩着我，我的心灵一片平静，期待着充满购物的简单快乐的一天。我的双手可能渴望新的小玩意，但我在这一刻平静的孤独中找到了安慰。,1,negative
+Select a suitable time to call friends,评估在家的舒适度,我蜷缩在家里，房间沐浴在早晨阳光的柔和光线下，从没有任何压力或戏剧性的一天的安静简单中感受到宁静的满足。,1,negative
+Decide if a shopping trip is necessary with current inventory,着装整齐，享受舒适的购物体验,我正准备去购物，外面的阳光温暖地照着，我很高兴感到满足与平静，度过了没有任何压力和担忧的一天。,1,positive
+Prepare necessary items for safe travel such as a reusable bag,检查最近的商店营业时间,我决定是时候去购物了，天气很好，我正在查找最近商店的营业时间来计划我的行程。,0,no_event
+Check phone for available friends to contact,以短暂的冥想或伸展运动开始新的一天,我正在家里享受宁静的早晨，阳光透过窗户投射出温暖的光芒，我准备享受片刻的放松和正念，感谢我这一天的平静简单。,1,positive
+Travel to the nearest store,根据当前需求和收入水平确定购物清单,我坐在阳光明媚的小房间里，思考着我的购物清单。平和日子的宁静与我对科技的复杂性越来越不耐烦形成鲜明对比，但这种平静让我暂时感到满足。,0,no_event
+Serve the prepared food in a comfortable setting,在家享受美食,我在家里安静地享受着一顿饭，外面明媚的阳光照耀着温暖的光芒，我享受着简单的一天，在这宁静的时刻感到心满意足。,1,negative
+Determine shopping list based on current needs and income level,根据距离和便利程度选择购物目的地,我正在思考我的一天，感受着喜悦和悲伤的平静混合。我打算去购物，也许是在当地市场，优先考虑便利性和邻近性。,0,no_event
+Choose shopping destination based on proximity and convenience,前往购物目的地,当我踏入阳光明媚的早晨，23摄氏度的温暖让人心旷神怡，但接下来的一天似乎有些平淡，我的情绪像气温一样波动——平衡，但没有了曾经充满我每一天的冒险热情。,1,positive
+Travel to the shopping destination,完成清单上商品的购物,我出去走走，阳光温暖地照着，我正在去市场的路上。我感到一种平静和满足的感觉，欣赏着这一天的宁静和我的购物清单的简单。,0,no_event
+Check out and pay for the purchases,选择适合晴朗天气的休闲活动,我享受着一个悠闲的下午，阳光温暖地照在我的脸上，我思考着在这个阳光明媚的日子里，什么活动可以给我带来快乐。,0,no_event
+Go to the selected leisure spot,参加休闲活动,尽管这一天相当平静，但我正享受着一个悠闲的下午，带着一种平静和满足的感觉，因为我发现自己处于阳光明媚的宁静怀抱中。,1,positive
+Return home after the leisure activity,休闲活动结束后返回家中,漫步在阳光明媚的傍晚，23℃的温暖让我心旷神怡，思绪被包裹在宁静与满足的温柔之中。我渴望回家，准备在这个平静而平静的夜晚度过一天后放松身心。,0,no_event
+Relax and unwind in a quiet setting,检查当前时间以确保接近就寝时间,我刚刚摆弄完智能手机，外面阳光明媚，我感到很满足，准备放松并上床睡觉。今天的宁静，让我有一种平和、满足的感觉。,0,no_event
+Return home after the leisure activity,评估当前环境是否适合留在室内,经过一天的安静沉思后，我舒适地坐在家里，夕阳西下，思考着这一天的简单，因为不需要克服复杂的数字障碍，我感到如释重负。,1,positive
+Verify kitchen supplies and plan menu,准备好食材和炊具,我在家，夜色静谧，阳光依然明媚，准备食材，摆好炊具，心里轻松自在，回想着平衡的一天的简单满足。,0,no_event
+Select preferred mode of communication,选择适当的联系方式（电话、短信、电子邮件等）,我在家里放松，阳光温暖地照耀着，我在没有重大干扰的平静的一天中感到轻松。我正在考虑联系朋友，决定与他们联系的最佳方式。,0,no_event
+"Select the appropriate method to reach out (phone call, text message, email, etc.)",确保舒适的环境,我在家，阳光温暖地照着，虽然温度刚刚好，但我并没有感到太焦躁。我已经习惯了安静的生活，享受着今天的平静带来的平静。,0,no_event
+Stay at home due to pleasant weather and current tranquility,,,0,no_event

@@ -1,0 +1,7 @@
+agent_id,day,t,scenario,outcome,p_negative_interval_logged,p_positive_interval_logged,p_total_interval_logged,stage_min_event_forced,stage_min_event_forced_roll,smoke_forced_roll,roll,scenario_entry_reason
+1,0,61201,info_ad_click,positive,0.004793965049126438,0.0012148292633463716,0.006008794312472809,True,True,False,0.749999,matched
+2,0,61201,info_ad_click,positive,0.003988234637615878,0.0015076134324653104,0.0054958480700811885,True,True,False,0.749999,matched
+3,1,61201,ride_hailing,negative,0.009008805900313943,0.0,0.009008805900313943,True,True,False,0.749999,matched
+4,1,61201,ride_hailing,positive,0.004844254550456735,0.0004284512248024435,0.005272705775259179,True,True,False,0.749999,matched
+2,2,61201,payment_transfer,positive,0.005057969077380765,0.0034372196500933585,0.008495188727474123,True,True,False,0.749999,matched
+6,2,62101,ride_hailing,positive,0.0027312383658993273,0.0047411486772847644,0.007472387043184092,True,True,False,0.749999,matched

@@ -1,0 +1,13 @@
+group_id,pair_index,pair_seed,world_order,world_name,exp_id,status,stage_index,stage_name,agent_count,task_count,attempt_rate,success_rate,help_seek_rate,abandon_rate,negative_feedback_rate,helplessness_delta,day,t,step
+stage6_single_10day_3seed_logical_clock_20260408,0,101,0,baseline_low_friction,547e453b-549e-45b8-ba3b-af17f2dcf29d,ok,0,steady,10,392,0.691327,0.385204,0.385204,0.09949,0.306122,32.083549,10,21601.0,1021601
+stage6_single_10day_3seed_logical_clock_20260408,0,101,1,high_friction_low_assist,716a2b28-f426-46c5-a1b7-ee4d07c526c9,ok,0,steady,10,504,0.301587,0.025794,0.190476,0.10119,0.275794,61.17,10,21601.0,1021601
+stage6_single_10day_3seed_logical_clock_20260408,0,101,2,high_friction_high_assist,18af7b7c-c3f8-4117-9d5c-6eedb3686c42,ok,0,steady,10,409,0.613692,0.207824,0.420538,0.134474,0.405868,52.04053,10,21601.0,1021601
+stage6_single_10day_3seed_logical_clock_20260408,0,101,3,low_friction_high_assist,b87f09f3-06c9-4d26-9734-8556f647237b,ok,0,steady,10,359,0.793872,0.56546,0.504178,0.041783,0.228412,7.466247,10,21601.0,1021601
+stage6_single_10day_3seed_logical_clock_20260408,1,102,0,baseline_low_friction,c346c533-60b4-4f61-9775-7f013d5f09c2,ok,0,steady,10,395,0.683544,0.387342,0.379747,0.065823,0.296203,33.937912,10,21601.0,1021601
+stage6_single_10day_3seed_logical_clock_20260408,1,102,1,high_friction_low_assist,2f99021a-a383-4b8c-b755-97ee1a35ba7b,ok,0,steady,10,481,0.382536,0.04158,0.239085,0.133056,0.340956,61.275,10,21601.0,1021601
+stage6_single_10day_3seed_logical_clock_20260408,1,102,2,high_friction_high_assist,8eeac31f-7fe4-4407-af42-fc40f1d30a09,ok,0,steady,10,434,0.539171,0.200461,0.317972,0.099078,0.33871,48.076812,10,21601.0,1021601
+stage6_single_10day_3seed_logical_clock_20260408,1,102,3,low_friction_high_assist,9d4a0d9f-f2c8-45a1-a3ac-acf7dc092723,ok,0,steady,10,354,0.816384,0.610169,0.463277,0.028249,0.206215,2.323948,10,21601.0,1021601
+stage6_single_10day_3seed_logical_clock_20260408,2,103,0,baseline_low_friction,f199f521-683b-461b-9a9e-e0f627d601f1,ok,0,steady,10,394,0.664975,0.362944,0.416244,0.083756,0.30203,38.797587,10,21601.0,1021601
+stage6_single_10day_3seed_logical_clock_20260408,2,103,1,high_friction_low_assist,eebc7539-1044-4bb0-ab35-260819391f36,ok,0,steady,10,505,0.308911,0.039604,0.205941,0.085149,0.269307,61.275,10,21601.0,1021601
+stage6_single_10day_3seed_logical_clock_20260408,2,103,2,high_friction_high_assist,5cc2e71b-eb89-4132-99c3-cb1dddaf49dc,ok,0,steady,10,430,0.539535,0.202326,0.393023,0.123256,0.337209,55.401802,10,21601.0,1021601
+stage6_single_10day_3seed_logical_clock_20260408,2,103,3,low_friction_high_assist,04ffc6a9-8308-45a4-be86-b9539b5c3397,ok,0,steady,10,367,0.757493,0.544959,0.455041,0.035422,0.212534,8.756288,10,21601.0,1021601

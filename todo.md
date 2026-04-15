@@ -1,0 +1,138 @@
+# TODO
+
+## 2026-03-22
+
+- [ ] 把 AgentSociety / 其他 experiment 中最有价值的“心理设计模式”轻量吸收到 `friction proto`
+  - 总原则：
+    - 不恢复原生 `needs -> plan -> step_execution -> cognition` 全链
+    - 不让自由文本或 LLM 直接决定 success / failure
+    - 只做结构化、受限、可审计的轻量扩展
+    - 保持主链不变：
+      - `任务分配 -> 策略选择 -> 结果生成 -> helplessness 更新 -> 记录`
+  - 第一优先：
+    - `digital_emotion_state`
+    - 目标：让任务后不仅更新 `helplessness`，也更新简单情绪状态
+    - 建议字段：
+      - `anxiety`
+      - `frustration`
+      - `relief`
+      - `confidence`
+    - 用途：
+      - 轻量影响下一轮是否更敢尝试
+      - 提高行为真实感
+  - 第一优先：
+    - `proto_daily_reflection`
+    - 目标：每天保留一句简短、结构化的数字任务反思
+    - 例子：
+      - “验证码老失败，我有点怕再试”
+      - “今天自己做成一次，感觉还有希望”
+    - 用途：
+      - 增强可解释性
+      - 服务周报、汇报、论文写作
+  - 第一优先：
+    - `proto mini survey`
+    - 目标：在每天末尾或每个 stage 末尾做短量表测量
+    - 建议问题方向：
+      - 自我效能
+      - 紧张/焦虑
+      - 回避倾向
+      - 感知支持
+    - 用途：
+      - 做阶段前后对比
+      - 做 world 组间对比
+      - 让输出更像心理实验结果
+  - 第二优先：
+    - `digital_*_satisfaction`
+    - 目标：借鉴 `NeedsBlock`，增加数字任务版本的 satisfaction 状态
+    - 建议字段：
+      - `digital_autonomy_satisfaction`
+      - `digital_safety_satisfaction`
+      - `digital_support_satisfaction`
+    - 用途：
+      - 补充 `helplessness` 之外的中间心理过程
+  - 第二优先：
+    - `message / exposure intervention`
+    - 目标：借鉴 `inflammatory_message`，加入标准化信息暴露/提示干预
+    - 建议形式：
+      - `supportive guidance message`
+      - `friction / scam / warning message`
+    - 用途：
+      - 在 stage 开始时做统一干预
+      - 观察其对后续情绪、求助、回避和 helplessness 的影响
+  - 当前推荐实施顺序：
+    - 1. `digital_emotion_state`
+    - 2. `proto_daily_reflection`
+    - 3. `proto mini survey`
+    - 4. `digital_*_satisfaction`
+    - 5. `message / exposure intervention`
+
+## 2026-03-21
+
+- [ ] 为 `friction proto` 设计下一阶段 memory 扩展方案，优先保持“结构化、可解释、服务 helplessness 主线”
+  - 第一优先：
+    - 增加“任务类型经验记忆”
+    - 目标：区分 agent 对不同数字任务的历史经验，而不是只保留一个总的 `helplessness`
+    - 建议字段：
+      - `task_family_failure_counts`
+      - `task_family_success_counts`
+      - `task_family_recent_outcomes`
+    - 研究价值：
+      - 更贴近真实情况，即老人往往是“对某一类任务更怕”，不是对所有数字任务都一样回避
+  - 第一优先：
+    - 增加“帮助效果记忆”
+    - 目标：让 agent 记住过去“求助是否有效”
+    - 建议字段：
+      - `help_attempt_count`
+      - `help_success_count`
+      - `help_failure_count`
+      - `help_effectiveness_by_task_family`
+    - 研究价值：
+      - 后续 `seek_help_then_attempt` 不再只是规则动作，而能部分基于历史帮助经验
+  - 第一优先：
+    - 增加“近期失败轨迹记忆”
+    - 目标：不仅看 `consecutive_failures`，还看最近一段时间的整体体验
+    - 建议字段：
+      - `recent_attempt_outcomes`
+      - `recent_negative_feedback_ratio`
+      - `recent_avoid_count`
+    - 研究价值：
+      - 回避行为会更平滑，不再过度依赖单一 streak
+  - 第二优先：
+    - 增加“任务紧迫度/重要性记忆”
+    - 目标：让 agent 在高 helplessness 下，面对高紧迫任务时不一定直接回避
+    - 建议字段：
+      - `task_urgency`
+      - `task_importance`
+      - `deferred_urgent_task_count`
+    - 研究价值：
+      - 更贴近真实数字生活场景，例如挂号、支付等任务存在刚性压力
+  - 第二优先：
+    - 增加“帮助来源偏好记忆”
+    - 目标：区分不同帮助来源的缓冲效果
+    - 建议字段：
+      - `family_help_effectiveness`
+      - `platform_help_effectiveness`
+      - `staff_help_effectiveness`
+    - 研究价值：
+      - 后续可研究“什么样的支持最能降低无助感”
+  - 第二优先：
+    - 增加“简短 thought/rationale memory”
+    - 目标：为每轮行为保留一句可解释短语，而不是引入复杂长文本记忆
+    - 建议字段：
+      - `recent_task_thought`
+      - `recent_help_reason`
+      - `recent_avoid_reason`
+    - 研究价值：
+      - 有利于汇报、可解释性展示和后续论文写作
+  - 第三优先：
+    - 暂不优先恢复原生 `needs -> plan -> cognition` 全链 memory
+    - 暂不优先引入 `chat_histories`、`social_network`、`stream_memory` 这类长历史或社交记忆
+    - 原因：
+      - 当前研究主线是 `数字任务失败 -> helplessness 上升 -> 后续更容易回避`
+      - 过早恢复复杂 memory 会重新拉高系统复杂度，削弱 prototype 的清晰性
+  - 当前推荐实施顺序：
+    - 1. 任务类型经验记忆
+    - 2. 帮助效果记忆
+    - 3. 近期失败轨迹记忆
+    - 4. 任务紧迫度/重要性记忆
+    - 5. 简短 thought/rationale memory

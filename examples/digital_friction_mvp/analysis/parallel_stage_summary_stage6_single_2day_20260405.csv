@@ -1,0 +1,9 @@
+group_id,pair_index,pair_seed,world_order,world_name,exp_id,status,stage_index,stage_name,agent_count,task_count,attempt_rate,success_rate,help_seek_rate,abandon_rate,negative_feedback_rate,helplessness_delta,day,t,step
+stage6_single_2day_20260405,0,101,0,baseline_low_friction,d802f08c-f834-43eb-be89-5c9d517b4914,ok,0,steady,10,960,0.520833,0.244792,0.386458,0.076042,0.276042,60.975802,2,21601.0,221601
+stage6_single_2day_20260405,0,101,1,high_friction_low_assist,9084a0e4-5e12-4007-bb97-99fa668f3738,ok,0,steady,10,960,0.316667,0.021875,0.197917,0.114583,0.294792,61.275,2,21601.0,221601
+stage6_single_2day_20260405,0,101,2,high_friction_high_assist,c13b062f-ee4e-45e5-a455-4db50fb09ed8,ok,0,steady,10,960,0.5,0.142708,0.364583,0.110417,0.357292,61.19,2,21601.0,221601
+stage6_single_2day_20260405,0,101,3,low_friction_high_assist,cfad344e-d8a0-4222-b4c4-20add1deea33,ok,0,steady,10,960,0.84375,0.651042,0.394792,0.020833,0.192708,-26.302199,2,21601.0,221601
+stage6_single_2day_20260405,1,102,0,baseline_low_friction,8e11c014-d072-400a-b51d-689c4c45635b,ok,0,steady,10,960,0.563542,0.297917,0.354167,0.073958,0.265625,43.248067,2,21601.0,221601
+stage6_single_2day_20260405,1,102,1,high_friction_low_assist,58b5c75b-9ab2-440f-983a-bfc39bd5d56e,ok,0,steady,10,960,0.292708,0.023958,0.1875,0.105208,0.26875,61.275,2,21601.0,221601
+stage6_single_2day_20260405,1,102,2,high_friction_high_assist,92c22d3a-e514-49c3-a9dc-0fd4a76c28e9,ok,0,steady,10,960,0.503125,0.1625,0.380208,0.1125,0.340625,58.029948,2,21601.0,221601
+stage6_single_2day_20260405,1,102,3,low_friction_high_assist,3da93857-b8f2-4e96-880a-3d9dea6d0a5e,ok,0,steady,10,960,0.808333,0.616667,0.414583,0.026042,0.191667,-9.366985,2,21601.0,221601

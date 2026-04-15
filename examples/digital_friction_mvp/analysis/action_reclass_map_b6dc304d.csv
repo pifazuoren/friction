@@ -1,0 +1,2318 @@
+action,behavior_class,count
+Enjoy the meal,meal_consumption_dining,79
+Return home from current location,mobility_commute_transition,79
+Clean up after eating,meal_cleanup,53
+Lie down in bed,sleep_transition_and_sleep,47
+Serve the meal,meal_preparation_cooking,42
+Prepare a comfortable sleeping environment,sleep_environment_setup,38
+Ensure a comfortable sleeping environment,sleep_environment_setup,37
+Return to home,mobility_commute_transition,33
+Return to home from current location,mobility_commute_transition,30
+Clean up after the meal,meal_cleanup,28
+Eat the meal,meal_consumption_dining,28
+Start cooking the meal,meal_preparation_cooking,28
+Enjoy the meal at home,meal_consumption_dining,25
+Prepare the sleeping environment,sleep_environment_setup,23
+Adjust the room temperature if necessary,home_environment_management,21
+Lie down in the bed,sleep_transition_and_sleep,21
+Relax and unwind,relaxation_reflection_emotion,20
+Change into comfortable sleepwear,morning_routine_hygiene,19
+Ensure a comfortable sleep environment,sleep_environment_setup,19
+Prepare for bed,sleep_environment_setup,19
+Prepare the bedroom for sleep,sleep_environment_setup,19
+Relax and prepare for sleep,sleep_environment_setup,19
+Prepare a comfortable sleep environment,sleep_environment_setup,17
+Prepare a meal at home,meal_preparation_cooking,17
+Reflect on the meal experience,meal_consumption_dining,17
+Prepare and cook the meal,meal_preparation_cooking,16
+Cook the meal,meal_preparation_cooking,15
+Relax in a comfortable position,relaxation_reflection_emotion,15
+Prepare and cook a meal,meal_preparation_cooking,14
+Serve the cooked meal,meal_preparation_cooking,14
+Adjust the room temperature to a comfortable level,home_environment_management,13
+Enjoy a relaxing evening with a meal at home,meal_consumption_dining,12
+Prepare for sleep,sleep_environment_setup,12
+Consume the prepared meal,meal_consumption_dining,11
+Engage in a calming activity,relaxation_reflection_emotion,11
+Engage in a relaxing activity,relaxation_reflection_emotion,10
+Enjoy the meal alone or with loved ones,meal_consumption_dining,10
+Enjoy the meal in a comfortable setting,meal_consumption_dining,10
+Lay down in bed,sleep_transition_and_sleep,10
+Reflect on the meal and the day,relaxation_reflection_emotion,10
+Set the room temperature to a comfortable level,home_environment_management,10
+Set the table with utensils and plates,meal_preparation_cooking,10
+Set up a comfortable sleeping environment,sleep_environment_setup,10
+Close your eyes and drift off to sleep,sleep_transition_and_sleep,9
+Dress appropriately for the weather,morning_routine_hygiene,9
+Get into bed,sleep_transition_and_sleep,9
+Plan for the rest of the day,planning_general_admin,9
+Prepare and cook the meal at home,meal_preparation_cooking,9
+Prepare ingredients,meal_preparation_cooking,9
+Return to my residence,mobility_commute_transition,9
+Travel to home,mobility_commute_transition,9
+Unlock and enter the home,mobility_commute_transition,9
+Begin working on assigned tasks,work_task_productive,8
+"Engage in a calming activity, such as reading or listening to soothing music",relaxation_reflection_emotion,8
+"Engage in a calming activity, such as reading, to help relax",relaxation_reflection_emotion,8
+Engage in a relaxing activity to unwind,relaxation_reflection_emotion,8
+Enjoy the meal in a relaxed atmosphere,meal_consumption_dining,8
+Fall asleep,sleep_transition_and_sleep,8
+Prepare a home-cooked meal,meal_preparation_cooking,8
+Prepare a meal,meal_preparation_cooking,8
+Prepare a shopping list,shopping_planning_budget_inventory,8
+Prepare for cooking,meal_preparation_cooking,8
+Prepare ingredients and cooking utensils,meal_preparation_cooking,8
+Select and prepare ingredients,meal_preparation_cooking,8
+Serve the meal in a comfortable setting,meal_preparation_cooking,8
+Change into comfortable pajamas,morning_routine_hygiene,7
+Cook a home-cooked meal,meal_preparation_cooking,7
+Cook a nutritious meal,meal_preparation_cooking,7
+Ensure the sleeping environment is comfortable,sleep_environment_setup,7
+Enter the bedroom,sleep_transition_and_sleep,7
+Get into bed and lie down,sleep_transition_and_sleep,7
+Lie down and close your eyes to initiate sleep,sleep_transition_and_sleep,7
+Prepare ingredients and cook the meal,meal_preparation_cooking,7
+Prepare shopping bag and wallet,shopping_execution_procurement,7
+Reflect on the meal and the day's tranquility,relaxation_reflection_emotion,7
+Relax and wind down,sleep_transition_and_sleep,7
+Retire to the bedroom,sleep_transition_and_sleep,7
+Shop for the planned items,shopping_execution_procurement,7
+Sit down and enjoy the meal,meal_consumption_dining,7
+Start the cooking process,meal_preparation_cooking,7
+Adjust room temperature if necessary,home_environment_management,6
+Choose a suitable communication method,planning_general_admin,6
+Determine necessary items based on daily needs,shopping_planning_budget_inventory,6
+Eat the prepared meal,meal_consumption_dining,6
+"Engage in a calming activity, such as reading",relaxation_reflection_emotion,6
+Engage in a relaxing activity such as reading or listening to music,relaxation_reflection_emotion,6
+Engage in a relaxing activity to wind down,sleep_transition_and_sleep,6
+Engage in light reading or other leisure activities,relaxation_reflection_emotion,6
+Enjoy a leisurely dinner at home,meal_consumption_dining,6
+Enjoy breakfast,meal_consumption_dining,6
+"Enjoy the meal alone or possibly with a light, quiet activity afterward",meal_consumption_dining,6
+Enjoy the meal alone to reflect on the quiet day,meal_consumption_dining,6
+"Enjoy the meal outside, taking into account the tranquility and relief mentioned",digital_device_account_ops,6
+Ensure the room is comfortable for sleep,sleep_environment_setup,6
+Enter sleep mode,sleep_transition_and_sleep,6
+Head towards home,mobility_commute_transition,6
+Listen to soothing music,relaxation_reflection_emotion,6
+Open the front door,mobility_commute_transition,6
+Plan the meal,planning_general_admin,6
+Prepare a meal considering the tranquility of the day and your satisfaction with it,meal_preparation_cooking,6
+Prepare and cook a meal at home,meal_preparation_cooking,6
+Prepare for sleep by setting up a comfortable environment,sleep_environment_setup,6
+Prepare shopping list based on needs,shopping_planning_budget_inventory,6
+Prepare the bedroom,sleep_environment_setup,6
+Prepare the kitchen for cooking,meal_preparation_cooking,6
+Prepare the meal,meal_preparation_cooking,6
+Read a book for leisure,relaxation_reflection_emotion,6
+Relax body and mind,relaxation_reflection_emotion,6
+Relax in a comfortable chair and read a book,relaxation_reflection_emotion,6
+Relax with a good book,relaxation_reflection_emotion,6
+Return home after shopping,mobility_commute_transition,6
+Return home from workplace,work_task_productive,6
+Return to home from workplace,work_task_productive,6
+Return to my home,mobility_commute_transition,6
+Return to my home from the current location,mobility_commute_transition,6
+Serve and enjoy the meal,meal_consumption_dining,6
+Set the alarm for the next day,sleep_environment_setup,6
+Set the alarm if needed,sleep_environment_setup,6
+Set the room temperature to a comfortable level for sleep,sleep_environment_setup,6
+Set up a comfortable sleep environment,sleep_environment_setup,6
+Shop by comparing prices and qualities of items,shopping_execution_procurement,6
+Start cooking the chosen meal,meal_preparation_cooking,6
+Travel back to home,mobility_commute_transition,6
+Travel to the chosen shopping location,mobility_commute_transition,6
+Travel to the nearest shopping center,mobility_commute_transition,6
+Travel to the selected shopping location,mobility_commute_transition,6
+Turn off all electronic devices,digital_device_account_ops,6
+Assess current comfort level,planning_general_admin,5
+Begin cooking a meal,meal_preparation_cooking,5
+Dim the lights to create a relaxing environment,sleep_environment_setup,5
+Eat the meal at home,meal_consumption_dining,5
+Engage in a calming activity to induce sleep,relaxation_reflection_emotion,5
+Enjoy the meal alone or with family if available,meal_consumption_dining,5
+Ensure all necessary ingredients are available,meal_preparation_cooking,5
+Ensure the bedroom is comfortable,sleep_environment_setup,5
+Lay down in the bed,sleep_transition_and_sleep,5
+Prepare and cook the selected meal,meal_preparation_cooking,5
+Prepare the bed for sleep,sleep_environment_setup,5
+Reflect on how the tranquility has contributed to a sense of satisfaction,relaxation_reflection_emotion,5
+"Reflect on the simplicity of the meal and the day, reinforcing the emotion of satisfaction",relaxation_reflection_emotion,5
+Relax and unwind before sleep,relaxation_reflection_emotion,5
+Return home with purchased items,mobility_commute_transition,5
+Return home with the purchased items,mobility_commute_transition,5
+Select a friend to call,social_contact_communication,5
+Select items from the shopping list,shopping_execution_procurement,5
+Serve the meal on a table,meal_preparation_cooking,5
+Set the table for the meal,meal_preparation_cooking,5
+"Shop based on the prepared list, considering the income and consumption level",other_unclear,5
+Travel to the nearest shopping center or store,mobility_commute_transition,5
+Wear comfortable clothing suitable for the weather,morning_routine_hygiene,5
+Attempt to fall asleep,sleep_transition_and_sleep,4
+Begin cooking a meal that is easy to prepare and suitable for evening consumption,meal_preparation_cooking,4
+Begin cooking the meal,meal_preparation_cooking,4
+Begin meal preparation,other_unclear,4
+Begin shopping for items on the list and any additional needs,shopping_planning_budget_inventory,4
+Begin the meal preparation process,other_unclear,4
+Begin work on tasks,work_task_productive,4
+Change into comfortable sleep attire,morning_routine_hygiene,4
+Consider any additional activities or relaxation to round off the evening following the meal,planning_general_admin,4
+Consume the meal,other_unclear,4
+"Cook a simple, satisfying meal",other_unclear,4
+Determine shopping list based on needs,shopping_planning_budget_inventory,4
+"Engage in a calming activity that brings joy, such as reading or listening to music",relaxation_reflection_emotion,4
+"Engage in a calming activity, such as reading or meditation",relaxation_reflection_emotion,4
+Engage in a calming bedtime routine,sleep_environment_setup,4
+"Engage in a hobby, such as gardening or puzzles",other_unclear,4
+Engage in calming activities such as reading or meditating,relaxation_reflection_emotion,4
+Engage in gentle reading or a puzzle,relaxation_reflection_emotion,4
+Engage in light activity or read a book to relax,relaxation_reflection_emotion,4
+Engage in light reading or a hobby to occupy time,relaxation_reflection_emotion,4
+Engage in light reading or research to prepare for work,work_task_productive,4
+Engage in relaxing activities,relaxation_reflection_emotion,4
+Enjoy a home-cooked meal,meal_preparation_cooking,4
+Enjoy the meal alone,meal_consumption_dining,4
+Enjoy the meal alone in the tranquility of home,meal_consumption_dining,4
+Enjoy the meal alone or invite a close friend or family member if desired,social_contact_communication,4
+Enjoy the meal alone or with companionship,meal_consumption_dining,4
+Enjoy the meal and find solace in the routine,meal_consumption_dining,4
+Enjoy the meal in a relaxed manner to savor the day's tranquility,meal_consumption_dining,4
+Enjoy the meal in a relaxed setting,meal_consumption_dining,4
+Enjoy the meal in a tranquil and comfortable setting,meal_consumption_dining,4
+Enjoy the meal in peace,meal_consumption_dining,4
+Enjoy the meal outside,meal_consumption_dining,4
+Ensure comfortable sleeping environment,sleep_environment_setup,4
+Ensure the environment is conducive for sleep,other_unclear,4
+Ensure the room is comfortable for sleeping,other_unclear,4
+Ensure the room is dark to facilitate sleep,other_unclear,4
+Go to bed,mobility_commute_transition,4
+Leave workplace,work_task_productive,4
+Lie down and drift off to sleep,sleep_transition_and_sleep,4
+Lie down and prepare for sleep,sleep_environment_setup,4
+Lie down in the prepared bed,sleep_transition_and_sleep,4
+Listen to relaxing music or an audio book,relaxation_reflection_emotion,4
+"Perform a relaxing activity (e.g., reading or listening to calm music) to unwind",relaxation_reflection_emotion,4
+Perform relaxation techniques,other_unclear,4
+"Plan a light evening activity, like reading or meditation, to conclude the day",relaxation_reflection_emotion,4
+Practice relaxation techniques,other_unclear,4
+Prepare a home-cooked meal as it aligns with the feeling of simplicity and peace today,meal_preparation_cooking,4
+Prepare a meal based on available ingredients,meal_preparation_cooking,4
+Prepare a meal considering dietary needs and preferences,shopping_planning_budget_inventory,4
+Prepare a meal with available ingredients,meal_preparation_cooking,4
+Prepare a nourishing lunch considering retirement age and current temperature,home_environment_management,4
+Prepare a nutritious and easy-to-consume meal due to advanced age,other_unclear,4
+Prepare a nutritious meal considering the tranquil and fulfilling feeling of the day,other_unclear,4
+Prepare a nutritious meal for lunch to enjoy at home,other_unclear,4
+Prepare a shopping list based on needs,shopping_planning_budget_inventory,4
+Prepare a simple meal at home,meal_consumption_dining,4
+"Prepare a simple, nourishing meal suitable for your age and health",other_unclear,4
+Prepare and consume the meal,other_unclear,4
+Prepare and cook the planned meal,meal_preparation_cooking,4
+Prepare and enjoy an evening meal,other_unclear,4
+Prepare breakfast,meal_preparation_cooking,4
+Prepare dinner as a home-cooked meal,meal_preparation_cooking,4
+Prepare for bed by changing into comfortable clothing,sleep_environment_setup,4
+Prepare for meal,other_unclear,4
+Prepare for rest,other_unclear,4
+Prepare for sleep by creating a comfortable environment,sleep_environment_setup,4
+Prepare for sleep by dimming lights,sleep_environment_setup,4
+Prepare for sleep by relaxing,sleep_environment_setup,4
+Prepare for sleep by winding down,sleep_environment_setup,4
+Prepare for travel,mobility_commute_transition,4
+Prepare ingredients and start cooking,meal_preparation_cooking,4
+Prepare ingredients for a meal,meal_preparation_cooking,4
+Prepare ingredients for the meal,meal_preparation_cooking,4
+Prepare meal using available ingredients,meal_preparation_cooking,4
+Prepare the ingredients for cooking,meal_preparation_cooking,4
+Prepare the meal based on the assessed options,shopping_planning_budget_inventory,4
+Prepare the meal based on the preference of the day,meal_preparation_cooking,4
+Prepare the meal using available ingredients,meal_preparation_cooking,4
+Prepare the meal with a focus on tranquility,meal_preparation_cooking,4
+"Prepare the selected meal, considering the current weather and temperature",home_environment_management,4
+Prepare the sleep environment,sleep_environment_setup,4
+Prepare the sleeping area,other_unclear,4
+Purchase necessary items,shopping_execution_procurement,4
+Read a book or listen to calm music,relaxation_reflection_emotion,4
+Read a book or magazine,relaxation_reflection_emotion,4
+Read a book or magazine for some quiet entertainment,relaxation_reflection_emotion,4
+Reflect on the day's events,relaxation_reflection_emotion,4
+Reflect on the day's tranquility during the meal,relaxation_reflection_emotion,4
+Reflect on the tranquility of the morning,relaxation_reflection_emotion,4
+Relax and drift off to sleep,relaxation_reflection_emotion,4
+Relax and enjoy the calm atmosphere,relaxation_reflection_emotion,4
+Relax and enjoy the quiet day,relaxation_reflection_emotion,4
+Relax and unwind from the day's activities,relaxation_reflection_emotion,4
+Relax and unwind to prepare for sleep,sleep_environment_setup,4
+Relax in a comfortable chair with a book,relaxation_reflection_emotion,4
+Relax in a comfortable position in the living room,relaxation_reflection_emotion,4
+"Relax with a book or hobby, immersing myself in a peaceful activity",relaxation_reflection_emotion,4
+Review and organize personal belongings to maintain a peaceful space,planning_general_admin,4
+Review the day's events in a journal,planning_general_admin,4
+Savor the meal and reflect on the day's contentment,relaxation_reflection_emotion,4
+Select a friend to contact,social_contact_communication,4
+Select and prepare ingredients for a meal,meal_preparation_cooking,4
+Set the alarm for an appropriate wake-up time,sleep_environment_setup,4
+Set the alarm for the next day if needed,sleep_environment_setup,4
+Set the room temperature to 23C,home_environment_management,4
+Set the table,meal_preparation_cooking,4
+Stay home to enjoy tranquility,other_unclear,4
+Travel to the shopping center,mobility_commute_transition,4
+Unlock the front door,other_unclear,4
+Wash the dishes,other_unclear,4
+Wind down by engaging in a calming activity,sleep_transition_and_sleep,4
+Adjust to a comfortable sleeping position,other_unclear,3
+Arrive at the dining location,mobility_commute_transition,3
+Assess available food options at current location,shopping_planning_budget_inventory,3
+Assess available food options at workplace,work_task_productive,3
+Assess current sleepiness level,planning_general_admin,3
+Assess the available options based on current preferences,shopping_planning_budget_inventory,3
+"Begin a leisurely walk, focusing on the surroundings",other_unclear,3
+Begin cooking a home-cooked meal,meal_preparation_cooking,3
+"Begin preparing a meal with a simple dish, reflecting on the day's calm and balance",relaxation_reflection_emotion,3
+Begin the process of falling asleep,sleep_transition_and_sleep,3
+Begin to wind down and transition into sleep,sleep_transition_and_sleep,3
+Check current contacts list,other_unclear,3
+Check inventory for available food items,shopping_planning_budget_inventory,3
+Choose a friend to call,social_contact_communication,3
+Choose a meal or order food from the selected location,planning_general_admin,3
+Choose the nearest shopping center based on mobility and convenience,shopping_execution_procurement,3
+Close your eyes and allow yourself to drift off to sleep,sleep_transition_and_sleep,3
+Complete the shopping task,work_task_productive,3
+Consume the chosen food item or meal,other_unclear,3
+Consume the food at the current location,other_unclear,3
+Consume the meal at the chosen location,other_unclear,3
+Determine the distance and time required to reach a nearby restaurant or open-air dining area,meal_consumption_dining,3
+Dim the lights,sleep_environment_setup,3
+Dim the lights to create a sleep-friendly atmosphere,sleep_environment_setup,3
+Drive to the nearest shopping center,shopping_execution_procurement,3
+End the walk and return to the starting point,mobility_commute_transition,3
+Engage in a calming activity such as reading or meditation,relaxation_reflection_emotion,3
+Engage in a calming activity to relax before sleep,relaxation_reflection_emotion,3
+Engage in a relaxing activity to calm the mind,relaxation_reflection_emotion,3
+Enjoy a meal,other_unclear,3
+Enjoy the meal alone as a moment of self-reflection and appreciation of the day's tranquility,meal_consumption_dining,3
+Enjoy the meal alone as a reflection of the day's peacefulness,meal_consumption_dining,3
+Enjoy the meal alone or with companions,meal_consumption_dining,3
+"Enjoy the meal alone, reflecting on the day's tranquility",meal_consumption_dining,3
+Enjoy the meal in a comfortable setting at home,meal_consumption_dining,3
+"Enjoy the meal outside, savoring the sunny atmosphere",meal_consumption_dining,3
+Enjoy the meal prepared,meal_consumption_dining,3
+Ensure a comfortable environment,home_environment_management,3
+Ensure all necessary items are in reach for easy access,other_unclear,3
+Ensure comfort for sleep,other_unclear,3
+Ensure comfort in sleeping environment,sleep_environment_setup,3
+Ensure food is ready and served,other_unclear,3
+Ensure kitchen essentials are available,meal_preparation_cooking,3
+Ensure leftovers are stored properly,other_unclear,3
+Ensure the bedroom environment is conducive to sleep,sleep_environment_setup,3
+Ensure the kitchen is ready for cooking,meal_preparation_cooking,3
+Ensure the room is cool and comfortable,other_unclear,3
+Enter home and secure doors,other_unclear,3
+Enter the kitchen,meal_preparation_cooking,3
+Enter the store and proceed to the aisles with the shopping list,mobility_commute_transition,3
+Head home,mobility_commute_transition,3
+Head to the chosen shopping location using the most comfortable and time-efficient method of transportation,other_unclear,3
+Head to the selected outdoor venue,other_unclear,3
+Head towards the nearest park,other_unclear,3
+Head towards the nearest supermarket,other_unclear,3
+Initiate the sleep process,sleep_transition_and_sleep,3
+Leave home and travel to the nearest shopping area,mobility_commute_transition,3
+Leave workplace and start journey home,work_task_productive,3
+Leave workplace to travel home,work_task_productive,3
+Lie down and go to sleep,mobility_commute_transition,3
+Lie down in bed in a comfortable position,sleep_transition_and_sleep,3
+Locate the venue and navigate to it,other_unclear,3
+Move from current location to home,other_unclear,3
+Move from current location to the house,other_unclear,3
+Move from outside to inside the house,other_unclear,3
+Move towards home,other_unclear,3
+Navigate within the store to find items on the shopping list,shopping_execution_procurement,3
+Order and consume the meal,other_unclear,3
+Perform a calming bedtime routine,sleep_environment_setup,3
+Plan a meal based on the day's emotions and tranquility,planning_general_admin,3
+Plan the route to the dining location,mobility_commute_transition,3
+Practice relaxation techniques to ease into sleep,other_unclear,3
+Prep ingredients and cook the planned meal,other_unclear,3
+Prepare a meal based on dietary preferences and restrictions,meal_preparation_cooking,3
+Prepare a meal that suits your taste,meal_preparation_cooking,3
+Prepare a nutritious meal,other_unclear,3
+Prepare a simple meal considering the tranquil mood,other_unclear,3
+"Prepare a simple, nutritious meal for lunch",other_unclear,3
+Prepare and cook the meal with ease,meal_preparation_cooking,3
+Prepare and serve the meal,meal_preparation_cooking,3
+Prepare dinner using available ingredients,other_unclear,3
+Prepare for a comfortable sleep environment,sleep_environment_setup,3
+Prepare for bed by changing into comfortable attire,sleep_environment_setup,3
+Prepare for relaxation,other_unclear,3
+Prepare for sleep by ensuring a comfortable environment,sleep_environment_setup,3
+Prepare or order food for an outdoor meal,other_unclear,3
+Prepare shopping list,shopping_planning_budget_inventory,3
+Prepare the bedroom for a comfortable sleep environment,sleep_environment_setup,3
+Prepare the meal at home,meal_preparation_cooking,3
+Prepare the meal in a comfortable and safe environment,meal_preparation_cooking,3
+Proceed to the checkout counter and pay for the purchased items,mobility_commute_transition,3
+Proceed to the chosen eating option,mobility_commute_transition,3
+Proceed to the shopping location,mobility_commute_transition,3
+Relax and unwind before sleeping,relaxation_reflection_emotion,3
+Relax and unwind in preparation for sleep,relaxation_reflection_emotion,3
+Relax mind and body,relaxation_reflection_emotion,3
+Retire to my bedroom,other_unclear,3
+Retrieve contact information,social_contact_communication,3
+Return home,mobility_commute_transition,3
+Return home from the current location,mobility_commute_transition,3
+Return home to prepare for eating,mobility_commute_transition,3
+Return home with the shopping items,mobility_commute_transition,3
+Return to home from the current location,mobility_commute_transition,3
+Return to home safely,mobility_commute_transition,3
+Return to home to prepare the meal,mobility_commute_transition,3
+Return to my home from current location,mobility_commute_transition,3
+Return to the home,mobility_commute_transition,3
+Return to the home environment,mobility_commute_transition,3
+Return to the house,mobility_commute_transition,3
+Review current savings and budget for shopping,shopping_planning_budget_inventory,3
+Review necessary shopping list,shopping_planning_budget_inventory,3
+Secure and close all entry points to ensure safety,other_unclear,3
+Select and purchase the items on the shopping list,shopping_execution_procurement,3
+Select nearest shopping location based on current location,other_unclear,3
+Serve the prepared meal,other_unclear,3
+Set out to the planned shopping destination,mobility_commute_transition,3
+Set the alarm for morning if needed,sleep_environment_setup,3
+Set the alarm for the desired wake-up time,sleep_environment_setup,3
+Set the alarm for the next morning,sleep_environment_setup,3
+Set the table with a pleasant setting,meal_preparation_cooking,3
+Sit down and order food or find a seat,other_unclear,3
+Start cooking a home-cooked meal,meal_preparation_cooking,3
+Start preparing the meal,other_unclear,3
+Take the necessary transportation to the shopping center,shopping_execution_procurement,3
+Transport the food to the selected outdoor location,other_unclear,3
+Travel from workplace to home,work_task_productive,3
+Travel to local shopping center,mobility_commute_transition,3
+Travel to local supermarket,mobility_commute_transition,3
+Travel to the chosen dining location,mobility_commute_transition,3
+Travel to the chosen location,mobility_commute_transition,3
+Travel to the grocery store,mobility_commute_transition,3
+Travel to the nearest store,mobility_commute_transition,3
+Travel to the nearest store or market by foot or public transportation,mobility_commute_transition,3
+Travel to the selected dining establishment,mobility_commute_transition,3
+Travel to the selected dining location if necessary,mobility_commute_transition,3
+Travel to the selected store,mobility_commute_transition,3
+Travel to the selected store using a suitable mode of transport,mobility_commute_transition,3
+Unlock and enter home,other_unclear,3
+Walk to the grocery store,mobility_commute_transition,3
+ Lie down in a comfortable position,sleep_transition_and_sleep,2
+ Lie down in bed,sleep_transition_and_sleep,2
+ Lie down in the bed,sleep_transition_and_sleep,2
+Access a communication device such as a phone or a tablet,digital_device_account_ops,2
+Access my contact list,social_contact_communication,2
+Access my phone,digital_device_account_ops,2
+Access phone,digital_device_account_ops,2
+Access phone or device,digital_device_account_ops,2
+Adjust room temperature if necessary for comfort,home_environment_management,2
+Adjust room temperature if necessary to 23C,home_environment_management,2
+Adjust room temperature to 23C if necessary,home_environment_management,2
+Adjust room temperature to a comfortable level,home_environment_management,2
+Adjust room temperature to a comfortable level if necessary,home_environment_management,2
+Adjust the bedroom temperature if necessary,home_environment_management,2
+Adjust the room temperature if necessary to 23C,home_environment_management,2
+Adjust the room temperature to a comfortable level for sleep,home_environment_management,2
+Adjust the room temperature to be comfortable,home_environment_management,2
+"After the meal, clear the dishes and wash them if necessary",other_unclear,2
+Appreciate the tranquility of the evening,other_unclear,2
+Assess and confirm home meal options,shopping_planning_budget_inventory,2
+Assess available options for shopping due to retirement income level,shopping_planning_budget_inventory,2
+Assess available time for shopping,planning_general_admin,2
+Assess current energy levels,planning_general_admin,2
+Assess current environment,planning_general_admin,2
+Assess current fatigue level,planning_general_admin,2
+Assess current hunger level and decide what to eat,planning_general_admin,2
+Assess current state of alertness,planning_general_admin,2
+Assess current surroundings for suitable dining options,shopping_planning_budget_inventory,2
+Assess home-cooked meal preparation,meal_preparation_cooking,2
+Assess income and needs,shopping_planning_budget_inventory,2
+Assess meal preparation needs,shopping_planning_budget_inventory,2
+Assess meal quality and satisfaction,planning_general_admin,2
+Assess personal needs and budget for shopping,shopping_planning_budget_inventory,2
+Assess shopping needs based on daily activities,shopping_planning_budget_inventory,2
+Assess sleepiness,planning_general_admin,2
+Assess sleepiness level,planning_general_admin,2
+Assess the available food options at the current location,shopping_planning_budget_inventory,2
+Begin a relaxing morning with a quiet breakfast,relaxation_reflection_emotion,2
+Begin preparing a home-cooked meal,meal_preparation_cooking,2
+Begin preparing a meal,other_unclear,2
+Begin preparing a meal if not already done,other_unclear,2
+Begin preparing food if necessary,other_unclear,2
+Begin preparing the ingredients for cooking,meal_preparation_cooking,2
+Begin preparing the meal,other_unclear,2
+Begin preparing the selected dish,other_unclear,2
+Begin preparing the selected meal,other_unclear,2
+Begin sleep by closing eyes and adopting a comfortable sleep position,sleep_transition_and_sleep,2
+Begin to drift off to sleep,other_unclear,2
+Begin to fall asleep,sleep_transition_and_sleep,2
+Begin to pack personal items,other_unclear,2
+Begin to wind down and prepare for sleep,sleep_environment_setup,2
+Call a friend,social_contact_communication,2
+Change into comfortable attire,morning_routine_hygiene,2
+Change into comfortable clothing suitable for walking,morning_routine_hygiene,2
+Check and adjust room temperature to comfortable level,home_environment_management,2
+Check availability and make a reservation if necessary,other_unclear,2
+Check current availability of outdoor seating,other_unclear,2
+Check current inventory at home,shopping_planning_budget_inventory,2
+Check current location for any available shopping options,shopping_planning_budget_inventory,2
+Check current needs and list items to purchase,shopping_execution_procurement,2
+Check current needs for shopping,shopping_planning_budget_inventory,2
+Check existing food supplies or make a shopping list,shopping_planning_budget_inventory,2
+Check for available friends to contact,social_contact_communication,2
+Check for contacts,other_unclear,2
+Check for ingredients to prepare a meal,meal_preparation_cooking,2
+Check if environment is suitable for sleeping,other_unclear,2
+Check inventory of food supplies,shopping_planning_budget_inventory,2
+Check my schedule for any planned social activities,planning_general_admin,2
+Check my schedule for available friends,social_contact_communication,2
+Check pantry and fridge for ingredients,other_unclear,2
+Check phone contacts for friends' numbers,digital_device_account_ops,2
+Check phone for contacts,digital_device_account_ops,2
+Check phone for recent messages,digital_device_account_ops,2
+Check the environment for comfort,other_unclear,2
+Check the meal prep,other_unclear,2
+Check the temperature to ensure it is comfortable for sleep,home_environment_management,2
+Choose a food item or decide to prepare a meal,meal_preparation_cooking,2
+Choose a meal from the menu that is healthy and easily digestible,planning_general_admin,2
+Choose a method to contact friends,social_contact_communication,2
+"Choose a place based on comfort, food options, and cost",shopping_planning_budget_inventory,2
+Choose a suitable meal based on preference and availability,planning_general_admin,2
+Choose home-cooked meal options,shopping_planning_budget_inventory,2
+Chooses a meal based on current health and preference,other_unclear,2
+Clean up after breakfast,other_unclear,2
+Clean up after dining,meal_consumption_dining,2
+Clean up after eating to maintain a clean living space,meal_cleanup,2
+Clean up after eating to maintain a peaceful environment,meal_cleanup,2
+Clean up after eating to maintain the home's order,meal_cleanup,2
+Clean up after eating to maintain the peace of the home,meal_cleanup,2
+Clean up after meal,other_unclear,2
+Clean up after the meal to maintain a comfortable environment,meal_cleanup,2
+Clean up and store leftover food or packaging,shopping_execution_procurement,2
+Clean up the kitchen after eating,meal_preparation_cooking,2
+Clean up the kitchen and utensils used during the meal,meal_preparation_cooking,2
+Clean up the meal area,other_unclear,2
+Clean up the meal area to maintain a clean environment,other_unclear,2
+Clean up the table and store leftover food,shopping_execution_procurement,2
+Clear the dining area after eating,meal_consumption_dining,2
+Clear the meal area after eating to maintain a clean and comfortable environment,home_environment_management,2
+Clear the plates and utensils after eating,other_unclear,2
+"Clear the table, preparing for a restful rest following the meal",meal_cleanup,2
+Close eyes and drift into sleep,other_unclear,2
+Close the bedroom curtains to block out light,other_unclear,2
+Close the bedroom door,other_unclear,2
+Close the bedroom door and begin to sleep,other_unclear,2
+Close the bedroom door for privacy,other_unclear,2
+Close the bedroom door to signal readiness for sleep,other_unclear,2
+Close the curtains or blinds to create a darker sleeping environment,sleep_environment_setup,2
+Close the curtains to block out light,other_unclear,2
+Close the curtains to create a dark environment,other_unclear,2
+Close the curtains to ensure darkness for better sleep,other_unclear,2
+Close the eyes and drift off to sleep,other_unclear,2
+Close the eyes and prepare for sleep,sleep_environment_setup,2
+Close the eyes and relax,relaxation_reflection_emotion,2
+Close your eyes and drift into sleep,sleep_transition_and_sleep,2
+"Close your eyes and relax, starting the sleep process",sleep_transition_and_sleep,2
+Complete the purchase,shopping_execution_procurement,2
+Conclude meal preparation,other_unclear,2
+Consider having a small dessert if desired,planning_general_admin,2
+Consider preparing a light snack or drink to enjoy while relaxing,relaxation_reflection_emotion,2
+Consume the food item,other_unclear,2
+Consume the meal in a comfortable setting,other_unclear,2
+Consume the meal prepared,other_unclear,2
+Contemplate the underlying feeling of hope,other_unclear,2
+Cook breakfast,other_unclear,2
+Cook the main dish,other_unclear,2
+Cook the meal following a chosen recipe,meal_preparation_cooking,2
+Create a comfortable environment for reflection,relaxation_reflection_emotion,2
+Decide on the type of shopping needed based on personal needs,shopping_planning_budget_inventory,2
+Determine if additional activities are needed to wind down,sleep_transition_and_sleep,2
+Determine if there's a need for shopping based on income and consumption level,shopping_planning_budget_inventory,2
+Determine necessary shopping items based on current needs,shopping_planning_budget_inventory,2
+Determine necessary shopping items based on needs and preferences,shopping_planning_budget_inventory,2
+Determine shopping list based on daily needs,shopping_planning_budget_inventory,2
+Determine shopping list based on needs and preferences,shopping_planning_budget_inventory,2
+Determine shopping needs,shopping_planning_budget_inventory,2
+Determine shopping needs based on existing needs and preferences,shopping_planning_budget_inventory,2
+Determine the shopping list based on needs,shopping_planning_budget_inventory,2
+Determine the type of shopping needed based on income and consumption level,planning_general_admin,2
+Dim the lights in the living area,sleep_environment_setup,2
+Dim the lights to create a conducive sleeping environment,sleep_environment_setup,2
+Dim the lights to create a relaxing atmosphere,sleep_environment_setup,2
+Dim the lights to create a restful atmosphere,sleep_environment_setup,2
+Dim the lights to create a restful environment,sleep_environment_setup,2
+Dim the lights to signal the body to wind down,sleep_environment_setup,2
+Dispose of the meal-related waste properly,other_unclear,2
+Dress appropriately for shopping,morning_routine_hygiene,2
+Dress appropriately for the sunny weather,morning_routine_hygiene,2
+Dress appropriately for the weather and temperature,morning_routine_hygiene,2
+Dress comfortably for a shopping trip,other_unclear,2
+Eat dinner,other_unclear,2
+Eat the home-cooked meal,meal_preparation_cooking,2
+Eat the prepared food,other_unclear,2
+Eats the meal,other_unclear,2
+End current activities at workplace,work_task_productive,2
+End current work activities,work_task_productive,2
+End work duties,work_task_productive,2
+End work or activities at the workplace,work_task_productive,2
+"Engage in a calming activity (e.g., reading or listening to soothing music)",relaxation_reflection_emotion,2
+"Engage in a calming activity (e.g., reading) to relax the mind",relaxation_reflection_emotion,2
+"Engage in a calming activity (e.g., reading, meditation)",relaxation_reflection_emotion,2
+Engage in a calming activity (if desired),relaxation_reflection_emotion,2
+Engage in a calming activity (optional),relaxation_reflection_emotion,2
+Engage in a calming activity before sleep,relaxation_reflection_emotion,2
+Engage in a calming activity like reading or listening to soothing music,relaxation_reflection_emotion,2
+Engage in a calming activity or meditation,relaxation_reflection_emotion,2
+Engage in a calming activity such as reading or listening to soothing music,relaxation_reflection_emotion,2
+Engage in a calming activity such as reading or listening to soothing music to aid in relaxation,relaxation_reflection_emotion,2
+Engage in a calming activity such as reading or meditation to relax,relaxation_reflection_emotion,2
+Engage in a calming activity to ease into sleep,relaxation_reflection_emotion,2
+Engage in a calming activity to help with relaxation,relaxation_reflection_emotion,2
+Engage in a calming activity to induce relaxation,relaxation_reflection_emotion,2
+Engage in a calming activity to reinforce the feeling of hope,relaxation_reflection_emotion,2
+Engage in a calming activity to relax,relaxation_reflection_emotion,2
+"Engage in a calming activity to relax (e.g., reading, meditation)",relaxation_reflection_emotion,2
+Engage in a calming activity to relax mind and body,relaxation_reflection_emotion,2
+Engage in a calming activity to wind down,sleep_transition_and_sleep,2
+"Engage in a calming activity, if desired (e.g., reading a book, meditating, etc.)",relaxation_reflection_emotion,2
+"Engage in a calming activity, if needed, to relax",relaxation_reflection_emotion,2
+"Engage in a calming activity, such as deep breathing or reading",relaxation_reflection_emotion,2
+"Engage in a calming activity, such as reading or meditating, to settle down",relaxation_reflection_emotion,2
+"Engage in a calming activity, such as reading, to aid in relaxation",relaxation_reflection_emotion,2
+Engage in a calming pre-sleep activity,other_unclear,2
+Engage in a light breathing exercise to help induce sleep,other_unclear,2
+Engage in a light reading activity,relaxation_reflection_emotion,2
+Engage in a light reading or meditation to calm thoughts,relaxation_reflection_emotion,2
+Engage in a light reading or meditation to help with relaxation,relaxation_reflection_emotion,2
+Engage in a quiet activity to calm the mind,relaxation_reflection_emotion,2
+"Engage in a quiet, reflective moment post-meal to appreciate the day's tranquility",other_unclear,2
+"Engage in a relaxing activity after eating, such as reading or light meditation, to extend the sense of peace and contentment",relaxation_reflection_emotion,2
+Engage in a relaxing activity before lying down,relaxation_reflection_emotion,2
+Engage in a relaxing activity before sleep to help with relaxation,relaxation_reflection_emotion,2
+Engage in a relaxing activity like reading or listening to calm music to ease into sleep,relaxation_reflection_emotion,2
+"Engage in a relaxing activity, such as reading or meditation",relaxation_reflection_emotion,2
+Engage in a relaxing bedtime routine,sleep_environment_setup,2
+Engage in a relaxing routine to induce sleep,relaxation_reflection_emotion,2
+"Engage in calming activity, such as reading a book or listening to soothing music",relaxation_reflection_emotion,2
+Engage in light household activities to make the environment comfortable,other_unclear,2
+Engage in light reading or listening to soft music to induce relaxation,relaxation_reflection_emotion,2
+Engage in light reading or meditation if desired,relaxation_reflection_emotion,2
+Engage in light reading or meditation to help relax the mind,relaxation_reflection_emotion,2
+Engage in light reading or meditation to relax the mind,relaxation_reflection_emotion,2
+Engage in light reading or meditation to settle down,relaxation_reflection_emotion,2
+Enjoy a leisurely morning with coffee or tea,other_unclear,2
+Enjoy a light evening snack,other_unclear,2
+Enjoy a light snack or tea to keep energy levels up,other_unclear,2
+Enjoy a moment of relaxation following the meal,other_unclear,2
+Enjoy a quiet meal,other_unclear,2
+"Enjoy a quiet meal with a focus on simple, nourishing dishes",other_unclear,2
+Enjoy a relaxing bath,relaxation_reflection_emotion,2
+Enjoy a warm cup of tea or coffee,other_unclear,2
+Enjoy breakfast in a relaxed manner,meal_consumption_dining,2
+Enjoy the current peaceful mood,other_unclear,2
+Enjoy the current tranquility of the home environment,home_environment_management,2
+Enjoy the meal alone or with companionship if desired,meal_consumption_dining,2
+"Enjoy the meal alone, allowing the quiet day to continue and to maintain the sense of tranquility",meal_consumption_dining,2
+"Enjoy the meal alone, allowing time for reflection on the day's peacefulness",meal_consumption_dining,2
+"Enjoy the meal alone, as no one is expected to join",meal_consumption_dining,2
+"Enjoy the meal alone, in reflection of the day's tranquility",meal_consumption_dining,2
+Enjoy the meal at a comfortable temperature,meal_consumption_dining,2
+Enjoy the meal in a relaxed manner,meal_consumption_dining,2
+Enjoy the meal in a relaxing manner,meal_consumption_dining,2
+Enjoy the meal in the calm atmosphere,meal_consumption_dining,2
+Enjoy the meal once it's ready,meal_consumption_dining,2
+Enjoy the meal outdoors,meal_consumption_dining,2
+"Enjoy the meal, focusing on the nourishment and the moment of tranquility",meal_consumption_dining,2
+Enjoy the quiet moments of the home environment,home_environment_management,2
+Enjoy the quiet morning at home,other_unclear,2
+Enjoy the tranquility of home and its simplicity,other_unclear,2
+Enjoy the tranquility of the park,other_unclear,2
+Ensure a comfortable eating environment,other_unclear,2
+Ensure a comfortable seating arrangement for dining,meal_consumption_dining,2
+Ensure a hygienic cooking environment,meal_preparation_cooking,2
+Ensure all devices are turned off or on silent mode,digital_device_account_ops,2
+Ensure all necessary cooking supplies are available,shopping_planning_budget_inventory,2
+Ensure all necessary ingredients are available for cooking,meal_preparation_cooking,2
+Ensure comfort and convenience at home for meal preparation,other_unclear,2
+Ensure comfort and safety in the living environment,other_unclear,2
+Ensure comfort in current living environment,other_unclear,2
+Ensure comfort in the sleeping area,other_unclear,2
+Ensure comfort in the sleeping environment,sleep_environment_setup,2
+Ensure comfortable sleep environment,sleep_environment_setup,2
+Ensure food is properly cooked and safe to eat,other_unclear,2
+Ensure home is ready for meal preparation,other_unclear,2
+Ensure kitchen is set up for cooking,meal_preparation_cooking,2
+Ensure kitchen supplies are available,shopping_planning_budget_inventory,2
+Ensure meal is enjoyable and comforting,other_unclear,2
+Ensure meal is in line with retirement lifestyle and dietary needs,shopping_planning_budget_inventory,2
+Ensure mealtime is peaceful and enjoyable,other_unclear,2
+Ensure personal comfort and safety,other_unclear,2
+Ensure room is dark for better sleep,other_unclear,2
+Ensure that the meal is healthy and nourishing for a person of your age and current health status,other_unclear,2
+Ensure the bedroom is comfortable for sleep,sleep_environment_setup,2
+Ensure the environment is suitable for meal preparation,other_unclear,2
+Ensure the home is secure and comfortable for the night,other_unclear,2
+Ensure the kitchen is clean and equipped for cooking,meal_preparation_cooking,2
+Ensure the kitchen is equipped with necessary ingredients and utensils,meal_preparation_cooking,2
+Ensure the kitchen is set for cooking,meal_preparation_cooking,2
+Ensure the living space is comfortable for sleep,other_unclear,2
+Ensure the living space is comfortable for sleeping,other_unclear,2
+Ensure the meal is balanced for health,other_unclear,2
+Ensure the meal is enjoyable and fulfilling,other_unclear,2
+Ensure the meal is enjoyable and satisfies the need to eat,shopping_planning_budget_inventory,2
+Ensure the meal is nutritious and fulfilling for dinner,other_unclear,2
+Ensure the meal is prepared to a safe temperature,home_environment_management,2
+Ensure the meal is ready and at a suitable serving temperature,home_environment_management,2
+Ensure the room is conducive to sleep,sleep_environment_setup,2
+Ensure the room is dark and quiet,other_unclear,2
+Ensure the room is quiet and dark,other_unclear,2
+Ensure the room is quiet and has appropriate temperature,home_environment_management,2
+Ensure the room is suitable for sleep,other_unclear,2
+Ensure the sleep environment is comfortable,sleep_environment_setup,2
+Ensure you enjoy your meal in a comfortable and safe environment,other_unclear,2
+Enter restful state,other_unclear,2
+Enter the bedroom and lie down,sleep_transition_and_sleep,2
+Enter the house,other_unclear,2
+Evaluate available food options at the workplace,work_task_productive,2
+Evaluate available food options at workplace,work_task_productive,2
+Evaluate available ingredients and plan the meal,planning_general_admin,2
+Evaluate the current location for suitable dining options,shopping_planning_budget_inventory,2
+Evaluate the current weather and decide on the best shopping time,other_unclear,2
+"Evaluate the day's experience to appreciate the simple, fulfilling moments",other_unclear,2
+Fall asleep naturally,sleep_transition_and_sleep,2
+Focus on sleep until morning,other_unclear,2
+"Gather necessary items (e.g., pillow, blanket, glasses, etc.)",other_unclear,2
+Get dressed for shopping,morning_routine_hygiene,2
+Get dressed for the shopping trip,morning_routine_hygiene,2
+"Get dressed in comfortable, weather-appropriate clothing",morning_routine_hygiene,2
+Go to bed at a reasonable hour to ensure enough sleep,mobility_commute_transition,2
+Go to sleep,mobility_commute_transition,2
+Have a healthy breakfast,other_unclear,2
+Identify a friend to contact,social_contact_communication,2
+Identify shopping list based on current needs and preferences,shopping_planning_budget_inventory,2
+Identify shopping list based on daily needs,shopping_planning_budget_inventory,2
+"If applicable, prepare the chosen food item or order it",other_unclear,2
+"If necessary, adjust the room temperature to a comfortable level",home_environment_management,2
+"If needed, prepare ingredients",meal_preparation_cooking,2
+Initiate sleep,other_unclear,2
+Lay down in the bed at an appropriate time for rest,sleep_transition_and_sleep,2
+Leave workplace to head home,work_task_productive,2
+Lie down and close the eyes,sleep_transition_and_sleep,2
+Lie down and close your eyes,sleep_transition_and_sleep,2
+Lie down and initiate sleep,sleep_transition_and_sleep,2
+Lie down and relax,sleep_transition_and_sleep,2
+Lie down and rest,sleep_transition_and_sleep,2
+Lie down in bed and assume a comfortable sleep position,sleep_transition_and_sleep,2
+Lie down in bed and attempt to fall asleep,sleep_transition_and_sleep,2
+Lie down in bed and relax,sleep_transition_and_sleep,2
+Lie down in the bed and initiate the sleep process,sleep_transition_and_sleep,2
+List shopping needs,shopping_planning_budget_inventory,2
+Listen to calming music,other_unclear,2
+Listen to some soft music to relax,relaxation_reflection_emotion,2
+Listen to soothing music to enhance the peaceful atmosphere,relaxation_reflection_emotion,2
+Maintain a sense of balance and hope,other_unclear,2
+Maintain current routine and comfort,other_unclear,2
+Make purchases and ensure items meet personal needs,shopping_execution_procurement,2
+Monitor cooking process and adjust as necessary,meal_preparation_cooking,2
+Monitor cooking progress and adjust as needed,meal_preparation_cooking,2
+Monitor cooking progress to ensure food is prepared to desired specifications,meal_preparation_cooking,2
+Monitor the cooking process to ensure meal is properly prepared,meal_preparation_cooking,2
+Monitor the meal and adjust cooking if needed,meal_preparation_cooking,2
+Order food,other_unclear,2
+Order or select the meal,other_unclear,2
+"Pack essentials or a small bag with wallet, shopping list, and water",shopping_execution_procurement,2
+Perform a brief stretching or meditation to maintain well-being,morning_routine_hygiene,2
+Perform a calming pre-sleep routine,other_unclear,2
+Perform a calming routine to relax,relaxation_reflection_emotion,2
+Perform a calming routine to relax the mind,relaxation_reflection_emotion,2
+Perform a relaxation routine to settle the mind,other_unclear,2
+Perform a relaxing activity to unwind,relaxation_reflection_emotion,2
+Perform a relaxing bedtime routine,sleep_environment_setup,2
+Perform a short meditation or light reading to calm the mind,relaxation_reflection_emotion,2
+Perform calming activity,relaxation_reflection_emotion,2
+Perform light stretching or exercises,morning_routine_hygiene,2
+Perform light stretching or yoga,morning_routine_hygiene,2
+Perform morning hygiene routine,morning_routine_hygiene,2
+Perform relaxation techniques to calm the mind,relaxation_reflection_emotion,2
+Perform relaxing bedtime routine,sleep_environment_setup,2
+Place an order or wait for service,other_unclear,2
+Plan a meal based on current weather and temperature,home_environment_management,2
+Plan a meal considering the peace of the day,planning_general_admin,2
+Plan a routine for the following day to maintain a sense of routine and contentment,planning_general_admin,2
+Plan a simple and comforting meal for tonight,planning_general_admin,2
+Plan a simple meal based on comfort and ease,planning_general_admin,2
+Plan a simple meal considering current time and environment,planning_general_admin,2
+Plan a simple meal that brings contentment,planning_general_admin,2
+"Plan a simple, home-cooked lunch based on current health and dietary needs",shopping_planning_budget_inventory,2
+Plan and prepare a simple meal,planning_general_admin,2
+Plan and prepare ingredients for a meal,meal_preparation_cooking,2
+Plan meal options,shopping_planning_budget_inventory,2
+Plan meal options based on available ingredients,shopping_planning_budget_inventory,2
+Plan meal options considering dietary preferences and ingredients at home,shopping_planning_budget_inventory,2
+Plan meal selection based on preferences and ingredients available,planning_general_admin,2
+Plan shopping list,shopping_planning_budget_inventory,2
+Plan shopping list based on daily needs,shopping_planning_budget_inventory,2
+Plan shopping list based on known preferences,shopping_planning_budget_inventory,2
+Plan simple yet nourishing meal options,shopping_planning_budget_inventory,2
+Plan the shopping list based on daily needs,shopping_planning_budget_inventory,2
+Plan the shopping list based on needs and preferences,shopping_planning_budget_inventory,2
+"Practice a calming activity (e.g., reading or meditation) if needed",relaxation_reflection_emotion,2
+Practice a calming activity like reading or meditation,relaxation_reflection_emotion,2
+"Practice a calming activity, such as reading or listening to music",relaxation_reflection_emotion,2
+Practice a calming bedtime routine,sleep_environment_setup,2
+Practice deep breathing or meditation to relax,relaxation_reflection_emotion,2
+Practice gentle stretching or yoga,morning_routine_hygiene,2
+Practice light stretching to maintain flexibility,morning_routine_hygiene,2
+Practice light stretching to stay flexible,morning_routine_hygiene,2
+Practice mindfulness or meditation,relaxation_reflection_emotion,2
+Practice mindfulness or meditation to deepen the reflection,relaxation_reflection_emotion,2
+Practice relaxation techniques if needed,other_unclear,2
+Practice relaxation techniques to induce sleep,other_unclear,2
+Preheat the oven and prepare cooking ingredients,meal_preparation_cooking,2
+Prepare a comfortable bed and change into comfortable night attire,morning_routine_hygiene,2
+Prepare a comfortable resting environment,other_unclear,2
+Prepare a comfortable seating area with natural light,other_unclear,2
+Prepare a comfortable work environment at home,work_task_productive,2
+Prepare a comfortable working environment at home,other_unclear,2
+Prepare a healthy breakfast,other_unclear,2
+Prepare a healthy morning snack,other_unclear,2
+Prepare a light breakfast,other_unclear,2
+"Prepare a light, calming bedtime snack",other_unclear,2
+"Prepare a light, nutritious breakfast",other_unclear,2
+Prepare a meal at home considering the tranquility of the day and current temperature,meal_preparation_cooking,2
+Prepare a meal considering current time and weather,meal_preparation_cooking,2
+Prepare a meal considering the weather and temperature,meal_preparation_cooking,2
+Prepare a meal to satisfy the need for sustenance,shopping_planning_budget_inventory,2
+Prepare a meal using available ingredients,meal_preparation_cooking,2
+Prepare a meal with portable food if a café or restaurant is not available,meal_preparation_cooking,2
+Prepare a meal with simple and easy-to-cook ingredients,meal_preparation_cooking,2
+Prepare a nutritious breakfast considering the pleasant weather and comfortable temperature,home_environment_management,2
+Prepare a quiet workspace,work_task_productive,2
+Prepare a relaxing environment,relaxation_reflection_emotion,2
+Prepare a shopping list based on current needs and budget,shopping_planning_budget_inventory,2
+Prepare a shopping list based on daily necessities,shopping_planning_budget_inventory,2
+Prepare a shopping list based on needs and preferences,shopping_planning_budget_inventory,2
+Prepare a simple and nutritious meal considering the current weather and temperature,home_environment_management,2
+Prepare a simple breakfast at home,other_unclear,2
+Prepare a simple meal,other_unclear,2
+Prepare a simple meal as today was tranquil and there's no need for elaborate preparation,shopping_planning_budget_inventory,2
+Prepare a simple meal based on comfort and nutritional needs,shopping_planning_budget_inventory,2
+Prepare a simple meal considering age and physical comfort,other_unclear,2
+Prepare a simple meal considering health and dietary needs,shopping_planning_budget_inventory,2
+Prepare a simple meal considering the quiet day and my age,other_unclear,2
+Prepare a simple meal considering weather and temperature,home_environment_management,2
+Prepare a simple meal considering weather and time,other_unclear,2
+Prepare a simple meal or snack,other_unclear,2
+Prepare a simple meal that can be enjoyed at home,other_unclear,2
+Prepare a simple meal to enjoy at home,other_unclear,2
+"Prepare a simple, nourishing meal",other_unclear,2
+"Prepare a simple, nutritious breakfast based on available ingredients",other_unclear,2
+"Prepare a simple, nutritious meal",other_unclear,2
+"Prepare a small snack or meal for later, given the early hour",other_unclear,2
+Prepare a warm herbal tea to relax,relaxation_reflection_emotion,2
+Prepare all necessary ingredients,other_unclear,2
+Prepare and consume the selected food,other_unclear,2
+Prepare and cook a meal that is easy to prepare,meal_preparation_cooking,2
+"Prepare and cook a simple meal, considering ease and enjoyment",meal_preparation_cooking,2
+Prepare and cook the desired food,meal_preparation_cooking,2
+Prepare bed for comfortable sleep,other_unclear,2
+Prepare bed for rest,other_unclear,2
+Prepare breakfast as a home meal,meal_preparation_cooking,2
+Prepare breakfast ingredients,meal_preparation_cooking,2
+Prepare dining area,meal_consumption_dining,2
+Prepare dining area with necessary items,meal_consumption_dining,2
+Prepare for a comfortable meal at home,meal_consumption_dining,2
+Prepare for a home-cooked meal,meal_preparation_cooking,2
+"Prepare for a restful night, maintaining a positive state of joy as you wind down",sleep_transition_and_sleep,2
+"Prepare for bed (change into comfortable clothing, adjust the room temperature if necessary)",sleep_environment_setup,2
+"Prepare for bed (e.g., remove unnecessary items, set up the bed)",sleep_environment_setup,2
+Prepare for bed by changing into comfortable pajamas,sleep_environment_setup,2
+Prepare for bed with a comfortable sleepwear,sleep_environment_setup,2
+Prepare for bed with necessary items,sleep_environment_setup,2
+Prepare for breakfast,other_unclear,2
+Prepare for cooking at home,meal_preparation_cooking,2
+Prepare for dinner,other_unclear,2
+Prepare for rest by changing into comfortable clothing,other_unclear,2
+Prepare for sleep by changing into comfortable clothing,sleep_environment_setup,2
+Prepare for sleep by changing into comfortable sleepwear,sleep_environment_setup,2
+Prepare for sleep by dimming the lights,sleep_environment_setup,2
+Prepare for sleep by ensuring comfort,sleep_environment_setup,2
+Prepare for sleep by relaxing and winding down,sleep_environment_setup,2
+Prepare for sleep with comfortable environment,sleep_environment_setup,2
+Prepare for the meal,other_unclear,2
+Prepare ingredients for cooking,meal_preparation_cooking,2
+Prepare ingredients if necessary,meal_preparation_cooking,2
+Prepare kitchen for cooking,meal_preparation_cooking,2
+Prepare meal based on available ingredients,meal_preparation_cooking,2
+Prepare meal ingredients,meal_preparation_cooking,2
+Prepare necessary payment methods and shopping list,shopping_planning_budget_inventory,2
+Prepare or buy the selected food item,shopping_execution_procurement,2
+"Prepare or enter home, if already there",other_unclear,2
+Prepare or heat up leftovers for a meal,other_unclear,2
+Prepare or order the selected meal,other_unclear,2
+Prepare personal items for the outing,other_unclear,2
+Prepare shopping list based on current needs,shopping_planning_budget_inventory,2
+Prepare side dishes and beverages,other_unclear,2
+Prepare some leftovers from today’s cooking,meal_preparation_cooking,2
+Prepare the bed with clean sheets,other_unclear,2
+Prepare the bedroom for a comfortable sleep,sleep_environment_setup,2
+Prepare the bedroom for rest,sleep_environment_setup,2
+Prepare the bedroom with appropriate temperature,sleep_environment_setup,2
+Prepare the ingredients and cook the meal,meal_preparation_cooking,2
+Prepare the ingredients for a simple meal,other_unclear,2
+Prepare the ingredients for the meal,other_unclear,2
+Prepare the kitchen area for cooking,meal_preparation_cooking,2
+Prepare the kitchen environment,meal_preparation_cooking,2
+Prepare the kitchen environment for cooking,meal_preparation_cooking,2
+Prepare the kitchen for meal preparation,meal_preparation_cooking,2
+Prepare the lunch in a calm and peaceful setting,relaxation_reflection_emotion,2
+Prepare the meal based on available ingredients,meal_preparation_cooking,2
+Prepare the meal if not pre-made,meal_preparation_cooking,2
+Prepare the meal if there is available equipment,meal_preparation_cooking,2
+Prepare the meal in a comfortable and relaxing manner,meal_preparation_cooking,2
+Prepare the meal in a comfortable and relaxing setting,meal_preparation_cooking,2
+Prepare the meal in the kitchen,meal_preparation_cooking,2
+Prepare the meal ingredients,meal_preparation_cooking,2
+Prepare the meal using the available ingredients,meal_preparation_cooking,2
+Prepare the meal with accessible ingredients,meal_preparation_cooking,2
+Prepare the necessary ingredients and cooking utensils,meal_preparation_cooking,2
+Prepare the necessary ingredients for the meal,other_unclear,2
+Prepare the selected meal,other_unclear,2
+Prepare the selected meal in a relaxed manner,other_unclear,2
+Prepare the shopping list based on needs,shopping_planning_budget_inventory,2
+Prepare to go to bed,mobility_commute_transition,2
+Prepares the kitchen,meal_preparation_cooking,2
+Prepares the selected meal,other_unclear,2
+Proceed to the checkout and pay for purchases,mobility_commute_transition,2
+Read a book or listen to soothing music to unwind,relaxation_reflection_emotion,2
+Read or engage in a hobby to start the day positively,other_unclear,2
+Recall moments of joy and sadness,other_unclear,2
+Reflect on the day and express gratitude for the simple joy,relaxation_reflection_emotion,2
+Reflect on the day and practice mindfulness to relax,relaxation_reflection_emotion,2
+Reflect on the day and relax,relaxation_reflection_emotion,2
+Reflect on the day and the meal,relaxation_reflection_emotion,2
+Reflect on the day's events and feelings,relaxation_reflection_emotion,2
+Reflect on the day's events and maintain a positive outlook,relaxation_reflection_emotion,2
+Reflect on the day's experiences and the sense of satisfaction gained from a tranquil day,relaxation_reflection_emotion,2
+Reflect on the day's peace and simplicity,relaxation_reflection_emotion,2
+Reflect on the day's peacefulness,relaxation_reflection_emotion,2
+Reflect on the day's peacefulness over the meal,relaxation_reflection_emotion,2
+Reflect on the day's thoughts,relaxation_reflection_emotion,2
+Reflect on the day's thoughts and feelings,relaxation_reflection_emotion,2
+Reflect on the day's tranquility while eating,relaxation_reflection_emotion,2
+Reflect on the meal,relaxation_reflection_emotion,2
+Reflect on the meal and day,relaxation_reflection_emotion,2
+"Reflect on the meal and day, possibly enjoying a moment of relaxation or leisure",relaxation_reflection_emotion,2
+Reflect on the meal and enjoy the tranquility of the day,relaxation_reflection_emotion,2
+Reflect on the meal and feelings,relaxation_reflection_emotion,2
+Reflect on the meal and its ingredients,relaxation_reflection_emotion,2
+Reflect on the meal and its satisfaction,relaxation_reflection_emotion,2
+Reflect on the meal and its taste,relaxation_reflection_emotion,2
+Reflect on the meal and the calm day,relaxation_reflection_emotion,2
+Reflect on the meal and the day's calmness,relaxation_reflection_emotion,2
+Reflect on the meal and the day's events,relaxation_reflection_emotion,2
+Reflect on the meal and the day's peacefulness,relaxation_reflection_emotion,2
+Reflect on the passage of time and the tranquility experienced,relaxation_reflection_emotion,2
+Reflect on the peaceful day,relaxation_reflection_emotion,2
+Reflect on the peaceful day with the meal,relaxation_reflection_emotion,2
+Reflect on the peacefulness of the day,relaxation_reflection_emotion,2
+Reflect on the peacefulness of the day post-meal,relaxation_reflection_emotion,2
+Reflect on the simplicity and value of peace during the meal,relaxation_reflection_emotion,2
+Reflect on the simplicity of uneventful days and the fulfillment they bring,relaxation_reflection_emotion,2
+Reflect on today's peaceful day,relaxation_reflection_emotion,2
+Relax after meal,relaxation_reflection_emotion,2
+Relax after the meal to digest,relaxation_reflection_emotion,2
+Relax after the peaceful day,relaxation_reflection_emotion,2
+Relax and enjoy the peaceful evening at home,relaxation_reflection_emotion,2
+Relax and enjoy the quiet atmosphere,relaxation_reflection_emotion,2
+Relax and enjoy the quiet of the home,relaxation_reflection_emotion,2
+Relax and enjoy the tranquility of the home environment,relaxation_reflection_emotion,2
+Relax and practice relaxation techniques to calm the mind,relaxation_reflection_emotion,2
+Relax and reflect on the day's events after finishing the meal,relaxation_reflection_emotion,2
+Relax and reflect on the quiet day with the meal,relaxation_reflection_emotion,2
+Relax and rest after eating,relaxation_reflection_emotion,2
+Relax and take it easy after eating,relaxation_reflection_emotion,2
+Relax and unwind from the day,relaxation_reflection_emotion,2
+Relax and unwind from the day's events,relaxation_reflection_emotion,2
+Relax and unwind in the tranquil atmosphere,relaxation_reflection_emotion,2
+Relax and unwind to facilitate sleep,relaxation_reflection_emotion,2
+"Relax and unwind, possibly with a light activity",relaxation_reflection_emotion,2
+"Relax and unwind, reflecting on the day's tranquility",relaxation_reflection_emotion,2
+Relax before bedtime,relaxation_reflection_emotion,2
+Relax in a calm and serene state,relaxation_reflection_emotion,2
+Relax in a comfortable chair or sofa to wind down,sleep_transition_and_sleep,2
+Relax in a comfortable chair to focus on reflection,relaxation_reflection_emotion,2
+Relax in a comfortable chair to unwind,relaxation_reflection_emotion,2
+Relax in a seated or lying position,relaxation_reflection_emotion,2
+Relax in the comfort of home,relaxation_reflection_emotion,2
+Relax in the comfortable home environment,relaxation_reflection_emotion,2
+Relax in the current environment,relaxation_reflection_emotion,2
+Relax in the current room,relaxation_reflection_emotion,2
+Relax in the living room,relaxation_reflection_emotion,2
+Relax in the living room to unwind,relaxation_reflection_emotion,2
+Relax in your favorite chair or bed,relaxation_reflection_emotion,2
+Relax mind,relaxation_reflection_emotion,2
+Relax mind through deep breathing or meditation,relaxation_reflection_emotion,2
+Relax or engage in a low-energy activity after the meal,relaxation_reflection_emotion,2
+Relax the body and mind,relaxation_reflection_emotion,2
+Relax the body and mind with deep breathing or light stretching,morning_routine_hygiene,2
+Remove all distractions and set aside any electronics,other_unclear,2
+Remove all electronic devices to reduce distractions,digital_device_account_ops,2
+Remove any distractions or electronics from the bedroom,other_unclear,2
+Remove any electronic devices to minimize disturbances,digital_device_account_ops,2
+Remove distractions,other_unclear,2
+Remove distractions from the bedroom,other_unclear,2
+Reserve a table if necessary,other_unclear,2
+Reserve a table if needed,other_unclear,2
+"Reserve a table, if necessary, considering the current time and weather",other_unclear,2
+Rest and relax after meal,relaxation_reflection_emotion,2
+Rest and relax after the meal,relaxation_reflection_emotion,2
+Retire to bed,other_unclear,2
+Retrieve any necessary ingredients or cooking utensils,meal_preparation_cooking,2
+Retrieve contact list,social_contact_communication,2
+Retrieve phone,digital_device_account_ops,2
+Review and prepare shopping list,shopping_planning_budget_inventory,2
+Review any current promotions or discounts available,planning_general_admin,2
+Review contacts list,planning_general_admin,2
+Review current needs and budget,shopping_planning_budget_inventory,2
+Review daily tasks or to-do list,work_task_productive,2
+Review meal options,shopping_planning_budget_inventory,2
+Review meal preparation options,shopping_planning_budget_inventory,2
+Review or set the day's agenda,planning_general_admin,2
+Review the day and calm the mind,relaxation_reflection_emotion,2
+Review the day's activities and feelings,planning_general_admin,2
+Review the day's activities and reflect,relaxation_reflection_emotion,2
+Review the day's events and thoughts to foster a peaceful state of mind,planning_general_admin,2
+Review the ingredients and plan a meal based on current supplies,shopping_planning_budget_inventory,2
+Review today's tasks and goals,work_task_productive,2
+Review work-related tasks for the day,work_task_productive,2
+"Savor the meal alone in the quiet of your home, reflecting on the day's tranquility",meal_consumption_dining,2
+Savor the simplicity of a home-cooked meal,meal_preparation_cooking,2
+Seek out available food options,shopping_planning_budget_inventory,2
+Select a comfortable place to sit and enjoy the evening weather,other_unclear,2
+Select a food item that suits the weather and temperature,home_environment_management,2
+Select a friend to call or message,social_contact_communication,2
+Select a healthy and easy-to-prepare meal,meal_preparation_cooking,2
+Select a home-cooked meal that is both nourishing and enjoyable,meal_preparation_cooking,2
+Select a meal based on preferences and ingredients available,other_unclear,2
+Select a method of communication,other_unclear,2
+Select a nutritious meal option considering age and health,other_unclear,2
+Select a simple meal option that suits the current weather and temperature,home_environment_management,2
+Select a simple meal to prepare based on comfort and ease,other_unclear,2
+Select a simple yet nourishing meal based on the current weather and temperature,home_environment_management,2
+"Select a simple, nutritious meal considering the temperature",home_environment_management,2
+Select a suitable communication method,other_unclear,2
+Select a suitable food item based on available options,shopping_planning_budget_inventory,2
+Select a suitable method for contacting friends,social_contact_communication,2
+Select a suitable outdoor eating location based on the current weather and temperature,home_environment_management,2
+Select a time to call,social_contact_communication,2
+Select an easy meal option considering current emotion and day's tranquility,other_unclear,2
+Select an eating place that aligns with current health and dietary needs,shopping_planning_budget_inventory,2
+Select and prepare ingredients for the meal,meal_preparation_cooking,2
+Select appropriate friends to contact,social_contact_communication,2
+Select items based on needs,shopping_execution_procurement,2
+Select items within budget,shopping_execution_procurement,2
+Select necessary items for purchase,shopping_execution_procurement,2
+Select preferred method of contact,social_contact_communication,2
+Serve and arrange the meal,other_unclear,2
+Serve and consume the meal,meal_consumption_dining,2
+Serve and eat the prepared meal,meal_consumption_dining,2
+Serve the cooked meal on plates,meal_preparation_cooking,2
+Serve the meal and enjoy,meal_preparation_cooking,2
+Serve the meal and enjoy it,meal_preparation_cooking,2
+Serve the meal and set the table,meal_preparation_cooking,2
+Serve the meal and sit down comfortably to enjoy it,meal_preparation_cooking,2
+Serve the meal and sit down to eat,meal_preparation_cooking,2
+Serve the meal in a comfortable setting to enhance the satisfaction and joy of the mealtime,meal_preparation_cooking,2
+Serve the meal in a comfortable setting to maintain the tranquil mood,meal_preparation_cooking,2
+Serve the meal on a comfortable chair or couch,meal_preparation_cooking,2
+Serve the meal on a pleasant setting,meal_preparation_cooking,2
+Serve the meal on plates,meal_preparation_cooking,2
+Serve the meal on the dining table,meal_preparation_cooking,2
+Set a calming bedtime routine,sleep_environment_setup,2
+Set a calming environment with appropriate temperature,home_environment_management,2
+Set an alarm for an appropriate wake-up time,other_unclear,2
+Set an alarm for an appropriate wake-up time if necessary,other_unclear,2
+Set an alarm if needed,other_unclear,2
+Set the alarm clock if necessary and then lie down in the bed,sleep_environment_setup,2
+Set the alarm clock if needed,sleep_environment_setup,2
+Set the alarm for a comfortable wake-up time,sleep_environment_setup,2
+Set the alarm for the next day if necessary,sleep_environment_setup,2
+Set the alarm if necessary,sleep_environment_setup,2
+Set the bedroom temperature to a comfortable level,home_environment_management,2
+Set the dining table with appropriate items,meal_consumption_dining,2
+Set the dining table with utensils and a pleasant ambiance,meal_consumption_dining,2
+Set the environment for relaxation,other_unclear,2
+Set the table and prepare utensils,meal_preparation_cooking,2
+Set the table for an intimate meal at home,meal_preparation_cooking,2
+Set the table with appropriate tableware and decor to enhance the dining experience,meal_preparation_cooking,2
+Set the table with appropriate utensils and place settings,meal_preparation_cooking,2
+Set the table with appropriate utensils and settings,meal_preparation_cooking,2
+Set the table with cutlery and plates,meal_preparation_cooking,2
+Set the table with necessary utensils and plates,meal_preparation_cooking,2
+Set up a calming bedtime routine,sleep_environment_setup,2
+Set up a comfortable sleeping position,other_unclear,2
+Set up a comfortable work environment,work_task_productive,2
+Set up a comfortable workspace at home to ensure productivity,work_task_productive,2
+Set up a sleep schedule,planning_general_admin,2
+Set up my bed with clean sheets and pillows,other_unclear,2
+Set up the meal in a comfortable and safe outdoor space,other_unclear,2
+Shop for the items on the list,shopping_execution_procurement,2
+Sit down and eat,other_unclear,2
+Sit down and start eating,other_unclear,2
+Sit down comfortably and enjoy the meal,meal_consumption_dining,2
+Sit down to eat the prepared meal,meal_consumption_dining,2
+"Sit down to eat, savoring each bite with joy",other_unclear,2
+Sit down to enjoy the meal,meal_consumption_dining,2
+Sit down to enjoy the meal in peace,meal_consumption_dining,2
+Sleep peacefully,other_unclear,2
+Start cooking,meal_preparation_cooking,2
+Start cooking a meal,meal_preparation_cooking,2
+Start cooking the selected meal,meal_preparation_cooking,2
+Start meal preparation if needed,other_unclear,2
+Start preparing a home-cooked meal,meal_preparation_cooking,2
+Start preparing a meal,other_unclear,2
+Start preparing dinner considering the current time and the need for a meal,shopping_planning_budget_inventory,2
+Start the day with a healthy breakfast,other_unclear,2
+Start the day with a leisurely breakfast,other_unclear,2
+Start the day with a light breakfast to sustain energy levels,other_unclear,2
+Start the evening routine to prepare for dinner,other_unclear,2
+Start the preparation for cooking,meal_preparation_cooking,2
+Stay at home and utilize current location,other_unclear,2
+Stay at home as the location is already there,other_unclear,2
+Stay at home to maintain comfort and tranquility after a quiet day,other_unclear,2
+Stay at home to prepare a meal,meal_preparation_cooking,2
+Stay at home to prepare for dinner,other_unclear,2
+Stay at home to prepare meal,meal_preparation_cooking,2
+Stay home as the day has started,other_unclear,2
+Stay home due to current location,other_unclear,2
+Stay home due to the pleasant weather and comfortable temperature,home_environment_management,2
+Take a leisurely walk around the home garden to appreciate the beauty of the surroundings,other_unclear,2
+Take a moment to meditate or practice deep breathing to enhance tranquility,other_unclear,2
+Take a peaceful walk or sit in a tranquil spot at home,other_unclear,2
+Take a relaxing bath or shower to help unwind,relaxation_reflection_emotion,2
+Take a short walk around the house to enjoy the quiet,other_unclear,2
+Take a warm bath or shower to relax,relaxation_reflection_emotion,2
+Take care of any necessary dishes afterward,other_unclear,2
+"Take in the calm atmosphere of the home, contributing to the sense of relief",relaxation_reflection_emotion,2
+Take in the sunny weather while eating,other_unclear,2
+Take short breaks to rest and relax,relaxation_reflection_emotion,2
+Take time to savor the meal and the quiet day,other_unclear,2
+Turn off all electronic devices to reduce distractions,digital_device_account_ops,2
+Turn off electronic devices to relax,digital_device_account_ops,2
+Wait for food to be ready if preparation is needed,other_unclear,2
+Wait for food to be served or bring prepared food,other_unclear,2
+Wait for the table to be ready or for a seat to open up,other_unclear,2
+Wash dishes,meal_cleanup,2
+Wash dishes after eating,meal_cleanup,2
+Wash dishes or place them in the dishwasher,meal_cleanup,2
+Wash dishes post-meal,meal_cleanup,2
+Wash the dishes after eating,other_unclear,2
+Wash the dishes after eating to keep the home clean and organized,other_unclear,2
+Wash the dishes after eating to maintain cleanliness,other_unclear,2
+Wash the dishes after finishing the meal,other_unclear,2
+Wash the dishes and clean up,other_unclear,2
+Wash the dishes to maintain a clean environment,other_unclear,2
+Wash the dishes to maintain cleanliness,other_unclear,2
+Wash the utensils,other_unclear,2
+Washes the utensils and clears the table,other_unclear,2
+Wind down and engage in a calming activity,sleep_transition_and_sleep,2
+Wind down by practicing a calming activity,sleep_transition_and_sleep,2
+Wind down to relax,sleep_transition_and_sleep,2
+Wind down with a calming activity,sleep_transition_and_sleep,2
+Write a short poem or passage to capture the peacefulness,other_unclear,2
+Write down thoughts and feelings in a journal,other_unclear,2
+ Lie down and get into a restful state,sleep_transition_and_sleep,1
+ Lie down in bed and attempt to fall asleep,sleep_transition_and_sleep,1
+ Lie down in bed and close the curtains,sleep_transition_and_sleep,1
+ Lie down in bed and close your eyes,sleep_transition_and_sleep,1
+ Lie down in bed and close your eyes to drift off to sleep,sleep_transition_and_sleep,1
+ Lie down in bed and prepare for sleep,sleep_environment_setup,1
+ Lie down in bed and relax,sleep_transition_and_sleep,1
+ Lie down in the bed and practice relaxation techniques to induce sleep,sleep_transition_and_sleep,1
+ Lie down in the prepared bed,sleep_transition_and_sleep,1
+ Lie down in the prepared sleeping area,sleep_transition_and_sleep,1
+Access a list of friends' contact information,social_contact_communication,1
+Access a mobile device to find a taxi service app,digital_device_account_ops,1
+Access phone contacts,digital_device_account_ops,1
+Access phone or communication device,digital_device_account_ops,1
+Access phone or contact list,digital_device_account_ops,1
+Access your contact list and select a friend to call,social_contact_communication,1
+Achieve sleep,other_unclear,1
+Adjust bedding to comfort level,other_unclear,1
+Adjust room temperature if necessary to ensure comfort,home_environment_management,1
+Adjust room temperature if needed,home_environment_management,1
+Adjust room temperature to 23C if needed,home_environment_management,1
+Adjust room temperature to a comfortable level for sleep,home_environment_management,1
+Adjust room temperature to be comfortable,home_environment_management,1
+Adjust sleep environment for comfort,sleep_environment_setup,1
+Adjust sleep environment if needed,sleep_environment_setup,1
+Adjust sleep environment to optimal comfort,sleep_environment_setup,1
+Adjust sleep schedule to current time,planning_general_admin,1
+Adjust temperature if needed,home_environment_management,1
+Adjust the bedroom temperature to be conducive for sleep,home_environment_management,1
+Adjust the living space temperature to 23C if necessary,home_environment_management,1
+Adjust the room environment to optimal sleep conditions,other_unclear,1
+Adjust the room temperature if necessary for comfort,home_environment_management,1
+Adjust the room temperature if necessary to be conducive to sleep,sleep_environment_setup,1
+Adjust the room temperature if needed,home_environment_management,1
+Adjust the room temperature to 23C,home_environment_management,1
+Adjust the room temperature to 23C for comfort,home_environment_management,1
+Adjust the room temperature to 23C for optimal sleep,home_environment_management,1
+Adjust the room temperature to 23C if needed,home_environment_management,1
+Adjust the room temperature to be conducive for sleep,home_environment_management,1
+Adjust the room temperature to be conducive to sleep,sleep_environment_setup,1
+Adjust the room temperature to comfort level,home_environment_management,1
+Adjust the room to a conducive state for sleep,other_unclear,1
+"Adjust the sleep environment (e.g., temperature, darkness)",sleep_environment_setup,1
+Adjust the sleep environment to your preference,sleep_environment_setup,1
+Adjust the sleep position,other_unclear,1
+Adjust the sleep temperature to 23°C,home_environment_management,1
+Adjust the sleeping environment to be comfortable,sleep_environment_setup,1
+Adjust the sleeping position,other_unclear,1
+Adjust the temperature to comfort,home_environment_management,1
+Adjust to a comfortable sleeping environment,sleep_environment_setup,1
+Adjust to comfortable sleeping environment,sleep_environment_setup,1
+Arrive at home,mobility_commute_transition,1
+Arrive at the dining location and make a reservation if needed,mobility_commute_transition,1
+Arrive at the restaurant,mobility_commute_transition,1
+Assess available food options nearby,shopping_planning_budget_inventory,1
+Assess available home-cooked meal options,shopping_planning_budget_inventory,1
+Assess comfort of the current sleeping environment,sleep_environment_setup,1
+Assess current comfort and adjust if needed,planning_general_admin,1
+Assess current comfort and environmental conditions,planning_general_admin,1
+Assess current comfort and surroundings,planning_general_admin,1
+Assess current comfort level of sleeping environment,sleep_environment_setup,1
+Assess current comfort of sleeping environment,sleep_environment_setup,1
+Assess current condition and ensure comfort,planning_general_admin,1
+Assess current energy level and comfort,planning_general_admin,1
+Assess current energy levels and comfort,planning_general_admin,1
+Assess current energy levels and restlessness,planning_general_admin,1
+Assess current energy levels to decide if a light nap is needed,planning_general_admin,1
+Assess current environment for comfortability to sleep,planning_general_admin,1
+Assess current environment to ensure comfort for sleeping,planning_general_admin,1
+Assess current fatigue level and decide if sleep is necessary,planning_general_admin,1
+Assess current food availability,planning_general_admin,1
+Assess current level of fatigue,planning_general_admin,1
+Assess current level of fatigue to determine if an early sleep routine is necessary,planning_general_admin,1
+Assess current location for suitable eating options,shopping_planning_budget_inventory,1
+Assess current location suitability for eating,planning_general_admin,1
+Assess current meal preparation status,planning_general_admin,1
+Assess current state and ensure comfort,planning_general_admin,1
+Assess current state and ensure comfort level is suitable for sleeping,planning_general_admin,1
+Assess current state for comfort and readiness to sleep,planning_general_admin,1
+Assess current state of readiness for cooking,meal_preparation_cooking,1
+Assess current state of restfulness,planning_general_admin,1
+Assess current state of wakefulness,planning_general_admin,1
+Assess if any food is available for meal preparation,planning_general_admin,1
+Assess mobility and shopping needs considering age and weather,shopping_planning_budget_inventory,1
+Assess need for food preparation,shopping_planning_budget_inventory,1
+Assess need for rest based on emotional state,shopping_planning_budget_inventory,1
+Assess the availability of food at the current location,planning_general_admin,1
+Assess the available food at home,planning_general_admin,1
+Assess the current environment for any adjustments to the sleep setup,planning_general_admin,1
+Assess the meal's quality and satisfaction,planning_general_admin,1
+Assess the need for rest given the calm and contentment,shopping_planning_budget_inventory,1
+Assess the weather conditions and ensure they are suitable for eating outside,planning_general_admin,1
+Begin a peaceful morning routine,morning_routine_hygiene,1
+Begin breakfast,other_unclear,1
+Begin shopping according to the prepared list,other_unclear,1
+Begin shopping by purchasing the listed items,other_unclear,1
+Begin the day with a morning routine,morning_routine_hygiene,1
+Begin the day with a short walk outside to enjoy the weather,other_unclear,1
+Begin the journey back to home,other_unclear,1
+Begin the journey back to home from workplace,work_task_productive,1
+Begin the journey home,other_unclear,1
+Begin the process of falling asleep by lying down,sleep_transition_and_sleep,1
+Begin the process of sleep,other_unclear,1
+Begin the process of sleep preparation,other_unclear,1
+Begin the relaxation process,other_unclear,1
+Begin the sleep process,sleep_transition_and_sleep,1
+Begin the winding down process by reducing exposure to screens,other_unclear,1
+Begin the winding down process for sleep,other_unclear,1
+Begin the winding-down process,sleep_transition_and_sleep,1
+Begin to get into a resting position,other_unclear,1
+Begin to mentally recollect peaceful moments of the day,other_unclear,1
+Begin to relax and drift off to sleep,relaxation_reflection_emotion,1
+Begin to relax and prepare for sleep,sleep_environment_setup,1
+Begin to relax mind and body,relaxation_reflection_emotion,1
+Begin to relax the body and mind,relaxation_reflection_emotion,1
+Begin to wind down and allow the body to prepare for sleep,sleep_environment_setup,1
+Begin to wind down and practice relaxation techniques,sleep_transition_and_sleep,1
+Begin to wind down by reducing light exposure,sleep_transition_and_sleep,1
+Begin to wind down for sleep,sleep_transition_and_sleep,1
+Begin winding down with deep breathing exercises,other_unclear,1
+Breathe deeply to center oneself,other_unclear,1
+Brush teeth and wash face to prepare for sleep,sleep_environment_setup,1
+Buy the items on the list,shopping_execution_procurement,1
+Call a friend for a phone chat,digital_device_account_ops,1
+Call a friend from my phone to schedule a time to meet,digital_device_account_ops,1
+Call or message a friend to initiate contact,social_contact_communication,1
+Call or message friends,social_contact_communication,1
+"Call or send a message to friends, expressing the wish to connect and share the peaceful atmosphere of the day",social_contact_communication,1
+"Change clothes to comfortable, weather-appropriate attire",other_unclear,1
+Change into comfortable clothes,morning_routine_hygiene,1
+Change into comfortable clothing,morning_routine_hygiene,1
+Change into comfortable night attire,morning_routine_hygiene,1
+Check and adjust the temperature in the room to a comfortable level,home_environment_management,1
+"Check and confirm the location and time of the nearest shopping center, ensuring it is open",shopping_execution_procurement,1
+Check and dress appropriately for the weather,morning_routine_hygiene,1
+Check and ensure the comfort of the bed,other_unclear,1
+Check and review the menu or items you plan to bring,planning_general_admin,1
+Check availability of outdoor seating,other_unclear,1
+Check available communication devices,digital_device_account_ops,1
+Check available communication methods,other_unclear,1
+Check available contact methods,social_contact_communication,1
+Check available food options nearby,shopping_planning_budget_inventory,1
+Check comfort of bed,other_unclear,1
+Check comfort of sleeping area,other_unclear,1
+Check comfort of sleeping environment,sleep_environment_setup,1
+Check comfort of the sleeping environment,sleep_environment_setup,1
+Check contact information,social_contact_communication,1
+Check current comfortability of sleeping environment,sleep_environment_setup,1
+Check current contact list,social_contact_communication,1
+Check current contact list for available friends,social_contact_communication,1
+Check current contact list for friends available to meet,social_contact_communication,1
+Check current funds or plan budget for the shopping trip,shopping_planning_budget_inventory,1
+Check current list of necessary items to buy,shopping_execution_procurement,1
+Check current location and weather suitability for shopping,other_unclear,1
+Check current location for nearby stores or shopping centers,other_unclear,1
+Check current location suitability for eating,other_unclear,1
+Check current savings or budget for shopping,shopping_planning_budget_inventory,1
+Check current shopping list,shopping_planning_budget_inventory,1
+Check current time,other_unclear,1
+Check current time and assess sleep readiness,planning_general_admin,1
+Check current time to assess if it's an appropriate time for sleep,planning_general_admin,1
+Check current time to determine if it's mealtime,planning_general_admin,1
+Check existing contacts list,other_unclear,1
+Check existing shopping list,shopping_planning_budget_inventory,1
+Check for a comfortable sleep environment,sleep_environment_setup,1
+Check for any available friends to contact,social_contact_communication,1
+Check for any discomfort that may interfere with sleep,other_unclear,1
+Check for any need of rest or discomfort,shopping_planning_budget_inventory,1
+Check for any scheduled calls or meetings with friends,social_contact_communication,1
+Check for availability of friends online,digital_device_account_ops,1
+Check for available communication channels,other_unclear,1
+Check for available contacts,other_unclear,1
+Check for comfort and necessary conditions for sleep,other_unclear,1
+Check for comfort and tidiness of the sleeping area,other_unclear,1
+Check for comfort items,other_unclear,1
+Check for contact information of friends,social_contact_communication,1
+Check for friends' availability,social_contact_communication,1
+Check for friends' contact information,social_contact_communication,1
+Check for outdoor seating availability at local cafes or restaurants,other_unclear,1
+Check for phone calls or messages from friends,digital_device_account_ops,1
+Check for phone contacts,digital_device_account_ops,1
+Check for seating availability at nearby outdoor cafes or restaurants,other_unclear,1
+Check if any friends are available for a call,social_contact_communication,1
+Check if any friends are available to contact,social_contact_communication,1
+Check if any nearby cafes or restaurants are open and have outdoor seating,other_unclear,1
+Check if any nearby outdoor eating options are open,shopping_planning_budget_inventory,1
+Check if comfortable sleep conditions are met,other_unclear,1
+Check if comfortable sleeping conditions are met,other_unclear,1
+Check if environment is conducive for sleep,other_unclear,1
+Check if shopping list is complete,shopping_planning_budget_inventory,1
+Check if the environment is conducive for sleep,other_unclear,1
+Check if the environment is suitable for sleep,other_unclear,1
+Check if the home environment is conducive for sleep,home_environment_management,1
+Check if the room is comfortable for sleep,other_unclear,1
+Check if the room is conducive for sleep,other_unclear,1
+Check if there are ingredients at home,other_unclear,1
+Check if there are shopping items already at home,other_unclear,1
+Check inventory for necessary ingredients,shopping_planning_budget_inventory,1
+Check my contact list,social_contact_communication,1
+Check my contact list for availability,social_contact_communication,1
+Check my current contact list,social_contact_communication,1
+Check my phone contacts,digital_device_account_ops,1
+Check my phone for any missed calls or messages from friends,digital_device_account_ops,1
+Check my phone for contact information,digital_device_account_ops,1
+Check on any food preparation for the day,other_unclear,1
+Check pantry and fridge for available food,other_unclear,1
+Check pantry for ingredients,other_unclear,1
+Check phone contacts for availability,digital_device_account_ops,1
+Check phone contacts for available friends,digital_device_account_ops,1
+Check phone contacts for recent friends' contact information,digital_device_account_ops,1
+Check phone contacts list for friends,digital_device_account_ops,1
+Check phone for available contacts,digital_device_account_ops,1
+Check phone for available friends,digital_device_account_ops,1
+Check phone for friend contact information,digital_device_account_ops,1
+Check sleep environment,sleep_environment_setup,1
+Check the alarm clock to ensure it's set for a comfortable sleep duration,other_unclear,1
+Check the availability of shopping stores or markets within walking distance,other_unclear,1
+Check the comfort of the bed,other_unclear,1
+Check the comfort of the bed and ensure it is suitable for sleep,other_unclear,1
+Check the comfort of the sleeping environment,sleep_environment_setup,1
+Check the contact information of close friends,social_contact_communication,1
+Check the contact information of friends,social_contact_communication,1
+Check the contact list,social_contact_communication,1
+Check the contact list for available friends,social_contact_communication,1
+Check the contact list for friends,social_contact_communication,1
+Check the contacts list,other_unclear,1
+Check the current time to ensure it's nearing bedtime,other_unclear,1
+Check the fridge and decide what to cook,other_unclear,1
+Check the fridge and pantry for ingredients,other_unclear,1
+Check the ingredients available for breakfast,other_unclear,1
+Check the list of items needed,other_unclear,1
+Check the nearest shopping center locations and hours,shopping_execution_procurement,1
+Check the opening hours of the selected store,shopping_execution_procurement,1
+Check the phone for available contacts,digital_device_account_ops,1
+Check the phone's battery level,digital_device_account_ops,1
+Check the room for comfort and safety,other_unclear,1
+Check the room for comfort and security,other_unclear,1
+Check the room temperature and adjust if necessary,home_environment_management,1
+Check the room temperature and adjust if needed to a comfortable level,home_environment_management,1
+Check the room temperature and comfort,home_environment_management,1
+Check the room temperature to ensure it's comfortable for sleeping,home_environment_management,1
+Check the shopping list,shopping_planning_budget_inventory,1
+Check the sleep environment for comfort,sleep_environment_setup,1
+Check the temperature and comfort of the bed,home_environment_management,1
+Check the time and consider any evening medication if needed,planning_general_admin,1
+Check the time and make sure it's appropriate to go to bed,mobility_commute_transition,1
+Check the weather and temperature to determine clothing choices,home_environment_management,1
+Check the weather and traffic updates for a suitable shopping time,digital_device_account_ops,1
+Check weather conditions for safe travel,mobility_commute_transition,1
+Checkout and pay for the items,shopping_execution_procurement,1
+Choose a contact to call,social_contact_communication,1
+Choose a dining establishment based on availability and personal preference,meal_consumption_dining,1
+Choose a friend to call or message,social_contact_communication,1
+Choose a meal option based on available resources,planning_general_admin,1
+Choose a meal that is appropriate for the weather,planning_general_admin,1
+Choose a method of communication,planning_general_admin,1
+Choose a method of contact,social_contact_communication,1
+Choose a nearby café or restaurant if there is one,planning_general_admin,1
+Choose a nearby dining option,meal_consumption_dining,1
+Choose a nearby eatery if one is suitable,planning_general_admin,1
+Choose a nearby grocery store,shopping_execution_procurement,1
+Choose a shopping location that is convenient and has the desired items,planning_general_admin,1
+Choose a shopping time that minimizes weather influence,planning_general_admin,1
+Choose a suitable meal from workplace options,work_task_productive,1
+Choose a suitable outdoor dining spot based on weather and comfort,meal_consumption_dining,1
+Choose a suitable outdoor restaurant or seating area,planning_general_admin,1
+Choose a suitable venue based on available options and distance,shopping_planning_budget_inventory,1
+Choose an eating option within walking distance,planning_general_admin,1
+Choose an outdoor dining spot with pleasant ambiance,meal_consumption_dining,1
+Choose communication method,planning_general_admin,1
+Choose the closest grocery store,shopping_execution_procurement,1
+Choose the closest shopping location considering mobility and time of day,planning_general_admin,1
+Choose the most convenient and accessible option for shopping,planning_general_admin,1
+Choose the most convenient method to reach out,planning_general_admin,1
+"Choose the most convenient shopping method (e.g., online or physical store)",digital_device_account_ops,1
+Choose the nearest and most convenient store,shopping_execution_procurement,1
+Close all electronic devices,digital_device_account_ops,1
+Close all electronic devices to avoid distractions,digital_device_account_ops,1
+"Close eyes and attempt to relax, focusing on achieving sleep",relaxation_reflection_emotion,1
+Close eyes and initiate sleep,other_unclear,1
+Close eyes and initiate the sleep process,sleep_transition_and_sleep,1
+Close eyes and prepare for sleep,sleep_environment_setup,1
+Close eyes and sleep,other_unclear,1
+Close eyes and transition into sleep mode,other_unclear,1
+Close eyes to initiate sleep,other_unclear,1
+"Close my eyes and begin to relax, transitioning to sleep",relaxation_reflection_emotion,1
+Close my eyes and drift off to sleep,other_unclear,1
+Close my eyes and fall asleep,sleep_transition_and_sleep,1
+"Close my eyes and relax, preparing to fall asleep",sleep_transition_and_sleep,1
+Close the bedroom curtains,other_unclear,1
+Close the bedroom curtains for better sleep,other_unclear,1
+Close the bedroom curtains for darkness,other_unclear,1
+Close the bedroom curtains for privacy and darkness,other_unclear,1
+Close the bedroom curtains or blinds to reduce light exposure,other_unclear,1
+Close the bedroom curtains to block light,other_unclear,1
+Close the bedroom curtains to create a conducive sleeping environment,sleep_environment_setup,1
+Close the bedroom curtains to enhance darkness,other_unclear,1
+Close the bedroom door and turn off lights to signal to the body that it is time to sleep,sleep_environment_setup,1
+Close the bedroom door and turn off the lights,sleep_environment_setup,1
+Close the bedroom door and turn off the lights to signal the start of sleep,sleep_environment_setup,1
+Close the bedroom door to maintain privacy,other_unclear,1
+Close the bedroom lights,home_environment_management,1
+Close the blinds or curtains to ensure darkness for sleep,other_unclear,1
+Close the curtains,other_unclear,1
+Close the curtains for a darker environment,other_unclear,1
+Close the curtains or blinds to block out sunlight,other_unclear,1
+Close the curtains or blinds to darken the room,other_unclear,1
+Close the curtains or blinds to ensure privacy and darkness,other_unclear,1
+Close the curtains to block light,other_unclear,1
+Close the curtains to block out sunlight,other_unclear,1
+Close the curtains to create a comfortable atmosphere,other_unclear,1
+Close the curtains to create a conducive sleep environment,sleep_environment_setup,1
+Close the curtains to create a dark environment for sleeping,other_unclear,1
+Close the curtains to create a restful atmosphere,other_unclear,1
+Close the curtains to create a sleep-conducive environment,other_unclear,1
+Close the curtains to ensure a conducive sleeping environment,sleep_environment_setup,1
+Close the curtains to ensure a dark environment,other_unclear,1
+Close the curtains to ensure darkness for sleep,other_unclear,1
+Close the curtains to ensure privacy and create a relaxing environment,relaxation_reflection_emotion,1
+Close the curtains to reduce light,other_unclear,1
+Close the curtains to simulate darkness,other_unclear,1
+Close the door for security and comfort,other_unclear,1
+"Close the eyes and allow oneself to relax, preparing for sleep",relaxation_reflection_emotion,1
+"Close the eyes and begin to relax, allowing sleep to come naturally",relaxation_reflection_emotion,1
+Close the eyes and drift into sleep,other_unclear,1
+Close the eyes and initiate the sleep process,sleep_transition_and_sleep,1
+Close the eyes and take deep breaths to relax,relaxation_reflection_emotion,1
+Close the eyes and transition into sleep,other_unclear,1
+Close the eyes to initiate sleep,other_unclear,1
+Close the window and adjust the room temperature if necessary,home_environment_management,1
+Close the window to ensure a quiet room,other_unclear,1
+Close the windows and curtains to create a comfortable sleeping environment,sleep_environment_setup,1
+Close your eyes and allow yourself to fall asleep,sleep_transition_and_sleep,1
+Close your eyes and begin the sleep process,sleep_transition_and_sleep,1
+Close your eyes and begin to drift off to sleep,sleep_transition_and_sleep,1
+Close your eyes and drift into a peaceful sleep,sleep_transition_and_sleep,1
+Close your eyes and fall asleep,sleep_transition_and_sleep,1
+Close your eyes and focus on relaxation techniques,sleep_transition_and_sleep,1
+Close your eyes and follow a calming breathing pattern to induce sleep,sleep_transition_and_sleep,1
+Close your eyes and initiate the process of falling asleep,sleep_transition_and_sleep,1
+Close your eyes and initiate the sleep process,sleep_transition_and_sleep,1
+Close your eyes and practice deep breathing,sleep_transition_and_sleep,1
+Close your eyes and practice mindfulness or deep breathing to promote relaxation,sleep_transition_and_sleep,1
+Close your eyes and relax,sleep_transition_and_sleep,1
+Close your eyes and relax until you fall asleep,sleep_transition_and_sleep,1
+"Close your eyes and relax, preparing for sleep",sleep_transition_and_sleep,1
+Close your eyes and take a deep breath to induce sleep,sleep_transition_and_sleep,1
+Close your eyes and take deep breaths to calm down,sleep_transition_and_sleep,1
+Close your eyes and take deep breaths to initiate sleep,sleep_transition_and_sleep,1
+Close your eyes to drift off to sleep,sleep_transition_and_sleep,1
+Complete the shopping by purchasing the necessary items,other_unclear,1
+Complete the shopping with the shopping list,shopping_planning_budget_inventory,1
+Concentrate on calming thoughts to facilitate sleep,other_unclear,1
+Concentrate on deep breathing and relaxation techniques to fall asleep,sleep_transition_and_sleep,1
+Concentrate on relaxation and sleep,other_unclear,1
+Concentrate on relaxing thoughts to fall asleep,sleep_transition_and_sleep,1
+Concentrate on relaxing thoughts to help fall asleep,sleep_transition_and_sleep,1
+Conclude the meal with a sense of contentment,other_unclear,1
+Conduct shopping based on the prepared list,other_unclear,1
+Conduct the shopping activity,other_unclear,1
+Confirm comfort of sleep environment,sleep_environment_setup,1
+Confirm the need for sleep,shopping_planning_budget_inventory,1
+Confirm the taxi request and provide any additional details if required,other_unclear,1
+Consciously decide to fall asleep in a peaceful and restful manner,sleep_transition_and_sleep,1
+Consciously focus on sleep and relax all muscles,relaxation_reflection_emotion,1
+Consciously prepare for sleep,sleep_environment_setup,1
+Consciously relax and initiate sleep,relaxation_reflection_emotion,1
+Consciously relax body and mind,relaxation_reflection_emotion,1
+Consider a calming activity to relax,relaxation_reflection_emotion,1
+Consider any dietary restrictions or preferences for meal selection,planning_general_admin,1
+Consider any small joys that came from the day's simplicity,planning_general_admin,1
+Consider preparing any leftovers for tomorrow,planning_general_admin,1
+Consider using blackout curtains if necessary,planning_general_admin,1
+Consider whether to store any remaining food for later,shopping_execution_procurement,1
+Consume the meal at the workplace,work_task_productive,1
+Contemplate the tranquility of the day while resting,other_unclear,1
+Create a calming bedtime routine to relax the body and mind,sleep_environment_setup,1
+Create a comfortable sleeping environment,sleep_environment_setup,1
+Decide on shopping location based on convenience and needs,shopping_planning_budget_inventory,1
+Decide on the most convenient time to go shopping,other_unclear,1
+Determine nearest shopping locations based on current location and convenience,planning_general_admin,1
+Determine shopping needs based on daily routine,shopping_planning_budget_inventory,1
+Determine the closest shopping destination,mobility_commute_transition,1
+Determine the exact address of the destination,mobility_commute_transition,1
+Determine the most convenient store or shopping center for the chosen shopping type,shopping_execution_procurement,1
+Determine the most convenient store to visit,shopping_execution_procurement,1
+Dim lights to create a calming environment,home_environment_management,1
+Dim lights to create a restful environment,home_environment_management,1
+Dim the lights in the room to create a calming atmosphere,sleep_environment_setup,1
+Dim the lights in the room to create a relaxing atmosphere,sleep_environment_setup,1
+Dim the lights to create a conducive sleep environment,sleep_environment_setup,1
+Dim the lights to create a sleep-friendly environment,sleep_environment_setup,1
+Dim the lights to create a sleep-inducing environment,sleep_environment_setup,1
+Dim the lights to create a soothing environment,sleep_environment_setup,1
+Dim the lights to signal the body it's time to rest,sleep_environment_setup,1
+Dim the lights to signal the body to relax,sleep_environment_setup,1
+Dim the lights to signal the brain that it's time to sleep,sleep_environment_setup,1
+Dim the lights to signal the end of the day,sleep_environment_setup,1
+Dispose of any waste from the meal,other_unclear,1
+Dispose of any waste properly,other_unclear,1
+Dispose of any waste properly after the meal,other_unclear,1
+Dispose of food waste appropriately after eating,other_unclear,1
+Dispose of meal waste appropriately,other_unclear,1
+Dispose of the mealware responsibly after the meal,other_unclear,1
+Dress appropriately for outdoor activities,morning_routine_hygiene,1
+Dress appropriately for the weather and walking,morning_routine_hygiene,1
+"Dress appropriately for the weather, as it is sunny and the temperature is moderate",morning_routine_hygiene,1
+Dress in comfortable clothes,other_unclear,1
+Eat the meal alone to maintain personal space and peace,meal_consumption_dining,1
+Eat the meal at workplace,work_task_productive,1
+End the reflection with a moment of gratitude for the tranquility,relaxation_reflection_emotion,1
+End work duties and prepare to leave workplace,work_task_productive,1
+End workday and prepare to leave workplace,work_task_productive,1
+"Engage in a calming activity before bed, such as reading",relaxation_reflection_emotion,1
+"Engage in a calming activity before sleep, if desired",relaxation_reflection_emotion,1
+Engage in a calming activity before sleeping (if needed),relaxation_reflection_emotion,1
+"Engage in a calming activity if needed (e.g., reading or meditating) before lying down",relaxation_reflection_emotion,1
+Engage in a calming activity or meditation to facilitate sleep,relaxation_reflection_emotion,1
+Engage in a calming activity to help fall asleep,sleep_transition_and_sleep,1
+Engage in a calming activity to prepare for sleep,sleep_environment_setup,1
+Engage in a calming activity to promote sleep,relaxation_reflection_emotion,1
+Engage in a calming activity to signal the body it's time to rest,relaxation_reflection_emotion,1
+Engage in a calming activity to signal to the body it's time to sleep,relaxation_reflection_emotion,1
+"Engage in a calming activity, such as reading, to induce sleep",relaxation_reflection_emotion,1
+Engage in a calming routine,other_unclear,1
+Engage in a light reading or meditation to calm the mind,relaxation_reflection_emotion,1
+"Engage in a quiet, restful activity to help signal to the body that it's time to sleep",other_unclear,1
+"Engage in a relaxing activity (e.g., reading) to induce sleep",relaxation_reflection_emotion,1
+"Engage in a relaxing activity before sleeping (e.g., reading)",relaxation_reflection_emotion,1
+"Engage in a relaxing activity or simply rest, savoring the peacefulness of the day",relaxation_reflection_emotion,1
+Engage in a relaxing activity to calm the mind before sleep,relaxation_reflection_emotion,1
+Engage in a relaxing activity to ease into sleep,relaxation_reflection_emotion,1
+Engage in a relaxing activity to help fall asleep,sleep_transition_and_sleep,1
+Engage in a relaxing activity to prepare for sleep,sleep_environment_setup,1
+Engage in a relaxing activity to unwind before sleeping,relaxation_reflection_emotion,1
+"Engage in a relaxing activity, such as reading, to help in winding down",relaxation_reflection_emotion,1
+Engage in calming activities,other_unclear,1
+Engage in calming activities to induce sleep,other_unclear,1
+Engage in calming activities to relax before sleep,relaxation_reflection_emotion,1
+Engage in gentle relaxation techniques,other_unclear,1
+Engage in light breathing exercises or meditation to calm the mind,relaxation_reflection_emotion,1
+Engage in light breathing exercises to calm the mind,relaxation_reflection_emotion,1
+Engage in light reading or meditation to induce sleep,relaxation_reflection_emotion,1
+Enjoy a comfortable indoor meal,other_unclear,1
+Enjoy a cup of coffee in the garden to connect with the serene weather,other_unclear,1
+Enjoy a quiet moment of reflection or relaxation,relaxation_reflection_emotion,1
+Enjoy a restful sleep,other_unclear,1
+"Enjoy the meal alone or possibly invite a close friend or family member, if the mood suits",social_contact_communication,1
+Enjoy the meal alone or with a companion if desired,meal_consumption_dining,1
+Enjoy the meal and the peaceful day,meal_consumption_dining,1
+"Enjoy the meal without rushing, savoring the tranquility",meal_consumption_dining,1
+Enjoy the peaceful atmosphere of the home,other_unclear,1
+Enjoy the peaceful morning,other_unclear,1
+Enjoy the quiet and contentment of the evening,other_unclear,1
+Ensure a calm and quiet environment to promote sleep,relaxation_reflection_emotion,1
+Ensure a comfortable sleeping environment by adjusting lighting and sounds,sleep_environment_setup,1
+Ensure a comfortable temperature for sleep,home_environment_management,1
+Ensure a quiet room for sleep,other_unclear,1
+Ensure a safe and secure sleep environment,sleep_environment_setup,1
+Ensure a suitable temperature for sleep,home_environment_management,1
+Ensure all electronic devices are turned off or on silent mode,digital_device_account_ops,1
+Ensure all electronic devices are turned off to create a quiet environment,digital_device_account_ops,1
+Ensure all necessary ingredients and utensils are available,other_unclear,1
+Ensure all necessary items for sleep are in reach,other_unclear,1
+Ensure all necessary items for sleep are within reach,other_unclear,1
+Ensure all necessary nighttime activities are complete,other_unclear,1
+Ensure all necessary preparations for a restful sleep are in place,other_unclear,1
+Ensure any necessary items like a glass of water or tissues are within reach before lying down,other_unclear,1
+Ensure bedroom environment is conducive to sleep,sleep_environment_setup,1
+Ensure comfort and safety for sleeping,other_unclear,1
+Ensure comfort for sleeping,other_unclear,1
+Ensure comfort in sleeping area,other_unclear,1
+Ensure comfort in the sleep environment,sleep_environment_setup,1
+Ensure comfortability for sleeping,other_unclear,1
+Ensure comfortability in the sleeping environment,sleep_environment_setup,1
+Ensure cooking equipment is turned off and cool down before sitting down to eat,meal_preparation_cooking,1
+Ensure home environment is suitable for eating,home_environment_management,1
+Ensure home is prepared for meal,other_unclear,1
+"Ensure hydration, if not already done",other_unclear,1
+Ensure meal is enjoyable and satisfying,other_unclear,1
+Ensure meal is suitable for retirement age diet,other_unclear,1
+Ensure proper waste disposal after meal,other_unclear,1
+Ensure room temperature is comfortable for sleep,home_environment_management,1
+Ensure satisfaction with meal,other_unclear,1
+Ensure that all necessary items are within reach,other_unclear,1
+Ensure that the meal is ready to be served,other_unclear,1
+Ensure the bedroom environment is conducive for sleep,other_unclear,1
+Ensure the bedroom is at a comfortable temperature for sleep,home_environment_management,1
+Ensure the bedroom is comfortable and conducive to sleep,sleep_environment_setup,1
+Ensure the environment is conducive to sleep,sleep_environment_setup,1
+Ensure the environment is conducive to sleeping,other_unclear,1
+"Ensure the environment is suitable for eating (e.g., clear away clutter)",other_unclear,1
+Ensure the food is safe and suitable for consumption,other_unclear,1
+Ensure the fridge is restocked,other_unclear,1
+Ensure the home environment is comfortable and conducive to sleep,sleep_environment_setup,1
+Ensure the home environment is conducive for sleep,home_environment_management,1
+Ensure the living environment is conducive to sleep,sleep_environment_setup,1
+Ensure the living space is conducive to sleep,sleep_environment_setup,1
+Ensure the meal is consumed safely,other_unclear,1
+Ensure the room is at a comfortable temperature,home_environment_management,1
+Ensure the room is at a comfortable temperature for sleep,home_environment_management,1
+Ensure the room is at a comfortable temperature for sleeping,home_environment_management,1
+Ensure the room is at a suitable temperature for sleeping,home_environment_management,1
+Ensure the room is comfortable,other_unclear,1
+Ensure the room is conducive for sleep,other_unclear,1
+Ensure the room is conducive to sleep (cool and quiet),sleep_environment_setup,1
+Ensure the room is conducive to sleep by adjusting temperature and lighting,sleep_environment_setup,1
+Ensure the room is conducive to sleep; adjust temperature if necessary,sleep_environment_setup,1
+Ensure the room is cool and comfortable at 23C,other_unclear,1
+Ensure the room is dark,other_unclear,1
+Ensure the room is quiet and conducive to sleep,sleep_environment_setup,1
+"Ensure the room is suitable for sleep (quiet, comfortable temperature)",home_environment_management,1
+Ensure the room temperature is suitable,home_environment_management,1
+Ensure the sleeping environment is comfortable and ready,sleep_environment_setup,1
+Ensure the sleeping environment is comfortable and suitable,sleep_environment_setup,1
+Enter a relaxed state,other_unclear,1
+Enter a relaxed state of mind,other_unclear,1
+Enter a restful sleep state,sleep_transition_and_sleep,1
+Enter a state of calm and readiness for sleep,relaxation_reflection_emotion,1
+Enter a state of rest,other_unclear,1
+Enter a state of sleep,other_unclear,1
+Enter bedroom,other_unclear,1
+Enter bedroom and lie down,sleep_transition_and_sleep,1
+Enter home,other_unclear,1
+Enter home safely,other_unclear,1
+Enter into a state of relaxation and drift off to sleep,other_unclear,1
+Enter rest mode,other_unclear,1
+Enter sleep mode and rest,sleep_transition_and_sleep,1
+Enter sleep mode by lying down,sleep_transition_and_sleep,1
+Enter sleep mode by lying down in the bed,sleep_transition_and_sleep,1
+Enter sleep mode mentally,sleep_transition_and_sleep,1
+"Enter sleep mode, allowing for rest and rejuvenation",sleep_transition_and_sleep,1
+Enter the bed,other_unclear,1
+Enter the bedroom and lie down in bed,sleep_transition_and_sleep,1
+Enter the bedroom to begin the sleep process,sleep_transition_and_sleep,1
+Enter the destination address in the app,digital_device_account_ops,1
+Enter the house and prepare for sleep,sleep_environment_setup,1
+Enter the sleep phase,other_unclear,1
+Enter the sleeping environment,sleep_environment_setup,1
+Enter the sleeping environment at the current time,sleep_environment_setup,1
+Enter the sleeping position,other_unclear,1
+Evaluate available food options at current location,shopping_planning_budget_inventory,1
+Evaluate available food options nearby,shopping_planning_budget_inventory,1
+Evaluate existing food supplies,shopping_planning_budget_inventory,1
+Evaluate hunger level and plan menu,planning_general_admin,1
+Evaluate the current weather conditions to ensure safety and comfort,other_unclear,1
+Evaluate the meal's taste and quality,other_unclear,1
+Evaluate the taste and satisfaction of the meal,other_unclear,1
+Execute shopping list and purchase necessary items,shopping_execution_procurement,1
+Exit home and go to the nearest shopping center,mobility_commute_transition,1
+Fall asleep in a tranquil environment,sleep_transition_and_sleep,1
+Find a comfortable seating arrangement,other_unclear,1
+Find a comfortable spot to eat,other_unclear,1
+Find a suitable outdoor dining location,meal_consumption_dining,1
+Find a suitable outdoor seating area,other_unclear,1
+Find an outdoor dining location suitable for an older adult,meal_consumption_dining,1
+Focus on breathing and ease into sleep,other_unclear,1
+Focus on breathing deeply and slowly to promote sleep,other_unclear,1
+Focus on deep breathing to promote relaxation and prepare for sleep,sleep_environment_setup,1
+Focus on maintaining a peaceful sleep environment,sleep_environment_setup,1
+Focus on relaxation techniques,other_unclear,1
+Focus on relaxation techniques to aid in falling asleep,sleep_transition_and_sleep,1
+Focus on relaxation techniques to initiate sleep,other_unclear,1
+Focus on relaxing your body and mind to fall asleep,sleep_transition_and_sleep,1
+Focus on sleep-inducing thoughts or visualization,other_unclear,1
+Gather any leftover food to store properly for future use,shopping_execution_procurement,1
+Gather any leftovers for future meals if needed,other_unclear,1
+Gather necessary ingredients for a simple meal to maintain ease of cooking,meal_preparation_cooking,1
+Gently brush teeth to prepare for sleep,sleep_environment_setup,1
+Gently close and lower bedroom lights to signal the body it's time to sleep,home_environment_management,1
+Get comfortable in the bed,other_unclear,1
+Get dressed in comfortable clothing suitable for the weather,morning_routine_hygiene,1
+Get into a comfortable sleeping position,other_unclear,1
+Get into bed and prepare for sleep,sleep_environment_setup,1
+Get into bed and settle down for sleep,sleep_transition_and_sleep,1
+Get into bed at a comfortable temperature,sleep_transition_and_sleep,1
+Get into comfortable clothing,other_unclear,1
+Get into comfortable night attire,other_unclear,1
+Get into comfortable sleepwear,other_unclear,1
+Get ready for shopping,other_unclear,1
+Get ready for shopping by dressing comfortably and safely,other_unclear,1
+"Get ready to leave home, considering the weather and temperature",mobility_commute_transition,1
+Get ready to leave home; wear comfortable clothing and footwear,mobility_commute_transition,1
+Go to bed at a reasonable hour,mobility_commute_transition,1
+Go to bed at a reasonable hour for a 63-year-old,mobility_commute_transition,1
+Go to bed at a reasonable time for your age and activity level,mobility_commute_transition,1
+Go to bed at a time conducive to rest,mobility_commute_transition,1
+Go to bed at an appropriate time for a 7-8 hour sleep cycle,mobility_commute_transition,1
+Go to sleep in the bedroom,mobility_commute_transition,1
+Go to the bedroom,mobility_commute_transition,1
+Go to the nearest shopping center,mobility_commute_transition,1
+Go to the nearest supermarket,mobility_commute_transition,1
+Go to the shopping location,mobility_commute_transition,1
+Gradually reduce activities to signal the body to wind down,sleep_transition_and_sleep,1
+Greet pets if any are at home,other_unclear,1
+Identify a suitable friend to contact,social_contact_communication,1
+Identify close friends,social_contact_communication,1
+Identify friends to contact,social_contact_communication,1
+Identify friends to contact based on current location and common interests,social_contact_communication,1
+Identify nearby stores or markets for convenience,other_unclear,1
+Identify nearby stores with shopping needs,shopping_planning_budget_inventory,1
+Identify shopping needs,shopping_planning_budget_inventory,1
+Identify shopping needs based on daily consumption,shopping_planning_budget_inventory,1
+Identify suitable food item for the weather and temperature,home_environment_management,1
+Identify suitable friends to contact,social_contact_communication,1
+Identify the preferred mode of contact,social_contact_communication,1
+"If suitable, find a quiet spot to sit and enjoy the sunny weather",other_unclear,1
+Initiate contact via phone call,digital_device_account_ops,1
+Initiate sleep by lying down in the bed,other_unclear,1
+Initiate sleep routine,other_unclear,1
+Lay down and begin to wind down,sleep_transition_and_sleep,1
+Lay down and close eyes,sleep_transition_and_sleep,1
+Lay down and get into a comfortable position,sleep_transition_and_sleep,1
+Lay down and relax in the bed,sleep_transition_and_sleep,1
+Lay down and rest,sleep_transition_and_sleep,1
+Lay down in bed and adjust pillows,sleep_transition_and_sleep,1
+Lay down in bed and drift off to sleep,sleep_transition_and_sleep,1
+Lay down in bed and initiate the sleep process,sleep_transition_and_sleep,1
+Lay down in bed in a relaxed position,sleep_transition_and_sleep,1
+Lay down in bed with the intention to sleep,sleep_transition_and_sleep,1
+Lay down in the bed and practice relaxation techniques if feeling anxious,sleep_transition_and_sleep,1
+Lay down in the bed to initiate the sleep process,sleep_transition_and_sleep,1
+Lay in bed and prepare to fall asleep,sleep_transition_and_sleep,1
+Lay in bed in a relaxed state and gradually drift off to sleep,other_unclear,1
+Lay in bed with intention to sleep,other_unclear,1
+Lay in the bed,other_unclear,1
+Leave home,mobility_commute_transition,1
+Leave home for the selected shopping location,mobility_commute_transition,1
+Leave home for the shopping destination,mobility_commute_transition,1
+Leave home to go to the nearest shopping center,mobility_commute_transition,1
+Leave workplace and initiate journey home,work_task_productive,1
+Leave workplace and travel back to home,work_task_productive,1
+Lie down and allow yourself to drift off to sleep,sleep_transition_and_sleep,1
+Lie down and assume a comfortable sleeping position,sleep_transition_and_sleep,1
+Lie down and close eyes,sleep_transition_and_sleep,1
+Lie down and close eyes to initiate sleep,sleep_transition_and_sleep,1
+Lie down and close the eyes to signal readiness for sleep,sleep_transition_and_sleep,1
+Lie down and close the eyes to transition into sleep,sleep_transition_and_sleep,1
+Lie down and fall asleep,sleep_transition_and_sleep,1
+Lie down and initiate the process of falling asleep,sleep_transition_and_sleep,1
+Lie down and initiate the sleep process,sleep_transition_and_sleep,1
+Lie down and practice relaxation techniques to promote sleep,sleep_transition_and_sleep,1
+Lie down and take a few deep breaths to relax,sleep_transition_and_sleep,1
+Lie down and transition into a state of relaxation before sleeping,sleep_transition_and_sleep,1
+Lie down in a comfortable position,sleep_transition_and_sleep,1
+Lie down in bed and adjust the pillows to a comfortable position,sleep_transition_and_sleep,1
+Lie down in bed and adjust the room temperature if necessary,sleep_transition_and_sleep,1
+Lie down in bed and adopt a comfortable sleeping position,sleep_transition_and_sleep,1
+Lie down in bed and allow the body to relax,sleep_transition_and_sleep,1
+Lie down in bed and close the curtains to create a dark environment,sleep_transition_and_sleep,1
+Lie down in bed and close the eyes to drift off to sleep,sleep_transition_and_sleep,1
+Lie down in bed and close the eyes to initiate sleep,sleep_transition_and_sleep,1
+Lie down in bed and close your eyes,sleep_transition_and_sleep,1
+Lie down in bed and focus on breathing deeply to calm the mind,sleep_transition_and_sleep,1
+Lie down in bed and focus on relaxation techniques,sleep_transition_and_sleep,1
+Lie down in bed and focus on relaxing breathing techniques,sleep_transition_and_sleep,1
+Lie down in bed and focus on winding down for sleep,sleep_transition_and_sleep,1
+Lie down in bed and get comfortable,sleep_transition_and_sleep,1
+Lie down in bed and initiate the sleep process,sleep_transition_and_sleep,1
+"Lie down in bed and practice a relaxing sleep-inducing activity, such as deep breathing or meditation",sleep_transition_and_sleep,1
+Lie down in bed and prepare to fall asleep,sleep_transition_and_sleep,1
+Lie down in bed and start winding down,sleep_transition_and_sleep,1
+Lie down in bed at a suitable time,sleep_transition_and_sleep,1
+Lie down in bed at an appropriate time for rest,sleep_transition_and_sleep,1
+Lie down in bed in a quiet room,sleep_transition_and_sleep,1
+Lie down in bed in a relaxed position,sleep_transition_and_sleep,1
+Lie down in bed in a restful position,sleep_transition_and_sleep,1
+Lie down in bed to fall asleep,sleep_transition_and_sleep,1
+Lie down in bed to initiate sleep,sleep_transition_and_sleep,1
+Lie down in bed to initiate the sleep process,sleep_transition_and_sleep,1
+Lie down in bed to sleep,sleep_transition_and_sleep,1
+Lie down in the bed and adjust the position to your comfort,sleep_transition_and_sleep,1
+Lie down in the bed and assume a comfortable sleep position,sleep_transition_and_sleep,1
+Lie down in the bed and assume a comfortable sleeping position,sleep_transition_and_sleep,1
+Lie down in the bed and close the eyes to initiate sleep,sleep_transition_and_sleep,1
+Lie down in the bed and prepare for sleep,sleep_environment_setup,1
+Lie down in the bed and relax,sleep_transition_and_sleep,1
+Lie down in the bed and start to drift off to sleep,sleep_transition_and_sleep,1
+Lie down in the bed and take a moment to relax,sleep_transition_and_sleep,1
+Lie down in the bed in a comfortable position,sleep_transition_and_sleep,1
+Lie down in the bed to begin the sleeping process,sleep_transition_and_sleep,1
+Lie down in the bed to initiate the sleep process,sleep_transition_and_sleep,1
+Lie down in the bed to sleep,sleep_transition_and_sleep,1
+Lie down in the bed to start winding down,sleep_transition_and_sleep,1
+Lie down in the bed to start winding down for sleep,sleep_transition_and_sleep,1
+Lie down in the comfortable bed,sleep_transition_and_sleep,1
+Lie down in the prepared sleep environment and drift off to sleep,sleep_environment_setup,1
+Locate a comfortable outdoor seating area,other_unclear,1
+Locate a quiet and comfortable outdoor area to sit,other_unclear,1
+Locate the nearest shopping center,shopping_execution_procurement,1
+Lock the door for security,other_unclear,1
+Log into work-related accounts,digital_device_account_ops,1
+Maintain a calm and restful atmosphere,relaxation_reflection_emotion,1
+Maintain a comfortable room temperature,home_environment_management,1
+Maintain a comfortable sleep position,other_unclear,1
+Maintain a comfortable sleeping position,other_unclear,1
+Maintain a relaxed and comfortable posture to ensure restful sleep,other_unclear,1
+Maintain current location as it is home,other_unclear,1
+Make a cup of tea or coffee to relax,relaxation_reflection_emotion,1
+Make a reservation or wait for an open table if necessary,other_unclear,1
+Make purchases from the shopping list,shopping_execution_procurement,1
+Monitor comfort throughout the sleep period,other_unclear,1
+Navigate to preferred stores within the shopping center,shopping_execution_procurement,1
+Navigate to the chosen eatery,other_unclear,1
+"Navigate to the shopping center, considering the sunny weather and comfortable temperature",shopping_execution_procurement,1
+Obtain the identified food item,other_unclear,1
+Obtain the menu and decide on a meal to order,other_unclear,1
+Open the app and select the option to request a taxi,digital_device_account_ops,1
+Order a meal that suits your mood and preferences,other_unclear,1
+Order food and enjoy the meal,meal_consumption_dining,1
+Order food and enjoy the meal outside,meal_consumption_dining,1
+Order food or select items from a menu,shopping_execution_procurement,1
+Pack essentials like water and sunglasses,other_unclear,1
+"Pack essentials such as wallet, keys, and sunglasses",shopping_execution_procurement,1
+Park the car and enter the shopping center,shopping_execution_procurement,1
+Pay for the purchases and carry them back home,shopping_execution_procurement,1
+Perform a brief relaxation exercise,other_unclear,1
+"Perform a calming activity, such as reading or listening to soft music, to ease into sleep",relaxation_reflection_emotion,1
+Perform a relaxing activity to ease into sleep,relaxation_reflection_emotion,1
+Perform a short meditation or yoga session to enhance tranquility,relaxation_reflection_emotion,1
+Perform any necessary relaxation or pre-sleep routine,other_unclear,1
+Perform bedtime routine,sleep_environment_setup,1
+Perform light stretching or relaxation exercises,morning_routine_hygiene,1
+Perform pre-sleep routine,other_unclear,1
+Perform relaxation techniques to wind down,sleep_transition_and_sleep,1
+Perform the shopping tasks as listed on the shopping list,work_task_productive,1
+Pick up the phone,digital_device_account_ops,1
+Pick up the phone and call a friend,digital_device_account_ops,1
+Pick up the phone and dial the first friend's number,digital_device_account_ops,1
+Pick up the phone or activate the video call device,digital_device_account_ops,1
+Pick up the phone to call a friend,digital_device_account_ops,1
+Plan the mode of transportation to reach the chosen dining location,meal_consumption_dining,1
+Plan the route based on the distance to the nearest shopping center,mobility_commute_transition,1
+Plan the route to the nearest grocery store,mobility_commute_transition,1
+Plan the route to the nearest shopping center,mobility_commute_transition,1
+Plan the route to the nearest shopping center considering weather and time,mobility_commute_transition,1
+Plan the route to the shopping destination,mobility_commute_transition,1
+Plan the shopping route,mobility_commute_transition,1
+Postpone any non-essential activities to ensure time for the meal,other_unclear,1
+Practice a relaxing bedtime routine,sleep_environment_setup,1
+Practice calming techniques if needed,other_unclear,1
+Practice deep breathing or meditation to calm down,relaxation_reflection_emotion,1
+Practice deep breathing or meditation to induce sleep,relaxation_reflection_emotion,1
+Practice deep breathing to induce sleep,other_unclear,1
+Practice gentle relaxation techniques to aid in falling asleep,sleep_transition_and_sleep,1
+Practice relaxation techniques to facilitate the onset of sleep,other_unclear,1
+Practice relaxation techniques to promote sleep,other_unclear,1
+Practice relaxation techniques to unwind,relaxation_reflection_emotion,1
+Preheat the oven for cooking,meal_preparation_cooking,1
+Prep the bedroom for sleep by adjusting the temperature and light,home_environment_management,1
+Prepare a calming cup of tea,other_unclear,1
+Prepare a calming morning beverage,other_unclear,1
+"Prepare a comfortable sleeping environment, ensuring the bed is made and the room is quiet",sleep_environment_setup,1
+Prepare a comfortable sleeping position,other_unclear,1
+Prepare a comfortable sleeping space,other_unclear,1
+Prepare a cup of tea or coffee to enjoy during relaxation,other_unclear,1
+Prepare a nighttime routine,other_unclear,1
+Prepare a relaxing bed with fresh sheets,relaxation_reflection_emotion,1
+Prepare a shopping bag,shopping_execution_procurement,1
+Prepare a shopping bag or basket,shopping_execution_procurement,1
+Prepare a shopping bag or cart,shopping_execution_procurement,1
+Prepare a shopping bag or list for ease of mobility,shopping_execution_procurement,1
+Prepare a sleeping environment,sleep_environment_setup,1
+Prepare a small bag with essentials,other_unclear,1
+"Prepare a suitable sleep environment, such as changing bedding",sleep_environment_setup,1
+Prepare and enter the home environment,mobility_commute_transition,1
+Prepare and leave home for the store,mobility_commute_transition,1
+Prepare any necessary nighttime items,other_unclear,1
+"Prepare any necessary personal items (e.g., pillow, blanket) to enhance sleep comfort",other_unclear,1
+Prepare any personal items or special requests for the meal,other_unclear,1
+Prepare for a comfortable sleeping environment,sleep_environment_setup,1
+Prepare for a restful sleep,other_unclear,1
+Prepare for a short walk or drive to the store,shopping_execution_procurement,1
+"Prepare for bed (brush teeth, wash face, etc.)",sleep_environment_setup,1
+"Prepare for bed (change into comfortable clothing, set up pillows and blankets)",sleep_environment_setup,1
+Prepare for bed by brushing teeth and changing into comfortable pajamas,sleep_environment_setup,1
+Prepare for bed by changing into comfortable clothes,sleep_environment_setup,1
+Prepare for bed by changing into comfortable sleepwear,sleep_environment_setup,1
+Prepare for bed by setting up the bedroom,sleep_environment_setup,1
+Prepare for bed by turning off electronic devices,digital_device_account_ops,1
+Prepare for bed with appropriate attire,sleep_environment_setup,1
+Prepare for bed with comfortable attire,sleep_environment_setup,1
+"Prepare for bed, change into comfortable sleepwear",sleep_environment_setup,1
+"Prepare for bed, including changing into comfortable pajamas",sleep_environment_setup,1
+"Prepare for bed, including dressing in comfortable attire",sleep_environment_setup,1
+"Prepare for bed, including washing up and changing into comfortable clothes",sleep_environment_setup,1
+Prepare for bedtime,other_unclear,1
+Prepare for bedtime by changing into comfortable nightwear,other_unclear,1
+Prepare for bedtime by dimming lights,home_environment_management,1
+Prepare for bedtime by setting the environment to a comfortable temperature,home_environment_management,1
+Prepare for bedtime routine,sleep_environment_setup,1
+Prepare for rest by ensuring a comfortable environment,home_environment_management,1
+Prepare for rest by ensuring comfort,other_unclear,1
+Prepare for rest with comfortable bed settings,other_unclear,1
+"Prepare for sleep (e.g., take off heavy clothing, set up the bed)",sleep_environment_setup,1
+Prepare for sleep by adjusting the room temperature,sleep_environment_setup,1
+Prepare for sleep by adjusting the room temperature to 23C if necessary,sleep_environment_setup,1
+Prepare for sleep by changing into comfortable pajamas,sleep_environment_setup,1
+Prepare for sleep by dimming lights and adjusting room temperature if necessary,sleep_environment_setup,1
+Prepare for sleep by dimming lights and setting the room temperature,sleep_environment_setup,1
+Prepare for sleep by dimming lights if necessary,sleep_environment_setup,1
+Prepare for sleep by ensuring a calm environment,sleep_environment_setup,1
+Prepare for sleep by ensuring the environment is comfortable,sleep_environment_setup,1
+Prepare for sleep by ensuring the room is comfortable,sleep_environment_setup,1
+Prepare for sleep by setting a calming environment,sleep_environment_setup,1
+Prepare for sleep by setting up the bed,sleep_environment_setup,1
+Prepare for sleep by setting up the bedroom,sleep_environment_setup,1
+Prepare for sleep by setting up the environment,sleep_environment_setup,1
+Prepare for sleep by turning off electronic devices,digital_device_account_ops,1
+Prepare for sleep by turning off electronics,sleep_environment_setup,1
+Prepare for sleep by turning off the lights,sleep_environment_setup,1
+Prepare for sleep by winding down and avoiding electronic devices,digital_device_account_ops,1
+"Prepare for sleep, including changing into comfortable pajamas",sleep_environment_setup,1
+"Prepare for sleep, such as adjusting the room temperature and lighting",sleep_environment_setup,1
+"Prepare for the trip, ensuring all personal items and necessary transportation are in order",other_unclear,1
+Prepare necessary bedtime items,other_unclear,1
+"Prepare necessary items for bedtime (e.g., glasses, medication)",other_unclear,1
+Prepare necessary items like transportation (if needed) and clothing (for weather conditions),other_unclear,1
+Prepare or purchase food to be eaten outside,shopping_execution_procurement,1
+Prepare or select food to eat,other_unclear,1
+Prepare sleep environment,sleep_environment_setup,1
+Prepare sleep environment with appropriate clothing and bed settings,sleep_environment_setup,1
+Prepare sleep space,other_unclear,1
+Prepare sleeping area,other_unclear,1
+Prepare sleeping area for relaxation,other_unclear,1
+Prepare sleeping area if necessary,other_unclear,1
+Prepare the bed,other_unclear,1
+Prepare the bed for a good night's sleep,other_unclear,1
+Prepare the bed for a restful sleep,other_unclear,1
+Prepare the bed for comfort,other_unclear,1
+Prepare the bed for sleeping,other_unclear,1
+Prepare the bed with clean sheets and pillows,other_unclear,1
+Prepare the bedroom by adjusting the temperature and lighting,sleep_environment_setup,1
+Prepare the bedroom environment for sleep,sleep_environment_setup,1
+Prepare the cooking area,meal_preparation_cooking,1
+Prepare the dining area,meal_consumption_dining,1
+Prepare the food for consumption,other_unclear,1
+Prepare the food item,other_unclear,1
+Prepare the sleeping area (adjust temperature if necessary),home_environment_management,1
+Prepare the sleeping area for comfort,other_unclear,1
+Prepare the sleeping area with comfort in mind,other_unclear,1
+"Prepare the sleeping environment (adjust room temperature, if necessary)",sleep_environment_setup,1
+Prepare the sleeping environment for comfort,sleep_environment_setup,1
+Prepare to drift into sleep,other_unclear,1
+Prepare to eat at the selected location,other_unclear,1
+Prepare to eat the selected meal,other_unclear,1
+Prepare to fall asleep,sleep_transition_and_sleep,1
+Prepare to have a meal at home,meal_consumption_dining,1
+Prepare to leave home for the shopping destination,mobility_commute_transition,1
+Prepare to rest,other_unclear,1
+Prepare to rest by winding down,other_unclear,1
+"Prepare to wind down, possibly with a calming activity",sleep_transition_and_sleep,1
+"Prepare transportation (e.g., car, public transport) considering the weather and temperature",home_environment_management,1
+Prepares for sleep,other_unclear,1
+Prepares the kitchen for cooking,meal_preparation_cooking,1
+Purchase food or order delivery,shopping_execution_procurement,1
+Purchase items from the shopping list,shopping_execution_procurement,1
+Purchase the necessary items,shopping_execution_procurement,1
+Reflect on meal experience,meal_consumption_dining,1
+Reflect on the day's peace,relaxation_reflection_emotion,1
+Reflect on the day's peacefulness during the meal,relaxation_reflection_emotion,1
+Reflect on the day's plans and mood before starting the day,relaxation_reflection_emotion,1
+Reflect on the day’s peacefulness,relaxation_reflection_emotion,1
+Reflect on the meal and day's tranquility,relaxation_reflection_emotion,1
+Reflect on the meal experience and gratitude,meal_consumption_dining,1
+Reflect on the quiet day while eating,relaxation_reflection_emotion,1
+Reflect on the tranquility of the day after eating,relaxation_reflection_emotion,1
+Relax and allow body to rest,relaxation_reflection_emotion,1
+Relax and allow myself to drift off to sleep,relaxation_reflection_emotion,1
+Relax and allow oneself to fall asleep,sleep_transition_and_sleep,1
+Relax and allow the body to transition into sleep,relaxation_reflection_emotion,1
+Relax and calm the mind to signal the body for sleep,relaxation_reflection_emotion,1
+Relax and clear mind for sleep,relaxation_reflection_emotion,1
+Relax and close your eyes,sleep_transition_and_sleep,1
+Relax and close your eyes to signal to the body it is time to sleep,sleep_transition_and_sleep,1
+Relax and focus on breathing to fall asleep,sleep_transition_and_sleep,1
+Relax and focus on sleep,relaxation_reflection_emotion,1
+Relax and lie down in bed,sleep_transition_and_sleep,1
+Relax and practice a calming routine to induce sleep,relaxation_reflection_emotion,1
+Relax and prepare mind for sleep,relaxation_reflection_emotion,1
+Relax and prepare the mind for sleep,relaxation_reflection_emotion,1
+Relax and prepare your mind for sleep,relaxation_reflection_emotion,1
+"Relax and rest, as it's a sunny day and you are retired",relaxation_reflection_emotion,1
+Relax and settle down for sleep,relaxation_reflection_emotion,1
+Relax and settle into sleep mode,relaxation_reflection_emotion,1
+Relax and take deep breaths to induce sleep,relaxation_reflection_emotion,1
+Relax and take deep breaths to prepare for sleep,sleep_environment_setup,1
+Relax and take deep breaths to wind down,sleep_transition_and_sleep,1
+Relax and unwind before bedtime,relaxation_reflection_emotion,1
+Relax and unwind for a peaceful sleep,relaxation_reflection_emotion,1
+Relax and unwind in a comfortable environment,relaxation_reflection_emotion,1
+Relax and unwind to create a serene bedtime routine,sleep_environment_setup,1
+Relax and unwind to enhance sleep quality,relaxation_reflection_emotion,1
+Relax and unwind to foster a peaceful sleep,relaxation_reflection_emotion,1
+Relax and unwind to prepare the body for sleep,relaxation_reflection_emotion,1
+Relax and unwind to signal the body it is time to sleep,relaxation_reflection_emotion,1
+Relax and wind down after a day of activities,sleep_transition_and_sleep,1
+Relax and wind down after a peaceful day,sleep_transition_and_sleep,1
+Relax and wind down before lying down,sleep_transition_and_sleep,1
+Relax and wind down before sleep,sleep_transition_and_sleep,1
+Relax and wind down from the day's activities,sleep_transition_and_sleep,1
+Relax and wind down to induce sleep,sleep_transition_and_sleep,1
+Relax and wind down to promote sleep,sleep_transition_and_sleep,1
+Relax and wind down to signal the body it is time for sleep,sleep_transition_and_sleep,1
+Relax before bed to help with sleep,relaxation_reflection_emotion,1
+Relax before bed to induce sleep,relaxation_reflection_emotion,1
+Relax before sleep,relaxation_reflection_emotion,1
+Relax body and mind before bedtime,relaxation_reflection_emotion,1
+Relax for a few minutes,relaxation_reflection_emotion,1
+Relax for a few minutes before bed,relaxation_reflection_emotion,1
+Relax for a few minutes before sleep,relaxation_reflection_emotion,1
+Relax for a few minutes to help unwind and prepare for sleep,sleep_environment_setup,1
+Relax for a few minutes to prepare for sleep,sleep_environment_setup,1
+Relax for a few minutes to unwind,relaxation_reflection_emotion,1
+Relax for a few minutes to wind down,sleep_transition_and_sleep,1
+Relax for a few moments before lying down,relaxation_reflection_emotion,1
+Relax in a comfortable chair or on the couch,relaxation_reflection_emotion,1
+Relax in a comfortable position in bed,relaxation_reflection_emotion,1
+Relax in a comfortable position in the bedroom,relaxation_reflection_emotion,1
+Relax in bed,relaxation_reflection_emotion,1
+Relax in bed for a few minutes,relaxation_reflection_emotion,1
+Relax in bed to prepare for sleep,sleep_environment_setup,1
+Relax in current location to transition into sleep mode,relaxation_reflection_emotion,1
+Relax in the living room for a few minutes,relaxation_reflection_emotion,1
+Relax mentally and physically to initiate sleep,relaxation_reflection_emotion,1
+Relax mind and body to prepare for sleep,sleep_environment_setup,1
+"Relax mind and body, ready to fall asleep",sleep_transition_and_sleep,1
+Relax the body and mind to induce sleep,relaxation_reflection_emotion,1
+Relax to settle into a calm state,relaxation_reflection_emotion,1
+Relax to wind down,sleep_transition_and_sleep,1
+Relax with a short nap or meditation,relaxation_reflection_emotion,1
+Relaxation activities to induce sleep,other_unclear,1
+Relaxation and preparation for sleep,other_unclear,1
+Relaxation and wind down before bed,sleep_transition_and_sleep,1
+Relaxation before sleep,other_unclear,1
+Relaxation before sleeping,other_unclear,1
+Relaxation techniques to encourage sleep,other_unclear,1
+Relaxation to promote sleep,other_unclear,1
+Remove any electronic devices that might interfere with sleep,digital_device_account_ops,1
+Remove any electronic devices that might keep you awake,digital_device_account_ops,1
+Remove any electronic devices to minimize distractions,digital_device_account_ops,1
+Remove electronic devices that might interfere with sleep,digital_device_account_ops,1
+Remove or cover any distractions,other_unclear,1
+Rest after finishing the meal,other_unclear,1
+Rest and relax,relaxation_reflection_emotion,1
+Rest and unwind following the meal,relaxation_reflection_emotion,1
+Rest for a while to digest the meal and continue enjoying the quiet day,other_unclear,1
+Rest for a while to ensure that you are relaxed after the meal,other_unclear,1
+Rest in a comfortable and familiar environment,other_unclear,1
+Retire to bed to sleep,other_unclear,1
+Retire to bedroom,other_unclear,1
+Retire to the bedroom to rest,sleep_transition_and_sleep,1
+Retire to your bed,other_unclear,1
+Retrieve a list of contact numbers for friends,social_contact_communication,1
+Retrieve a list of friends' contact information,social_contact_communication,1
+"Retrieve and clean up any personal items needed for social interaction, such as a phone or glasses",digital_device_account_ops,1
+Retrieve contacts list,other_unclear,1
+Return home from the workplace,work_task_productive,1
+Return home with purchases,mobility_commute_transition,1
+Return to the kitchen,mobility_commute_transition,1
+Return to workplace,work_task_productive,1
+Review inventory to check for meal ingredients,shopping_planning_budget_inventory,1
+Review shopping list,shopping_planning_budget_inventory,1
+Review the menu at the selected outdoor dining spot,meal_consumption_dining,1
+Review the morning's weather forecast,planning_general_admin,1
+Review transportation options and choose one,shopping_planning_budget_inventory,1
+Review weather conditions and dress appropriately,morning_routine_hygiene,1
+Review weather conditions for appropriate attire,planning_general_admin,1
+Secure the home,other_unclear,1
+Seek a comfortable seating area,other_unclear,1
+Seek a suitable eating spot nearby,other_unclear,1
+Seek out food available outside,other_unclear,1
+Select a close friend,social_contact_communication,1
+Select a comfortable space at home for the call,social_contact_communication,1
+Select a comfortable spot at home,other_unclear,1
+Select a comfortable spot in the home for the call,social_contact_communication,1
+Select a communication method,other_unclear,1
+Select a convenient place to meet,other_unclear,1
+Select a dining option based on availability and suitability,meal_consumption_dining,1
+Select a meal option,other_unclear,1
+"Select a method of communication (e.g., phone, email, social media)",digital_device_account_ops,1
+Select a method to contact friends,social_contact_communication,1
+Select a nearby café or restaurant if available,other_unclear,1
+Select a nearby eatery if desired,other_unclear,1
+Select a nearby grocery store for convenience,shopping_execution_procurement,1
+Select a recipe and gather necessary ingredients,other_unclear,1
+Select a simple meal option,other_unclear,1
+Select a suitable contact method,social_contact_communication,1
+Select a suitable eating spot outdoors,other_unclear,1
+Select a suitable food item for breakfast,other_unclear,1
+Select a suitable friend to call,social_contact_communication,1
+Select a suitable meal option,other_unclear,1
+Select a suitable outdoor dining location,meal_consumption_dining,1
+Select a suitable outdoor dining location based on availability and comfort,meal_consumption_dining,1
+Select a suitable outdoor dining location nearby,meal_consumption_dining,1
+Select a suitable restaurant or location to eat outside,other_unclear,1
+Select a suitable time for the call,social_contact_communication,1
+Select a suitable time to call friends,social_contact_communication,1
+Select a suitable time to call or meet friends,social_contact_communication,1
+Select a suitable time to call or message friends,social_contact_communication,1
+Select a time to call friends,social_contact_communication,1
+Select an appropriate recipe for cooking,meal_preparation_cooking,1
+Select and purchase necessary items,shopping_execution_procurement,1
+Select appropriate communication method based on current technology availability,other_unclear,1
+Select friends to contact,social_contact_communication,1
+Select items from the shopping list and place them in the shopping cart,shopping_execution_procurement,1
+Select nearby stores with easy access,other_unclear,1
+Select phone or device to call,digital_device_account_ops,1
+Select the best time for a call,social_contact_communication,1
+Select the most comfortable way to call my friends,social_contact_communication,1
+Select the most suitable time for a call,social_contact_communication,1
+Select the nearest and most convenient shopping location,other_unclear,1
+Serve and arrange the meal on the dining table,meal_consumption_dining,1
+Serve and eat the home-cooked lunch,other_unclear,1
+Serve and enjoy the breakfast at home,other_unclear,1
+Serve and present the meal,other_unclear,1
+Serve breakfast,other_unclear,1
+Serve food,other_unclear,1
+Serve prepared meal,other_unclear,1
+Serve the meal on a comfortable setting,meal_preparation_cooking,1
+Serve the meal on a plate,meal_preparation_cooking,1
+Serve the meal on a suitable tableware,meal_preparation_cooking,1
+Serve the prepared food,other_unclear,1
+Serve the prepared meal on plates,other_unclear,1
+Set a calming routine to signal to body it's time to sleep,other_unclear,1
+Set a comfortable room temperature,home_environment_management,1
+Set a comfortable sleeping temperature,home_environment_management,1
+Set a relaxing sleep environment with minimal noise and light,sleep_environment_setup,1
+Set a sleep routine,other_unclear,1
+Set a sleep schedule and stick to it to maintain routine,planning_general_admin,1
+Set a sleep timer or alarm if needed,other_unclear,1
+Set a soothing sleep environment with soft lighting,sleep_environment_setup,1
+Set a timer or alarm for sleep,other_unclear,1
+Set an alarm for a reasonable wake-up time,other_unclear,1
+Set an alarm for morning,other_unclear,1
+Set an alarm for morning if necessary,other_unclear,1
+Set an alarm for morning wake-up time if necessary,other_unclear,1
+Set an alarm for tomorrow if necessary,other_unclear,1
+Set an alarm if necessary,other_unclear,1
+Set an alarm if necessary for an early morning routine,morning_routine_hygiene,1
+Set an alarm if necessary for the morning,other_unclear,1
+Set an alarm if necessary for the next day,other_unclear,1
+Set an alarm if needed for any morning activities,other_unclear,1
+Set an alarm if needed for the next day,other_unclear,1
+Set aside any devices or activities that might interfere with sleep,digital_device_account_ops,1
+Set aside any devices to avoid distractions,digital_device_account_ops,1
+Set out for the shopping location,other_unclear,1
+Set out from home to the nearest shopping center,shopping_execution_procurement,1
+"Set sleep aids (e.g., white noise machine)",other_unclear,1
+Set the alarm,sleep_environment_setup,1
+Set the alarm clock for the next morning,sleep_environment_setup,1
+Set the alarm for 8 hours later,sleep_environment_setup,1
+Set the alarm for a good night's rest,sleep_environment_setup,1
+Set the alarm for a restful sleep duration,sleep_environment_setup,1
+Set the alarm for morning,sleep_environment_setup,1
+Set the alarm for necessary activities,sleep_environment_setup,1
+Set the alarm for the morning if necessary,sleep_environment_setup,1
+Set the alarm for the next day (if needed),sleep_environment_setup,1
+"Set the alarm for the next day, if necessary",sleep_environment_setup,1
+"Set the alarm for the next morning, if needed",sleep_environment_setup,1
+Set the alarm for tomorrow,sleep_environment_setup,1
+Set the alarm for tomorrow morning,sleep_environment_setup,1
+Set the alarm if necessary for a restful sleep,sleep_environment_setup,1
+Set the alarm if necessary for the next day,sleep_environment_setup,1
+Set the alarm if needed for any morning appointments or routines,sleep_environment_setup,1
+Set the alarm if needed for morning activities,sleep_environment_setup,1
+Set the alarm if needed for the next day,sleep_environment_setup,1
+Set the dining area,meal_consumption_dining,1
+Set the dining table,meal_consumption_dining,1
+Set the dining table with utensils and serve the meal,meal_preparation_cooking,1
+Set the environment for sleep,other_unclear,1
+Set the room temperature and lighting to a comfortable level for sleep,sleep_environment_setup,1
+Set the room temperature to 23C for comfort,home_environment_management,1
+Set the room temperature to a comfortable level for sleeping,home_environment_management,1
+Set the room temperature to comfortable level,home_environment_management,1
+Set the room to a conducive environment for sleep,other_unclear,1
+Set the table in a comfortable and inviting manner,meal_preparation_cooking,1
+Set the table with appropriate diningware,meal_preparation_cooking,1
+Set the table with utensils and a meal tray,meal_preparation_cooking,1
+Set the time for sleep,other_unclear,1
+Set up a bedtime routine,sleep_environment_setup,1
+"Set up a comfortable sleep environment, ensuring it is quiet and conducive to sleep",sleep_environment_setup,1
+"Set up a comfortable sleep environment, including adjusting the room temperature if necessary",sleep_environment_setup,1
+Set up a relaxing sleep environment,sleep_environment_setup,1
+Set up alarm clock for morning wake-up,other_unclear,1
+"Set up any necessary sleep aids (e.g., pillows, blanket)",other_unclear,1
+Set up bed for a comfortable sleep,other_unclear,1
+Set up bed for rest,other_unclear,1
+Set up bed with pillows and blankets,other_unclear,1
+Set up the bed comfortably,other_unclear,1
+Set up the bed for a comfortable sleep,other_unclear,1
+Set up the bedroom to a conducive sleeping state,other_unclear,1
+Set up the bedroom with comfortable bedding,other_unclear,1
+Set up the sleep environment,sleep_environment_setup,1
+Set up the sleeping environment,sleep_environment_setup,1
+Set up the sleeping environment comfortably,sleep_environment_setup,1
+Set up the sleeping environment with comfort in mind,sleep_environment_setup,1
+Shop for essential items,shopping_execution_procurement,1
+Shop for necessary items,shopping_execution_procurement,1
+Sit down at the dining table,meal_consumption_dining,1
+"Sit down at the dining table, setting a pleasant meal environment",meal_consumption_dining,1
+Sit down comfortably,other_unclear,1
+Sleep in a tranquil state,other_unclear,1
+Sleep peacefully throughout the night,other_unclear,1
+Start breathing exercises to help calm the mind and prepare for sleep,sleep_environment_setup,1
+Start the process of falling asleep,sleep_transition_and_sleep,1
+Start the sleep process,sleep_transition_and_sleep,1
+Stay at home,other_unclear,1
+Stay at home as no need to move to a different location,shopping_planning_budget_inventory,1
+Stay at home as the day starts,other_unclear,1
+Stay at home due to current location,other_unclear,1
+Stay at home to enjoy the tranquility of the quiet day,other_unclear,1
+Stay in a state of rest and sleep until morning,other_unclear,1
+Stay in bed for the duration of the sleep target,other_unclear,1
+Stay in bed to relax after the morning reflection,relaxation_reflection_emotion,1
+Stay in bed until wake-up,other_unclear,1
+Stay in the current location to maintain comfort,other_unclear,1
+Take a brief nap to rejuvenate,other_unclear,1
+Take a comfortable seat,other_unclear,1
+Take a deep breath and allow yourself to drift off to sleep,other_unclear,1
+Take a moment to appreciate the calm of the evening,relaxation_reflection_emotion,1
+Take a moment to appreciate the peacefulness of the day,other_unclear,1
+Take a moment to enjoy the meal's preparation,meal_consumption_dining,1
+Take a moment to reflect on the day's calmness,relaxation_reflection_emotion,1
+Take a short walk around the house to maintain mobility,other_unclear,1
+Take care of any necessary morning medication,other_unclear,1
+Take deep breaths and clear the mind,other_unclear,1
+Take necessary medication or supplements if required,other_unclear,1
+Take necessary medications or care of health if required,other_unclear,1
+Take off any heavy clothing to regulate body temperature,home_environment_management,1
+Take time to reflect on the quiet day,relaxation_reflection_emotion,1
+Transition into sleep mode,other_unclear,1
+Travel back to my residence,mobility_commute_transition,1
+Travel to the grocery store to start shopping,mobility_commute_transition,1
+Travel to the nearest shopping area,mobility_commute_transition,1
+Travel to the nearest supermarket or shopping center,mobility_commute_transition,1
+Travel to the selected restaurant or location,mobility_commute_transition,1
+Travel to the shopping center or market,mobility_commute_transition,1
+Travel to the shopping center using preferred mode of transportation,mobility_commute_transition,1
+Travel to the shopping center using the preferred mode of transport,mobility_commute_transition,1
+Travel to the shopping location,mobility_commute_transition,1
+Turn off all electronic devices and embrace the darkness to signal the body for sleep,digital_device_account_ops,1
+Turn off all electronic devices and establish a calming routine,digital_device_account_ops,1
+Turn off all electronic devices to create a conducive environment for sleep,digital_device_account_ops,1
+Turn off all electronic devices to create a sleep-friendly environment,digital_device_account_ops,1
+Turn off all electronic devices to ensure a good night's sleep,digital_device_account_ops,1
+Turn off all electronic devices to minimize disturbances,digital_device_account_ops,1
+Turn off all electronic devices to reduce exposure to blue light,digital_device_account_ops,1
+Turn off all electronic devices to relax,digital_device_account_ops,1
+Turn off all lights to create a dark environment,sleep_environment_setup,1
+Turn off any distracting lights or sounds,sleep_environment_setup,1
+Turn off any electronic devices to avoid distractions,digital_device_account_ops,1
+Turn off any electronic devices to minimize light and noise,digital_device_account_ops,1
+Turn off any lights or electronic devices that might disrupt sleep,digital_device_account_ops,1
+Turn off any unnecessary lights to create a comfortable sleep environment,sleep_environment_setup,1
+Turn off any unnecessary lights to simulate nighttime,sleep_environment_setup,1
+Turn off electronic devices,digital_device_account_ops,1
+Turn off electronic devices and establish a calming routine,digital_device_account_ops,1
+Turn off electronic devices to ensure a good night's sleep,digital_device_account_ops,1
+Turn off electronic devices to minimize light and noise,digital_device_account_ops,1
+Turn off electronic devices to promote relaxation,digital_device_account_ops,1
+Turn off electronic devices to reduce disturbances,digital_device_account_ops,1
+Turn off electronics,other_unclear,1
+Turn off lights,sleep_environment_setup,1
+Turn off lights to create a conducive sleep environment,sleep_environment_setup,1
+Turn off lights to signal the end of the day,sleep_environment_setup,1
+Turn off or adjust lighting to a suitable level for sleep,other_unclear,1
+Turn off or dim the lights,sleep_environment_setup,1
+Turn off the lights,sleep_environment_setup,1
+"Turn off the lights and adjust room temperature, if necessary",sleep_environment_setup,1
+Turn off the lights and relax,sleep_environment_setup,1
+Turn off unnecessary lights,sleep_environment_setup,1
+Turn off unnecessary lights and sounds to create a conducive sleep environment,sleep_environment_setup,1
+Turn off unnecessary lights to create a calm environment,sleep_environment_setup,1
+Unlock the door,other_unclear,1
+Verify that the home is prepared for a meal,digital_device_account_ops,1
+Visualize a future filled with positive anticipation,other_unclear,1
+Wait for the eating option to be ready,other_unclear,1
+Wait for the food to be served,other_unclear,1
+Wait for the meal to be prepared and served,other_unclear,1
+Wake up and engage in a short exercise routine,morning_routine_hygiene,1
+Wake up and gather myself for social interaction,morning_routine_hygiene,1
+Wake up and perform light stretching to start the day,morning_routine_hygiene,1
+Wake up and prepare for the day,morning_routine_hygiene,1
+Wake up naturally or with a routine,morning_routine_hygiene,1
+Wash hands after eating,other_unclear,1
+Wash hands after the meal,other_unclear,1
+Wind down and relax before bedtime,sleep_transition_and_sleep,1
+Wind down and relax before sleeping,sleep_transition_and_sleep,1
+Wind down by setting a comfortable room temperature,sleep_transition_and_sleep,1
+Wind down with a relaxing activity,sleep_transition_and_sleep,1

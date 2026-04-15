@@ -1,0 +1,7 @@
+English Title: Barriers and enablers for older adults participating in a home-based pragmatic exercise program delivered and monitored by Amazon Alexa: a qualitative study
+Chinese Title: 老年人参与由亚马逊 Alexa 提供和监测的居家实用运动项目的障碍与促进因素：一项定性研究
+Category: older_adults
+Page URL: https://bmcgeriatr.biomedcentral.com/articles/10.1186/s12877-022-02963-2
+PDF URL: https://link.springer.com/content/pdf/10.1186/s12877-022-02963-2.pdf
+Notes: BMC open access
+Download Status: metadata_only

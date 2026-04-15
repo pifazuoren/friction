@@ -1,0 +1,7 @@
+English Title: Thinking more or thinking differently? Using drift-diffusion modeling to illuminate why accuracy prompts decrease misinformation sharing
+Chinese Title: 想得更多，还是想得不同？利用漂移扩散模型揭示准确性提示为何会减少错误信息分享
+Category: general
+Page URL: https://doi.org/10.1016/j.cognition.2022.105312
+PDF URL: 
+Notes: Publisher page may require access
+Download Status: metadata_only (pdf_url_not_found)

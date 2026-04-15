@@ -1,0 +1,7 @@
+English Title: A nuanced understanding of Internet use and non-use among the elderly
+Chinese Title: 对老年人互联网使用与不使用的细致理解
+Category: older_adults
+Page URL: https://research.utwente.nl/en/publications/a-nuanced-understanding-of-internet-use-and-non-use-among-the-eld
+PDF URL: https://research.utwente.nl/files/6913371/171.full.pdf
+Notes: Repository metadata page
+Download Status: metadata_only (HTTPError)

@@ -1,0 +1,5 @@
+group_id,pair_index,pair_seed,world_order,world_name,exp_id,status,qc_config_match,config_fingerprint,agent_count,total_days,attempt_rate,success_rate,help_seek_rate,abandon_rate,negative_feedback_rate,helplessness_delta,task_count,attempts,successes,help_seek_count,abandon_count,negative_feedback_count,trust_delta,avoidance_delta,emitted,positives,negatives,neg_share,emit_given_attempt
+stage6_single_1day_task_windows_smoke_20260407,0,101,0,baseline_low_friction,,failed,0,9aa3d682e45d5a42,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0.0,0.0,0,0,0,0.0,0.0
+stage6_single_1day_task_windows_smoke_20260407,0,101,1,high_friction_low_assist,,failed,0,9aa3d682e45d5a42,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0.0,0.0,0,0,0,0.0,0.0
+stage6_single_1day_task_windows_smoke_20260407,0,101,2,high_friction_high_assist,,failed,0,9aa3d682e45d5a42,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0.0,0.0,0,0,0,0.0,0.0
+stage6_single_1day_task_windows_smoke_20260407,0,101,3,low_friction_high_assist,,failed,0,9aa3d682e45d5a42,0,0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0.0,0.0,0,0,0,0.0,0.0

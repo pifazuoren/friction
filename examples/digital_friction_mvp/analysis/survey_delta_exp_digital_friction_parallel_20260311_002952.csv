@@ -1,0 +1,13 @@
+group_id,pair_index,pair_seed,world_name,exp_id,tech_acceptance_delta,trust_in_apps_delta,avoidance_tendency_delta,survey_helplessness_index_delta,survey_withdrawal_index_delta,behavior_delay_online_delta,behavior_proxy_reliance_delta,behavior_offline_switch_delta
+digital_friction_parallel_20260311_002952,0,101,baseline_low_friction,0ab03044-dd76-4f66-b916-6f54a17d348f,5.0,0.833333,0.833333,-1.666667,0.277778,-5.0,-5.833333,11.666667
+digital_friction_parallel_20260311_002952,0,101,high_friction_low_assist,5acbdf3b-b362-44cc-a94e-639df496280c,-9.166667,5.833333,0.833333,2.5,4.166667,4.166667,7.5,0.833333
+digital_friction_parallel_20260311_002952,0,101,low_friction_high_assist,df032cbf-0304-4f74-9d0f-a9e6351a8d29,2.5,-7.5,-0.833333,-4.583333,-12.222222,-14.166667,-14.166667,-8.333333
+digital_friction_parallel_20260311_002952,1,102,baseline_low_friction,a11f4c49-0147-4f4c-806d-e838ca10ff0b,3.333333,-3.333333,-6.666667,5.625,-2.5,1.666667,-9.166667,0.0
+digital_friction_parallel_20260311_002952,1,102,high_friction_low_assist,df90190a-6b3f-4f44-8ef8-8994831b25fb,6.666667,-5.833333,-7.5,-1.041667,6.388889,0.0,10.833333,8.333333
+digital_friction_parallel_20260311_002952,1,102,low_friction_high_assist,63e86c54-c01b-4fdd-8ed0-cf5e00833050,-4.166667,0.833333,-5.833333,-5.625,-4.444444,-12.5,3.333333,-4.166667
+digital_friction_parallel_20260311_002952,2,103,baseline_low_friction,62b1a5e8-dbc9-419d-b65f-856081bb136d,4.166667,0.0,-5.0,6.458333,-3.888889,-0.833333,-10.833333,0.0
+digital_friction_parallel_20260311_002952,2,103,high_friction_low_assist,47ce311d-2cc3-404a-9289-00ed30f32b99,2.5,-3.333333,-5.833333,1.666667,3.055556,9.166667,1.666667,-1.666667
+digital_friction_parallel_20260311_002952,2,103,low_friction_high_assist,36d74e33-dd04-448f-bdfb-ab0737af4d58,-6.666667,0.0,-5.833333,0.833333,9.722222,5.833333,11.666667,11.666667
+digital_friction_parallel_20260311_002952,3,104,baseline_low_friction,a3d50392-0445-4c06-b668-1e4caf06ee85,0.0,-0.833333,12.5,2.083333,-1.111111,-3.333333,1.666667,-1.666667
+digital_friction_parallel_20260311_002952,3,104,high_friction_low_assist,121f56fc-2c6d-460f-9b59-3aed5e0a380b,2.5,5.833333,-0.833333,-1.875,10.0,6.666667,13.333333,10.0
+digital_friction_parallel_20260311_002952,3,104,low_friction_high_assist,0c665caf-7728-4e4b-bb07-f22e2bc9a1e8,-3.333333,-12.5,-5.0,3.125,5.555556,3.333333,5.833333,7.5

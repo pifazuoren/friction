@@ -1,0 +1,17 @@
+{
+  "group_id": "20260322_010128",
+  "config_fingerprint": "44a1436236d5253a",
+  "config_payload": {
+    "world_batch": [
+      "baseline_low_friction",
+      "high_friction_low_assist",
+      "high_friction_high_assist",
+      "low_friction_high_assist"
+    ],
+    "AGENT_COUNT": "10",
+    "PROTO_LLM_UNCONTROLLABILITY_MODE": "hybrid",
+    "STAGE_DAYS": "2",
+    "STAGE_MODE": "full",
+    "STAGE_SINGLE_NAME": "steady"
+  }
+}

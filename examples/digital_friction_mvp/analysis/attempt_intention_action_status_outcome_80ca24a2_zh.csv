@@ -1,0 +1,30 @@
+intention,action,agent_status_status,emitted,outcome
+Assess my shopping list,检查我的手机上的联系人,在阳光明媚的日子里，我早早起床，拿起我值得信赖的旧手机查看朋友发来的消息，一想到要浏览任何可能复杂的界面，我就感到既兴奋又有点焦虑。,1,positive
+Determine nearest shopping location,根据当前需求制定购物清单,我坐在安静舒适的简陋家里，阳光透过窗户投射出温暖的光芒，我思考着未来的任务，对即将到来的购物之旅感到谨慎的期待，尽管我目前的情况很轻松。,1,positive
+Get dressed for a shopping trip,准备任何必要的购物清单,当我准备好开始新的一天时，阳光在房间里投射出温暖、明亮的光芒，我对我的购物之旅产生了一种温柔的期待，尽管我的购物清单的具体细节仍然难以捉摸。世界太平了，我的思绪就像外面清晨清新的空气一样清晰。,1,positive
+Review shopping list based on known items,根据天气穿着适当的衣服,当我在这个阳光明媚的早晨醒来时，我感到一阵轻松，因为今天只是休闲的一天。为迎接 23 华氏度的宜人天气，我穿好衣服，对这一天平静、平安的状态感到满意。,0,no_event
+Check my phone for contacts,评估我目前的财务状况,我开始了新的一天，阳光温暖地照耀着，我计划在检查完我的财务状况后去购物，尽管所发生的事情的具体细节有点模糊。我目前的想法是日常工作和对财务评估的预期。,0,no_event
+Choose a nearby shopping destination considering weather conditions,为旅行着装，包括舒适的步行鞋,我刚刚为购物之旅打扮好，穿上一双舒适的步行鞋，今天天气宜人，我感到如释重负。温暖的阳光很诱人，我很满足于继续我的日常生活，没有任何紧迫的想法或担忧。,0,no_event
+Plan shopping list based on current needs,确保厨房准备好做饭,我在家里，阳光明媚，我正准备做一些温暖而丰盛的东西。我有点焦虑，因为我总是在网上交易，所以我确保一切都设置得恰到好处，而不依赖于数字帮助。,0,no_event
+Review shopping list and prioritize necessary items,检查家里的成分,我舒适地坐在家庭办公室里，喝着早晨的咖啡。阳光透过窗户照进来，温暖了我的房间，当我清晰、有条理地检查冰箱里的东西时，我感到如释重负。,0,no_event
+"Get dressed for the trip, including comfortable walking shoes",审查当前预算或计划支出,我舒服地坐在客厅里，沐浴在早晨温暖的阳光下，在一个宁静的早晨后感到一种轻松的感觉，我的思绪不再关注任何紧迫的问题或担忧，只是在出去购物之前享受安静。,1,negative
+Exit home to start shopping trip,前往最近的购物区,今天早上我准备出发时感到有点失望。天气很好，但我对昨天尝试的新应用程序感到沮丧；事实证明这对我来说太复杂了。不过，我计划很快去购物，这可能会让我精神振奋。,1,negative
+Verify current location is home,考虑饮食需求和偏好来计划膳食,当我坐在社区公园安静的长椅上，在阳光温柔的爱抚下，思考我的膳食计划，考虑到我的健康问题和预算，在简单的生活乐趣中我感到一种平静。,0,no_event
+Travel to the nearest shopping area,评估当前位置的食物供应情况,我在附近闲逛，阳光温暖地照着，但我却感觉有点失落，因为我还没有找到什么好吃的。我之前尝试过的在线教程和应用程序感觉太复杂了，现在我只是希望能偶然发现一个可以轻松获取食物的地方。,0,no_event
+Order or prepare food,等待食物准备好或到达,我坐在社区阅览室，阳光明媚，耐心地等待饭菜准备好，在熟悉的环境中感受到期待和舒适。,1,positive
+Stay home as there is no need to move,获取储存的食物或使用可用的食材计划膳食,我在家里，阳光明媚，没有什么异常情况，我感到很欣慰。我正在考虑晚餐做什么，专注于我在日常生活中欣赏的简单和高效。,0,no_event
+Return to the house,换上舒适的睡衣,我坐在客厅里，阳光透过窗户投射出温暖的光芒，我试图适应突然需要换衣服的情况，但由于我正在努力使用复杂的应用程序，我感到越来越沮丧，尽管我在阳光明媚的天气里总体上感到舒适。,0,no_event
+Retire to your bed,调整睡姿至舒适的位置,经过一天的社区活动，我正在家里放松，夕阳西下，房间里变得温暖舒适，我正在调整自己的睡姿，寻找最舒服的地方。,0,no_event
+Stay at home due to current location,准备饭菜时要考虑简单和快速的准备,当我一大早站在安静、阳光明媚的厨房里时，我的手犹豫地伸手去拿简单的食材，当我试图以最小的麻烦和挫败感准备一顿饭时，又一个平静的日子的失望折磨着我。,0,no_event
+Return to home after a walk in the garden,准备在家吃的饭菜,我坐在家中，沐浴在午后温暖的阳光下，一边准备着家里的饭菜，一边感到一丝不满足——这平静的一天，让我有一种平息的怨恨和一丝悲伤。,0,no_event
+Seek comfort in familiar surroundings,吃一顿家常饭来滋养身体,这是一个阳光明媚的夜晚，尽管天气温暖，但当我坐在家里思考这一天的安静孤独时，我发现自己感到相当沮丧，并对吞噬我这一天的寂静感到一种怨恨。,1,negative
+Verify meal readiness,准备任何必要的膳食（如果尚未准备好）,当我坐在客厅里，23 度的温暖夜晚在我面前展开时，我发现自己在思考准备晚餐的简单乐趣。我的心很平静，对这一天的安静度过感到满意，并满足于知道一切都在掌控之中，这是应该的。,1,positive
+Start the day at home since location is already home,在您的设备上启动出租车服务应用程序,凌晨 1 点，当我准备使用出租车应用程序时，我感到有点失望。我怀念一天中简单的宁静、平和与安静，而且我对应用程序的复杂性感到有点沮丧，这似乎挑战了我的耐心。,1,negative
+登录常用服务并完成验证码/实名核验,准备饭菜,在宁静的家中，我怀着一颗平静的心准备着饭菜，感受着阳光明媚的温暖，感受着简单生活中的平静。,1,negative
+Launch taxi service app on your device,确保厨房准备好做饭,此刻，我安静地待在家里，阳光明媚，我感到一种温柔的平静，因为我专注于准备厨房准备一顿家常饭菜，知道这一天过得平静而平安，但我仍然对接下来可能发生的事情感到兴奋。,0,no_event
+Check current location and ensure it's home,评估可用食品的库存,我在家，外面阳光明媚，我花点时间检查一下冰箱里的东西，在平静简单的一天中感到心满意足。,0,no_event
+Check current comfort settings,如有必要，调整室温,我在家里安顿下来，阳光透过窗户照进来带来温暖，我正在考虑调节恒温器。这一天很平静，与平常的喧嚣形成了鲜明的对比，我很满足于简单地沐浴在这一切的安静中。,1,positive
+Stay at home due to sunny weather and comfortable temperature,选择带来舒适感的简单膳食,当我坐在舒适的扶手椅上，温暖的阳光透过窗户照射进来时，我正在选择一顿简单、舒缓的饭菜，感受平静而满足的一天带来的平静感。,1,positive
+Assess my mood and decide if a shopping trip is suitable,准备厨房做饭,我在厨房里，阳光洒下温暖的光芒，我的手指在准备晚餐时摸索着炊具。尽管外面天气宜人，但悲伤和愤怒的感觉却挥之不去，让这一天的孤独感比以往任何时候都更加沉重。,1,positive
+Stay at home due to late hour and need for rest,根据难易程度和时间选择简单的膳食选项,我蜷缩在家里，傍晚柔和的阳光透过窗户洒进来，我沉思着这一天的安静简单，满足于一顿便餐和没有压力的宁静，感到一种深深的满足感。,1,positive
+Retire to the bedroom and lie down,准备饭菜,当我舒适地坐在家里，清晨的阳光透过微开的窗帘洒进来，我在这平静而平静的一天中感到一种平静的解脱。伴随着23度的温暖空气和熟悉的舒适感，我专注于准备一顿简单的饭菜，对这段安静时光的轻松感到感激。,1,negative

@@ -1,0 +1,25 @@
+﻿offline_parent,offline_subtype,count,ratio,examples
+sleep_rest,sleep_env_setup,268,0.1675,Adjust the room temperature to 23°C for comfort | Close the bedroom curtains to block sunlight | Adjust the bedroom temperature to a comfortable level
+relax_leisure,relax_mindbody,215,0.1344,Perform morning stretches to wake up | Listen to relaxing music or a podcast | Practice a relaxation technique to prepare for sleep
+meal_flow,meal_other,154,0.0963,Clear the dishes after eating | Reflect on the meal and any thoughts or feelings about the food | Select a simple meal recipe based on available ingredients
+sleep_rest,sleep_other,125,0.0781,Take a few deep breaths and slowly drift off to sleep | Prepare the bed with clean sheets | Prepare for bed by changing into pajamas
+other_offline,other_offline,121,0.0756,Choose items based on budget | Prepare a healthy breakfast | List necessary items to buy for future use
+meal_flow,meal_table_serve,114,0.0712,Set the table with utensils and cutlery | Sit down at the dining table and serve the meal | Sit down and serve the meal
+sleep_rest,sleep_entry,102,0.0638,Lie down in the bed and set the alarm | Begin the process of sleeping by closing my eyes and focusing on my breath | Lay down in bed and close your eyes
+meal_flow,meal_eat,95,0.0594,Enjoy the meal at a leisurely pace | Enjoy the meal | Enjoy the meal
+meal_flow,meal_cook,75,0.0469,Prepare a simple meal considering easy and nutritious options | Cook the meal | Start cooking the meal as per the selected recipe
+meal_flow,meal_prep,67,0.0419,Prepare a meal using easy-to-cook ingredients | Prepare a meal using ingredients from the pantry | Prepare the ingredients for a simple meal
+sleep_rest,sleep_schedule,66,0.0413,Change into comfortable sleepwear | Set the alarm clock for a suitable sleep time | Set the alarm if necessary for the next day
+shopping_mobility,shopping_other,38,0.0238,Plan to visit nearby stores with convenient locations | Store leftovers in the refrigerator | Check my financial situation to ensure sufficient funds for shopping
+meal_flow,meal_cleanup,36,0.0225,Wash the dishes after eating | Clean up after eating | Clean up after eating
+planning_review,planning_other,30,0.0187,Review current inventory and list items to buy | Check in with family members via phone call | Check the kitchen to see if there are any ingredients available
+shopping_mobility,shopping_plan,23,0.0144,Review shopping list and prioritize items | Review shopping list based on need | Review available stores in the vicinity
+relax_leisure,relax_other,20,0.0125,Perform morning stretching exercises | Get ready to leave the house | Get ready and leave the house
+relax_leisure,reading_hobby,15,0.0094,Review the day's schedule or read a book | Review the day's schedule or read a book | Read a book or a magazine
+home_maintenance,household_adjustments,10,0.0063,Dress appropriately for the sunny weather | Adjust indoor temperature to 23°C | Dress appropriately for the sunny weather
+planning_review,weather_review,6,0.0037,Check weather for shopping convenience | Check the weather forecast for the day | Check weather conditions to ensure safety while shopping
+home_maintenance,home_chores,6,0.0037,Adjust the living room lights to a dim setting | Ensure all necessary items are within reach | Ensure all necessary items are within reach
+planning_review,day_plan_review,5,0.0031,Review the day's achievements and thoughts before sleeping | Plan for the next day | Plan for the next day
+shopping_mobility,shopping_trip,4,0.0025,Select and start shopping at the nearest supermarket | Leave the workplace | Leave the workplace
+shopping_mobility,shopping_purchase_offline,4,0.0025,Select necessary items and proceed to the checkout | Purchase the listed items | Purchase the listed items
+relax_leisure,bath_selfcare,1,0.0006,Take a warm shower or bath

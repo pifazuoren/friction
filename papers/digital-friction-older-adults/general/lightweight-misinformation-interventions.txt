@@ -1,0 +1,7 @@
+English Title: Exploring Lightweight Interventions at Posting Time to Reduce the Sharing of Misinformation on Social Media
+Chinese Title: 探索在发布时刻实施的轻量干预：减少社交媒体上的错误信息分享
+Category: general
+Page URL: https://doi.org/10.1145/3449092
+PDF URL: 
+Notes: ACM publisher page may require access
+Download Status: metadata_only (pdf_url_not_found)

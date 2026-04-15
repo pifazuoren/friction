@@ -1,0 +1,82 @@
+\documentclass[11pt]{article}
+
+% ---------- page ----------
+\usepackage[a4paper,margin=2cm]{geometry}
+
+% ---------- Chinese ----------
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setmainfont{Times New Roman}
+\setCJKmainfont{Noto Serif CJK SC}
+
+% ---------- table ----------
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{makecell}
+
+% ---------- misc ----------
+\usepackage{caption}
+\usepackage{ragged2e}
+\usepackage{hyperref}
+
+% tabularx column types
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\newcolumntype{P}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+
+\begin{document}
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{P{1.15cm} Y Y Y Y}
+\toprule
+\textbf{Part} & \textbf{简单版更新机制} & \textbf{变量规则（可直接写进机制说明）} & \textbf{理论预期 / 结果方向对照} & \textbf{可支持的论文} \\
+\midrule
+
+Part 1 &
+\textbf{不是“失败几次就更 helpless”，而是“开始觉得自己怎么做都没用”时，helplessness 才会上升。} &
+把 \textbf{failure / friction} 当作上游输入；把 \textbf{perceived uncontrollability} 当作 helplessness 的近端驱动。也就是：失败本身不直接加分，只有当失败被解释为“行动无法改变结果”时，才提高 helplessness。 &
+如果模型合理，那么：\textbf{同样次数的失败}，在“仍觉得可控”的条件下 helplessness 上升应更弱；在“觉得不可控”的条件下上升应更强。 &
+Seligman \& Maier (1967); Abramson et al. (1978); Maier \& Seligman (2016); Tafet \& Ortiz Alonso (2025) \\
+
+Part 2 &
+\textbf{中间要加一层“我觉得自己能不能搞定”与“我还有没有控制感”。} &
+在 appraisal 层加入 \textbf{self-efficacy / felt control}。规则上，不把 objective difficulty、主观控制感、任务效能感压成一个总分，而是拆开：它们共同决定失败会不会被解释成“没救了”。 &
+如果模型合理，那么：高 self-efficacy / 高 felt control 的 agent，遇到阻碍时更不容易进入 helplessness；低 self-efficacy / 低 felt control 的 agent，更容易把受阻解释为“我做什么都没用”。 &
+Skinner (1996); Bandura (1977); An et al. (2024); Sun et al. (2025); Song et al. (2025) \\
+
+Part 3 &
+\textbf{“不做”不能都算 helplessness，要先分清为什么不做。} &
+把 non-attempt / non-use 拆成至少三类：\textbf{能力不足型}（不会/太难）、\textbf{风险规避型}（怕出错/怕被骗）、\textbf{价值不足型}（觉得不值得/没必要）。因此 avoid 行为不能直接等于 helplessness。 &
+如果模型合理，那么：即便行为上都表现为“不做”，不同 avoid 来源对应的内部状态应该不同。比如 risk-avoidant nonuse 不一定伴随高 helplessness；value-based nonuse 也不必然代表低控制感。 &
+Davis (1989); Venkatesh et al. (2003); Jokisch et al. (2022); Money et al. (2024); Birati \& Tzemah-Shahar (2026) \\
+
+Part 4 &
+\textbf{成功也不是“成功次数越多越好”，而是“我明确感觉到是我自己做成的”那种成功，才真正有保护作用。} &
+把 success 区分为 \textbf{mastery-like / controllable success} 与普通完成。只有前者更适合作为长期保护项，去降低后续 helplessness 或缓冲焦虑影响。不要把所有 success 都机械累计。 &
+如果模型合理，那么：同样是成功经历，\textbf{可归因于自己有效行动}的成功，应该更能降低后续 helplessness；被动完成、跟着做完、但没有掌握感的“成功”，保护作用应更弱。 &
+Maier \& Seligman (2016); Niu et al. (2026); Lu et al. (2024); Avazzadeh et al. (2025) \\
+
+Part 5 &
+\textbf{帮助不是直接把 helplessness 减掉，而是先把人“扶起来”——恢复理解、效能感和控制感。} &
+把 \textbf{support / external help} 设为修复机制，而不是最终层的直接减分器。更合理的规则是：support 先作用于 \textbf{self-efficacy、felt control、benefit understanding} 等中间层，再间接影响 helplessness。可保留少量直接效应为经验问题，但不预先写死。 &
+如果模型合理，那么：有帮助的条件下，应该先看到中间变量改善，再看到 helplessness 缓和；而“代替做完”的帮助，不一定真正降低长期 helplessness，甚至可能增加依赖。 &
+Zhu et al. (2025); Emmesjö et al. (2025); Wilson et al. (2021) \\
+
+Part 7 &
+\textbf{task\_self\_efficacy 这个变量不是硬编出来的，它本来就有专门文献支持。} &
+将 \textbf{task\_self\_efficacy} 作为数字任务层的可操作化变量，用来表示“个体相信自己能否完成某类数字任务”。它不是泛泛自信，而是任务化、场景化的效能预期。 &
+如果模型合理，那么：task\_self\_efficacy 应该能解释 attempt、persistence、以及受阻后的恢复差异；它作为机制变量是有测量传统与理论根基的。 &
+Compeau \& Higgins (1995); Bandura (1997) \\
+
+\bottomrule
+\end{tabularx}
+\caption{Helplessness 更新机制的分部设定、变量规则、理论预期与文献支持}
+\label{tab:helplessness_update_mechanism}
+\end{table}
+
+\end{document}

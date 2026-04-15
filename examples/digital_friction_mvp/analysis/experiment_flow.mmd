@@ -1,0 +1,31 @@
+flowchart TD
+  A["world_runner.py\n选择 worlds + seeds\n生成 config snapshot / manifest"] --> B["启动 main.py"]
+  B --> C["init_status\n按 profile 初始化 helplessness / memory / digital_emotion_state"]
+  C --> D["初始 survey\nsync_survey_feedback"]
+
+  D --> E{"按 stage 运行"}
+  E --> E1["写入该 stage 的环境条件\nfriction / assist / risk / accessibility"]
+  E1 --> F{"每天 × 每个决策时段"}
+
+  F --> G["STEP -> agent.forward()"]
+  G --> G1["读取当前状态 / 环境 / 日期"]
+  G1 --> G2["准备 digital_emotion_state\n跨天衰减"]
+  G2 --> G3["可选 daily reflection\n审计层"]
+  G3 --> G4["如有需要，分配任务"]
+  G4 --> G5["提取 memory features\nself-efficacy / help effect / recent failure"]
+  G5 --> G6["可选 strategy bias\n探索层，默认 off"]
+  G6 --> G7["规则选策略\nattempt_self / seek_help_then_attempt / avoid"]
+  G7 --> G8["规则算 outcome\nsuccess / failure / abandon / avoid"]
+  G8 --> G9["校准 perceived uncontrollability\nrule + bounded LLM"]
+  G9 --> G10["事件级心理评估\n更新 anxiety / confidence 等"]
+  G10 --> G11["规则更新 helplessness"]
+  G11 --> G12["更新 memory / counters / payload / event_log"]
+
+  G12 --> H["log_step_status\n记录 step metrics"]
+  H --> F
+
+  F --> I["stage_settlement\n汇总 stage attempt rows / stage summary / explanations"]
+  I --> J["stage-end survey\nsync_survey_feedback"]
+  J --> E
+
+  E --> K["最终输出\nSQLite + analysis CSV + manifest"]

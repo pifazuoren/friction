@@ -1,0 +1,1365 @@
+from __future__ import annotations
+
+import json
+import os
+import random
+import re
+from typing import Any
+
+from agentsociety.cityagent import SocietyAgent
+from config_runtime import load_runtime_config
+
+from .attempt_strategy import choose_attempt_strategy, compute_rule_strategy_weights
+from .compat import apply_compatibility_updates
+from .experience_memory import (
+    extract_memory_features,
+    update_experience_memory,
+)
+from .models import HelplessnessUpdateInput
+from .llm_psychology import (
+    maybe_generate_daily_reflection,
+    prepare_digital_emotion_state_for_day,
+    resolve_event_appraisal,
+    resolve_final_interview,
+    resolve_stage_interview,
+    resolve_strategy_deliberation,
+    resolve_task_appraisal,
+)
+from .logical_clock import is_proto_logical_clock_enabled
+from .outcome_model import (
+    infer_avoid_reason,
+    infer_support_mode,
+    resolve_attempt_outcome,
+    support_quality_from_env,
+)
+from .profile_buckets import age_bucket, persona_bucket
+from .runtime import assign_task_if_missing, build_stage_transition_updates
+from .state_schema import build_proto_status_attributes
+from .state_update import apply_helplessness_update
+from .task_assignment import decode_task, encode_task, is_task_window_tick
+from .uncontrollability_calibrator import calibrate_uncontrollability
+
+
+_STAGE_INTERVIEW_MARKER = re.compile(
+    r"^\[PROTO_STAGE_INTERVIEW_V1\]\[stage=(?P<stage_name>[^\]]+)\]\[index=(?P<stage_index>\d+)\]"
+)
+_FINAL_INTERVIEW_MARKER = "[PROTO_FINAL_INTERVIEW_V1]"
+_SURVEY_SUMMARY_FIELDS = (
+    "survey_helplessness_index",
+    "survey_withdrawal_index",
+    "survey_self_efficacy_index",
+    "survey_support_index",
+    "survey_usefulness_index",
+    "survey_anxiety_index",
+)
+
+
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        if value is None:
+            return default
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    try:
+        if value is None:
+            return default
+        return int(float(value))
+    except (TypeError, ValueError):
+        return default
+
+
+def _clamp(value: float, lower: float = 0.0, upper: float = 100.0) -> float:
+    return max(lower, min(upper, float(value)))
+
+
+def _compact_status_text(value: Any, default: str = "unknown") -> str:
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    return text or default
+
+
+def _compact_status_note(
+    value: Any,
+    *,
+    default: str = "unknown",
+    max_chars: int = 160,
+) -> str:
+    text = _compact_status_text(value, default=default)
+    if len(text) > max_chars:
+        text = text[:max_chars].rstrip()
+    return text or default
+
+
+def _format_status_time_hhmm(value: Any, default: str = "unknown") -> str:
+    text = str(value or "").strip()
+    match = re.search(r"(?P<hour>\d{1,2}):(?P<minute>\d{2})", text)
+    if not match:
+        return default
+    hour = _safe_int(match.group("hour"), -1)
+    minute = _safe_int(match.group("minute"), -1)
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        return default
+    return f"{hour:02d}:{minute:02d}"
+
+
+def _decode_json_list(raw_value: Any) -> list[dict[str, Any]]:
+    if isinstance(raw_value, list):
+        return [item for item in raw_value if isinstance(item, dict)]
+    if raw_value in (None, "", "null"):
+        return []
+    if isinstance(raw_value, str):
+        try:
+            payload = json.loads(raw_value)
+        except json.JSONDecodeError:
+            return []
+        if isinstance(payload, list):
+            return [item for item in payload if isinstance(item, dict)]
+    return []
+
+
+def _support_snapshot_for_task(
+    help_effect_memory: Any,
+    task_family: str,
+) -> dict[str, Any]:
+    if not isinstance(help_effect_memory, dict):
+        return {}
+    by_task_family = help_effect_memory.get("by_task_family", {})
+    by_source = help_effect_memory.get("by_source", {})
+    return {
+        "overall": (
+            help_effect_memory.get("overall", {})
+            if isinstance(help_effect_memory.get("overall"), dict)
+            else {}
+        ),
+        "task_family": (
+            by_task_family.get(task_family, {})
+            if isinstance(by_task_family, dict)
+            else {}
+        ),
+        "source": (
+            by_source.get("generic", {})
+            if isinstance(by_source, dict)
+            else {}
+        ),
+    }
+
+
+def _summarize_event_log_for_interview(event_log: list[dict[str, Any]]) -> dict[str, Any]:
+    summary = {
+        "event_count": 0,
+        "negative_count": 0,
+        "success_count": 0,
+        "avoid_count": 0,
+        "help_used_count": 0,
+        "top_task_family": "",
+        "top_outcome_type": "",
+    }
+    if not event_log:
+        return summary
+    task_counts: dict[str, int] = {}
+    outcome_counts: dict[str, int] = {}
+    for item in event_log:
+        summary["event_count"] += 1
+        decision = item.get("decision", {}) if isinstance(item, dict) else {}
+        task_family = str(
+            item.get("scenario")
+            or (decision.get("task_family") if isinstance(decision, dict) else "")
+            or ""
+        ).strip()
+        outcome_type = str(
+            (decision.get("primary_reason") if isinstance(decision, dict) else "")
+            or ""
+        ).strip()
+        if task_family:
+            task_counts[task_family] = task_counts.get(task_family, 0) + 1
+        if outcome_type:
+            outcome_counts[outcome_type] = outcome_counts.get(outcome_type, 0) + 1
+        if outcome_type in {"success_self", "success_with_help"}:
+            summary["success_count"] += 1
+        if outcome_type == "avoid_without_attempt":
+            summary["avoid_count"] += 1
+        if outcome_type in {
+            "failure_after_attempt",
+            "failure_even_with_help",
+            "abandon_midway",
+        }:
+            summary["negative_count"] += 1
+        if str(decision.get("strategy_type", "")).strip() == "seek_help_then_attempt":
+            summary["help_used_count"] += 1
+    if task_counts:
+        summary["top_task_family"] = max(
+            task_counts.items(), key=lambda item: (item[1], item[0])
+        )[0]
+    if outcome_counts:
+        summary["top_outcome_type"] = max(
+            outcome_counts.items(), key=lambda item: (item[1], item[0])
+        )[0]
+    return summary
+
+
+_BACKGROUND_PRIORITY_KEYWORDS = (
+    "线下",
+    "验证码",
+    "支付",
+    "挂号",
+    "风险",
+    "诈骗",
+    "被骗",
+    "视力",
+    "复杂",
+    "小字",
+    "求助",
+    "帮助",
+    "家人",
+    "志愿者",
+    "不敢",
+    "焦虑",
+    "放弃",
+    "尝试",
+)
+
+
+def _compress_background_story(background_story: Any, max_chars: int = 120) -> str:
+    text = re.sub(r"\s+", "", str(background_story or "")).strip()
+    if not text:
+        return ""
+    sentences = [
+        sentence.strip("，,；;。")
+        for sentence in re.split(r"[。！？!?]", text)
+        if str(sentence).strip()
+    ]
+    prioritized = [
+        sentence
+        for sentence in sentences
+        if any(keyword in sentence for keyword in _BACKGROUND_PRIORITY_KEYWORDS)
+    ]
+    ordered: list[str] = []
+    for sentence in prioritized + sentences:
+        if sentence and sentence not in ordered:
+            ordered.append(sentence)
+        candidate = "。".join(ordered)
+        if len(candidate) >= max_chars:
+            break
+    summary = "。".join(ordered[:3]).strip("。")
+    if not summary:
+        summary = text[:max_chars]
+    if len(summary) > max_chars:
+        summary = summary[:max_chars].rstrip("，,；;。")
+    return summary
+
+
+def _extract_same_task_event_tail(
+    *,
+    task_family: str,
+    event_log: Any,
+    limit: int = 3,
+) -> list[dict[str, Any]]:
+    if not isinstance(event_log, list):
+        return []
+    tail: list[dict[str, Any]] = []
+    for item in reversed(event_log):
+        if not isinstance(item, dict):
+            continue
+        decision = item.get("decision", {})
+        if not isinstance(decision, dict):
+            decision = {}
+        current_task_family = str(
+            item.get("scenario") or decision.get("task_family") or ""
+        ).strip()
+        if current_task_family != str(task_family):
+            continue
+        tail.append(
+            {
+                "day": _safe_int(item.get("day"), 0),
+                "outcome_type": str(decision.get("primary_reason", "")).strip(),
+                "strategy_type": str(decision.get("strategy_type", "")).strip(),
+                "avoid_reason": str(decision.get("avoid_reason", "")).strip(),
+                "support_quality": _safe_int(decision.get("support_quality"), 0),
+                "perceived_uncontrollability": _safe_int(
+                    decision.get("perceived_uncontrollability"),
+                    0,
+                ),
+            }
+        )
+        if len(tail) >= int(limit):
+            break
+    return list(reversed(tail))
+
+
+def _build_task_relevant_memory_packet(
+    *,
+    task: Any,
+    task_domain_memory: Any,
+    help_effect_memory: Any,
+    recent_episode_summary: Any,
+    event_log: Any,
+) -> dict[str, Any]:
+    task_state = {}
+    if isinstance(task_domain_memory, dict):
+        raw_state = task_domain_memory.get(task.task_family)
+        if isinstance(raw_state, dict):
+            task_state = raw_state
+    help_snapshot = _support_snapshot_for_task(help_effect_memory, task.task_family)
+    family_help = (
+        help_snapshot.get("task_family", {})
+        if isinstance(help_snapshot.get("task_family"), dict)
+        else {}
+    )
+    recent = recent_episode_summary if isinstance(recent_episode_summary, dict) else {}
+    event_tail = _extract_same_task_event_tail(
+        task_family=task.task_family,
+        event_log=event_log,
+        limit=3,
+    )
+    controllable_success_memory = _safe_float(
+        task_state.get("controllable_success_memory", 0.0)
+    )
+    return {
+        "task_family": str(task.task_family),
+        "same_task_attempt_count": _safe_int(task_state.get("attempt_count"), 0),
+        "same_task_success_count": _safe_int(task_state.get("success_count"), 0),
+        "same_task_failure_count": _safe_int(task_state.get("failure_count"), 0),
+        "same_task_avoid_count": _safe_int(task_state.get("avoid_count"), 0),
+        "same_task_failure_streak": _safe_int(
+            task_state.get("same_task_failure_streak"),
+            0,
+        ),
+        "same_task_recent_negative_feedback_ema": round(
+            _safe_float(task_state.get("recent_negative_feedback_ema", 0.0)),
+            4,
+        ),
+        "same_task_last_outcome": str(task_state.get("last_outcome", "")).strip(),
+        "same_task_task_self_efficacy": round(
+            _safe_float(task_state.get("task_self_efficacy", 50.0)),
+            4,
+        ),
+        "same_task_controllable_success_memory": round(
+            controllable_success_memory,
+            4,
+        ),
+        "same_task_help_attempt_count": _safe_int(
+            family_help.get("help_attempt_count"),
+            0,
+        ),
+        "same_task_help_success_count": _safe_int(
+            family_help.get("help_success_count"),
+            0,
+        ),
+        "same_task_help_failure_count": _safe_int(
+            family_help.get("help_failure_count"),
+            0,
+        ),
+        "help_success_rate_same_task": round(
+            _safe_float(family_help.get("help_success_rate_smoothed", 0.5)),
+            4,
+        ),
+        "recent_negative_feedback_ratio": round(
+            _safe_float(recent.get("recent_negative_feedback_ratio", 0.0)),
+            4,
+        ),
+        "recent_avoid_ratio": round(
+            _safe_float(recent.get("recent_avoid_ratio", 0.0)),
+            4,
+        ),
+        "recent_help_seek_ratio": round(
+            _safe_float(recent.get("recent_help_seek_ratio", 0.0)),
+            4,
+        ),
+        "recent_same_task_failure_count": _safe_int(
+            recent.get("recent_same_task_failure_count"),
+            0,
+        ),
+        "recent_failure_pressure": round(
+            _safe_float(recent.get("recent_failure_pressure", 0.0)),
+            4,
+        ),
+        "recent_same_task_outcomes_tail": [
+            str(item.get("outcome_type", "")).strip() for item in event_tail
+        ],
+        "recent_same_task_events_tail": event_tail,
+        "has_controllable_success_evidence": controllable_success_memory > 0.05,
+    }
+
+
+class DigitalHelplessnessAgent(SocietyAgent):
+    StatusAttributes = SocietyAgent.StatusAttributes + build_proto_status_attributes()
+    survey_recent_alignment = True
+
+    async def before_forward(self) -> None:
+        if is_proto_logical_clock_enabled(getattr(self, "environment", None)):
+            # Keep simulator motion/status sync for framework persistence, but skip
+            # the heavier SocietyAgent context preparation in logical clock mode.
+            await self.update_motion()
+            return
+        await super().before_forward()
+
+    async def _run_minimal_daily_housekeeping(
+        self,
+        *,
+        current_day: int,
+        env: dict[str, Any],
+    ) -> None:
+        normalized_day = int(current_day)
+        last_housekeeping_day = _safe_int(
+            await self.memory.status.get("proto_last_housekeeping_day", -1),
+            -1,
+        )
+        if last_housekeeping_day == normalized_day:
+            return
+        raw_digital_emotion_state = await self.memory.status.get(
+            "digital_emotion_state", {}
+        )
+        digital_emotion_state = prepare_digital_emotion_state_for_day(
+            raw_digital_emotion_state,
+            target_day=normalized_day,
+        )
+        if digital_emotion_state.to_dict() != (
+            raw_digital_emotion_state
+            if isinstance(raw_digital_emotion_state, dict)
+            else {}
+        ):
+            await self.memory.status.update(
+                "digital_emotion_state",
+                digital_emotion_state.to_dict(),
+            )
+        helplessness = _clamp(
+            _safe_float(await self.memory.status.get("helplessness_score", 0.0))
+        )
+        current_stage_key = str(
+            env.get("digital_stage") or env.get("stage_name") or ""
+        ).strip()
+        previous_stage_key = str(
+            await self.memory.status.get("proto_active_stage_key", "")
+        ).strip()
+        stage_updates, _ = build_stage_transition_updates(
+            current_stage_key=current_stage_key,
+            previous_stage_key=previous_stage_key,
+            helplessness=helplessness,
+        )
+        for key, value in stage_updates.items():
+            await self.memory.status.update(key, value)
+        await self.memory.status.update("proto_last_housekeeping_day", normalized_day)
+
+    async def _write_idle_step_state(self) -> None:
+        await self.memory.status.update(
+            "current_intention", "No digital task assigned"
+        )
+        await self.memory.status.update(
+            "friction_step_signal",
+            {
+                "step_type": "idle",
+                "step_intention": "No digital task assigned",
+                "step_outcome": "none",
+                "status_text": "No digital task assigned",
+            },
+        )
+
+    async def status_summary(self) -> None:
+        try:
+            day_value, time_value = self.environment.get_datetime(format_time=True)
+        except Exception:
+            day_value, time_value = 0, "unknown"
+        stage = _compact_status_text(
+            await self.memory.status.get("proto_active_stage_key", ""),
+            default="",
+        )
+        if not stage:
+            env = getattr(self.environment, "environment", {})
+            if not isinstance(env, dict):
+                env = {}
+            stage = _compact_status_text(
+                env.get("digital_stage") or env.get("stage_name"),
+                default="unknown",
+            )
+        friction_step_signal = await self.memory.status.get("friction_step_signal", {})
+        if not isinstance(friction_step_signal, dict):
+            friction_step_signal = {}
+        summary = (
+            f"day={_safe_int(day_value, 0)} "
+            f"time={_format_status_time_hhmm(time_value)} "
+            f"stage={stage or 'unknown'} "
+            f"step={_compact_status_text(friction_step_signal.get('step_type'), default='unknown')} "
+            f"intention={_compact_status_text(await self.memory.status.get('current_intention', ''), default='unknown')} "
+            f"outcome={_compact_status_text(friction_step_signal.get('step_outcome'), default='none')} "
+            f"helplessness={_clamp(_safe_float(await self.memory.status.get('helplessness_score', 0.0))):.1f} "
+            f"trust={_clamp(_safe_float(await self.memory.status.get('trust_in_apps', 0.0))):.1f} "
+            f"avoidance={_clamp(_safe_float(await self.memory.status.get('avoidance_tendency', 0.0))):.1f} "
+            f"note={_compact_status_note(friction_step_signal.get('status_text'), default='unknown')}"
+        )
+        await self.memory.status.update("status_summary", summary)
+
+    async def _build_task_appraisal_profile_summary(self) -> dict[str, Any]:
+        background_story = str(
+            await self.memory.status.get("background_story", "")
+        ).strip()
+        persona = str(await self.memory.status.get("persona", "")).strip()
+        if not persona:
+            persona = str(await self.memory.status.get("personality", "")).strip()
+        return {
+            "age": _safe_int(await self.memory.status.get("age", -1), -1),
+            "education": str(
+                await self.memory.status.get("education", "unknown")
+            ).strip(),
+            "occupation": str(
+                await self.memory.status.get("occupation", "unknown")
+            ).strip(),
+            "persona": persona,
+            "background_summary": _compress_background_story(background_story),
+            "digital_experience": _clamp(
+                _safe_float(await self.memory.status.get("digital_experience", 0.5)),
+                0.0,
+                1.0,
+            ),
+            "vision_limit": _clamp(
+                _safe_float(await self.memory.status.get("vision_limit", 0.3)),
+                0.0,
+                1.0,
+            ),
+            "past_fraud_experience": _clamp(
+                _safe_float(
+                    await self.memory.status.get("past_fraud_experience", 0.2)
+                ),
+                0.0,
+                1.0,
+            ),
+        }
+
+    async def _build_survey_summary(self) -> dict[str, float]:
+        summary: dict[str, float] = {}
+        for field_name in _SURVEY_SUMMARY_FIELDS:
+            summary[field_name] = _clamp(
+                _safe_float(await self.memory.status.get(field_name, 0.0))
+            )
+        return summary
+
+    async def _persist_proto_decision_state(
+        self,
+        *,
+        task_appraisal: Any,
+        strategy_deliberation: Any,
+    ) -> None:
+        await self.memory.status.update("proto_task_appraisal", task_appraisal.to_dict())
+        await self.memory.status.update(
+            "proto_strategy_deliberation",
+            strategy_deliberation.to_dict(),
+        )
+
+    async def do_interview(self, question: str) -> str:
+        stage_match = _STAGE_INTERVIEW_MARKER.match(str(question or "").strip())
+        if stage_match:
+            stage_name = str(stage_match.group("stage_name") or "").strip()
+            stage_index = _safe_int(stage_match.group("stage_index"), 0)
+            try:
+                stage_summary_memory = await self.stream.search(
+                    f"[{stage_name}] digital_friction_stage_summary",
+                    top_k=3,
+                )
+            except Exception:
+                stage_summary_memory = ""
+            survey_summary = await self._build_survey_summary()
+            latest_task_appraisal = await self.memory.status.get(
+                "proto_task_appraisal", {}
+            )
+            latest_digital_emotion = await self.memory.status.get(
+                "digital_emotion_state", {}
+            )
+            latest_daily_reflection = await self.memory.status.get(
+                "proto_daily_reflection", {}
+            )
+            event_log = _decode_json_list(await self.memory.status.get("event_log", []))
+            result = await resolve_stage_interview(
+                llm=getattr(self, "llm", None),
+                stage_name=stage_name,
+                stage_index=stage_index,
+                stage_summary_memory=str(stage_summary_memory),
+                survey_summary=survey_summary,
+                latest_task_appraisal=latest_task_appraisal,
+                latest_digital_emotion=latest_digital_emotion,
+                latest_daily_reflection=latest_daily_reflection,
+                event_log_summary=_summarize_event_log_for_interview(event_log),
+            )
+            return json.dumps(result.to_dict(), ensure_ascii=False)
+
+        if str(question or "").strip().startswith(_FINAL_INTERVIEW_MARKER):
+            survey_summary = await self._build_survey_summary()
+            latest_digital_emotion = await self.memory.status.get(
+                "digital_emotion_state", {}
+            )
+            latest_daily_reflection = await self.memory.status.get(
+                "proto_daily_reflection", {}
+            )
+            stage_interview_history = await self.memory.status.get(
+                "proto_stage_interview_history", []
+            )
+            event_log = _decode_json_list(await self.memory.status.get("event_log", []))
+            result = await resolve_final_interview(
+                llm=getattr(self, "llm", None),
+                stage_interview_history=stage_interview_history,
+                latest_digital_emotion=latest_digital_emotion,
+                latest_daily_reflection=latest_daily_reflection,
+                survey_summary=survey_summary,
+                event_log_summary=_summarize_event_log_for_interview(event_log),
+            )
+            return json.dumps(result.to_dict(), ensure_ascii=False)
+
+        return await super().do_interview(question)
+
+    async def forward(self):
+        self.step_count += 1
+        day, t = self.environment.get_datetime()
+        env = dict(self.environment.environment)
+        current_day = int(day)
+        existing_task_raw = await self.memory.status.get("proto_assigned_task_json", "")
+        has_existing_task = existing_task_raw not in (None, "", "null")
+        if not has_existing_task and not is_task_window_tick(float(t)):
+            await self._run_minimal_daily_housekeeping(
+                current_day=current_day,
+                env=env,
+            )
+            await self._write_idle_step_state()
+            return 0.0
+        runtime_config = load_runtime_config()
+        helplessness = _clamp(
+            _safe_float(await self.memory.status.get("helplessness_score", 0.0))
+        )
+        trust = _clamp(_safe_float(await self.memory.status.get("trust_in_apps", 0.0)))
+        avoidance = _clamp(
+            _safe_float(await self.memory.status.get("avoidance_tendency", 0.0))
+        )
+        survey_summary = await self._build_survey_summary()
+        survey_helplessness_index = float(
+            survey_summary["survey_helplessness_index"]
+        )
+        survey_withdrawal_index = float(survey_summary["survey_withdrawal_index"])
+        survey_self_efficacy_index = float(
+            survey_summary["survey_self_efficacy_index"]
+        )
+        survey_support_index = float(survey_summary["survey_support_index"])
+        survey_usefulness_index = float(survey_summary["survey_usefulness_index"])
+        survey_anxiety_index = float(survey_summary["survey_anxiety_index"])
+        event_log = _decode_json_list(await self.memory.status.get("event_log", []))
+        task_domain_memory = await self.memory.status.get("task_domain_memory", {})
+        help_effect_memory = await self.memory.status.get("help_effect_memory", {})
+        recent_episode_buffer = await self.memory.status.get("recent_episode_buffer", [])
+        rationale_memory = await self.memory.status.get("rationale_memory", [])
+        raw_digital_emotion_state = await self.memory.status.get(
+            "digital_emotion_state", {}
+        )
+        digital_emotion_state = prepare_digital_emotion_state_for_day(
+            raw_digital_emotion_state,
+            target_day=current_day,
+        )
+        if digital_emotion_state.to_dict() != (
+            raw_digital_emotion_state if isinstance(raw_digital_emotion_state, dict) else {}
+        ):
+            await self.memory.status.update(
+                "digital_emotion_state",
+                digital_emotion_state.to_dict(),
+            )
+        reflection_updates, generated_reflection = await maybe_generate_daily_reflection(
+            llm=getattr(self, "llm", None),
+            current_day=current_day,
+            last_reflection_day=_safe_int(
+                await self.memory.status.get("proto_last_reflection_day", -1),
+                -1,
+            ),
+            event_log=event_log,
+            digital_emotion_state=digital_emotion_state.to_dict(),
+            task_domain_memory=task_domain_memory,
+            help_effect_memory=help_effect_memory,
+            reflection_history=await self.memory.status.get(
+                "proto_daily_reflection_history", []
+            ),
+        )
+        for key, value in reflection_updates.items():
+            await self.memory.status.update(key, value)
+        await self.memory.status.update("proto_last_housekeeping_day", current_day)
+        current_daily_reflection = (
+            reflection_updates.get("proto_daily_reflection")
+            if reflection_updates.get("proto_daily_reflection") is not None
+            else await self.memory.status.get("proto_daily_reflection", {})
+        )
+        current_stage_key = str(
+            env.get("digital_stage") or env.get("stage_name") or ""
+        ).strip()
+        previous_stage_key = str(
+            await self.memory.status.get("proto_active_stage_key", "")
+        ).strip()
+        stage_updates, stage_changed = build_stage_transition_updates(
+            current_stage_key=current_stage_key,
+            previous_stage_key=previous_stage_key,
+            helplessness=helplessness,
+        )
+        for key, value in stage_updates.items():
+            await self.memory.status.update(key, value)
+        if stage_changed:
+            event_log = []
+        if generated_reflection is not None:
+            current_reflection_count = _safe_int(
+                await self.memory.status.get("proto_stage_daily_reflection_count", 0),
+                0,
+            )
+            await self.memory.status.update(
+                "proto_stage_daily_reflection_count",
+                current_reflection_count + 1,
+            )
+        task = decode_task(existing_task_raw)
+        task, task_updates, _ = assign_task_if_missing(
+            existing_task=task,
+            agent_id=int(self.id),
+            day=int(day),
+            tick_seconds=float(t),
+            env=env,
+        )
+        for key, value in task_updates.items():
+            await self.memory.status.update(key, value)
+        if task is None:
+            await self._write_idle_step_state()
+            return 0.0
+
+        consecutive_failures = _safe_int(
+            await self.memory.status.get("proto_consecutive_failures", 0)
+        )
+        support_quality = support_quality_from_env(env)
+        baseline_memory_features = extract_memory_features(
+            task=task,
+            helplessness_score=helplessness,
+            task_domain_memory=task_domain_memory,
+            help_effect_memory=help_effect_memory,
+            recent_episode_buffer=recent_episode_buffer,
+            digital_emotion_state=digital_emotion_state.to_dict(),
+            psychology_mode=runtime_config.proto_llm_psychology_mode,
+        )
+        profile_summary = await self._build_task_appraisal_profile_summary()
+        recent_episode_summary = {
+            "recent_negative_feedback_ratio": baseline_memory_features.recent_negative_feedback_ratio,
+            "recent_avoid_ratio": baseline_memory_features.recent_avoid_ratio,
+            "recent_help_seek_ratio": baseline_memory_features.recent_help_seek_ratio,
+            "recent_same_task_failure_count": baseline_memory_features.recent_same_task_failure_count,
+            "recent_failure_pressure": baseline_memory_features.recent_failure_pressure,
+        }
+        task_relevant_memory_packet = _build_task_relevant_memory_packet(
+            task=task,
+            task_domain_memory=task_domain_memory,
+            help_effect_memory=help_effect_memory,
+            recent_episode_summary=recent_episode_summary,
+            event_log=event_log,
+        )
+        world_context = {
+            "digital_stage": current_stage_key,
+            "friction_level": _safe_int(env.get("friction_level", 0), 0),
+            "malicious_friction_level": _safe_int(
+                env.get("malicious_friction_level", 0), 0
+            ),
+            "complexity_level": _safe_int(env.get("complexity_level", 0), 0),
+            "risk_level": _safe_int(env.get("risk_level", 0), 0),
+            "assist_level": _safe_int(env.get("assist_level", 0), 0),
+            "accessibility_level": _safe_int(env.get("accessibility_level", 0), 0),
+            "human_support_level": _safe_int(env.get("human_support_level", 0), 0),
+        }
+        task_appraisal = await resolve_task_appraisal(
+            llm=getattr(self, "llm", None),
+            task=task,
+            stage_key=current_stage_key,
+            world_context=world_context,
+            profile_summary=profile_summary,
+            task_relevant_memory=task_relevant_memory_packet,
+            helplessness_now=helplessness,
+            task_self_efficacy=baseline_memory_features.task_self_efficacy,
+            help_success_rate_smoothed=baseline_memory_features.help_success_rate_smoothed,
+            recent_episode_summary=recent_episode_summary,
+            digital_emotion_state=digital_emotion_state.to_dict(),
+        )
+        memory_features = extract_memory_features(
+            task=task,
+            helplessness_score=helplessness,
+            task_domain_memory=task_domain_memory,
+            help_effect_memory=help_effect_memory,
+            recent_episode_buffer=recent_episode_buffer,
+            digital_emotion_state=digital_emotion_state.to_dict(),
+            task_appraisal_result=task_appraisal.to_dict(),
+            psychology_mode=runtime_config.proto_llm_psychology_mode,
+        )
+        rule_strategy_weights = compute_rule_strategy_weights(
+            effective_helplessness=memory_features.effective_helplessness,
+            support_quality=support_quality,
+            task_difficulty=task.difficulty,
+            consecutive_failures=consecutive_failures,
+            task_self_efficacy=memory_features.task_self_efficacy,
+            help_success_rate_smoothed=memory_features.help_success_rate_smoothed,
+            recent_negative_feedback_ratio=memory_features.recent_negative_feedback_ratio,
+            recent_same_task_failure_count=memory_features.recent_same_task_failure_count,
+        )
+        strategy_deliberation = await resolve_strategy_deliberation(
+            llm=getattr(self, "llm", None),
+            task=task,
+            task_appraisal=task_appraisal.to_dict(),
+            effective_helplessness=memory_features.effective_helplessness,
+            task_self_efficacy=memory_features.task_self_efficacy,
+            help_success_rate_smoothed=memory_features.help_success_rate_smoothed,
+            recent_negative_feedback_ratio=memory_features.recent_negative_feedback_ratio,
+            recent_same_task_failure_count=memory_features.recent_same_task_failure_count,
+            digital_emotion_state=digital_emotion_state.to_dict(),
+            daily_reflection=current_daily_reflection,
+            rule_weights=rule_strategy_weights,
+        )
+        exp_seed = _safe_int(os.getenv("EXP_SEED", "101"), 101)
+        pair_seed = _safe_int(os.getenv("PARALLEL_PAIR_SEED", str(exp_seed)), exp_seed)
+        world_name = str(os.getenv("WORLD_NAME", "baseline_low_friction"))
+        base_rng_seed = (
+            exp_seed * 10000019
+            + pair_seed * 1000033
+            + int(self.id) * 1000003
+            + int(day) * 10007
+            + int(float(t))
+            + sum(ord(ch) for ch in task.task_id)
+            + 31 * sum(ord(ch) for ch in world_name)
+        )
+        strategy_rng = random.Random(base_rng_seed + 17)
+        strategy = choose_attempt_strategy(
+            effective_helplessness=memory_features.effective_helplessness,
+            support_quality=support_quality,
+            task_difficulty=task.difficulty,
+            consecutive_failures=consecutive_failures,
+            task_self_efficacy=memory_features.task_self_efficacy,
+            help_success_rate_smoothed=memory_features.help_success_rate_smoothed,
+            recent_negative_feedback_ratio=memory_features.recent_negative_feedback_ratio,
+            recent_same_task_failure_count=memory_features.recent_same_task_failure_count,
+            strategy_deliberation_result=strategy_deliberation,
+            rng=strategy_rng,
+        )
+        outcome = resolve_attempt_outcome(
+            task=task,
+            strategy=strategy,
+            helplessness=helplessness,
+            env=env,
+            consecutive_failures=consecutive_failures,
+            rng=random.Random(base_rng_seed + 29),
+        )
+        calibration = await calibrate_uncontrollability(
+            llm=getattr(self, "llm", None),
+            task=task,
+            strategy=strategy,
+            outcome=outcome,
+            env=env,
+            helplessness_now=helplessness,
+            consecutive_failures_before=consecutive_failures,
+            pre_event_task_appraisal=task_appraisal.to_dict(),
+            task_relevant_memory=task_relevant_memory_packet,
+        )
+        outcome.perceived_uncontrollability = calibration.final_value
+        outcome.rule_perceived_uncontrollability = calibration.rule_value
+        outcome.uncontrollability_source = calibration.source
+        outcome.uncontrollability_llm_value = calibration.llm_value
+        outcome.uncontrollability_llm_confidence = calibration.confidence
+        outcome.uncontrollability_llm_reason = calibration.reason
+        outcome.uncontrollability_status = calibration.status
+        outcome.uncontrollability_cache_hit = calibration.cache_hit
+        avoid_reason_result: dict[str, Any] | None = None
+        if outcome.outcome_type == "avoid_without_attempt":
+            avoid_reason_result = infer_avoid_reason(
+                task=task,
+                env=env,
+                helplessness=helplessness,
+                recent_same_task_failure_count=memory_features.recent_same_task_failure_count,
+                task_self_efficacy=memory_features.task_self_efficacy,
+                felt_control=task_appraisal.felt_control,
+                perceived_task_risk=task_appraisal.perceived_task_risk,
+                task_value=task_appraisal.task_value,
+            )
+            outcome.avoid_reason = str(avoid_reason_result["label"])
+            outcome.avoid_reason_source = str(avoid_reason_result["source"])
+            outcome.avoid_reason_confidence = float(avoid_reason_result["confidence"])
+            outcome.avoid_reason_note = str(avoid_reason_result["note"])
+        support_mode_result: dict[str, Any] | None = None
+        if outcome.help_used:
+            support_mode_result = infer_support_mode(
+                outcome_type=outcome.outcome_type,
+                support_quality=outcome.support_quality,
+                felt_control=task_appraisal.felt_control,
+                expected_help_effectiveness=task_appraisal.expected_help_effectiveness,
+            )
+            outcome.support_mode = str(support_mode_result["label"])
+            outcome.support_mode_source = str(support_mode_result["source"])
+        current_task_snapshot = (
+            task_domain_memory.get(task.task_family, {})
+            if isinstance(task_domain_memory, dict)
+            else {}
+        )
+        current_help_snapshot = _support_snapshot_for_task(
+            help_effect_memory, task.task_family
+        )
+        pre_update_recent_summary = {
+            "recent_negative_feedback_ratio": memory_features.recent_negative_feedback_ratio,
+            "recent_avoid_ratio": memory_features.recent_avoid_ratio,
+            "recent_help_seek_ratio": memory_features.recent_help_seek_ratio,
+            "recent_same_task_failure_count": memory_features.recent_same_task_failure_count,
+            "recent_failure_pressure": memory_features.recent_failure_pressure,
+            "emotion_pressure": memory_features.emotion_pressure,
+        }
+        event_appraisal = await resolve_event_appraisal(
+            llm=getattr(self, "llm", None),
+            task=task,
+            strategy=strategy,
+            outcome=outcome,
+            helplessness_now=helplessness,
+            consecutive_failures_before=consecutive_failures,
+            digital_emotion_state=digital_emotion_state.to_dict(),
+            task_domain_snapshot=current_task_snapshot,
+            help_effect_snapshot=current_help_snapshot,
+            recent_episode_summary=pre_update_recent_summary,
+            pre_event_task_appraisal=task_appraisal.to_dict(),
+            task_relevant_memory_lite={
+                "same_task_last_outcome": task_relevant_memory_packet.get(
+                    "same_task_last_outcome", ""
+                ),
+                "same_task_failure_count": task_relevant_memory_packet.get(
+                    "same_task_failure_count",
+                    0,
+                ),
+                "same_task_failure_streak": task_relevant_memory_packet.get(
+                    "same_task_failure_streak",
+                    0,
+                ),
+                "same_task_controllable_success_memory": task_relevant_memory_packet.get(
+                    "same_task_controllable_success_memory",
+                    0.0,
+                ),
+                "help_success_rate_same_task": task_relevant_memory_packet.get(
+                    "help_success_rate_same_task",
+                    0.5,
+                ),
+                "recent_same_task_outcomes_tail": task_relevant_memory_packet.get(
+                    "recent_same_task_outcomes_tail",
+                    [],
+                ),
+            },
+            day=current_day,
+        )
+        updated_digital_emotion_state = {
+            **event_appraisal.final_after,
+            "last_updated_day": current_day,
+        }
+        update_result = apply_helplessness_update(
+            HelplessnessUpdateInput(
+                helplessness_now=helplessness,
+                outcome_type=outcome.outcome_type,
+                consecutive_failures=consecutive_failures,
+                support_quality=outcome.support_quality,
+                perceived_uncontrollability=outcome.perceived_uncontrollability,
+                task_self_efficacy=memory_features.task_self_efficacy,
+                felt_control=task_appraisal.felt_control,
+                expected_help_effectiveness=task_appraisal.expected_help_effectiveness,
+                avoid_reason=outcome.avoid_reason,
+                controllable_success_memory=memory_features.controllable_success_memory,
+                support_mode=outcome.support_mode,
+            )
+        )
+        compat = apply_compatibility_updates(
+            trust_now=trust,
+            avoidance_now=avoidance,
+            outcome_type=outcome.outcome_type,
+            help_used=outcome.help_used,
+        )
+        memory_update = update_experience_memory(
+            task=task,
+            strategy=strategy,
+            outcome=outcome,
+            day=int(day),
+            helplessness_delta=float(update_result.delta),
+            task_domain_memory=task_domain_memory,
+            help_effect_memory=help_effect_memory,
+            recent_episode_buffer=recent_episode_buffer,
+            rationale_memory=rationale_memory,
+            task_appraisal_result=task_appraisal.to_dict(),
+        )
+        stage_name = str(env.get("digital_stage") or env.get("stage_name") or "stage")
+        positive_event = outcome.outcome_type in {"success_self", "success_with_help"}
+        decision = {
+            "primary_reason": outcome.outcome_type,
+            "reason_tags": (
+                ["success_experience"]
+                if positive_event
+                else ["negative_feedback"]
+                if outcome.negative_feedback
+                else ["avoidance"]
+            ),
+            "task_family": task.task_family,
+            "friction_type": task.friction_type,
+            "strategy_type": strategy.strategy_type,
+            "support_quality": outcome.support_quality,
+            "perceived_uncontrollability": outcome.perceived_uncontrollability,
+            "rule_perceived_uncontrollability": outcome.rule_perceived_uncontrollability,
+            "uncontrollability_source": outcome.uncontrollability_source,
+            "uncontrollability_llm_confidence": outcome.uncontrollability_llm_confidence,
+            "avoid_reason": outcome.avoid_reason,
+            "avoid_reason_source": outcome.avoid_reason_source,
+            "avoid_reason_confidence": outcome.avoid_reason_confidence,
+            "support_mode": outcome.support_mode,
+            "support_mode_source": outcome.support_mode_source,
+            "event_appraisal_source": event_appraisal.source,
+            "event_appraisal_confidence": event_appraisal.confidence,
+            "pre_event_felt_control": float(task_appraisal.felt_control),
+            "pre_event_task_risk": float(task_appraisal.perceived_task_risk),
+            "pre_event_help_effectiveness": float(
+                task_appraisal.expected_help_effectiveness
+            ),
+            "same_task_failure_count": int(
+                task_relevant_memory_packet.get("same_task_failure_count", 0)
+            ),
+            "same_task_controllable_success_memory": float(
+                task_relevant_memory_packet.get(
+                    "same_task_controllable_success_memory",
+                    0.0,
+                )
+            ),
+            "task_appraisal_profile_age_bucket": age_bucket(
+                profile_summary.get("age", -1)
+            ),
+            "task_appraisal_profile_persona_tag": persona_bucket(
+                profile_summary.get("persona", "")
+            ),
+            "rationale": strategy.rationale,
+            "strategy_weights": dict(strategy.weights),
+            "effective_helplessness": memory_features.effective_helplessness,
+            "memory_features": memory_features.to_dict(),
+        }
+        event_log.append(
+            {
+                "day": int(day),
+                "t": float(t),
+                "attempt_uid": task.task_id,
+                "scenario": task.task_family,
+                "outcome": "positive"
+                if positive_event
+                else "negative"
+                if outcome.negative_feedback
+                else "neutral",
+                "message": f"{task.task_family}:{outcome.outcome_type}",
+                "roll": outcome.success_probability,
+                "decision": decision,
+            }
+        )
+        attempt_rows = _decode_json_list(
+            await self.memory.status.get("proto_stage_attempt_rows_json", "[]")
+        )
+        attempt_row = {
+            "agent_id": int(self.id),
+            "day": int(day),
+            "t": float(t),
+            "step": int(day * 100000 + float(t)),
+            "stage_name": stage_name,
+            "task_id": task.task_id,
+            "task_family": task.task_family,
+            "friction_type": task.friction_type,
+            "strategy_type": strategy.strategy_type,
+            "outcome_type": outcome.outcome_type,
+            "support_quality": int(outcome.support_quality),
+            "perceived_uncontrollability": int(outcome.perceived_uncontrollability),
+            "rule_perceived_uncontrollability": int(
+                outcome.rule_perceived_uncontrollability
+            ),
+            "uncontrollability_source": str(outcome.uncontrollability_source),
+            "uncontrollability_llm_confidence": float(
+                outcome.uncontrollability_llm_confidence
+            ),
+            "helplessness_before": float(update_result.helplessness_before),
+            "helplessness_after": float(update_result.helplessness_after),
+            "helplessness_delta": float(update_result.delta),
+            "help_used": bool(outcome.help_used),
+            "negative_feedback": bool(outcome.negative_feedback),
+            "strategy_weights_json": json.dumps(strategy.weights, ensure_ascii=False),
+            "payload_json": json.dumps(
+                {
+                    "task": task.to_dict(),
+                    "strategy": strategy.to_dict(),
+                    "outcome": outcome.to_dict(),
+                    "profile_summary": profile_summary,
+                    "task_relevant_memory": task_relevant_memory_packet,
+                    "task_appraisal": task_appraisal.to_dict(),
+                    "strategy_deliberation": strategy_deliberation.to_dict(),
+                    "uncontrollability_calibration": calibration.to_dict(),
+                    "psychology_mode": event_appraisal.mode,
+                    "event_appraisal": event_appraisal.to_dict(),
+                    "update": update_result.to_dict(),
+                    "compat": compat.to_dict(),
+                    "memory_features": memory_features.to_dict(),
+                    "task_domain_snapshot": memory_update["task_domain_snapshot"],
+                    "help_effect_snapshot": memory_update["help_effect_snapshot"],
+                    "recent_episode_summary": memory_update["recent_episode_summary"],
+                    "paper_backed_core": {
+                        "helplessness": {
+                            "before": float(update_result.helplessness_before),
+                            "after": float(update_result.helplessness_after),
+                            "delta": float(update_result.delta),
+                        },
+                        "update_breakdown": {
+                            "base_delta": float(update_result.base_delta),
+                            "repetition_delta": float(update_result.repetition_delta),
+                            "uncontrollability_delta": float(
+                                update_result.uncontrollability_delta
+                            ),
+                            "efficacy_loss_term": float(
+                                update_result.efficacy_loss_term
+                            ),
+                            "control_loss_term": float(
+                                update_result.control_loss_term
+                            ),
+                            "support_buffer": float(update_result.support_buffer),
+                            "mastery_recovery_term": float(
+                                update_result.mastery_recovery_term
+                            ),
+                            "raw_delta_before_damping": float(
+                                update_result.raw_delta_before_damping
+                            ),
+                            "damping_factor": float(update_result.damping_factor),
+                            "avoid_reason_multiplier": float(
+                                update_result.avoid_reason_multiplier
+                            ),
+                            "controllable_success_protection": float(
+                                update_result.controllable_success_protection
+                            ),
+                            "effective_delta": float(update_result.delta),
+                        },
+                        "avoid_reason": {
+                            "label": str(outcome.avoid_reason),
+                            "source": str(outcome.avoid_reason_source),
+                            "confidence": float(outcome.avoid_reason_confidence),
+                            "note": str(outcome.avoid_reason_note),
+                            "scores": (
+                                avoid_reason_result["scores"]
+                                if isinstance(avoid_reason_result, dict)
+                                else {}
+                            ),
+                        },
+                        "perceived_uncontrollability": {
+                            "final": int(outcome.perceived_uncontrollability),
+                            "rule": int(outcome.rule_perceived_uncontrollability),
+                            "source": str(outcome.uncontrollability_source),
+                            "llm_confidence": float(
+                                outcome.uncontrollability_llm_confidence
+                            ),
+                        },
+                        "task_specific_self_efficacy": float(
+                            memory_features.task_self_efficacy
+                        ),
+                        "controllable_success_memory": float(
+                            memory_features.controllable_success_memory
+                        ),
+                        "task_appraisal": {
+                            "perceived_task_difficulty": float(
+                                task_appraisal.perceived_task_difficulty
+                            ),
+                            "perceived_task_risk": float(
+                                task_appraisal.perceived_task_risk
+                            ),
+                            "felt_control": float(task_appraisal.felt_control),
+                            "expected_help_effectiveness": float(
+                                task_appraisal.expected_help_effectiveness
+                            ),
+                            "task_value": float(task_appraisal.task_value),
+                            "task_appraisal_shift": float(
+                                memory_features.task_appraisal_shift
+                            ),
+                            "source": str(task_appraisal.source),
+                            "confidence": float(task_appraisal.confidence),
+                        },
+                        "support_effectiveness": {
+                            "help_success_rate_smoothed": float(
+                                memory_features.help_success_rate_smoothed
+                            ),
+                            "support_quality": int(outcome.support_quality),
+                            "support_mode": str(outcome.support_mode),
+                            "support_mode_source": str(outcome.support_mode_source),
+                            "mode_note": (
+                                str(support_mode_result["note"])
+                                if isinstance(support_mode_result, dict)
+                                else ""
+                            ),
+                        },
+                        "recent_negative_experience": {
+                            "recent_negative_feedback_ratio": float(
+                                memory_features.recent_negative_feedback_ratio
+                            ),
+                            "recent_same_task_failure_count": int(
+                                memory_features.recent_same_task_failure_count
+                            ),
+                            "recent_failure_pressure": float(
+                                memory_features.recent_failure_pressure
+                            ),
+                        },
+                        "digital_emotion_primary": {
+                            "anxiety_before": float(
+                                event_appraisal.emotion_before.get("anxiety", 0.0)
+                            ),
+                            "anxiety_after": float(
+                                event_appraisal.final_after.get("anxiety", 0.0)
+                            ),
+                            "confidence_before": float(
+                                event_appraisal.emotion_before.get("confidence", 0.0)
+                            ),
+                            "confidence_after": float(
+                                event_appraisal.final_after.get("confidence", 0.0)
+                            ),
+                            "emotion_pressure": float(
+                                memory_features.emotion_pressure
+                            ),
+                        },
+                        "survey_measurements": {
+                            "survey_helplessness_index": float(
+                                survey_helplessness_index
+                            ),
+                            "survey_withdrawal_index": float(
+                                survey_withdrawal_index
+                            ),
+                            "survey_self_efficacy_index": float(
+                                survey_self_efficacy_index
+                            ),
+                            "survey_support_index": float(survey_support_index),
+                            "survey_usefulness_index": float(
+                                survey_usefulness_index
+                            ),
+                            "survey_anxiety_index": float(survey_anxiety_index),
+                        },
+                    },
+                    "auxiliary_audit": {
+                        "daily_reflection_role": "audit_exploratory",
+                        "daily_reflection": current_daily_reflection,
+                        "bounded_hybrid_decision_role": "optional_hybrid",
+                        "strategy_deliberation_enabled": bool(
+                            runtime_config.proto_llm_strategy_deliberation_enabled
+                        ),
+                        "strategy_deliberation": strategy_deliberation.to_dict(),
+                        "rationale_snapshot": memory_update["rationale_snapshot"],
+                        "digital_emotion_secondary": {
+                            "frustration_before": float(
+                                event_appraisal.emotion_before.get(
+                                    "frustration", 0.0
+                                )
+                            ),
+                            "frustration_after": float(
+                                event_appraisal.final_after.get(
+                                    "frustration", 0.0
+                                )
+                            ),
+                            "relief_before": float(
+                                event_appraisal.emotion_before.get("relief", 0.0)
+                            ),
+                            "relief_after": float(
+                                event_appraisal.final_after.get("relief", 0.0)
+                            ),
+                        },
+                    },
+                },
+                ensure_ascii=False,
+            ),
+        }
+        attempt_rows.append(attempt_row)
+
+        negative_event_count = _safe_int(
+            await self.memory.status.get("negative_event_count", 0)
+        ) + compat.negative_event_increment
+        help_request_count = _safe_int(
+            await self.memory.status.get("help_request_count", 0)
+        ) + compat.help_request_increment
+        success_count = _safe_int(await self.memory.status.get("success_count", 0)) + compat.success_increment
+        failure_count = _safe_int(await self.memory.status.get("failure_count", 0)) + compat.failure_increment
+        intercept_count = _safe_int(await self.memory.status.get("intercept_count", 0)) + compat.intercept_increment
+
+        cumulative_negative = _safe_int(
+            await self.memory.status.get("cumulative_negative_event_count", 0)
+        ) + compat.negative_event_increment
+        cumulative_help = _safe_int(
+            await self.memory.status.get("cumulative_help_request_count", 0)
+        ) + compat.help_request_increment
+        cumulative_success = _safe_int(
+            await self.memory.status.get("cumulative_success_count", 0)
+        ) + compat.success_increment
+        cumulative_failure = _safe_int(
+            await self.memory.status.get("cumulative_failure_count", 0)
+        ) + compat.failure_increment
+        cumulative_intercept = _safe_int(
+            await self.memory.status.get("cumulative_intercept_count", 0)
+        ) + compat.intercept_increment
+
+        await self.memory.status.update("helplessness_score", update_result.helplessness_after)
+        await self.memory.status.update("trust_in_apps", compat.trust_in_apps)
+        await self.memory.status.update("avoidance_tendency", compat.avoidance_tendency)
+        await self.memory.status.update(
+            "survey_helplessness_index", update_result.helplessness_after
+        )
+        await self.memory.status.update(
+            "proto_consecutive_failures", update_result.next_consecutive_failures
+        )
+        await self.memory.status.update("negative_event_count", negative_event_count)
+        await self.memory.status.update("help_request_count", help_request_count)
+        await self.memory.status.update("success_count", success_count)
+        await self.memory.status.update("failure_count", failure_count)
+        await self.memory.status.update("intercept_count", intercept_count)
+        await self.memory.status.update(
+            "cumulative_negative_event_count", cumulative_negative
+        )
+        await self.memory.status.update(
+            "cumulative_help_request_count", cumulative_help
+        )
+        await self.memory.status.update("cumulative_success_count", cumulative_success)
+        await self.memory.status.update("cumulative_failure_count", cumulative_failure)
+        await self.memory.status.update(
+            "cumulative_intercept_count", cumulative_intercept
+        )
+        await self.memory.status.update("event_log", event_log)
+        await self.memory.status.update(
+            "digital_emotion_state", updated_digital_emotion_state
+        )
+        await self._persist_proto_decision_state(
+            task_appraisal=task_appraisal,
+            strategy_deliberation=strategy_deliberation,
+        )
+        await self.memory.status.update(
+            "task_domain_memory", memory_update["task_domain_memory"]
+        )
+        await self.memory.status.update(
+            "help_effect_memory", memory_update["help_effect_memory"]
+        )
+        await self.memory.status.update(
+            "recent_episode_buffer", memory_update["recent_episode_buffer"]
+        )
+        await self.memory.status.update(
+            "rationale_memory", memory_update["rationale_memory"]
+        )
+        await self.memory.status.update(
+            "proto_stage_attempt_rows_json", json.dumps(attempt_rows, ensure_ascii=False)
+        )
+        await self.memory.status.update(
+            "current_intention", f"{task.task_family}:{strategy.strategy_type}"
+        )
+        await self.memory.status.update(
+            "friction_step_signal",
+            {
+                "step_type": "digital_task",
+                "step_intention": f"{task.task_family}:{strategy.strategy_type}",
+                "step_outcome": outcome.outcome_type,
+                "status_text": outcome.note,
+            },
+        )
+        should_defer = (
+            outcome.outcome_type == "avoid_without_attempt" and int(task.defer_count) < 1
+        )
+        if should_defer:
+            task.defer_count += 1
+            await self.memory.status.update("proto_assigned_task_json", encode_task(task))
+            await self.memory.status.update("digital_todo_pending", 1)
+            await self.memory.status.update("digital_todo_active_task_id", task.task_id)
+        else:
+            await self.memory.status.update("proto_assigned_task_json", "")
+            await self.memory.status.update("digital_todo_pending", 0)
+            await self.memory.status.update("digital_todo_active_task_id", "")
+            await self.memory.status.update("digital_todo_active_day", -1)
+            await self.memory.status.update("digital_todo_active_t", 0.0)
+            await self.memory.status.update("digital_task_hint", "")
+            await self.memory.status.update("digital_task_hint_need", "")
+            await self.memory.status.update("digital_task_hint_pending", 0)
+        return float(update_result.delta)

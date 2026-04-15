@@ -1,0 +1,174 @@
+record_type,granularity,exp_id,stage_index,stage_key,day,t_local,step_abs,agent_id,row_index_within_step,scenario,outcome,message,roll,scenario_entry_reason,scenario_aligned,digital_exposure,step_type,step_intention,step_outcome,prob_model,p_negative_interval,p_positive_interval,emit_policy,emit_forced_by_policy,status_gate_reason
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,23401,,1,,login_captcha,positive,语音/无障碍登录验证成功，今日计划稳中推进。,0.19328662873109104,min_stage_attempt_force,False,False,other,Plan the day's activities,success,attempt_hazard,0.10295665900914415,0.24513476323852185,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,23401,,3,,payment_transfer,positive,支付/转账提示明确，依据需求调整购物清单，平稳成功完成。,0.19161133819581755,matched,True,True,economy,Review shopping list based on current needs,success,attempt_hazard,0.10246782888046163,0.3168089417401467,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,23401,,4,,login_captcha,positive,验证成功，早晨流程稳定。,0.23882032660712982,min_stage_attempt_force,False,False,other,Assess the morning routine,success,attempt_hazard,0.04267449494366407,0.18458340734625797,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,23401,,6,,login_captcha,positive,登录时，语音提示验证成功，稳定流畅。,0.06289895199354012,min_stage_attempt_force,True,False,other,Check for any morning activities or tasks,success,attempt_hazard,0.031460103882005604,0.17126639326560084,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,25201,,2,,login_captcha,positive,登录时，轻松语音验证，享静美时光，验证成功！,0.22911748605196947,min_stage_attempt_force,False,False,other,Enjoy a quiet morning coffee or tea,success,attempt_hazard,0.05858972447740425,0.2281057485806705,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,25201,,5,,ecommerce_order_flow,negative,购物车库存提示波动，重复操作累感不爱。,0.006518601416265479,min_stage_attempt_force,True,True,other,Check and update shopping list based on needs,success,attempt_hazard,0.059107147965948785,0.24255460591729278,natural,False,ambiguous
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,28801,,2,,login_captcha,positive,登录验证，语音提示成功完成。,0.166330594557909,min_stage_attempt_force,False,False,other,Read or engage in a hobby,success,attempt_hazard,0.058153348284957225,0.17269390480730054,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,28801,,6,,login_captcha,negative,登录遇阻，验证难题，轻松晨间习惯助你轻松应对。,0.005947723639619706,min_stage_attempt_force,False,False,other,"Enjoy a light morning routine, such as reading or meditating",success,attempt_hazard,0.034929981328360525,0.12428375399061632,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,32401,,1,,social_contact_coordination,negative,社交联系协调遇挫，好友互动验证失败，焦虑升级。,0.09062902093019809,matched,True,True,social,Identify available friends for contact,failure,attempt_hazard,0.29913176503666805,0.08755581549112618,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,36001,,5,,payment_transfer,negative,支付转账时，遇诱导误付风险，调整购物清单后成功规避。,0.02378181701439186,matched,True,True,economy,Adjust the shopping list based on findings,success,attempt_hazard,0.05910436084833607,0.20276009118829944,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,43201,,3,,payment_transfer,negative,支付转账时，遭遇误导选项，险些误操作，心绪不宁。,0.10865648288413654,matched,True,True,economy,Select a food option to purchase or consume,failure,attempt_hazard,0.3616623284595777,0.0883376715404223,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,45001,,3,,payment_transfer,positive,支付/转账提示清晰，成功完成，流程稳健。,0.13697836576264455,matched,True,True,economy,Identify the source of confusion in the payment transfer process,success,attempt_hazard,0.09596415819818714,0.2511576797477909,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,0,55801,,3,,payment_transfer,negative,支付转账时误触诱导选项，心慌意乱，幸免于难。,0.23178200425645945,matched,True,True,economy,Place an order or select food to be eaten,failure,attempt_hazard,0.3625055932652794,0.08749440673472055,natural,False,no_anchor
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_events,1,7201,,1,,ride_hailing,positive,打车启适老化，便捷叫车一步到位。,0.11015138093539045,matched,True,True,mobility,"Stay home, as it is convenient and cost-effective",success,attempt_hazard,0.06421953326852795,0.20153356293510047,natural,False,not_applicable
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,23401,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,23401,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,25201,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,25201,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,25201,,3,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,25201,,4,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,27001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,27001,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,27001,,3,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,27001,,4,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,27001,,5,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,27001,,6,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,28801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,28801,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,28801,,3,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,28801,,4,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,30601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,32401,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,34201,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,36001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,36001,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,39601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,46801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,48601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,50401,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,52201,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,52201,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,54001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,59401,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,63001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,64801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,66601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,66601,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,75601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,109001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,1,stage_1_summary,,,110801,,1,,no_event,,,,,,,,,,,,,,
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,23401,,6,,account_auth_security,positive,安全登录一步到位，账号安全无忧。,0.2722909805621413,min_stage_attempt_force,False,False,other,Enter sleep mode,success,attempt_hazard,0.12291232944130019,0.20406812525915355,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,27001,,1,,ride_hailing,positive,打车开启适老化，一键叫车惊鸿一瞥，入睡之旅顺利开启。,0.44586358576645435,min_stage_attempt_force,False,False,other,Close your eyes and drift off to sleep,success,attempt_hazard,0.21208059773453722,0.2379194022654628,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,27001,,3,,medical_appointment,negative,预约过程中，繁琐操作令您心焦。,0.11209303000331439,min_stage_attempt_force,False,False,other,Prepare ingredients for cooking,success,attempt_hazard,0.23123063806328775,0.21876936193671226,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,27001,,4,,medical_appointment,positive,体验长辈模式，挂号缴费一步到位，就诊准备轻松成功！,0.3546687236182189,min_stage_attempt_force,False,False,other,Practice relaxation techniques,success,attempt_hazard,0.12511589056505973,0.19839214764685736,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,27001,,5,,social_contact_coordination,negative,联系亲友验证失败，焦虑升级。,0.2446823374453727,min_stage_attempt_force,False,False,other,Ensure a quiet environment,success,attempt_hazard,0.2658192415082774,0.1841807584917226,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,28801,,1,,ecommerce_order_flow,negative,购物车库存波动，支付前反复退回，体验疲惫。,0.10324298148515443,min_stage_attempt_force,True,True,other,Check current shopping list,success,attempt_hazard,0.18466888852074986,0.24496403098845593,natural,False,ambiguous
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,28801,,3,,app_update_permission,positive,更新权限操作便捷流畅，一键完成，畅享体验。,0.5015523321406389,min_stage_attempt_force,False,False,other,Prepare a cup of tea,success,attempt_hazard,0.2174654165238891,0.23253458347611092,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,28801,,5,,gov_service,negative,政务办理遇阻，材料上传屡试不中，实名核验中断，进度暂停，放松身心以助入睡。,0.2519163656022634,min_stage_attempt_force,False,False,other,Engage in a relaxing activity to help fall asleep,success,attempt_hazard,0.20525953462511026,0.24474046537488972,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,28801,,6,,info_ad_click,negative,误触广告，支付失败，焦虑困扰。,0.0198451276704521,min_stage_attempt_force,False,False,other,Eat breakfast,success,attempt_hazard,0.09944301206096634,0.16726496044678973,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,34201,,4,,social_contact_coordination,negative,社交联络协调失败，好友验证与消息发送挫败，焦虑加剧。,0.24465135400179672,matched,True,True,social,Check and respond to emails,failure,attempt_hazard,0.3569360319814011,0.05201269904083957,natural,False,no_anchor
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,36001,,4,,social_contact_coordination,negative,社交联系协调失败，好友验证与消息发送屡试不中，心情焦虑。,0.1511075616903993,matched,True,True,social,Retrieve a list of friends' contact information,failure,attempt_hazard,0.3018813603783189,0.04255792179933827,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,45001,,2,,digital_general,positive,手机应用提示，轻松成功烹饪佳肴。,0.41963849691336397,matched,True,True,other,Prepare the meal according to recipe or preference,success,attempt_hazard,0.20951930110030767,0.22215960355420813,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,46801,,3,,ride_hailing,positive,体验打车新功能，一键叫车，便捷生活从此开启！,0.2718685837796414,matched,True,True,mobility,Determine the location for shopping,success,attempt_hazard,0.21603052565718936,0.23396947434281065,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,63001,,2,,payment_transfer,negative,支付转账时误触诱导项，险些多付，心头不宁。,0.08944321831263136,matched,True,True,economy,Perform shopping activities based on the shopping list,success,attempt_hazard,0.18900422138169112,0.15224332419168754,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,64801,,3,,ride_hailing,positive,体验打车新选择，轻松开启适老化，一键回家享温馨。,0.3443265380532764,matched,True,True,mobility,Head home to create a comfortable environment,success,attempt_hazard,0.2639732461535611,0.1860267538464389,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,70201,,6,,account_auth_security,positive,账号安全认证轻松通过，登录顺畅，餐点烹饪成功！,0.2489024279300599,matched,True,True,other,Prepare and cook a meal,success,attempt_hazard,0.09696526200326937,0.11871094489624402,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,1,84601,,3,,ride_hailing,negative,打车遇挫，流程繁琐，情绪受创。,0.07685332706550241,matched,True,True,mobility,Retire to bed,success,attempt_hazard,0.2132078499559002,0.23679215004409981,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,2,7201,,1,,digital_general,positive,操作简便，成功完成适合退休的营养餐准备。,0.5490634634682524,matched,True,True,other,Prepare a nutritious meal suitable for retirement age,success,attempt_hazard,0.27790496632181405,0.1720950336781859,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,2,7201,,5,,notification_risk_interrupt,negative,操作中风险中断，多次确认仍无法完成任务。,0.1173916883729843,non_digital_exploration,False,False,other,Lie down and start the process of falling asleep,success,attempt_hazard,0.18554496963131922,0.21441820929596728,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,2,9001,,1,,digital_general,negative,操作遇阻，退餐制作圆满完成。,0.14397446232773314,matched,True,True,other,Prepare a nutritious meal suitable for retirement age,success,attempt_hazard,0.2591770835994032,0.16248973403890257,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,2,16201,,1,,ride_hailing,negative,打车流程繁琐难忍，验证多番，出行计划受阻，情绪受创。,0.09281847292119416,matched,True,True,mobility,Travel to the supermarket,success,attempt_hazard,0.20671103370030713,0.16717452962579865,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,2,19801,,1,,ride_hailing,positive,一键老友模式，叫车顺利无忧。,0.2690561341343898,matched,True,True,mobility,Use smartphone to call for a taxi service,success,attempt_hazard,0.19473417061608325,0.23731968673882267,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_events,2,21601,,1,,social_contact_coordination,positive,社交协调顺畅，联系亲友流程简便，沟通受阻，请求派车失败。,0.2813688758447255,matched,True,True,social,Communicate with the taxi dispatcher to explain the issue,failure,attempt_hazard,0.41061853841247087,0.03938146158752915,natural,False,no_anchor
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,123401,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,123401,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,123401,,3,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,123401,,4,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,123401,,5,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,125201,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,125201,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,125201,,3,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,125201,,4,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,125201,,5,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,125201,,6,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,127001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,127001,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,128801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,128801,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,136001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,139601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,139601,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,139601,,3,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,141401,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,141401,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,154001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,159401,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,159401,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,161201,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,161201,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,161201,,3,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,164801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,166601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,181001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,182801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,184601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,201801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,203601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,205401,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,210801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,212601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,214401,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,218001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,2,stage_2_summary,,,219801,,1,,no_event,,,,,,,,,,,,,,
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,25201,,2,,digital_general,positive,应用操作简化提示，助力高效完成任务，重拾活力！,0.11633885947418454,matched,True,True,other,Engage in light activity to maintain alertness and avoid feeling idle,success,attempt_hazard,0.04090010836164178,0.26147664359499245,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,25201,,5,,login_captcha,positive,登录验证成功，请选择舒适阅读区继续操作。,0.31287313021046403,min_stage_attempt_force,False,False,other,Select a comfortable reading spot,success,attempt_hazard,0.0454848519930577,0.3299115703565978,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,25201,,6,,app_update_permission,positive,更新权限，轻松一触即达，畅享便捷操作。,0.09279935786088178,min_stage_attempt_force,False,False,other,Engage in a relaxing activity to wind down,success,attempt_hazard,0.017563497206404176,0.1814779549990339,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,27001,,3,,social_contact_coordination,positive,成功在社交平台联系亲友，流畅沟通缓解了失望情绪。,0.5309449756644322,min_stage_attempt_force,False,False,other,Engage in a calming activity to ease the emotions of disappointment,success,attempt_hazard,0.08573677377116412,0.3642632262288359,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,27001,,5,,info_ad_click,positive,信息流中精准提示，避开广告干扰，顺畅阅读材料！,0.3022778871874441,min_stage_attempt_force,False,False,other,Begin reading the chosen material,success,attempt_hazard,0.0671095017978923,0.2794590681137284,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,27001,,6,,gov_service,positive,政务无障碍，材料速递成功，流程顺畅，轻松办结！,0.10328218069429096,min_stage_attempt_force,False,False,other,Lie down in bed and close your eyes to initiate sleep,success,attempt_hazard,0.012846223487610426,0.135469603501616,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,36001,,1,,ride_hailing,positive,轻松启适老化模式，一键叫车，便捷回家，满意体验！,0.37804841510628995,matched,True,True,mobility,Return to home,success,attempt_hazard,0.0675668642722206,0.3352354188133428,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,37801,,1,,ride_hailing,positive,轻松开启适老化模式，一键打车回家成功！,0.09808433930135907,matched,True,True,mobility,Return to home,success,attempt_hazard,0.05145631165424273,0.2604162870325901,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,43201,,2,,app_update_permission,positive,更新权限引导清晰，轻松完成设置，静享美好用餐时光。,0.13248300891136344,digital_context_fallback,True,True,other,Serve the meal in a serene setting,success,attempt_hazard,0.021174582228102104,0.18410730743052495,natural,False,no_anchor
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,50401,,6,,social_contact_coordination,negative,社交联系协调失败，求助未果，焦虑加剧。,0.03348740300791786,matched,True,True,social,Pick up the phone to call a friend,failure,attempt_hazard,0.08609614112719884,0.08406143939235323,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,66601,,2,,ride_hailing,positive,成功开启适老化模式，轻松叫车，享受舒适时光。,0.016425100655311997,matched,True,True,mobility,Stay home and relax,success,attempt_hazard,0.014666003459217097,0.1301096159952385,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,68401,,4,,ride_hailing,positive,一键叫车，轻松出行，适老化模式体验顺畅。,0.22680208279875436,matched,True,True,mobility,Travel to the selected shopping location,success,attempt_hazard,0.02447712720747739,0.1763771982791199,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,72001,,3,,ride_hailing,positive,体验打车，便捷养老，一步叫车，安心入睡。,0.08243176260801566,matched,True,True,mobility,Lie down in the bed,success,attempt_hazard,0.04624018634866458,0.26711817047996833,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,72001,,4,,payment_transfer,positive,支付/转账操作提示明确，一键购齐心仪好物，购物无忧！,0.15265496728080707,matched,True,False,economy,Complete the shopping by purchasing the necessary items,success,attempt_hazard,0.01686169336752551,0.12397838213703079,natural,False,not_applicable
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,2,81001,,5,,medical_appointment,positive,长辈模式助力，挂号缴费轻松完成，顺利开启康复之旅。,0.144002811667981,non_digital_exploration,False,False,other,Eat the meal,success,attempt_hazard,0.02915134416550292,0.16507011917996975,natural,False,from_status_false
+event,event_detail,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_events,3,14401,,5,,payment_transfer,positive,支付/转账过程顺畅，已成功选择合品质价格商品。,0.07656806045090303,preferred_step_type_direct,True,False,economy,Select items that meet the quality and price criteria,success,attempt_hazard,0.03035792111114583,0.233781942481823,natural,False,from_status_false
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,223401,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,223401,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,223401,,3,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,223401,,4,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,223401,,5,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,223401,,6,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,225201,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,225201,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,225201,,3,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,227001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,227001,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,227001,,3,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,228801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,228801,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,228801,,3,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,228801,,4,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,228801,,5,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,228801,,6,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,248601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,261201,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,263001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,264801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,266601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,270201,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,273801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,273801,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,277401,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,279201,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,281001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,282801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,284601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,303601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,305401,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,307201,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,309001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,309001,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,310801,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,310801,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,312601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,316201,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,316201,,2,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,318001,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,321601,,1,,no_event,,,,,,,,,,,,,,
+no_event,step_aggregated_expanded,0e9eace8-abed-417a-af98-29344b8676af,3,stage_3_summary,,,321601,,2,,no_event,,,,,,,,,,,,,,

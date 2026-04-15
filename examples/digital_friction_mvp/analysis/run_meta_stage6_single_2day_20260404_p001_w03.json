@@ -1,0 +1,33 @@
+{
+  "status": "ok",
+  "error_message": "",
+  "exp_name": "digital_friction_parallel_stage6_single_2day_20260404_p001_low_friction_high_assist_20260404_182925",
+  "exp_id": "b885812d-48e2-4cbf-b570-d6dc398be0ef",
+  "world_name": "low_friction_high_assist",
+  "seed": 102,
+  "experiment_mode": "parallel_worlds",
+  "parallel_group_name": "stage6_single_2day_20260404",
+  "world_batch": [
+    "baseline_low_friction",
+    "high_friction_low_assist",
+    "high_friction_high_assist",
+    "low_friction_high_assist"
+  ],
+  "pair_index": 1,
+  "pair_seed": 102,
+  "world_order": 3,
+  "config_fingerprint": "785e28b52aa98af5",
+  "agent_count": 10,
+  "stage_mode": "single",
+  "stage_count": 1,
+  "stage_days": 2,
+  "total_days": 2,
+  "decision_interval_minutes": 30,
+  "decision_intervals_per_day": 48,
+  "opportunities_per_agent": 96,
+  "opportunities_total": 960,
+  "economy_block_enabled": true,
+  "economy_binding_audit_strict": false,
+  "agent_plan_prompt_profile": "off",
+  "written_at": "2026-04-04T19:22:14"
+}

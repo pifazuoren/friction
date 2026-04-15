@@ -1,0 +1,4 @@
+world_name,n_seed,tech_acceptance_delta_mean,trust_in_apps_delta_mean,avoidance_tendency_delta_mean,survey_helplessness_index_delta_mean,survey_withdrawal_index_delta_mean,behavior_delay_online_delta_mean,behavior_proxy_reliance_delta_mean,behavior_offline_switch_delta_mean
+baseline_low_friction,4,3.125,-0.833333,0.416666,3.125,-1.805555,-1.875,-6.041666,2.5
+high_friction_low_assist,4,0.625,0.625,-3.333333,0.3125,5.902778,5.0,8.333333,4.375
+low_friction_high_assist,4,-2.916667,-4.791667,-4.375,-1.5625,-0.347222,-4.375,1.666666,1.666667

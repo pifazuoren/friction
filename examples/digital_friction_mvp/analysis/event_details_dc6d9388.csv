@@ -1,0 +1,7 @@
+stage,day,t,scenario,outcome,entry_reason,status_gate_attempted,status_gate_matched,digital_exposure,digital_exposure_from_status,llm_status
+steady,0,61201,info_ad_click,positive,matched,False,False,False,False,cache_hit
+steady,0,61201,info_ad_click,positive,matched,False,False,False,False,cache_hit
+shock,1,61201,ride_hailing,negative,matched,False,False,True,False,ok
+shock,1,61201,ride_hailing,positive,matched,False,False,True,False,ok
+recovery,2,61201,payment_transfer,positive,matched,False,False,False,False,cache_hit
+recovery,2,62101,ride_hailing,positive,matched,False,False,True,False,ok

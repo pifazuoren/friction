@@ -1,0 +1,444 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{beaver}
+
+\usepackage[UTF8,fontset=fandol]{ctex}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, shapes.geometric, calc, fit}
+
+\newcommand{\framebottomnote}[1]{%
+    \vfill
+    \par\noindent
+    {\tiny\color{black!65}\parbox{0.96\linewidth}{#1}\par}%
+    \vspace*{-0.75cm}%
+}
+
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+
+\title[Helplessness Update]{Helplessness Update 机制设计与文献对应}
+\subtitle{Digital Friction 实验 --- 进展汇报}
+\date{2026-04-08}
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% ============================================================
+\section{背景与目标}
+% ============================================================
+
+\begin{frame}{旧版问题与改进目标}
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{旧版（v0 baseline）存在的问题}
+\begin{enumerate}
+    \item \texttt{BASE\_DELTAS} 过大，outcome 直接主导 helplessness 变化
+    \item 没有心理中介层（self-efficacy / felt control）
+    \item 所有 avoid 一律计入 helplessness
+    \item support 是万能直接减分器
+    \item 无长期保护机制（controllable success memory）
+    \item 无阻尼，反馈环容易数值爆炸
+\end{enumerate}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{改进后的设计原则}
+\begin{enumerate}
+    \item 主驱动改为 perceived uncontrollability
+    \item 加入 self-efficacy / felt control 中介层
+    \item avoid 拆分为 helpless / risk / low-value
+    \item support 以间接修复（SE / CSM）为主
+    \item 引入 controllable success memory 做乘性保护
+    \item 加入 bounded-state damping
+\end{enumerate}
+\end{column}
+\end{columns}
+
+\framebottomnote{改进方向来自 learned helplessness / controllability 理论主线（Seligman 1967; Abramson 1978; Maier \& Seligman 2016）和老年数字服务场景文献。}
+\end{frame}
+
+% ============================================================
+\section{机制总览}
+% ============================================================
+
+\begin{frame}{Helplessness Update --- 机制流程图}
+\centering
+\begin{tikzpicture}[
+    node distance=0.55cm and 0.6cm,
+    every node/.style={font=\scriptsize},
+    box/.style={draw, rounded corners=3pt, minimum height=0.7cm, text width=2.1cm, align=center, fill=white},
+    mainbox/.style={box, fill=blue!8, draw=blue!50},
+    classbox/.style={box, fill=orange!10, draw=orange!60, text width=1.7cm},
+    updatebox/.style={box, fill=red!8, draw=red!50, text width=2.6cm},
+    membox/.style={box, fill=green!8, draw=green!50, text width=2.4cm},
+    heurbox/.style={box, fill=gray!12, draw=gray!50, dashed, text width=1.8cm},
+    arr/.style={-{Stealth[length=4pt]}, thick, draw=black!70},
+    dasharr/.style={-{Stealth[length=4pt]}, thick, dashed, draw=black!40},
+]
+
+% Row 1: pipeline
+\node[mainbox] (task) {Task\\Assignment};
+\node[mainbox, right=of task] (appraisal) {Task Appraisal\\{\tiny (LLM hybrid)}};
+\node[mainbox, right=of appraisal] (strategy) {Strategy\\Choice};
+\node[mainbox, right=of strategy] (outcome) {Outcome\\{\tiny 6 types}};
+
+% Row 2: classifiers
+\node[classbox, below left=0.7cm and -0.3cm of outcome] (avoid) {Avoid\\分类\\{\tiny 3-class}};
+\node[classbox, below right=0.7cm and -0.3cm of outcome] (support) {Support\\Mode\\{\tiny 2-class}};
+
+% Row 3: update core
+\node[updatebox, below=2.0cm of outcome] (update) {\texttt{apply\_helplessness\_update}\\{\tiny 成功路径 / 失败路径}};
+
+% Mediators feeding into update
+\node[mainbox, left=0.8cm of update, text width=1.7cm] (mediators) {SE\\Felt Control\\Uncontrollability};
+
+% Protection and damping
+\node[membox, right=0.8cm of update] (csm) {Controllable\\Success Memory\\{\tiny 乘性保护}};
+\node[heurbox, below right=0.5cm and -0.5cm of update] (damp) {Damping\\{\tiny heuristic}};
+
+% Row 4: memory update
+\node[membox, below=1.5cm of update] (memupdate) {Experience Memory\\{\tiny SE / CSM / episode buffer}};
+
+% Arrows: main pipeline
+\draw[arr] (task) -- (appraisal);
+\draw[arr] (appraisal) -- (strategy);
+\draw[arr] (strategy) -- (outcome);
+
+% Arrows: classifiers
+\draw[arr] (outcome.south) -- ++(0,-0.3) -| (avoid.north);
+\draw[arr] (outcome.south) -- ++(0,-0.3) -| (support.north);
+
+% Arrows: into update
+\draw[arr] (avoid.south) |- (update.west);
+\draw[arr] (support.south) |- (update.east);
+\draw[arr] (mediators.east) -- (update.west);
+\draw[arr] (csm.west) -- (update.east);
+\draw[dasharr] (damp.north west) -- (update.south east);
+
+% Arrows: update -> memory
+\draw[arr] (update.south) -- (memupdate.north);
+
+% Feedback loop
+\draw[dasharr] (memupdate.west) -- ++(-3.5,0) |- (strategy.south west);
+
+% Appraisal provides mediators
+\draw[arr] (appraisal.south) -- ++(0,-0.5) -| (mediators.north);
+
+\end{tikzpicture}
+
+\framebottomnote{虚线箭头表示跨事件反馈。灰色虚线框表示工程启发式（非文献直接推出）。}
+\end{frame}
+
+% ============================================================
+\section{核心公式}
+% ============================================================
+
+\begin{frame}{核心公式}
+
+\textbf{成功路径}（\texttt{success\_self} / \texttt{success\_with\_help}）
+
+\vspace{0.15cm}
+\[
+H_{t+1} = \text{clamp}\!\bigl(H_t + \underbrace{\text{base}}_{\text{-1.4 / -0.7}} - \underbrace{\text{mastery\_recovery}}_{0 \sim 1.85}\,,\ 0,\ 100\bigr)
+\]
+
+\vspace{0.3cm}
+\textbf{失败路径}（\texttt{failure} / \texttt{abandon} / \texttt{avoid}）
+
+\vspace{0.15cm}
+\[
+\text{raw} = \underbrace{\text{base}}_{\substack{0.15 \\ \sim 0.9}}
++ \underbrace{\text{rep}}_{\substack{0 \\ \sim 1.5}}
++ \underbrace{\text{uncontroll}}_{\substack{0 \\ \sim 2.4}}
++ \underbrace{\text{eff\_loss}}_{\substack{0 \\ \sim 1.6}}
++ \underbrace{\text{ctrl\_loss}}_{\substack{0 \\ \sim 0.9}}
+- \underbrace{\text{buffer}}_{\substack{0 \\ \sim 0.12}}
+\]
+
+\vspace{0.1cm}
+\[
+H_{t+1} = \text{clamp}\!\Bigl(H_t
++ \text{raw}
+\times \underbrace{\alpha_{\text{avoid}}}_{\substack{0.15 \\ \sim 1.0}}
+\times \underbrace{(1 - \text{CSM\_prot})}_{\substack{0.55 \\ \sim 1.0}}
+\times \underbrace{\lambda(H_t)}_{\substack{0.55 \\ \sim 1.0}}
+\,,\ 0,\ 100\Bigr)
+\]
+
+\end{frame}
+
+% ============================================================
+\section{机制--文献映射}
+% ============================================================
+
+\begin{frame}[t]{机制--文献映射（一）：理论主线}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.15}
+\centering
+\begin{tabular}{
+    L{0.13\linewidth}
+    L{0.24\linewidth}
+    L{0.20\linewidth}
+    L{0.33\linewidth}
+}
+\toprule
+\textbf{机制} & \textbf{代码实现} & \textbf{理论依据} & \textbf{核心引句} \\
+\midrule
+不可控感\\主驱动
+&
+\texttt{UNCONTROLL\_DELTAS}$\{$1:1.2, 2:2.4$\}$远大于 \texttt{BASE\_DELTAS}$\{$fail:0.6$\}$
+&
+helplessness 核心是 action-outcome contingency 被破坏
+&
+Seligman (1967): ``Shock termination was independent of responding.'' \newline
+Abramson (1978): ``Once people perceive noncontingency, they attribute their helplessness to a cause.'' \\
+
+\midrule
+SE 中介层
+&
+\texttt{efficacy\_loss} $= (50{-}\text{SE})/22$; SE 按 outcome $\times$ support\_mode 差异化更新
+&
+负面经历应先伤效能感，再间接影响 helplessness
+&
+Bandura (1977): ``Expectations of personal efficacy determine whether coping behavior will be initiated, how much effort will be expended, and how long it will be sustained.'' \\
+
+\midrule
+Felt control\\事件调节
+&
+\texttt{control\_loss} $= (50{-}\text{FC})/28$; FC 每轮由 LLM appraisal 生成
+&
+control 是多层构念，即时感受与跨事件 SE 应分开
+&
+Skinner (1996): ``The framework is used to analyze more than 100 terms, such as sense of control, proxy control, and primary control.'' \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\begin{frame}[t]{机制--文献映射（二）：Avoid 拆分与可控成功记忆}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.15}
+\centering
+\begin{tabular}{
+    L{0.13\linewidth}
+    L{0.24\linewidth}
+    L{0.20\linewidth}
+    L{0.33\linewidth}
+}
+\toprule
+\textbf{机制} & \textbf{代码实现} & \textbf{理论依据} & \textbf{核心引句} \\
+\midrule
+Avoid 拆分
+&
+helpless $\times$1.0 / risk $\times$0.35 / low-value $\times$0.15
+&
+不做 $\neq$ 无助；可能是风险规避或低价值判断
+&
+Davis (1989): ``usefulness had a significantly greater correlation with usage behavior than did ease of use.'' \newline
+IRT review (2026): ``coded to the IRT domains: usage, value, risk, tradition, and image barriers.'' \\
+
+\midrule
+可控成功\\记忆
+&
+高质量 success 才积累 CSM（需 FC$\geq$45, U$\leq$1）；每天 $\times$0.985 衰减；乘性保护最高 45\%
+&
+先前可控经验应提供长期保护
+&
+Seligman (1967): ``Initial experience with escape ... prevented interference with later responding.'' \newline
+Maier (2016): ``This passivity can be overcome by learning control.'' \newline
+Review (2025): ``the sense of control offers the ability to effectively respond to environmental stressors.'' \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\begin{frame}[t]{机制--文献映射（三）：Support 间接化与成功恢复}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.15}
+\centering
+\begin{tabular}{
+    L{0.13\linewidth}
+    L{0.24\linewidth}
+    L{0.20\linewidth}
+    L{0.33\linewidth}
+}
+\toprule
+\textbf{机制} & \textbf{代码实现} & \textbf{理论依据} & \textbf{核心引句} \\
+\midrule
+Support\\间接修复
+&
+直接 buffer 极小（$\leq$0.12）；主效果经 SE 差异化更新（enabling +4.5 vs substituting +1.5）和 CSM 选择性积累传导
+&
+support 应先修复 control / efficacy，不是万能减分器
+&
+Digital feedback (2025): ``partially mediated by information processing self-efficacy.'' \newline
+Digital experiences (2025): ``older persons may become more dependent on others.'' \\
+
+\midrule
+成功恢复\\差异化
+&
+self 最强恢复（$\Delta$max $\approx$ $-$3.25）；enabling help 次之（$\approx$ $-$1.40）；substituting 最弱（$\approx$ $-$1.20）
+&
+自己做成比被帮着做成更能恢复控制感
+&
+Bandura (1977): ``through experiences of mastery, further enhancement of self-efficacy and corresponding reductions in defensive behavior.'' \newline
+Maier (2016): ``passivity can be overcome by learning control.'' \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\begin{frame}[t]{机制--文献映射（四）：建模选择}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.15}
+\centering
+\begin{tabular}{
+    L{0.13\linewidth}
+    L{0.24\linewidth}
+    L{0.20\linewidth}
+    L{0.33\linewidth}
+}
+\toprule
+\textbf{机制} & \textbf{代码实现} & \textbf{性质} & \textbf{与理论的关系} \\
+\midrule
+Damping
+&
+$\lambda(H) = 1 - 0.45 H/100$，clamp $[0.55, 1.0]$
+&
+\textbf{工程启发式}
+&
+与 Maier (2016)``被动是默认状态''方向相容，但不是文献直接推出的公式。主要目的是防止反馈环数值爆炸。 \\
+
+\midrule
+无自动回落
+&
+\texttt{helplessness\_score} 无 daily decay；只靠成功事件下拉
+&
+\textbf{建模选择}
+&
+与 Abramson (1978) ``learned attitude'' 方向相容：如果归因 stable，helplessness 不应自动消退。但具体``不加 decay''是操作化选择。 \\
+
+\midrule
+Trust /\\avoidance\\独立链
+&
+\texttt{trust\_in\_apps}、\texttt{avoidance\_tendency} 在 \texttt{compat.py} 中独立更新
+&
+\textbf{建模决策}
+&
+UTAUT (2003) 和 Skinner (1996) 支持``多维构念不应折叠''的一般原则，但具体三条独立链是工程选择。 \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+% ============================================================
+\section{初步结果}
+% ============================================================
+
+\begin{frame}[t]{10-day 3-seed Results Snapshot}
+\footnotesize
+\begin{columns}[T]
+\begin{column}{0.36\textwidth}
+\textbf{核心观察}
+\begin{itemize}
+    \item \textbf{High Friction + Low Assist}：attempt 明显下降，negative share 与 helplessness 上升最大
+    \item \textbf{High Friction + High Assist}：attempt 与 help-seeking 部分恢复，但 helplessness / trust 改善有限
+    \item \textbf{Low Friction + High Assist}：五项主指标均向预期方向改善
+\end{itemize}
+
+\textbf{实验设置}
+\begin{itemize}
+    \item steady 单阶段
+    \item 10 days，3 paired seeds
+    \item 30-minute step，logical clock
+\end{itemize}
+\end{column}
+
+\begin{column}{0.62\textwidth}
+\scriptsize
+\centering
+\textbf{Paired effects vs baseline}\\[2pt]
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Contrast vs baseline} & \textbf{$\Delta$Attempt} & \textbf{$\Delta$Neg.} & \textbf{$\Delta$Help.} & \textbf{$\Delta$Trust} & \textbf{$\Delta$Avoid.} \\
+\midrule
+High Friction + Low Assist
+& -0.349
+& +0.449
+& +18.614
+& -19.783
+& +7.167 \\
+
+High Friction + High Assist
+& -0.116
+& +0.195
+& +14.645
+& -22.017
+& +12.033 \\
+
+Low Friction + High Assist
+& +0.109
+& -0.170
+& -27.158
+& +40.083
+& -35.408 \\
+\bottomrule
+\end{tabular}
+}
+\end{column}
+\end{columns}
+
+{\tiny Data source: \texttt{stage6\_single\_10day\_3seed\_logical\_clock\_20260408}. 所有 paired QC 通过；由于 $n{=}3$，此页主要用于展示 effect direction 与 magnitude。}
+\end{frame}
+
+% ============================================================
+\section{总结}
+% ============================================================
+
+\begin{frame}{总结与下一步}
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{已完成}
+\begin{itemize}
+    \item 10 条机制全部落地并逐条映射到文献
+    \item 区分了三种证据层级：
+    \begin{itemize}
+        \scriptsize
+        \item 文献直接支持（不可控感主驱动、SE 中介、avoid 拆分、CSM、support 间接化）
+        \item 理论方向约束（无自动回落）
+        \item 工程启发式（damping、独立更新链）
+    \end{itemize}
+    \item 核心公式（成功/失败两路径）完整呈现
+\end{itemize}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{下一步}
+\begin{itemize}
+    \item 补充 avoid 分类的 LLM hybrid 校准层
+    \item 设计消融实验矩阵（6 组消融 + 5 项主指标）
+    \item 跑固定 multi-seed baseline 并保存
+    \item 完成 paired-seed 对照分析
+    \item 整合为论文 Mechanism Section 的完整叙事
+\end{itemize}
+\end{column}
+\end{columns}
+
+\framebottomnote{消融矩阵：No-Uncontrollability / No-Efficacy-Mediator / No-Avoid-Split / No-Control-Memory / Direct-Support-Only / No-Damping。主指标：AttemptRate, NegShare, HelplessDelta, TrustDelta, AvoidanceDelta。}
+\end{frame}
+
+\begin{frame}
+    \centering
+    \Huge{请老师批评指正}
+\end{frame}
+
+\end{document}

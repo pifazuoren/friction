@@ -1,0 +1,7 @@
+English Title: Science friction: data, metadata, and collaboration
+Chinese Title: 科学摩擦：数据、元数据与协作
+Category: general
+Page URL: https://pubmed.ncbi.nlm.nih.gov/22164720/
+PDF URL: 
+Notes: PubMed metadata page
+Download Status: metadata_only (pdf_url_not_found)

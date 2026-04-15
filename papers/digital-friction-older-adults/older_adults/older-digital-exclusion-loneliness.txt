@@ -1,0 +1,7 @@
+English Title: Digital exclusion and loneliness in older people: panel data analysis of three longitudinal cohort studies
+Chinese Title: 老年人的数字排斥与孤独：三项纵向队列研究的面板数据分析
+Category: older_adults
+Page URL: https://bmcgeriatr.biomedcentral.com/articles/10.1186/s12877-025-06337-2
+PDF URL: https://link.springer.com/content/pdf/10.1186/s12877-025-06337-2.pdf
+Notes: BMC open access
+Download Status: metadata_only

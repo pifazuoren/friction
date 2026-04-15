@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Agent Evolution Observation - Minimalist</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+
+        /* 1. THE SETUP - MINIMALIST LIGHT THEME */
+
+        * {
+
+            box-sizing: border-box;
+
+            margin: 0;
+
+            padding: 0;
+
+        }
+
+
+
+        body {
+
+            background-color: #f3f4f6; /* Very light gray for outer background */
+
+            display: grid;
+
+            place-items: center;
+
+            min-height: 100vh;
+
+            font-family: 'Noto Sans SC', sans-serif;
+
+            color: #1f2937;
+
+        }
+
+
+
+        .slide-container {
+
+            background: #ffffff; /* Pure white slide */
+
+            width: 1280px;
+
+            height: 720px;
+
+            position: relative;
+
+            overflow: hidden;
+
+            padding: 40px 50px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+
+            border-radius: 12px;
+
+            border: 1px solid #e5e7eb;
+
+        }
+
+
+
+        /* 2. HEADER STYLING */
+
+        .header {
+
+            width: 100%;
+
+            margin-bottom: 25px;
+
+            border-bottom: 1px solid #f3f4f6;
+
+            padding-bottom: 15px;
+
+        }
+
+
+
+        .header h1 {
+
+            font-size: 38px;
+
+            font-weight: 700;
+
+            color: #111827;
+
+            line-height: 1.2;
+
+            letter-spacing: 0.5px;
+
+        }
+
+
+
+        .header .subtitle {
+
+            font-size: 22px;
+
+            color: #6b7280;
+
+            margin-top: 8px;
+
+            font-weight: 400;
+
+        }
+
+
+
+        /* 3. CONTENT AREA - CUSTOM GRID */
+
+        .content-area {
+
+            display: flex;
+
+            flex-direction: column;
+
+            flex-grow: 1;
+
+            gap: 25px;
+
+        }
+
+
+
+        /* 3.1 TOP SECTION (60%) - 3 STAGES */
+
+        .evolution-stages {
+
+            display: grid;
+
+            grid-template-columns: repeat(3, 1fr);
+
+            gap: 20px;
+
+            height: 310px;
+
+        }
+
+
+
+        .stage-card {
+
+            background: #ffffff;
+
+            border-radius: 12px;
+
+            border: 1px solid #e5e7eb;
+
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+
+            padding: 20px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 12px;
+
+            position: relative;
+
+        }
+
+
+
+        .stage-card.stage-1 { border-top: 4px solid #10b981; }
+
+        .stage-card.stage-2 { border-top: 4px solid #f59e0b; }
+
+        .stage-card.stage-3 { border-top: 4px solid #ef4444; }
+
+
+
+        .stage-title {
+
+            font-size: 20px;
+
+            font-weight: 700;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+        }
+
+
+
+        .stage-1 .stage-title { color: #059669; }
+
+        .stage-2 .stage-title { color: #d97706; }
+
+        .stage-3 .stage-title { color: #dc2626; }
+
+
+
+        /* Terminal Log */
+
+        .terminal-log {
+
+            background: #f8fafc;
+
+            border-radius: 6px;
+
+            padding: 10px;
+
+            font-family: 'Fira Code', monospace;
+
+            font-size: 13px;
+
+            color: #475569;
+
+            border: 1px solid #e2e8f0;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+        }
+
+        .terminal-log i { color: #94a3b8; font-size: 12px; }
+
+
+
+        /* Dashboard */
+
+        .dashboard {
+
+            background: #ffffff;
+
+            border: 1px solid #f1f5f9;
+
+            border-radius: 6px;
+
+            padding: 10px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 8px;
+
+            font-size: 14px;
+
+        }
+
+        .metric-row {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+        }
+
+        .metric-label {
+
+            color: #475569;
+
+            font-weight: 500;
+
+        }
+
+        .progress-container {
+
+            flex-grow: 1;
+
+            height: 6px;
+
+            background: #f1f5f9;
+
+            border-radius: 3px;
+
+            margin: 0 10px;
+
+            overflow: hidden;
+
+        }
+
+        .progress-fill { height: 100%; border-radius: 3px;}
+
+        .stage-1 .progress-fill { width: 10%; background: #10b981; }
+
+        .stage-2 .progress-fill { width: 50%; background: #f59e0b; }
+
+        .stage-3 .progress-fill { width: 90%; background: #ef4444; }
+
+
+
+        /* CoT Block */
+
+        .cot-block {
+
+            background: #f8fafc;
+
+            border-left: 3px solid #cbd5e1;
+
+            padding: 12px;
+
+            font-size: 14px;
+
+            color: #475569;
+
+            font-style: italic;
+
+            line-height: 1.5;
+
+            flex-grow: 1;
+
+        }
+
+        .stage-1 .cot-block { border-left-color: #34d399; background: #ecfdf5; }
+
+        .stage-2 .cot-block { border-left-color: #fbbf24; background: #fffbeb; }
+
+        .stage-3 .cot-block { border-left-color: #f87171; background: #fef2f2; }
+
+
+
+        /* Radar Block */
+
+        .radar-block {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            font-size: 14px;
+
+            color: #64748b;
+
+            padding-top: 5px;
+
+        }
+
+        .radar-block i { color: #0284c7; }
+
+
+
+        /* Connection Progress Bar between stages */
+
+        .timeline-connector {
+
+            position: absolute;
+
+            top: 250px;
+
+            left: 50px;
+
+            right: 50px;
+
+            height: 3px;
+
+            background: linear-gradient(90deg, #10b981 0%, #f59e0b 50%, #ef4444 100%);
+
+            border-radius: 2px;
+
+            z-index: 0;
+
+            opacity: 0.15;
+
+        }
+
+
+
+        /* 3.2 BOTTOM SECTION (40%) - 2 COLUMNS */
+
+        .bottom-analysis {
+
+            display: grid;
+
+            grid-template-columns: 60% 38%;
+
+            gap: 2%;
+
+            height: 200px;
+
+        }
+
+
+
+        /* Theoretical Contributions */
+
+        .theory-section {
+
+            background: transparent;
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            gap: 15px;
+
+        }
+
+        .theory-title {
+
+            font-size: 18px;
+
+            color: #111827;
+
+            font-weight: 700;
+
+            margin-bottom: 5px;
+
+            letter-spacing: 0.5px;
+
+        }
+
+        .bullet-list {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 12px;
+
+        }
+
+        .bullet-item {
+
+            display: flex;
+
+            align-items: flex-start;
+
+            gap: 12px;
+
+            font-size: 15px;
+
+            color: #4b5563;
+
+            line-height: 1.5;
+
+        }
+
+        .bullet-icon {
+
+            font-size: 18px;
+
+            margin-top: 2px;
+
+        }
+
+        .bullet-item strong {
+
+            color: #111827;
+
+            font-weight: 700;
+
+        }
+
+
+
+        /* Code Sample Area - Light Theme */
+
+        .code-container {
+
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 12px;
+
+            overflow: hidden;
+
+            display: flex;
+
+            flex-direction: column;
+
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+
+        }
+
+        .code-header {
+
+            background: #f9fafb;
+
+            padding: 8px 15px;
+
+            font-size: 12px;
+
+            color: #6b7280;
+
+            font-family: 'Fira Code', monospace;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            border-bottom: 1px solid #e5e7eb;
+
+        }
+
+        .code-dots {
+
+            display: flex;
+
+            gap: 6px;
+
+        }
+
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        .dot.red { background: #ef4444; }
+
+        .dot.yellow { background: #f59e0b; }
+
+        .dot.green { background: #10b981; }
+
+        
+
+        .code-content {
+
+            padding: 15px;
+
+            font-family: 'Fira Code', monospace;
+
+            font-size: 13px;
+
+            line-height: 1.5;
+
+            color: #334155;
+
+            overflow-y: hidden;
+
+            background: #ffffff;
+
+        }
+
+        
+
+        /* Light Theme Syntax Highlighting */
+
+        .json-key { color: #0284c7; font-weight: 500; }
+
+        .json-string { color: #059669; }
+
+        .json-number { color: #dc2626; }
+
+        .json-bracket { color: #64748b; }
+
+
+
+    </style>
+
+</head>
+
+<body>
+
+
+
+<div class="slide-container" id="slide1">
+
+    <!-- Header Area -->
+
+    <div class="header">
+
+        <h1>演进观察：Agent 的“内心独白”与行为轨迹可视化</h1>
+
+        <p class="subtitle">从“系统难用”到“我老了”：习得性无助的微观溯源</p>
+
+    </div>
+
+
+
+    <!-- Main Content Area -->
+
+    <div class="content-area">
+
+        <!-- 阶段时间线背景线 -->
+
+        <div class="timeline-connector"></div>
+
+
+
+        <!-- Top 60%: 3 Stages Cards -->
+
+        <div class="evolution-stages">
+
+            <!-- Stage 1 -->
+
+            <div class="stage-card stage-1">
+
+                <div class="stage-title">
+
+                    <i class="fa-solid fa-circle-exclamation"></i> 阶段一：初期受挫
+
+                </div>
+
+                <div class="terminal-log">
+
+                    <i class="fa-solid fa-terminal"></i> 
+
+                    <span>Action: Attempt_Back &rarr; Trigger_Ad</span>
+
+                </div>
+
+                <div class="dashboard">
+
+                    <div class="metric-row">
+
+                        <span class="metric-label">Helplessness: 0.1</span>
+
+                        <div class="progress-container"><div class="progress-fill"></div></div>
+
+                        <span style="color: #059669; font-weight:700;">强</span>
+
+                    </div>
+
+                </div>
+
+                <div class="cot-block">
+
+                    “这个广告图标和返回键太像了，下次我要更仔细一点。”
+
+                </div>
+
+                <div class="radar-block">
+
+                    <i class="fa-solid fa-satellite-dish"></i> 外部归因（系统设计问题）
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Stage 2 -->
+
+            <div class="stage-card stage-2">
+
+                <div class="stage-title">
+
+                    <i class="fa-solid fa-bolt"></i> 阶段二：认知震荡
+
+                </div>
+
+                <div class="terminal-log">
+
+                    <i class="fa-solid fa-terminal"></i> 
+
+                    <span>Action: Retry_Pwd_x3 &rarr; Failed</span>
+
+                </div>
+
+                <div class="dashboard">
+
+                    <div class="metric-row">
+
+                        <span class="metric-label">Helplessness: 0.5</span>
+
+                        <div class="progress-container"><div class="progress-fill"></div></div>
+
+                        <span style="color: #d97706; font-weight:700;">动摇</span>
+
+                    </div>
+
+                </div>
+
+                <div class="cot-block">
+
+                    “输入三遍都不对……是我记错了，还是我真的看不清这些字？”
+
+                </div>
+
+                <div class="radar-block">
+
+                    <i class="fa-solid fa-satellite-dish"></i> 转向内部归因（怀疑自身能力）
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Stage 3 -->
+
+            <div class="stage-card stage-3">
+
+                <div class="stage-title">
+
+                    <i class="fa-solid fa-skull-crossbones"></i> 阶段三：彻底无助
+
+                </div>
+
+                <div class="terminal-log">
+
+                    <i class="fa-solid fa-terminal"></i> 
+
+                    <span>Action: Encounter_Popup &rarr; Exit</span>
+
+                </div>
+
+                <div class="dashboard">
+
+                    <div class="metric-row">
+
+                        <span class="metric-label">Helplessness: 0.9</span>
+
+                        <div class="progress-container"><div class="progress-fill"></div></div>
+
+                        <span style="color: #dc2626; font-weight:700;">回避</span>
+
+                    </div>
+
+                </div>
+
+                <div class="cot-block">
+
+                    “又来了。我怎么点都是错的，我这种老头子根本不适合用智能手机。不添麻烦了。”
+
+                </div>
+
+                <div class="radar-block">
+
+                    <i class="fa-solid fa-satellite-dish"></i> 内在、稳定、全局归因
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Bottom 40%: Theory & Code Sample -->
+
+        <div class="bottom-analysis">
+
+            <!-- Left: Theoretical Contributions -->
+
+            <div class="theory-section">
+
+                <div class="theory-title">核心理论贡献</div>
+
+                <div class="bullet-list">
+
+                    <div class="bullet-item">
+
+                        <span class="bullet-icon">🧠</span>
+
+                        <div><strong>心理黑箱可视化：</strong>利用 CoT 提取决策逻辑，将“黑箱仿真”转化为“可解释的心理模型”。</div>
+
+                    </div>
+
+                    <div class="bullet-item">
+
+                        <span class="bullet-icon">📉</span>
+
+                        <div><strong>归因风格自发偏移：</strong>观测到随摩擦累积，解释风格从“外部/偶然”向<strong>“内在/稳定/全局”</strong>质变。</div>
+
+                    </div>
+
+                    <div class="bullet-item">
+
+                        <span class="bullet-icon">🔗</span>
+
+                        <div><strong>因果连贯性验证：</strong>弃用行为非随机触发，而是基于受挫记忆与预期崩溃的逻辑必然。</div>
+
+                    </div>
+
+                    <div class="bullet-item">
+
+                        <span class="bullet-icon">🚀</span>
+
+                        <div><strong>补齐传统仿真短板：</strong>克服了蒙特卡洛模拟缺乏情感维度、问卷法无法捕捉微观演化的局限。</div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Right: Real Log Sample -->
+
+            <div class="code-container">
+
+                <div class="code-header">
+
+                    <div class="code-dots">
+
+                        <div class="dot red"></div>
+
+                        <div class="dot yellow"></div>
+
+                        <div class="dot green"></div>
+
+                    </div>
+
+                    <span>agent_memory_log_v2.json</span>
+
+                </div>
+
+                <div class="code-content">
+
+<pre><span class="json-bracket">{</span>
+
+  <span class="json-key">"step"</span>: <span class="json-number">12</span>,
+
+  <span class="json-key">"action"</span>: <span class="json-string">"click_ad_by_mistake"</span>,
+
+  <span class="json-key">"inner_thought"</span>: <span class="json-string">"Maybe it's my shaky hand... I'm just not good at this."</span>,
+
+  <span class="json-key">"attribution_style"</span>: <span class="json-string">"Internal/Stable"</span>,
+
+  <span class="json-key">"helplessness_score"</span>: <span class="json-number">0.78</span>,
+
+  <span class="json-key">"status"</span>: <span class="json-string">"Warning: Approaching Avoidance Threshold"</span>
+
+<span class="json-bracket">}</span></pre>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+
+</html>
+
+```

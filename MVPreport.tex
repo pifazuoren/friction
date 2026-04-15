@@ -1,0 +1,192 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{beaver}
+
+% 引入中文支持
+\usepackage[UTF8]{ctex}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+
+% 标题信息
+\title[MVP Report]{数字摩擦MVP汇报}
+\date{\today}
+
+\begin{document}
+
+% --- SLIDE 1: Title Page ---
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% --- Section: 实现与机制设计 ---
+\section{实现与机制设计}
+
+% --- SLIDE 2: P1 实现总览 ---
+\begin{frame}{初步MVP实现}
+    \begin{itemize}
+        \item 目标：数字摩擦/润滑剂 → 心理状态变化的最小闭环
+        \item 流程：初始化 → 调查 → 阶段干预 → 事件冲击 → 结算 → 保存指标
+    \end{itemize}
+
+\end{frame}
+
+% --- SLIDE 3: P2 阶段与环境参数设计 ---
+\begin{frame}{阶段与环境参数设计}
+    \begin{itemize}
+        \item 3 个阶段，每阶段 2 天
+        \item Stage1：\texttt{baseline\_low\_friction}（基线）
+        \item Stage2：高摩擦低辅助
+        \item Stage3：低摩擦高辅助
+        \item 7 个环境变量：\texttt{friction / malicious / complexity / risk / assist / accessibility / human\_support}
+    \end{itemize}
+
+\end{frame}
+
+% --- SLIDE 4: P3 事件触发机制 ---
+\begin{frame}{事件触发机制}
+    \begin{itemize}
+        \item 4 个场景：广告误触 / 支付转账 / 打车 / 验证码
+        \item 意图匹配 → 场景选择（匹配失败时随机触发）
+    \end{itemize}
+
+    \vspace{0.2cm}
+    \begin{align*}
+        p_{neg} &= 0.05
+        + 0.05\,friction
+        + 0.06\,malicious
+        + 0.04\,complexity
+        + 0.06\,risk \\
+        &\quad + 0.05\,vision\_limit
+        + 0.04\,past\_fraud
+        - 0.05\,digital\_experience \\
+        p_{pos} &= 0.04
+        + 0.06\,assist
+        + 0.05\,accessibility
+        + 0.05\,human\_support
+        + 0.03\,digital\_experience
+    \end{align*}
+
+\end{frame}
+
+% --- SLIDE 5: P4 状态更新与阶段结算 ---
+\begin{frame}{状态更新与阶段结算}
+    \begin{itemize}
+        \item 事件即时冲击：无助 / 信任 / 回避
+        \item 过程计数器：\texttt{negative / intercept / help / success / failure}
+        \item 阶段结算：\texttt{monthly\_settlement} 再次更新状态
+    \end{itemize}
+
+\end{frame}
+
+% --- Section: 结果与数据 ---
+\section{结果与数据}
+
+% --- SLIDE 6: P5 结果与数据输出 ---
+\begin{frame}{结果与数据输出}
+    \begin{itemize}
+        \item 输出目录：\texttt{agentsociety\_data/exps/\textless expid\textgreater}
+        \item \texttt{artifacts.json}：阶段状态与事件记录
+        \item \texttt{metric\_stage\_summary.csv}：阶段均值
+        \item \texttt{metric\_full.csv}：阶段级指标（无逐步趋势）
+    \end{itemize}
+
+\end{frame}
+
+% --- SLIDE 7: P6 结果展示 ---
+\begin{frame}{结果展示：核心指标}
+    \begin{columns}[T]
+        \begin{column}{0.33\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{agentsociety\_data/exps/6b0cc2fb-05a1-4bc3-9251-7eb3eb9d9496/metric\_helplessness\_avg.png}
+        \end{column}
+        \begin{column}{0.33\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{agentsociety\_data/exps/6b0cc2fb-05a1-4bc3-9251-7eb3eb9d9496/metric\_trust\_avg.png}
+        \end{column}
+        \begin{column}{0.33\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{agentsociety\_data/exps/6b0cc2fb-05a1-4bc3-9251-7eb3eb9d9496/metric\_avoidance\_avg.png}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% --- SLIDE 8: Survey 曲线 ---
+\begin{frame}{结果展示：Survey 曲线}
+    \centering
+    \includegraphics[width=0.9\linewidth]{agentsociety\_data/exps/6b0cc2fb-05a1-4bc3-9251-7eb3eb9d9496/mvp\_curves.png}
+\end{frame}
+
+% --- SLIDE 8: 事件过程指标 ---
+\begin{frame}{结果展示：事件过程指标}
+    \begin{columns}[T]
+        \begin{column}{0.5\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{agentsociety\_data/exps/6b0cc2fb-05a1-4bc3-9251-7eb3eb9d9496/metric\_negative\_event\_avg.png}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{agentsociety\_data/exps/6b0cc2fb-05a1-4bc3-9251-7eb3eb9d9496/metric\_success\_avg.png}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% --- Section: 不足 ---
+\section{不足}
+
+% --- SLIDE 8: P7 不足一（机制） ---
+\begin{frame}{机制层不足}
+    \begin{itemize}
+        \item 事件不是行为结果触发，而是概率注入
+        \item 意图不稳定 → 随机事件
+        \item 冲击强度固定，缺少个体差异化反应
+        \item 状态不反馈行为（无闭环）
+    \end{itemize}
+
+\end{frame}
+
+% --- SLIDE 9: P8 不足二（数据） ---
+\begin{frame}{数据层不足}
+    \begin{itemize}
+        \item 只有阶段均值，缺少逐步趋势
+        \item 问卷维度单一
+        \item 样本规模小（6 agents）
+        \item 对话/行为痕迹偏少
+    \end{itemize}
+
+\end{frame}
+
+% --- Section: 改进 ---
+\section{改进}
+
+% --- SLIDE 10: P9 改进一（机制增强） ---
+\begin{frame}{改进方向：机制增强}
+    \begin{itemize}
+        \item 稳定意图来源（计划/needs）
+        \item 事件绑定真实行为 block
+        \item 冲击强度差异化
+        \item 状态反馈行为（形成闭环）
+    \end{itemize}
+
+\end{frame}
+
+% --- SLIDE 11: P10 改进二（数据与实验设置） ---
+\begin{frame}{改进方向：数据与实验设置}
+    \begin{itemize}
+        \item 增加问卷维度（信任/回避/线下意愿）
+        \item 记录逐日/逐步指标
+        \item 扩大样本与时长
+        \item 长周期实验需增大步长（如 6小时/12小时/1天步），控制计算与成本
+        \item 参数校准与文献对齐
+    \end{itemize}
+
+\end{frame}
+
+% --- SLIDE 12: 结语 ---
+\begin{frame}
+    \centering
+    \Huge{请老师批评指正orz}
+\end{frame}
+
+\end{document}

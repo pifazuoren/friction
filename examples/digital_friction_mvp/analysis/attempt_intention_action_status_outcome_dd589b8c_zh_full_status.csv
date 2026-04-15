@@ -1,0 +1,49 @@
+intention,action,agent_status_status,emitted,outcome,step_intention,action_snapshot_day,action_snapshot_t,join_mode,join_lag_seconds
+查看购物清单,查看购物清单,当太阳慢慢升起，气温达到舒适的23摄氏度时，我感到一种如释重负的感觉，坐在家里，我的心情很轻松，因为没有什么好或坏的事情发生，我正在计划处理今天的购物清单。,1,正向,查看购物清单,0,21601.0,prev_snapshot,3600.0
+阅读书籍或杂志,阅读书籍或杂志,此时此刻，当我坐在舒适的椅子上时，我感到一种如释重负的感觉，我的眼睛适应了从窗户透进来的早晨的阳光。我打算读一本好书或杂志，在阳光明媚的家里享受一个安静祥和的早晨。,1,正向,阅读书籍或杂志,0,25201.0,prev_snapshot,3600.0
+根据库存与需求规划购物清单,根据库存与需求规划购物清单,早上 7:01，当我在晴朗的天空和温和温暖的阳光下开始新的一天时，我发现自己有一种如释重负的感觉，因为我知道没有什么特别紧迫的事情困扰着我。我现在开始计划我的购物清单，仔细考虑我的库存和需求，因为我越来越欣赏每项任务的简单性和清晰度。,0,未触发事件,根据库存与需求规划购物清单,0,25201.0,prev_snapshot,3600.0
+准备一份清淡早餐,准备一份清淡早餐,我回到家，清晨的阳光明媚，我感到一种轻松的感觉，知道新的一天才刚刚开始。我打算准备一份清淡的早餐，享受开始新的一天的宁静，没有任何紧迫的问题。,1,正向,准备一份清淡早餐,0,25201.0,prev_snapshot,3600.0
+根据需求确定购物清单,根据需求确定购物清单,我享受着一个悠闲的早晨，阳光温暖宜人，我有一种如释重负的感觉。我正在考虑我的购物清单，渴望让它成为一次富有成效的旅行。,0,未触发事件,根据需求确定购物清单,0,25201.0,prev_snapshot,3600.0
+出门,出门,当我打算走出家门去购物、享受阳光明媚的早晨和舒适的 23 度气温时，我感到一种轻松的感觉，尽管一想到复杂的应用程序和网站可能会引起头痛，我就感到有点恼火。,0,未触发事件,出门,0,28801.0,prev_snapshot,3600.0
+阅读书籍或杂志,阅读书籍或杂志,当我舒适地坐在客厅里时，阳光透过窗户照射进来，给我原本焦虑的心灵带来温暖和平静的感觉。我从一天的安静生活中得到了一点解脱，沉浸在一本好书的书页中，感激阅读的简单乐趣。,1,正向,阅读书籍或杂志,0,28801.0,prev_snapshot,3600.0
+在家开始新的一天,在家开始新的一天,在宁静的阳光明媚的一天开始时，我舒适地坐在家里，双手熟练地操纵着简单的应用程序，以确保一天的日常工作顺利进行，一种轻松的感觉笼罩着我，因为我相信简单的界面和我的帐户的安全得到了很好的保护。,1,正向,在家开始新的一天,0,28801.0,prev_snapshot,3600.0
+进行晨间冥想或安静反思,进行晨间冥想或安静反思,现在，我舒适地坐在家里，阳光透过窗户照进来，我的注意力集中在开始早晨的冥想上，感受到平静和满足的温和平衡。,0,未触发事件,进行晨间冥想或安静反思,0,28801.0,prev_snapshot,3600.0
+准备一份清淡早餐,准备一份清淡早餐,我舒适地坐在小客厅里，沐浴在早晨的阳光下，准备一份清淡的早餐，没有任何令人不安的数字干扰，我感到如释重负，我很满意今天没有发生任何异常情况。,0,未触发事件,准备一份清淡早餐,0,32401.0,prev_snapshot,3600.0
+查看手机联系人,查看手机联系人,我正在享受一个悠闲的早晨，手里拿着手机，浏览着联系人列表，当阳光透过窗户温暖地照进来时，我感到很满足。,0,未触发事件,查看手机联系人,0,32401.0,prev_snapshot,3600.0
+Select a friend to call,Select a friend to call,我正在温暖的阳光下喝着茶，想着今天要和朋友联系的计划，心里很满足，心里很平静，没有任何负担。,0,未触发事件,Select a friend to call,0,36001.0,prev_snapshot,3600.0
+Rest or engage in leisure activities post-meal,Rest or engage in leisure activities post-meal,我在公园里享受着宁静的午后漫步，心旷神怡，温暖的阳光沐浴在柔和的阳光下。我的身体有一种如释重负的感觉，因为我知道我的饭菜是在家里吃的，吃完饭后我可以放松并享受平静、悠闲的活动。,0,未触发事件,Rest or engage in leisure activities post-meal,0,46801.0,prev_snapshot,3600.0
+Relax or engage in leisure activities after eating,Relax or engage in leisure activities after eating,在探索手机新功能一天后，我理所应当地休息一下。阳光明媚，我感到满足和放松，准备在家吃顿饭放松一下。,0,未触发事件,Relax or engage in leisure activities after eating,0,46801.0,prev_snapshot,3600.0
+Rest or engage in leisure activities post-meal,Rest or engage in leisure activities post-meal,我刚刚在公园的一个安静的角落安顿下来，享受着温暖的阳光和周围的宁静。今天，我感到一种如释重负的感觉，因为我的脑子里没有任何紧急的问题，我的思想没有任何特别的担忧。,0,未触发事件,Rest or engage in leisure activities post-meal,0,50401.0,prev_snapshot,3600.0
+Prepare for sleep by setting a comfortable environment,Prepare for sleep by setting a comfortable environment,我正在放松一天的生活，坐在我熟悉的小公寓里享受温暖的阳光，在准备好好休息一晚时感受到舒适与平静。我的思绪很平静，我对即将到来的安静时刻感到既满足又期待。,0,未触发事件,Prepare for sleep by setting a comfortable environment,0,61201.0,prev_snapshot,3600.0
+Prepare for sleep by setting a comfortable environment,Prepare for sleep by setting a comfortable environment,我在家里度过了一个安静的夜晚，阳光透过房间投射出温柔的温暖，当我准备睡觉时，我感到一种满足感，我的心情很轻松，希望明天会带来新的学习和成长的机会。,1,正向,Prepare for sleep by setting a comfortable environment,0,61201.0,prev_snapshot,3600.0
+Enjoy the meal alone or possibly with a companion,Enjoy the meal alone or possibly with a companion,经过漫长的一天后，我正在家里放松一下。夕阳西下，给天空涂上了温暖的色调，我想着一顿简单的饭菜，反思着这一天的效率和秩序。,0,未触发事件,Enjoy the meal alone or possibly with a companion,0,79201.0,prev_snapshot,3600.0
+Go to the bedroom and lie down,Go to the bedroom and lie down,我在家里度过了一个晚上，希望今天平安无事，现在我打算上床睡觉，对卧室的安静安全感到满意。,0,未触发事件,Go to the bedroom and lie down,0,82801.0,prev_snapshot,3600.0
+Sit down at the dining table,Sit down at the dining table,我刚刚在阳光温暖的拥抱下散步回来，准备在家里坐下来吃晚饭时，我感到一种轻松的感觉，家里的一切都是熟悉而宁静的。,0,未触发事件,Sit down at the dining table,1,1.0,prev_snapshot,3600.0
+Return to a comfortable and familiar environment,Return to a comfortable and familiar environment,我安顿在家里，夕阳的温暖从窗外流过，我度过了一个简单的夜晚——我精通科技的一面享受着用手机在家里准备晚餐的便捷，而我谨慎的天性却被复杂的感觉稍微扰乱，因为生活平静的河流似乎提供了满足和一丝不确定性的混合。,0,未触发事件,Return to a comfortable and familiar environment,1,3601.0,prev_snapshot,3600.0
+Enjoy a meal in a relaxing setting,Enjoy a meal in a relaxing setting,我在家，心情既平静又期待。外面阳光明媚，我正在安静地享用一顿饭，回想着这一天发生的安静的事情。,0,未触发事件,Enjoy a meal in a relaxing setting,1,10801.0,prev_snapshot,3600.0
+Plan shopping list based on needs,Plan shopping list based on needs,当我享受早晨的阳光时，我心满意足地计划我的购物清单，我对技术的精通引导我以平衡的好奇心和谨慎的态度完成任务，所有这一切都在阳光照射的房间的舒缓光芒下进行。,0,未触发事件,Plan shopping list based on needs,1,18001.0,prev_snapshot,3600.0
+Set the alarm or reminder for an appropriate sleep time if needed,Set the alarm or reminder for an appropriate sleep time if needed,我在公园里享受着宁静的散步，阳光温暖着我的脸，我欣赏着午后的静谧之美。我的头脑很清醒，我感到一种来自简单退休生活的满足感。,0,未触发事件,Set the alarm or reminder for an appropriate sleep time if needed,1,50401.0,prev_snapshot,3600.0
+Enjoy the meal in a comfortable setting,Enjoy the meal in a comfortable setting,我在家里享受着一个安静的夜晚，外面的阳光依然温暖，我舒适地坐着，回想简单而满足的一天，感到一种平静和轻松的感觉。,0,未触发事件,Enjoy the meal in a comfortable setting,1,75601.0,prev_snapshot,3600.0
+Serve the meal in a comfortable and enjoyable setting,Serve the meal in a comfortable and enjoyable setting,九点钟，我已经在家里安顿下来了，明亮的阳光仍然透过窗户照进来，当我期待着一个安静的夜晚时，我感到一种满足感，今天令人满意的日常生活与平静的生活相结合，提供了一种平衡的平静和对未来的温和期待。,0,未触发事件,Serve the meal in a comfortable and enjoyable setting,1,75601.0,prev_snapshot,3600.0
+Enjoy the meal alone or with a family member if possible,Enjoy the meal alone or with a family member if possible,"独白：
+
+当我舒适地坐在家里，享受着23度阳光明媚的夜晚的温暖时，我感到一种轻松和满足的感觉。一天中安静的日常生活给我带来了一种平静的感觉，虽然没有什么特别令人兴奋的事情发生，但一顿家常饭菜的简单快乐让我脸上露出了微笑。",1,正向,Enjoy the meal alone or with a family member if possible,1,79201.0,prev_snapshot,3600.0
+Plan a suitable time to visit a nearby store,Plan a suitable time to visit a nearby store,我享受着宁静的夜晚，外面的夕阳美丽地落下，我悠闲地思考着这一天，满足于它带来的简单与平静，知道我很快就会带着清晰、满足的心情去参观附近的一家商店。,0,未触发事件,Plan a suitable time to visit a nearby store,2,7201.0,prev_snapshot,3600.0
+Return to the comfort of home,Return to the comfort of home,当我在宁静的夜晚中航行，感到满足和不安时，我回到了家的避难所，在生活的不确定性中，我感到安全的地方。,0,未触发事件,Return to the comfort of home,2,10801.0,prev_snapshot,3600.0
+Return to home if not already there,Return to home if not already there,我结束了安静的一天回到家，对平静的安宁感到满意，尽管缺乏兴奋，但带来了满足感。当我行走时，阳光的温暖让我感到宾至如归，反映出我对生活简单和清晰的偏爱。,1,正向,Return to home if not already there,2,14401.0,prev_snapshot,3600.0
+Retire to the bedroom,Retire to the bedroom,当我醒来时，阳光的温和温暖让我感到舒缓，我感到一种如释重负的感觉，因为这一天是平静地开始的，没有任何紧急任务或干扰。清晨的宁静笼罩着我，我很满意回到舒适的卧室休息和放松。,0,未触发事件,Retire to the bedroom,2,18001.0,prev_snapshot,3600.0
+Enjoy the meal in a comfortable setting,Enjoy the meal in a comfortable setting,今天，在阳光明媚的天空下，我心满意足地呆在家里，期待着在熟悉而舒适的环境中轻松地用餐，虽然我没有经历过任何不寻常的事件，但我很感激这平静而简单的一天。,1,正向,Enjoy the meal in a comfortable setting,2,46801.0,prev_snapshot,3600.0
+Review shopping list based on daily needs,Review shopping list based on daily needs,经过平静的一天后，我会花点时间坐在阳光下，在心里准备好我的购物清单，珍惜夜晚的平静和简单。,1,正向,Review shopping list based on daily needs,2,64801.0,prev_snapshot,3600.0
+Plan the most convenient route from home considering distance and traffic,Plan the most convenient route from home considering distance and traffic,我正在放松心情，在一个 23 度的阳光明媚的夜晚考虑我的购物清单，我的注意力集中在规划从家出发的最简单、最有效的路径上。,0,未触发事件,Plan the most convenient route from home considering distance and traffic,2,68401.0,prev_snapshot,3600.0
+Leave home to begin the shopping trip,Leave home to begin the shopping trip,我今年 71 岁，今晚感到平静，我正准备离开家去计划好的购物之旅。,1,正向,Leave home to begin the shopping trip,2,75601.0,prev_snapshot,3600.0
+Visit the nearest shopping center or grocery store,Visit the nearest shopping center or grocery store,我在阳光明媚的夜晚悠闲地散步，对一天的简单生活感到满足，同时考虑着去当地的购物中心参观的前景，享受宁静的天气带来的宁静。,0,未触发事件,Visit the nearest shopping center or grocery store,2,79201.0,prev_snapshot,3600.0
+Make purchases from the shopping list,Make purchases from the shopping list,我刚刚平静地散步回来，阳光温暖地照耀着我在附近漫步。今天感觉像是一个安静的成功，因为我已经成功地从购物清单中划掉了几件商品，而无需处理那些讨厌的在线表格或弹出广告的麻烦。,0,未触发事件,Make purchases from the shopping list,2,82801.0,prev_snapshot,3600.0
+Identify nearest shopping center or convenience store,Identify nearest shopping center or convenience store,当我在阳光温暖的怀抱下度过一天时，我带着平静的心情走在熟悉的街道上，很高兴能找到最近的购物地点，沉迷于退休生活的简单乐趣。,1,正向,Identify nearest shopping center or convenience store,2,82801.0,prev_snapshot,3600.0
+Check current contact information,Check current contact information,我在家里休息，外面的阳光让我感到很满足。我目前正在检查我的联系人列表，确保每个人的信息都是最新的，整理这些生活点滴让我感到很满足。,0,未触发事件,Check current contact information,3,1.0,prev_snapshot,3600.0
+Stay at home as no movement is necessary,Stay at home as no movement is necessary,舒舒服服地坐在家里，外面宁静的阳光和我现在的宁静相配，我有一种满足的满足感——今天平安无事，这正是我喜欢的。,0,未触发事件,Stay at home as no movement is necessary,3,3601.0,prev_snapshot,3600.0
+Call a friend,Call a friend,此时此刻，我正在享受阳光明媚的夜晚的宁静，在舒适的家中思考这一天的简单快乐，渴望通过电话与朋友联系。,0,未触发事件,Call a friend,3,3601.0,prev_snapshot,3600.0
+Pick up phone to call friends,Pick up phone to call friends,我舒服地坐在客厅里，阳光透过窗户投射出温暖的光芒，我正准备给朋友打电话，对这个平安无事的夜晚感到满足。,0,未触发事件,Pick up phone to call friends,3,7201.0,prev_snapshot,3600.0
+"If not, prepare a meal or order delivery","If not, prepare a meal or order delivery",在这个宁静的阳光明媚的早晨，我悠闲地漫步在公园里，心里充满了轻松和满足。我的一天都在享受退休后的简单快乐，因为我知道我所爱的人只要一通电话，就会引导我穿越数字迷宫。,1,负向,"If not, prepare a meal or order delivery",3,10801.0,prev_snapshot,3600.0
+Stay at home as the weather is conducive and there is no urgency to move.,Stay at home as the weather is conducive and there is no urgency to move.,当阳光沐浴在温柔的温暖中时，我舒适地坐在安静的家中，感到满足和谨慎的平静。我对一天的简单感到满意，但我心中始终保持着一丝谨慎，提醒我那些令人不安的经历塑造了我对数字互动的谨慎态度。,1,正向,Stay at home as the weather is conducive and there is no urgency to move.,3,10801.0,prev_snapshot,3600.0
+Stay at home as location,Stay at home as location,我在家里享受着安静的早晨，外面的阳光照进来带来温暖的舒适，没有平常的喧嚣，我在简单的一天中感到一种轻松的感觉。,0,未触发事件,Stay at home as location,3,14401.0,prev_snapshot,3600.0
+Stay home as it's already the target location,Stay home as it's already the target location,我在家里放松，在这平静的一天中感到一种满足和一丝忧郁。我的行为简单——使用我的应用程序并让事情保持简单——带来了一种我现在非常喜欢的平静感。,0,未触发事件,Stay home as it's already the target location,3,18001.0,prev_snapshot,3600.0

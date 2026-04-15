@@ -1,0 +1,52 @@
+% Auto-generated summary table for:
+% stage6_single_10day_3seed_logical_clock_20260408
+% Source files:
+% - parallel_world_summary_stage6_single_10day_3seed_logical_clock_20260408.csv
+% - parallel_world_paired_stats_stage6_single_10day_3seed_logical_clock_20260408.csv
+% - parallel_world_paired_qc_stage6_single_10day_3seed_logical_clock_20260408.csv
+% Requires: \usepackage{booktabs,graphicx}
+
+\begin{table}[t]
+\centering
+\caption{Digital friction experiment (Stage 6, single-stage 10-day, logical clock): world-level outcomes and paired effects vs baseline}
+\label{tab:digital_friction_stage6_20260408}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+
+\textbf{Panel A. Absolute outcomes across worlds (mean$\pm$SD over 3 seeds)}\\[2pt]
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lcccccc}
+\toprule
+World & Attempt rate & Success rate & Help-seek rate & Abandon rate & Neg. share & Helplessness $\Delta$ \\
+\midrule
+Baseline (Low Friction) & 0.680$\pm$0.014 & 0.378$\pm$0.014 & 0.394$\pm$0.020 & 0.083$\pm$0.017 & 0.443$\pm$0.010 & 32.789$\pm$1.821 \\
+High Friction + Low Assist & 0.331$\pm$0.045 & 0.036$\pm$0.009 & 0.212$\pm$0.025 & 0.106$\pm$0.024 & 0.893$\pm$0.021 & 51.403$\pm$0.161 \\
+High Friction + High Assist & 0.564$\pm$0.043 & 0.204$\pm$0.004 & 0.377$\pm$0.053 & 0.119$\pm$0.018 & 0.638$\pm$0.020 & 47.434$\pm$5.603 \\
+Low Friction + High Assist & 0.789$\pm$0.030 & 0.574$\pm$0.033 & 0.474$\pm$0.026 & 0.035$\pm$0.007 & 0.274$\pm$0.019 & 5.631$\pm$2.863 \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{0.6em}
+\textbf{Panel B. Paired effects vs baseline (mean difference [95\% CI], n=3 pairs)}\\[2pt]
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lccccc}
+\toprule
+Contrast vs baseline & $\Delta$Attempt rate & $\Delta$Neg. share & $\Delta$Helplessness & $\Delta$Trust & $\Delta$Avoidance \\
+\midrule
+High Friction + Low Assist & -0.349 [-0.390, -0.301] & +0.449 [+0.418, +0.472] & +18.614 [+16.829, +20.143] & -19.783 [-20.425, -19.400] & +7.167 [+4.850, +8.350] \\
+High Friction + High Assist & -0.116 [-0.144, -0.078] & +0.195 [+0.171, +0.219] & +14.645 [+9.296, +18.175] & -22.017 [-29.950, -14.575] & +12.033 [+4.325, +17.650] \\
+Low Friction + High Assist & +0.109 [+0.093, +0.133] & -0.170 [-0.181, -0.155] & -27.158 [-30.085, -24.262] & +40.083 [+34.625, +44.000] & -35.408 [-41.475, -30.375] \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{0.4em}
+\begin{minipage}{0.98\linewidth}
+\footnotesize
+\textit{Notes.}
+Experiment setup from manifest/config: 4 worlds, 3 paired seeds (101/102/103), 10 agents per world, single stage (steady), 10 days, 30-minute decision interval.
+All paired QC rows pass (\texttt{qc\_pass}=1).
+Wilcoxon p-values in paired stats are 0.25 for nonzero contrasts (small-sample limit at n=3), so Panel B is primarily descriptive about effect direction and magnitude.
+\end{minipage}
+\end{table}

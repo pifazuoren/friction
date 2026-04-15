@@ -1,0 +1,25 @@
+{
+  "group_id": "stage6_single_1day_logical_clock_tolerance_smoke_20260408",
+  "config_fingerprint": "ab9c5407d8f4771a",
+  "config_payload": {
+    "world_batch": [
+      "baseline_low_friction",
+      "high_friction_low_assist",
+      "high_friction_high_assist",
+      "low_friction_high_assist"
+    ],
+    "EVENT_DECISION_INTERVAL_MINUTES": "30",
+    "PROTO_LLM_DAILY_REFLECTION_ENABLED": "true",
+    "PROTO_LLM_EVENT_APPRAISAL_ENABLED": "true",
+    "PROTO_LLM_FINAL_INTERVIEW_ENABLED": "true",
+    "PROTO_LLM_PSYCHOLOGY_MODE": "hybrid",
+    "PROTO_LLM_STAGE_INTERVIEW_ENABLED": "true",
+    "PROTO_LLM_STRATEGY_DELIBERATION_ENABLED": "true",
+    "PROTO_LLM_TASK_APPRAISAL_ENABLED": "true",
+    "PROTO_LLM_UNCONTROLLABILITY_MODE": "hybrid",
+    "PROTO_LOGICAL_CLOCK_ENABLED": "true",
+    "STAGE_DAYS": "1",
+    "STAGE_MODE": "single",
+    "STAGE_SINGLE_NAME": "steady"
+  }
+}

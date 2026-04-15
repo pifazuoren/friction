@@ -1,0 +1,1863 @@
+[
+    {
+        "type": "text",
+        "text": "Technophobia in digital health contexts: A systematic review and meta-analysis with a focus on older adults",
+        "text_level": 1,
+        "bbox": [
+            99,
+            103,
+            675,
+            179
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "DIGITAL HEALTH Volume 11: 1–18 © The Author(s) 2025 Article reuse guidelines:   \nsagepub.com/journals-permissions   \nDOI: 10.1177/20552076251374218 journals.sagepub.com/home/dhj",
+        "bbox": [
+            741,
+            90,
+            921,
+            168
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "S Sage",
+        "bbox": [
+            835,
+            170,
+            919,
+            191
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Xiaofang Song1 , Shasha Li1 , Liying Dong2 , Yue Li1 , Xinyu Yang1 Jianyi Bao1 , Shufang Liao1 , Yingxue Xi1 and Guojing Guo1 ,",
+        "bbox": [
+            95,
+            220,
+            840,
+            261
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Abstract",
+        "text_level": 2,
+        "bbox": [
+            99,
+            302,
+            176,
+            317
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Objective: With the rapid integration of digital technologies into healthcare, technophobia has become a key barrier to digital health adoption, especially among older adults. This study aimed to evaluate technophobia levels and identify associated factors within a multidimensional ecological framework. Methods: A systematic search was conducted across 10 electronic databases for studies published until April 30, 2025. Meta-analysis was conducted to estimate pooled effect sizes. Technophobia levels were assessed using mean differences (MDs) or standardized mean differences (SMDs), each accompanied by a 95% confidence interval (CI). Summary correlation coefficients (r), with 95% CI, were used to evaluate associated factors based on the health ecological model. Results: Nineteen studies were included. The findings indicate that older adults demonstrated significantly elevated technophobia levels (MD = 39.90, 95% CI: 35.87–43.94) compared to non-older adults, with privacy and security concerns scoring the highest among the three dimensions (MD = 3.29, 95% CI: 2.94–3.64). Additionally, several factors showed significant correlations with technophobia (r = −0.537 to 0.235, P < 0.05), spanning four ecological domains: individual traits (e.g. digital health literacy), behavioral traits (e.g. self-efficacy), interpersonal networks (e.g. social networks), and living environment (e.g. income level). Conclusions: Technophobia is notably high among older adults in digital health contexts, especially regarding privacy and security concerns. Its roots span individual, social, and systemic dimensions. These findings highlight the need for targeted, multilevel interventions to reduce technophobia and ensure equitable access to digital health technologies.",
+        "bbox": [
+            97,
+            319,
+            922,
+            563
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Keywords",
+        "text_level": 2,
+        "bbox": [
+            99,
+            590,
+            184,
+            605
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Technophobia, digital health, associated factors, meta-analysis, review",
+        "bbox": [
+            99,
+            605,
+            579,
+            621
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Received: 14 May 2025; accepted: 14 August 2025",
+        "bbox": [
+            99,
+            629,
+            383,
+            644
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Introduction",
+        "text_level": 2,
+        "bbox": [
+            99,
+            670,
+            223,
+            687
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "With rapid global population aging and ongoing digital transformation, intelligent terminals have become increasingly prevalent.1 Digital technologies—such as cloud computing, big data, the Internet of Things (IoT), mobile Internet, artificial intelligence, blockchain, and virtual reality—are being widely integrated into various sectors, notably healthcare.1,2 This integration has fostered a new service model—digital health— designed to enhance healthcare delivery and improve population health. The World Health Organization (WHO) defines digital health as a field of knowledge and practice that develops and applies digital technologies to improve the efficiency and accessibility of healthcare services, encompassing smart devices, IoT-based systems, and other digital solutions.3 However, the technical barriers of digital health technologies and the complexities of collecting, storing, and sharing sensitive personal health data have led many individuals to experience fear, anxiety, or concern about the risks, sometimes even resistance, regarding their adoption and use.4 This has contributed to the emergence of technophobia—a psychological reaction that increasingly accompanies the advancement of digital health.5",
+        "bbox": [
+            97,
+            693,
+            504,
+            907
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            514,
+            669,
+            921,
+            762
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "header",
+        "text": "Review article",
+        "bbox": [
+            99,
+            61,
+            193,
+            78
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "header",
+        "text": "DIGITAL HEALTH",
+        "bbox": [
+            773,
+            21,
+            919,
+            76
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "page_footnote",
+        "text": "1 Department of Nursing, College of Medical Science, Huzhou University, Zhejiang, China",
+        "bbox": [
+            515,
+            790,
+            919,
+            818
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "page_footnote",
+        "text": "2 Department of Nursing, The First People’s Hospital of Huzhou, Huzhou City, China",
+        "bbox": [
+            515,
+            818,
+            919,
+            843
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "page_footnote",
+        "text": "Corresponding author: Shasha Li, Department of Nursing, College of Medical Science, Huzhou University, 759 Second Ring Road, Huzhou, Zhejiang 313000, China. Email: 270037615@qq.com",
+        "bbox": [
+            515,
+            857,
+            910,
+            907
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "footer",
+        "text": "cc ④ Creative Commons Non Commercial CC BY-NC: This article is distributed under the terms of the Creative Commons Attribution-BY NC NonCommercial 4.0 License (https://creativecommons.org/licenses/by-nc/4.0/) which permits non-commercial use, reproduction and distribution of the work without further permission provided the original work is attributed as specified on the SAGE and Open Access page (https://us. sagepub.com/en-us/nam/open-access-at-sage).",
+        "bbox": [
+            99,
+            921,
+            919,
+            973
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Technophobia refers to individuals’ irrational fear or anxiety toward digital technologies—such as mobile communication devices, artificial intelligence, and robotics— which may lead to their avoidance behaviors.5-7 One study suggested that technophobia is not limited to any single technology but encompasses all forms of digital technologies, particularly those related to computing, offering a broader perspective.5 As a social phenomenon, technophobia reflects public concerns over the development of digital health technologies, including risks related to privacy, data accuracy, responsible use, and the digital divide.8",
+        "bbox": [
+            77,
+            89,
+            484,
+            257
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Technophobia may undermine individual well-being by hindering engagement with digital health technologies and represents a critical psychological barrier to technology acceptance.9 Within today’s increasingly digital society, it is gradually emerging as a potential risk factor that may restrict healthpromoting behaviors and reduce individuals’ capacity to effectively address health-related challenges.10 Evidence further suggests that technophobia contributes to varying degrees of disconnection among different social groups within the context of digital healthy living.11 Compared to non-older adults, older adults—typically defined by the WHO as individuals aged 60 years and older in developing countries, and 65 years and older in developed countries12—are particularly vulnerable to technophobia due to a combination of individual, social, and systemic factors. Age-related declines in cognitive function, limited prior exposure to digital environments, and persistent stereotypes about aging contribute to a higher risk of digital exclusion.13 These challenges can undermine their ability to engage with digital health services, despite the growing reliance on such technologies in modern healthcare systems. Studies have shown that older individuals often report lower levels of digital confidence, literacy, and perceived usefulness of technology.14,15 Furthermore, technophobia in this group is not merely a matter of skill deficit, but reflects deeper psychological discomfort and mistrust—especially in relation to privacy, security, and autonomy.11 Therefore, recognizing and addressing intergroup differences in technophobia—particularly the heightened vulnerability among older adults—is crucial to ensuring equitable access to digital health services and fostering inclusive, age-appropriate health innovations.",
+        "bbox": [
+            75,
+            255,
+            484,
+            711
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Despite growing research attention to technophobia among older adults, systematic scientific investigations remain scarce—particularly those that comprehensively assess intergenerational differences with non-older populations and provide an in-depth analysis of the current status and key manifestations of technophobia in the elderly.4,16,17 Given the rapid digitization of health systems and the global trend of population aging, addressing technophobia in older adults has become an increasingly urgent public health concern. Understanding the factors associated with technophobia is crucial for informing the development of targeted intervention strategies that promote digital inclusion and age-friendly technology adoption.18 In light of the multitude of factors associated with technophobia, it is essential to examine these variables within a comprehensive conceptual framework.18 One such framework is the health ecological model, proposed by Collins,19 which posits that the health status of individuals and populations is shaped not only by biological and behavioral attributes but also by the combined effects of healthcare systems, physical environments, and social contexts. These elements are interdependent and interactive, and together, they shape the health outcomes of individuals and groups. The health ecological model thus provides an integrative lens through which to explore how individual, social, and environmental dimensions contribute to technophobia, thereby offering a more holistic understanding of the phenomenon.20",
+        "bbox": [
+            75,
+            711,
+            484,
+            924
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            492,
+            90,
+            900,
+            287
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Accordingly, the purpose of this systematic review was twofold: (i) to compare levels of technophobia between older and non-older adults in order to identify intergenerational differences, and subsequently examine the dimensional structure of technophobia within the older adult population to determine its predominant manifestations; and (ii) to explore factors associated with technophobia through the lens of the health ecological model, thereby providing a theoretical foundation for future investigations into its mechanisms and mediating pathways.",
+        "bbox": [
+            492,
+            286,
+            900,
+            440
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Methods",
+        "text_level": 2,
+        "bbox": [
+            494,
+            460,
+            583,
+            477
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Registration",
+        "text_level": 2,
+        "bbox": [
+            494,
+            489,
+            589,
+            506
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "This systematic review and meta-analysis were conducted in accordance with the PRISMA (Preferred Reporting Items for Systematic Reviews and Meta-Analyses) guidelines. The protocol was registered in PROSPERO (CRD42024516773) and is publicly accessible.",
+        "bbox": [
+            492,
+            511,
+            900,
+            590
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Search strategy",
+        "text_level": 2,
+        "bbox": [
+            494,
+            610,
+            620,
+            629
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Following PRISMA guidelines, a comprehensive search was performed in 10 databases: CNKI, CBMdisc, WanFang, VIP, PubMed, Embase, Web of Science, Cochrane Library, Medline, and CINAHL. The search spanned from database inception to April 2025. Additionally, the reference lists of the included studies were manually screened to ensure literature completeness. The search was conducted using a combination of subject terms and accessible terms. The key search terms were as follows: “technophobia,” “fear of technology,” “cyber phobia,” “associated factors,” “correlates,” “linked factors” “factors related to,” “risk factors,” “factor, risk,” “factors, risk,” and “risk factor.” Two independent reviewers screened all records manually for eligibility. Details of the search strategy are available in Supplemental Appendix 1.",
+        "bbox": [
+            492,
+            633,
+            900,
+            848
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Literature inclusion and exclusion criteria",
+        "text_level": 2,
+        "bbox": [
+            494,
+            868,
+            813,
+            886
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Literature inclusion criteria: (1) participants were aged 18 years or older; (2) the study employed an observational design; (3) the study assessed either the level of technophobia or its associated factors; and (4) technophobia was measured using a validated scale, with reported mean and standard deviation or sufficient data for conversion. For studies examining associated factors, the following were required: sample size and at least one of the following— correlation coefficient (r), β-value, F-value, t-value, or convertible r-value.21 Literature exclusion criteria were: (1) non-original research such as reviews, abstracts, or commentaries; (2) studies with inaccessible full texts, incomplete data, duplicate publications, or poor methodological quality (the Agency for Healthcare Research and Quality checklist score ≤3); and (3) publications not written in Chinese or English.",
+        "bbox": [
+            492,
+            891,
+            899,
+            924
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "page_number",
+        "text": "2",
+        "bbox": [
+            78,
+            51,
+            94,
+            64
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "header",
+        "text": "DIGITAL HEALTH",
+        "bbox": [
+            776,
+            49,
+            899,
+            65
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            97,
+            89,
+            504,
+            302
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Literature screening and data extraction",
+        "text_level": 2,
+        "bbox": [
+            99,
+            324,
+            413,
+            341
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "After finalizing the search strategy, all retrieved records were imported into NoteExpress for reference management, and duplicates were removed. Two independent reviewers independently extracted data using a preformatted Microsoft Excel sheet based on predefined inclusion criteria. Any discrepancies were resolved through discussion or consultation with a third reviewer. Extracted data included: first author, year of publication, study design, geographic region, sample size, technophobia level (including dimensions such as technology tension, technology fear, and privacy and security concerns), and factors associated with technophobia. For studies with incomplete or ambiguous data, the original authors were contacted to obtain missing information.",
+        "bbox": [
+            97,
+            346,
+            504,
+            546
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Literature quality evaluation",
+        "text_level": 2,
+        "bbox": [
+            99,
+            566,
+            319,
+            583
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Two reviewers independently assessed the quality of the included studies, with disagreements resolved through discussion or consultation with a third reviewer. The quality of crosssectional studies was evaluated using the Agency for Healthcare Research and Quality checklist, which consist of 11 items scored as “yes” (1 point), “no” or “unclear” (0 points). A total score of 8–11 indicated high quality, 4–7 moderate quality, and 0–3 low quality.22 Only studies rated as moderate or high quality were included in the final analysis.",
+        "bbox": [
+            97,
+            588,
+            504,
+            727
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Statistical analysis",
+        "text_level": 2,
+        "bbox": [
+            99,
+            747,
+            243,
+            765
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Statistical analyses were conducted using RevMan 5.4 software. For studies reporting technophobia levels, either standardized mean differences (SMDs) or mean differences (MDs), each with a 95% confidence interval (CI), were used as the pooled effect size, depending on the consistency of the measurement instruments. For studies examining associated factors, summary correlation coefficients (summary r) with corresponding 95% CIs were used. Correlation coefficients (r) were first extracted directly from the original studies. If r-values were not reported, alternative statistics—such as Spearman’s rho (rs), β coefficients, t-values, or F-values— were converted into r using standard formulas.21 These r-values were then transformed into Fisher’s Z scores and standard errors, and entered into RevMan 5.4 to perform meta-analysis and compute pooled Z-values and 95% CIs. Finally, the pooled Z-values were back-transformed into summary r-values with corresponding 95% CIs, as detailed in Supplemental Appendix 2.23",
+        "bbox": [
+            95,
+            770,
+            504,
+            924
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            514,
+            89,
+            921,
+            210
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Heterogeneity among the included studies was assessed using the Q test and the I 2 statistic. When I 2 < 50% and P > 0.10, it could be assumed that there was no significant heterogeneity, and a fixed-effects model was applied; otherwise, a random-effects model was used. Sensitivity analyses were conducted by evaluating changes in the pooled effect size following the exclusion of individual studies. Due to the limited number of existing studies on technophobia, fewer than 10 studies were included in both the technophobia level and associated factor analyses. Therefore, in accordance with the Cochrane Handbook for Systematic Reviews of Interventions, publication bias was not assessed.24 Furthermore, since one subgroup included only four studies—below the threshold for reliable publication bias assessment—the analysis was not conducted for the subgroup comparison. Statistical significance was defined as P < 0.05. Finally, based on Cohen’s criteria for interpreting correlation coefficients, summary r-values were interpreted to classify effect sizes: r = 0–0.20 indicated low correlation, r = 0.20–0.40 moderate correlation, and r = 0.40–1.00 high correlation, with r > 0 representing a positive association and r < 0 a negative association.25 In addition, to more intuitively reflect the strength of association between each factor and technophobia, a radial mapping visualization analysis was performed using Origin 2021 software, based on the health ecological model.",
+        "bbox": [
+            512,
+            210,
+            922,
+            606
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Results",
+        "text_level": 2,
+        "bbox": [
+            515,
+            626,
+            591,
+            644
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Study selection",
+        "text_level": 2,
+        "bbox": [
+            515,
+            655,
+            636,
+            673
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "A total of 2420 records were identified through systematic database searches, including 197 in Chinese and 2223 in English. After removing 462 duplicates and 82 records excluded by automation tools, 1876 records remained. Following title and abstract screening, 1786 records were excluded for not meeting the predefined inclusion criteria. Twelve studies were included after full-text assessment. Additionally, 14 articles were identified through reference screening, 7 of which met the inclusion criteria. In total, 19 studies were included in the final analysis. The study selection process is illustrated in Figure 1.",
+        "bbox": [
+            512,
+            678,
+            922,
+            847
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Study characteristics",
+        "text_level": 2,
+        "bbox": [
+            515,
+            868,
+            677,
+            886
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "A total of 19 published articles were included, all of which were cross-sectional in design. Sample sizes ranged from",
+        "bbox": [
+            514,
+            891,
+            921,
+            924
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "header",
+        "text": "Song et al.",
+        "bbox": [
+            100,
+            50,
+            174,
+            65
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "page_number",
+        "text": "3",
+        "bbox": [
+            904,
+            50,
+            919,
+            64
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "image",
+        "img_path": "images/835cf1f6d0c6d36a18a8ee2a060694dc3bbd85c52b747ea0896e08f8c2f55401.jpg",
+        "image_caption": [
+            "Figure 1. Selection process of included studies."
+        ],
+        "image_footnote": [],
+        "bbox": [
+            174,
+            94,
+            801,
+            563
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "117 to 3392 participants, with a combined total of 9385 individuals across 26 countries. Various standardized instruments were used to assess technophobia. Among them, the Technophobia Scale developed by Khasawneh and later refined by Sun Erhong et al. consists of 13 items—covering privacy and security concerns, technology tension, and technology fear—each rated on a 5-point Likert scale, with a total score ranging from 13 to 65. The dimension of technology tension consists of five items with a total score range of 5–25. The dimension of technology fear includes five items with a total score range of 5–25. Lastly, the privacy and security concern dimension comprises three items with a total score range of 3–15 points. The total scale demonstrated excellent internal consistency (Cronbach’s α = 0.91), and each dimension showed good reliability (α > 0.80).5,7 Moreover, the Technophobia Scale developed by Sinkovics et al. also comprises 13 items across three dimensions, with a score range of 13 to 65.26 The standardized Short Computer Anxiety Scale (SCAS), developed by Lester et al., contains six items.27 The Computer Anxiety Rating Scale (CARS), compiled by Heinssen et al., includes 19 items, with a score range of 19–95.28 The CARS-C, developed by Rosen and Weil, consists of 20 items, with a total score ranging from 20 to 100.29 All four scales reported Cronbach’s α-values above 0.80, indicating good internal consistency.26-29 Relevance factors include age, gender, personality traits, education, language proficiency, per capita monthly income, self-perceived health status, digital health literacy, family support, social networks, self-efficacy, technology use, and Internet use, as shown in Table 1.",
+        "bbox": [
+            77,
+            619,
+            484,
+            924
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            492,
+            619,
+            899,
+            773
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Quality assessment",
+        "text_level": 2,
+        "bbox": [
+            494,
+            793,
+            647,
+            810
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "The results of the quality assessment are presented in Table 1, with detailed evaluations for each study available in Supplemental Appendix 3. Among the cross-sectional studies (n = 19), 10 (52%) were rated as moderate quality (scores 4–7), and nine (48%) as high quality (scores 8–10). All studies met the predefined criteria and were included in the final synthesis.",
+        "bbox": [
+            492,
+            815,
+            899,
+            924
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "page_number",
+        "text": "4",
+        "bbox": [
+            78,
+            51,
+            94,
+            64
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "header",
+        "text": "DIGITAL HEALTH",
+        "bbox": [
+            776,
+            49,
+            899,
+            64
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "ontinued",
+        "bbox": [
+            894,
+            90,
+            914,
+            147
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "table",
+        "img_path": "images/3b479355a847eb476ad99feb44e7d4f4b9e389f9737f75ff3ad75cb70ad4160f.jpg",
+        "table_caption": [
+            "Table 1. Characteristics of the included studies (N=19)."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Studies</td><td>Country</td><td>Study population</td><td>Sample size</td><td>Mean age (M ± SD) a</td><td>Assessment tools</td><td>associated factors</td><td>Literature quality</td></tr><tr><td>Peng et al., 2023</td><td>China</td><td>Elderly individuals</td><td>606</td><td>69.67±7.14</td><td>Technophobia Saleb</td><td>Auan ny e social networks, technology use, and Internet use</td><td>High</td></tr><tr><td>Wu et al., 20223</td><td>China</td><td>Elderly individuals</td><td>3I8</td><td>60-86</td><td>Technophobia Sale</td><td>Gender, education, digital health literacy, and family support</td><td>High</td></tr><tr><td>Xie et al, 202</td><td>China</td><td>Elderly individuals</td><td>213</td><td>≥60</td><td>Technophobia Scaleb</td><td>Age, education, and digital health literacy</td><td>High</td></tr><tr><td>Li et al., 2023&#x27;</td><td>China</td><td>Elderly individuals</td><td>I53</td><td>≥60</td><td>Technophobia Sale</td><td>capita monthly incme, family support, social networks, anH residency</td><td></td></tr><tr><td>Tao et al., 20233&quot;</td><td>China</td><td>Elderly individuals</td><td>I5I</td><td>64.57±3.70</td><td>Technophobia caleb</td><td></td><td>High</td></tr><tr><td>Zhang, 201332</td><td>China</td><td>Elderly individuals</td><td>3I3</td><td>≥60</td><td>Self-developed scale</td><td>Age, education, and self-perceived health status</td><td>Middle</td></tr><tr><td>Lester et al., 200527</td><td>America</td><td>Students</td><td>644</td><td>≥18</td><td>SCAS</td><td>Gender and Internet use</td><td>Middle</td></tr><tr><td>Weil and Rosen, 95 53</td><td>23 countries</td><td>Students</td><td>3392</td><td>≥18</td><td>CARS-C</td><td>Gender and technology use</td><td>Middle</td></tr><tr><td>Chu et al., 191 34&quot;</td><td>America</td><td>Students</td><td>I32</td><td>≥18</td><td>CARS</td><td>Computer courses, cognitive approach, technology use, and language proficiency</td><td>Middle</td></tr><tr><td>Heinssen Jr et al., 198728</td><td>America</td><td>Students</td><td>270</td><td>I845</td><td>CARS</td><td>Personality traits, technology use, and language proficiency</td><td>Middle</td></tr><tr><td>Nimrod, 202I 35</td><td>Israel</td><td>Elderly individuals</td><td>407</td><td>60-84</td><td>Technophobia Scaled</td><td>Internet use</td><td>Middle</td></tr><tr><td>Nimrod, 2018³6</td><td>Israel</td><td>Elderly individuals</td><td>537</td><td>60-87</td><td>Technophobia Scale</td><td>Education, self-perceived health status, life satisfaction, and Internet use</td><td>Middle</td></tr><tr><td>Tang et al., 20237</td><td>China</td><td>Elderly individuals</td><td>29I</td><td>≥60</td><td>Technophobia Scaleb</td><td>Age, education, per capita monthly income, digital health literacy,High and family support</td><td></td></tr></table>",
+        "bbox": [
+            129,
+            88,
+            894,
+            919
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "header",
+        "text": "Song et al.",
+        "bbox": [
+            100,
+            50,
+            174,
+            65
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "page_number",
+        "text": "5",
+        "bbox": [
+            904,
+            49,
+            919,
+            64
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "table",
+        "img_path": "images/9c8227b123109ba4e209ae29e0c89c29337315c913b3577e2d66ee6dc7973851.jpg",
+        "table_caption": [
+            "Table 1. Continued."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Studies</td><td>Country</td><td>Study population</td><td>Sample size</td><td>Mean age (M ± SD)a</td><td>Assessment tools associated factors</td><td></td><td>Literature quality</td></tr><tr><td>Yang et al., 2438</td><td>China</td><td>Elderly individuals</td><td>503</td><td>≥60</td><td>Technophobia Scaleb</td><td>Age, gender, education, per capita monthly income, digital health High literacy, self-perceived health status, self-perceived aging and Internet use</td><td></td></tr><tr><td>Guo et al., 202439</td><td>China</td><td>Elderly individuals</td><td>320</td><td>60-92</td><td>Technophobia Scaleb</td><td></td><td>High</td></tr><tr><td>Sun et al., 202244</td><td>China</td><td>Elderly individuals</td><td>602</td><td>63.98±8.85</td><td>Technophobia Scaleb</td><td></td><td>High</td></tr><tr><td>Di Giacomo et al., 20198</td><td>Italy</td><td>Adults</td><td>II7</td><td>5067</td><td>SCAS</td><td>Self-efficacy and technology use</td><td>Middle</td></tr><tr><td>Korobili et al., 20104</td><td>Greece</td><td>Students</td><td>240</td><td>21.7±3.03</td><td>CARS</td><td>Language proficiency, self-efficacy, and Internet use</td><td>Middle</td></tr><tr><td>Anthony et al., 0</td><td>South Africa</td><td>Students</td><td>I76</td><td>19.4± I.5</td><td>CARS-C</td><td>Personality traits and technology use</td><td>Middle</td></tr><tr><td colspan=\"8\">reported, only the age threshold (e.g. ≥60) is indicated. Refers  Technophobia Scale developed by Khasawneh  al. Chines translation by Su rhong  al C, Australia, and Argentina. dRefers to Technophobia Scale developed by Sinkovics et al.</td></tr></table>",
+        "bbox": [
+            242,
+            87,
+            746,
+            920
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "page_number",
+        "text": "6",
+        "bbox": [
+            78,
+            50,
+            94,
+            64
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "header",
+        "text": "DIGITAL HEALTH",
+        "bbox": [
+            776,
+            49,
+            899,
+            64
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "table",
+        "img_path": "images/45530dfb2b2101bf2c3bace59c3368ca585fd2467fe3177ec85a1b2e4e9529be.jpg",
+        "table_caption": [
+            "Figure 2. Subgroup analysis of overall technophobia level."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td colspan=\"6\">Std. Mean Difference Std. Mean Difference</td></tr><tr><td>Study or Subgroup</td><td>Std. Mean Difference</td><td>SE Weight</td><td>IV. Random. 95% CI</td><td></td><td>IV. Random. 95% CI</td></tr><tr><td colspan=\"6\">1.4.1 Older adults</td></tr><tr><td>Guo et al.2024</td><td>5.328 0.456</td><td></td><td>4.5%</td><td>5.33 [4.43, 6.22]</td><td></td></tr><tr><td>Li et al.2023</td><td>4.678</td><td>0.782</td><td>2.4%</td><td>4.68 [3.15, 6.21]</td><td></td></tr><tr><td>Nimrod,2018</td><td>3.041</td><td>0.383</td><td>5.2%</td><td>3.04 [2.29, 3.79]</td><td></td></tr><tr><td>Nimrod,2021</td><td>2.912</td><td>0.476</td><td>4.3%</td><td>2.91 [1.98, 3.84]</td><td></td></tr><tr><td>Peng et al.2023</td><td>3.727</td><td>0.418</td><td>4.9%</td><td>3.73 [2.91, 4.55]</td><td></td></tr><tr><td>Tang et al.2023</td><td>3.807</td><td>0.572</td><td>3.5%</td><td>3.81 [2.69, 4.93]</td><td></td></tr><tr><td>Tao et al.2023</td><td>4.5</td><td>0.55</td><td>3.7%</td><td>4.50 [3.42, 5.58]</td><td></td></tr><tr><td>Wu et al.2023</td><td>3.659 0.629</td><td></td><td>3.2%</td><td>3.66 [2.43, 4.89]</td><td></td></tr><tr><td>Xie et al.2023</td><td>4.748</td><td>0.661</td><td>3.0%</td><td>4.75 [3.45, 6.04]</td><td></td></tr><tr><td>Yang et al.2024</td><td>3.562</td><td>0.456</td><td>4.5%</td><td>3.56 [2.67, 4.46]</td><td></td></tr><tr><td>Subtotal (95% CI)</td><td></td><td></td><td>39.1%</td><td>3.94 [3.42, 4.46]</td><td></td></tr><tr><td colspan=\"6\">Heterogeneity: Tau² = 0.42; Chi² = 23.79, df = 9 (P = 0.005); 1² = 62%</td></tr><tr><td colspan=\"6\">Test for overall effect: Z = 14.83 (P &lt; 0.00001)</td></tr><tr><td>1.4.2 No-older adults</td><td></td><td>0.69</td><td></td><td>4.52 [3.16, 5.87]</td><td></td></tr><tr><td>Chu et al.1991 Heinssen Jr et al.1987</td><td>4.517</td><td>0.714</td><td>2.8% 2.7%</td><td>3.71 [2.32, 5.11]</td><td></td></tr><tr><td>Lester1 et al.2005</td><td>3.715</td><td>0.197</td><td>7.2%</td><td>2.90 [2.51, 3.29]</td><td></td></tr><tr><td>Lester2 et al.2005</td><td>2.9</td><td>0.201</td><td>7.2%</td><td>2.63 [2.23, 3.02]</td><td></td></tr><tr><td>Lester3 et al.2005</td><td>2.627 3.156</td><td>0.177</td><td>7.4%</td><td>3.16 [2.81, 3.50]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Argentina)</td><td>2.696</td><td>2.22</td><td>0.4%</td><td>2.70 [-1.66, 7.05]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Australia)</td><td>3.124</td><td>0.732</td><td>2.6%</td><td>3.12 [1.69, 4.56]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Belgium)</td><td>3.335</td><td>1.06</td><td>1.5%</td><td>3.33 [1.26, 5.41]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Czechoslovakia)</td><td>3.588</td><td>1.092</td><td>1.4%</td><td>3.59 [1.45, 5.73]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Egypt)</td><td>5.545</td><td>0.802</td><td>2.3%</td><td>5.54 [3.97, 7.12]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Germany)</td><td>3.019</td><td>0.798</td><td>2.3%</td><td>3.02 [1.45, 4.58]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Greece)</td><td>3.884</td><td>1.226</td><td>1.2%</td><td>3.88 [1.48, 6.29]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Hungary)</td><td>3.489</td><td>0.716</td><td>2.7%</td><td>3.49 [2.09, 4.89]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(India)</td><td>3.758</td><td>1.854</td><td>0.5%</td><td>3.76 [0.12, 7.39]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Indonesia)</td><td>13.48</td><td>0.633</td><td>0.0%</td><td>13.48 [12.24, 14.72]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Israel)</td><td>3.09</td><td>0.892</td><td>1.9%</td><td>3.09 [1.34, 4.84]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Italy)</td><td>3.409</td><td>0.956</td><td>1.7%</td><td>3.41 [1.54, 5.28]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Japan)</td><td>3.256</td><td>0.709</td><td>2.7%</td><td>3.26 [1.87, 4.65]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Kenya)</td><td>2.739</td><td>2.033</td><td>0.5%</td><td>2.74 [-1.25, 6.72]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Mexico)</td><td>3.081</td><td>2.352</td><td>0.3%</td><td>3.08 [-1.53, 7.69]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(No.Irelan)</td><td>3.192</td><td>1.571</td><td>0.7%</td><td>3.19 [0.11, 6.27]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Poland)</td><td>12.297</td><td>0.826</td><td>0.0%</td><td>12.30 [10.68, 13.92]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Saud)</td><td>3.461</td><td>1.598</td><td>0.7%</td><td>3.46 [0.33, 6.59]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Singapore)</td><td>4.562</td><td>1.17</td><td>1.3%</td><td>4.56 [2.27, 6.86]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Spain)</td><td>3.483</td><td>0.798</td><td>2.3%</td><td>3.48 [1.92, 5.05]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Thailand)</td><td>3.763</td><td>1.135</td><td>1.3%</td><td>3.76 [1.54, 5.99]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(USA)</td><td>2.679</td><td>0.651</td><td>3.0%</td><td>2.68 [1.40, 3.95]</td><td></td></tr><tr><td>Weil &amp; Rosen,1995(Yugoslavi)</td><td></td><td>0.827</td><td>2.2%</td><td>3.36 [1.74, 4.98]</td><td></td></tr><tr><td>Subtotal (95% CI)</td><td>3.357</td><td></td><td>60.9%</td><td>3.07 [2.89, 3.26]</td><td></td></tr><tr><td colspan=\"6\">Heterogeneity: Tau² = 0.00; Chi2² = 24.86, df = 25 (P = 0.47); 1²2 = 0%</td></tr><tr><td colspan=\"5\">Test for overall effect: Z = 32.06 (P &lt; 0.00001)</td><td>-4</td></tr><tr><td colspan=\"6\">Total (95% CI) 100.0% 3.56 [3.28, 3.84] Heterogeneity: Tau²2 = 0.24; Chi2² = 66.44, df = 35 (P = 0.001); 1² = 47%</td></tr><tr><td colspan=\"5\">Test for overall effect: Z = 25.10 (P &lt; 0.00001)</td><td>-2 0 2 4</td></tr><tr><td colspan=\"6\">Test for subaroup differences: Chi2² = 9.39. df = 1 (P = 0.002). 12 = 89.4%</td></tr></table>",
+        "bbox": [
+            137,
+            93,
+            884,
+            650
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "Meta-analysis results",
+        "text_level": 2,
+        "bbox": [
+            99,
+            704,
+            299,
+            721
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "Overall level of technophobia",
+        "text_level": 2,
+        "bbox": [
+            99,
+            732,
+            327,
+            749
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "A total of 14 studies4,16,17,27,28,30,31,33-39 reported the overall level of technophobia, using different measuring tools to detect the level. Following the sensitivity analysis, we identified that the studies by Weil and Rosen (1995, Indonesia) and Weil and Rosen (1995, Poland) were the primary sources of heterogeneity. Excluding these studies led to a decrease in heterogeneity among the remaining studies, though it still persisted $( \\dot { I } ^ { 2 } = 4 7 \\%$ , Q-test, P = 0.001). As a result, a random effects model was employed for the meta-analysis due to the remaining heterogeneity. Given the variation in measurement tools, technophobia levels were combined using the SMD, which does not reflect the true levels. To address this, a subgroup analysis was performed to compare technophobia levels between groups based on SMD size. The analysis was conducted according to age, dividing participants into two groups: older adults (age ≥60) and non-older adults (18 ≤ age < 60), based on the characteristics of the included samples.",
+        "bbox": [
+            97,
+            754,
+            504,
+            923
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            514,
+            703,
+            921,
+            813
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "The results are shown in Figure 2. After combining effect sizes, the overall standardized technophobia level SMD was (3.56, 95% CI: 3.28–3.84, Z = 25.10, P < 0.00001), which was statistically significant. In the subgroup analysis, four studies27,28,33,34 reported the technophobia level of nonolder adults, and 10 studies4,16,17,30,31,35-39 reported the technophobia level of older adults. A significant difference in standardized technophobia levels was observed between the two groups. The older adults group exhibited a higher level of technophobia compared to the non-older adults group. Specifically, the pooled SMD for the older adults group was 3.94 (95% CI: 3.42–4.46), whereas that for the non-older adults group was 3.07 (95% CI: 2.89–3.26).",
+        "bbox": [
+            514,
+            813,
+            921,
+            923
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "header",
+        "text": "Song et al.",
+        "bbox": [
+            100,
+            50,
+            174,
+            65
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "page_number",
+        "text": "7",
+        "bbox": [
+            904,
+            50,
+            919,
+            64
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "table",
+        "img_path": "images/05b73ade570698bcd6f2c5d5f59079d4684bb7c54782ff4f1a13539652561583.jpg",
+        "table_caption": [
+            "Table 2. Mean and total scores of the overall technophobia scale and its dimensions among older adults.",
+            "n difference; 95% CI: 95% confidence"
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td></td><td>Total score MD, 95%</td><td colspan=\"2\">Bilateral test</td><td colspan=\"2\">Heterogeneity test</td><td colspan=\"2\">Mean score MD,</td><td colspan=\"2\">Bilateral test</td><td colspan=\"2\">Heterogeneity test</td><td>Effect</td></tr><tr><td>Dimension</td><td>CI</td><td>Z</td><td>P</td><td>1^{ (%</td><td>P</td><td>Effect model</td><td>95% CI</td><td>Z</td><td>P</td><td>1^2 (%</td><td>P</td><td>model</td></tr><tr><td>Technology tension</td><td>16.38, [14.4418.33]</td><td>I6.54</td><td>&lt;0.0000|</td><td>99</td><td>&lt;0.0000|</td><td>Random</td><td>2.89, [2.693.09]</td><td>28.49</td><td>&lt;0.0000|</td><td>96</td><td>&lt;0.00001</td><td>Random</td></tr><tr><td>Technology fear</td><td>15.50, [12.3218.69]</td><td>9.54</td><td>&lt;0.0000|</td><td>I0O</td><td>&lt;0.0000|</td><td>Random</td><td>3.02, [2.533.50]</td><td>I2.13</td><td>&lt;0.0000|</td><td>I0O</td><td>&lt;0.0000</td><td>Random</td></tr><tr><td>Privacy and security concerns</td><td>9.89, [8.681.10]</td><td>15.98</td><td>&lt;0.0000|</td><td>98</td><td>&lt;0.0000|</td><td>Random</td><td>3.29, [2.943.64]</td><td>|8.36</td><td>&lt;0.0000|</td><td>98</td><td>&lt;0.0000|</td><td>Random</td></tr><tr><td>Overall technophobia scale</td><td>39.90, [35.8743.94]</td><td>19.38</td><td>&lt;0.0000|</td><td>99</td><td>&lt;0.0000|</td><td>Random</td><td>3.07, [2.693.44]</td><td>15.9I</td><td>&lt;0.0000|</td><td>99</td><td>&lt;0.00001</td><td>Random</td></tr></table>",
+        "bbox": [
+            356,
+            88,
+            621,
+            919
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "page_number",
+        "text": "8",
+        "bbox": [
+            78,
+            50,
+            94,
+            64
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "header",
+        "text": "DIGITAL HEALTH",
+        "bbox": [
+            776,
+            49,
+            899,
+            64
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            95,
+            89,
+            504,
+            182
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Technophobia levels for older adults",
+        "text_level": 2,
+        "bbox": [
+            99,
+            203,
+            383,
+            220
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "While the use of SMD allowed for a standardized comparison of technophobia levels between older and non-older adults across studies employing different measurement tools, it does not reflect the actual magnitude of technophobia scores. To better capture the true level of technophobia in the older adult population, we further conducted a meta-analysis using the MD based on studies that employed the same instrument—the technophobia scale developed by Khasawneh and adapted by Sun Erhong. A total of nine studies4,16,17,30,31,37-40 were included in the analysis. Of these, seven studies16,17,30,31,37-39 reported overall technophobia scores and total scores by dimension; six stud-$\\vdots _ { \\mathrm { e s } } { } ^ { 4 , 1 6 , 3 0 , 3 1 , 3 8 , 3 9 }$ reported mean scores for all items on the scale; and seven studies4,16,30,31,38-40 reported mean item scores by dimension. Due to substantial heterogeneity across studies, a random-effects model was applied. As presented in Table 2, the pooled MD) for the overall technophobia scale total score was 39.90 (95% CI: 35.87–43.94), exceeding the scale’s theoretical midpoint. The MDs for total scores in each dimension were as follows: 15.50 (95% CI: 12.32–18.69) for technology fear, 16.38 (95% CI: 14.44– 18.33) for technology tension, and 9.89 (95% CI: 8.68– 11.10) for privacy and security concerns. The overall mean item score was 3.07 (95% CI: 2.69–3.44). The privacy and security concerns dimension had the highest mean item score (3.29, 95% CI: 2.94–3.64), exceeding the scalewide average. In contrast, technology fear and technology tension had lower mean item scores of 3.02 (95% CI: 2.53–3.50) and 2.89 (95% CI: 2.69–3.09), respectively. Figure 3 illustrates the forest plots of total scores for the overall scale and its dimensions, while Figure 4 displays the forest plots of mean item scores for the overall scale and each dimension.",
+        "bbox": [
+            95,
+            224,
+            504,
+            727
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Factors associated with technophobia",
+        "text_level": 2,
+        "bbox": [
+            97,
+            747,
+            391,
+            765
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Key factors associated with technophobia were identified through meta-analysis, as shown in Table 3. Their association strength and theoretical structure were further visualized in Figure 5 using a radial diagram based on the health ecological model. Detailed results are presented below.",
+        "bbox": [
+            97,
+            769,
+            504,
+            847
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Within the individual traits level, six factors were identified as being associated with technophobia, ranked by the strength of correlation. Digital health literac y17,30,38 showed a strong negative association (r = –0.414, 95% CI: −0.462 to −0.354). Personality traits28,42 (r = 0.235, 95% CI:",
+        "bbox": [
+            97,
+            846,
+            504,
+            923
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "0.139–0.319) and language proficiency28,34,41 (r = –0.226, 95% CI: −0.345 to −0.110) demonstrated moderate correlations. In contrast, age4,17,32,37,38 (r = 0.188, 95% CI: 0.050–0.319), gender27,30,38 (r = 0.188, 95% CI: 0.090–0.282), and education4,17,30,32,36-38 (r = –0.149, 95% CI: −0.188 to −0.110) showed relatively weak correlations with technophobia.",
+        "bbox": [
+            514,
+            88,
+            921,
+            180
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Within the behavioral traits level, nine factors were identified as being associated with technophobia, ranked from highest to lowest in terms of correlation strength. Self-efficacy4,8,27,41 showed a strong negative correlation $( r = - 0 . 4 6 2 , 9 5 \\% \\mathrm { C I } ; - 0 . 6 0 4 \\mathrm { t o } - 0 . 3 0 0 )$ . Moderately correlated factors included the number of online activities27,35 (r = –0.371, 95% CI: −0.438 to −0.300), technology experience28,33,34,42 (r = –0.273, 95% CI: −0.345 to −0.188), attitude toward the Internet27,38 (r = –0.273, 95% CI: $- 0 . 4 7 0 \\quad \\mathrm { ~ t o ~ } \\quad - 0 . 0 5 0 )$ and frequency of technology use4,8,38,41 (r = –0.234, 95% CI: −0.282 to −0.188). Weakly correlated factors included technology use intention4,8,27 (r = –0.178, 95% CI: −0.236 to −0.129), total online activity hours27,35,36 (r = –0.178, 95% CI: −0.226 to −0.129), self-perceived health status32,36,38 (r = –0.159, 95% CI: −0.207 to −0.110), and online activity program categories27,35,36 (r = –0.139, 95% CI: −0.188 to −0.090).",
+        "bbox": [
+            514,
+            180,
+            921,
+            438
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Within the interpersonal networks level, two factors were found to be associated with technophobia. Social networks4,16 showed a strong negative correlation (r = –0.537, 95% CI: −0.647 to −0.405), while family support4,16,30,37 exhibited a weak negative correlation (r = –0.178, 95% CI: −0.245 to −0.110). At the living environment level, only one relevant factor was identified: per capita monthly income,4,16,37 which showed a weak negative correlation with technophobia (r = –0.110, 95% CI: −0.168 to −0.050). No factors were examined at the macro tier level in the current study. Forest plots illustrating the relevant factors are provided in Supplemental Appendix 4.",
+        "bbox": [
+            514,
+            438,
+            921,
+            621
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "An updated health ecological model",
+        "text_level": 2,
+        "bbox": [
+            514,
+            643,
+            798,
+            660
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "This study contributes to the structural enhancement of the model. At the individual trait level, neurotic personality, language proficiency, and digital health literacy are newly incorporated, highlighting the cognitive, emotional, and communicative aspects of individuals’ predisposition toward technology. At the behavioral trait level, selfefficacy, technology use, Internet use, and self-perceived health status are identified as updated factors, reflecting both actual engagement with digital tools and subjective health perceptions—each significantly contributing to variations in technophobia.",
+        "bbox": [
+            512,
+            665,
+            922,
+            847
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Discussion",
+        "text_level": 2,
+        "bbox": [
+            515,
+            867,
+            621,
+            886
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "To our knowledge, this is the first systematic review and meta-analysis to quantitatively assess the overall level and specific dimensions of technophobia among older adults using extensive pooled data. This approach yields greater conceptual clarity about the multidimensional structure of technophobia. In addition, the study is the first to qualitatively categorize the factors associated with technophobia based on the health ecological model. The model provides a comprehensive, multilevel perspective that addresses the limitations of prior linear or single-domain approaches and enables a clearer understanding of how these factors interrelate within the context of technophobia.",
+        "bbox": [
+            514,
+            891,
+            921,
+            924
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "header",
+        "text": "Song et al.",
+        "bbox": [
+            100,
+            50,
+            174,
+            65
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "page_number",
+        "text": "9",
+        "bbox": [
+            904,
+            50,
+            919,
+            63
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "image",
+        "img_path": "images/d8607d5bce65ffe789efad9672d6ef52c1ca75d0106c2101d6efcb8ca1bc9fa2.jpg",
+        "image_caption": [
+            "Figure 3. Forest plots of total scores for the overall Technophobia Scale and its dimensions."
+        ],
+        "image_footnote": [],
+        "bbox": [
+            102,
+            90,
+            870,
+            865
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "page_number",
+        "text": "10",
+        "bbox": [
+            80,
+            50,
+            102,
+            64
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "header",
+        "text": "DIGITAL HEALTH",
+        "bbox": [
+            776,
+            49,
+            899,
+            65
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "image",
+        "img_path": "images/a21136dcbdd3eba7946b631a50f1adb2dd831750c4b6a7b1aedbbfb71237df55.jpg",
+        "image_caption": [],
+        "image_footnote": [],
+        "bbox": [
+            131,
+            93,
+            884,
+            813
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "table",
+        "img_path": "images/2209ce4c979f13af4b522389d11831ae901968edf46da580a9725d5666472809.jpg",
+        "table_caption": [
+            "Figure 4. Forest plots of mean item scores for the overall Technophobia Scale and its dimensions."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td></td><td></td><td></td><td></td><td>Mean Difference</td><td colspan=\"2\">Mean Difference</td></tr><tr><td>Study or Subgroup</td><td>Mean Difference</td><td></td><td>SE Weight</td><td>IV. Random, 95% CI</td><td>IV. Random, 95% CI</td><td></td></tr><tr><td>Guo et al.2024</td><td>4.35</td><td>0.08</td><td>14.2%</td><td>4.35 [4.19, 4.51]</td><td></td><td>T</td></tr><tr><td>Li et al.2023</td><td>3.41</td><td>0.09</td><td>14.1%</td><td>3.41 [3.23, 3.59]</td><td></td><td></td></tr><tr><td>Peng et al.2023</td><td>3.25</td><td>0.04</td><td>14.5%</td><td>3.25 [3.17, 3.33]</td><td></td><td></td></tr><tr><td>Sun &amp; Ye,2024</td><td>3.22</td><td>0.06</td><td>14.4%</td><td>3.22 [3.10, 3.34]</td><td></td><td></td></tr><tr><td>Tao et al.2023</td><td>2.57</td><td>0.08</td><td>14.2%</td><td>2.57 [2.41, 2.73]</td><td></td><td></td></tr><tr><td>Wu et al.2023</td><td>3.43</td><td>0.07</td><td>14.3%</td><td>3.43 [3.29, 3.57]</td><td></td><td></td></tr><tr><td>Yang et al.2024</td><td></td><td>2.8 0.05</td><td>14.4%</td><td>2.80 [2.70, 2.90]</td><td></td><td></td></tr><tr><td>Total (95% CI)</td><td></td><td>100.0%</td><td></td><td>3.29 [2.94, 3.64]</td><td></td><td></td></tr><tr><td>Heterogeneity: Tau² = 0.22; Chi² = 350.08, df = 6 (P &lt; 0.00001); 1² = 98% Test for overall effect: Z = 18.36 (P &lt; 0.00001)</td><td></td><td></td><td></td><td></td><td>-2 0</td><td>2 4</td></tr></table>",
+        "bbox": [
+            149,
+            648,
+            878,
+            809
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            97,
+            873,
+            505,
+            921
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            514,
+            873,
+            921,
+            921
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "header",
+        "text": "Song et al.",
+        "bbox": [
+            100,
+            50,
+            174,
+            65
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "page_number",
+        "text": "11",
+        "bbox": [
+            897,
+            50,
+            917,
+            64
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "table",
+        "img_path": "images/55c8644695ea1297792ed3caab3b8519b31f9f7d686cfb07b2717a839a61a634.jpg",
+        "table_caption": [
+            "Table 3. Meta-analysis of factors associated with the level of technophobia."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td rowspan=\"2\">Associated factors N</td><td rowspan=\"2\"></td><td colspan=\"4\">Effect size and 95% CI</td><td colspan=\"2\">Bilateral test</td><td rowspan=\"2\">Heterogeneity</td><td rowspan=\"2\">Effect model</td></tr><tr><td>Summary r</td><td>Lower limit</td><td>Upper limit</td><td>Z</td><td>P</td><td>12 (%) P</td></tr><tr><td>Age</td><td>5</td><td>I353 0.188</td><td>0.050</td><td>0.319</td><td>2.63</td><td>0.008</td><td>89</td><td>&lt;0.00001</td><td>Random</td></tr><tr><td>Education</td><td>7</td><td>2781</td><td>0.149</td><td>-0.188</td><td>0.110</td><td>7.85 &lt;0.00001</td><td>—</td><td>0.42</td><td>Fixed</td></tr><tr><td>Gender</td><td>3</td><td>II86</td><td>0.188</td><td>0.090</td><td>0.282</td><td>3.88 0.0001</td><td>64</td><td>0.06</td><td>Random</td></tr><tr><td>Per capita monthly income</td><td>3</td><td>1050</td><td>-0.110</td><td>0.168</td><td>0.050</td><td>3.48 0.0005</td><td>0</td><td>0.52</td><td>Fixed</td></tr><tr><td>Digital health literacy</td><td>3</td><td>I034</td><td>-0.414</td><td>0.462</td><td>0.354</td><td>I3.94</td><td>&lt;0.00001 0</td><td>0.66</td><td>Fixed</td></tr><tr><td>Family support</td><td>4</td><td>I368</td><td>0.178</td><td>0.245</td><td>0.110</td><td>4.87</td><td>&lt;0.00001 34</td><td>0.22</td><td>Fixed</td></tr><tr><td>Social networks</td><td>2 759</td><td></td><td>0.537</td><td>0.647</td><td>0.405</td><td>6.75</td><td>&lt;0.0000| 74</td><td>0.05</td><td>Random</td></tr><tr><td>Self-perceived health status</td><td>3</td><td>I353</td><td>-0.159</td><td>0.207</td><td>0.110</td><td>5.88</td><td>&lt;0.00001 0</td><td>0.37</td><td>Fixed</td></tr><tr><td>Self-efficacy</td><td>4</td><td>II52</td><td>0.462</td><td>-0.604</td><td>0.300</td><td>5.10</td><td>&lt;0.00001 88</td><td>&lt;0.0000|</td><td>Random</td></tr><tr><td>Personality traits</td><td>2 446</td><td></td><td>0.235</td><td>0.139</td><td>0.319</td><td>4.98</td><td>&lt;0.00001 0</td><td>0.37</td><td>Fixed</td></tr><tr><td>Technology use intention</td><td>3</td><td>I230</td><td>-0.178</td><td>0.236</td><td>-0.129</td><td>6.30</td><td>&lt;0.00001 0</td><td>0.42</td><td>Fixed</td></tr><tr><td>Technology experience</td><td>4</td><td>3946</td><td>0.273</td><td>0.345</td><td>0.188</td><td>6.08</td><td>&lt;0.0000| 6l</td><td>0.06</td><td>Random</td></tr><tr><td>Frequency of technology use</td><td>4</td><td>I42I</td><td>-0.234</td><td>0.282</td><td>0.188</td><td>9.11</td><td>&lt;0.00001 22</td><td>0.28</td><td>Fixed</td></tr><tr><td>Attitude toward the Internet</td><td>2</td><td>640</td><td>0.273</td><td>0.470</td><td>0.050</td><td>2.41 0.02</td><td>83</td><td>0.02</td><td>Random</td></tr><tr><td>Total online activity hours</td><td>3</td><td>I522</td><td>-0.178</td><td>-0.226</td><td>0.129</td><td>7.06</td><td>&lt;0.00001 29</td><td>0.23</td><td>Fixed</td></tr><tr><td>Number of online activities Online activity program</td><td>2</td><td>615</td><td>0.371</td><td>0.438</td><td>0.300 0.090</td><td>9.55 5.25</td><td>&lt;0.00001 40 &lt;0.00001 0</td><td>0.19 0.80</td><td>Fixed Fixed</td></tr><tr><td>categories</td><td>3</td><td>I451</td><td>0.139</td><td>0.188</td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Language proficiency</td><td>3</td><td>619</td><td>0.226</td><td>0.345</td><td>0.110</td><td>3.59</td><td>0.0003 58</td><td>0.09</td><td>Random</td></tr></table>",
+        "bbox": [
+            80,
+            105,
+            895,
+            687
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            77,
+            717,
+            482,
+            778
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "The results indicate that technophobia exhibits a clear intergenerational difference, with older adults showing significantly higher levels of technophobia compared to non-older adults. Further analysis revealed that the technophobia level among older adults exceeded the theoretical midpoint of the measurement scale. This elevated technophobia likely stems from multiple interrelated factors. As digital immigrants, older adults often lack early exposure to digital technologies, which impairs their ability to adapt to and trust these technologies for accessing and managing health information.43,44 Moreover, they frequently face structural barriers, including limited digital infrastructure,45 insufficient training opportunities, and poorly designed user interfaces.46 In the absence of targeted interventions, these challenges may reinforce digital exclusion and exacerbate the existing digital divide, ultimately compromising equitable access to health information and services for older populations.47 Therefore, actively promoting the integration of older adults into inclusive digital health ecosystems is essential to bridging this gap.30",
+        "bbox": [
+            77,
+            778,
+            484,
+            924
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            492,
+            716,
+            900,
+            877
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "Interestingly, among the three dimensions of technophobia, older adults exhibited the greatest concern for privacy and security, while showing the lowest level of technology fear. This trend may be attributed to the global proliferation of digital technology, which has led older adults to view it as less of a threat to their established lifestyles, thereby showing less concern about technology fear.4 Consistent with these findings, a survey conducted in New Zealand reported that 73.3% of respondents expressed serious concerns about the security and privacy of their health information.48 Older adults’ heightened sensitivity to privacy and security risks may, in part, stem from the systemic challenges they encounter when navigating a digital environment often perceived as untrustworthy.49 A low level of digital trust, combined with limited family support, further exacerbates their informational and emotional vulnerability in digital contexts.50 Moreover, insufficient awareness of personal data management has been identified as a significant contributor to privacy breaches.44 Age-related cognitive decline may further hinder older adults’ capacity to recognize and respond effectively to such risks. Therefore, improving their awareness of privacy and security risks, offering practical strategies for risk mitigation, and ensuring respect for their privacy rights are essential to alleviating technophobia in this population.4",
+        "bbox": [
+            492,
+            877,
+            900,
+            924
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "page_number",
+        "text": "12",
+        "bbox": [
+            80,
+            50,
+            102,
+            64
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "header",
+        "text": "DIGITAL HEALTH",
+        "bbox": [
+            776,
+            49,
+            899,
+            64
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "image",
+        "img_path": "images/d0be949457d4468ee7acd29abdbe781c0c63fb33c0ede74f1302edf33eb8ba5d.jpg",
+        "image_caption": [
+            "Figure 5. Radial mapping of technophobia correlates based on the health ecological model. NOTE: This diagram categorizes technophobia-related factors across different ecological levels: individual traits, behavioral traits, interpersonal networks, living environment, and macro-level factors (not assessed in this study). The size and proximity of nodes reflect the relative strength of correlation. ※ indicates newly added factors proposed in this extended model, r denotes the summary correlation coefficient."
+        ],
+        "image_footnote": [],
+        "bbox": [
+            194,
+            93,
+            823,
+            486
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            97,
+            588,
+            504,
+            924
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "To enhance analytical breadth and theoretical explanatory power, this study conducted a quantitative meta-integration of research on factors associated with technophobia in adult populations. This approach was motivated by two key considerations: the cross-age applicability of core variables such as self-efficacy, and the theoretical need to systematically classify these variables using the health ecological model. Guided by this framework, the study sought to develop a more comprehensive and structured understanding of how technophobia emerges, examining contributing factors across four interconnected levels: individual traits, behavioral traits, interpersonal networks, and the living environment.19,20 This process offers both a theoretical foundation and practical guidance for variable selection in future studies targeting older adults or other specific populations, while also contributing empirical insights to the ongoing refinement of the health ecological model.51",
+        "bbox": [
+            514,
+            588,
+            921,
+            846
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "However, this study did not identify relevant macrolevel factors associated with technophobia. This area remains underexplored and warrants further investigation. The following sections provide a more detailed discussion of the remaining levels.",
+        "bbox": [
+            514,
+            846,
+            921,
+            923
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "header",
+        "text": "Song et al.",
+        "bbox": [
+            100,
+            50,
+            174,
+            65
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "page_number",
+        "text": "13",
+        "bbox": [
+            897,
+            50,
+            919,
+            64
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "At the individual trait level, this review identifies education, gender, age, language proficiency, personality traits, and digital health literacy as factors associated with baseline technophobia, with their association strengths ranked from lowest to highest, respectively. Among these factors, education, gender, and age exhibited relatively weak associations with technophobia, with individuals who are less educated, female, and older-old tending to report higher levels of technophobia.",
+        "bbox": [
+            77,
+            90,
+            482,
+            226
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "It is worth noting that in the previous subgroup analysis, we found that the older adult group exhibited significantly higher levels of technophobia compared to the non-older group. In the further exploration of factors associated with technophobia, age continued to show a certain degree of predictive value. It should be noted that all studies included with “age” as a predictor were conducted among older adults; therefore, the observed association between age and technophobia essentially reflects age-related differences within the older population. Specifically, compared to the young-old group, the old-old group may exhibit higher levels of technophobia. This disparity may, to some extent, stem from multiple structural disadvantages faced by the old-old population. In particular, older-old adults with lower levels of education often experience limited exposure to technology due to a combination of lower formal educational attainment and having grown up in a pre-digital era.43 This dual constraint heightens perceived difficulty and reduces confidence, increasing susceptibility to technophobia and rejection of digital health technologies.30 Moreover, traditional gender norms have contributed to a digital “use gap” among women by discouraging their engagement with technology and limiting their adoption of digital health tools.52 Therefore, particular attention should be given to older-old women with lower levels of education, who face compounded disadvantages in engaging with digital health technologies. Addressing their specific barriers is essential to promoting equitable digital health adoption across vulnerable populations.",
+        "bbox": [
+            75,
+            226,
+            484,
+            665
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "Somewhat unexpectedly, both neuroticism and language proficiency—newly incorporated as individual trait variables in the extended model—demonstrated moderate associations with technophobia. Individuals with higher levels of neuroticism reported significantly elevated technophobic tendencies relative to their emotionally stable counterparts. This may be explained by prior research indicating that the hypersensitivity, emotional instability, and anxiety-prone tendencies associated with neuroticism increase susceptibility to perceived risks and lead to heightened reactivity when engaging with digital health technologies.53 By contrast, language proficiency—including listening, reading, writing, translation, and the ability to comprehend complex expressions—appears to function as a protective factor.54 Drawing on prior findings, individuals with stronger language proficiency tend to demonstrate greater cognitive reserve, more effective information processing, and a higher capacity to seek social and informational support, all of which are associated with reduced technophobia.34 Future studies should develop targeted interventions to improve language proficiency and investigate the mechanisms linking neuroticism to technophobia, particularly within digital health contexts.",
+        "bbox": [
+            75,
+            665,
+            484,
+            925
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            492,
+            89,
+            900,
+            180
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "Digital health literacy, newly identified at this level, also emerged as the strongest correlate of technophobia. It refers to the ability to use digital technologies to search for, select, and evaluate health information, and to apply that information to manage or solve health-related problems.55 Individuals lacking this competence may struggle to interpret complex medical information, resulting in delayed care or access barriers that further intensify technophobic responses.30 Clearly, prioritizing the early detection and identification of populations with low digital health literacy is essential. However, Tang et al.37 reported that older adults with chronic illnesses who are highly engaged with digital health information may still experience elevated technophobia. This apparent paradox may reflect heightened privacy concerns or increased risk sensitivity in this population, despite their technical capabilities.37,56",
+        "bbox": [
+            492,
+            180,
+            900,
+            423
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "At the behavioral trait level, self-efficacy, technology use, Internet use, and self-perceived health status were newly introduced to improve the extended model. While not necessarily causal, these factors are significantly associated with technophobia and represent key entry points for targeted intervention strategies. Self-efficacy—one’s belief in the ability to respond adaptively to internal and external stressors57— emerges as the strongest correlate at this level. Its strong negative correlation with technophobia underscores its protective role in mitigating technophobic tendencies, offering psychological reassurance and promoting a more confident engagement with technology.57 Meanwhile, the weak negative correlation indicates that poorer perceived health is linked to greater technophobia. When individuals report better health and higher selfefficacy, their reliance on digital health technologies may decrease, as their confidence in physical well-being and problem-solving abilities reduces the perceived need for such tools.30,38 Nevertheless, the use of digital health technologies remains important for further optimizing their health outcomes.",
+        "bbox": [
+            492,
+            422,
+            900,
+            741
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "Technology use and technophobia are closely linked, particularly in digital health contexts. Structured training, curricula, and hands-on experience have been shown to reduce technophobia by enhancing familiarity and lowering perceived complexity.58 Such exposure may contribute to the accumulation of broader technological experience, which, as evidenced by the moderate negative correlation observed in this study, may help mitigate technophobic attitudes. Likewise, the moderate positive association suggests that frequent technology use may alleviate technophobia by fostering understanding and trust,4 thereby reducing anxiety stemming from misunderstanding or unrealistic expectations. However, excessive use may be counterproductive, and the optimal level of engagement remains to be determined.59",
+        "bbox": [
+            492,
+            740,
+            900,
+            924
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "page_number",
+        "text": "14",
+        "bbox": [
+            80,
+            50,
+            102,
+            64
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "header",
+        "text": "DIGITAL HEALTH",
+        "bbox": [
+            776,
+            49,
+            899,
+            65
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            97,
+            89,
+            502,
+            121
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "Furthermore, the weak negative correlation between technophobia and usage intention indicates that individuals with lower intention may exhibit greater technophobia. Usage intention, a psychologically driven and internally motivated construct,27 underpins autonomous behavior. Once this intention reaches a critical threshold, it often leads to active engagement with digital health technologies,60 potentially reinforcing confidence and reducing technophobia. Technophobia has also been shown to negatively influence both usage intention and frequency.61 However, the potential bidirectional causal relationship between technophobia and technology use remains underexplored and warrants further investigation.",
+        "bbox": [
+            97,
+            121,
+            504,
+            316
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "In the digital era, the Internet plays a crucial role in healthcare by enabling the sharing and dissemination of healthrelated information.62 As expected, negative attitudes toward the Internet significantly predicted a higher risk of technophobia. Additionally, technophobia was negatively correlated with both the duration and diversity of online activities, highlighting the positive impact of sustained digital engagement. Such activities improve access to reliable information, strengthen confidence in digital tools, and enhance users’ sense of security when navigating digital health platforms.43 Notably, the study also identified online shopping as a specific activity linked to lower levels of technophobia, possibly due to the autonomy and social interaction inherent in such self-directed services.63 In summary, future research should prioritize strengthening behavioral traits—particularly self-efficacy—and developing targeted interventions focused on technology and Internet use to mitigate technophobia and enhance digital adaptability.",
+        "bbox": [
+            97,
+            316,
+            504,
+            591
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "Interpersonal networks—including interactions among individuals, families, and communities—are negatively correlated with technophobia. The strong negative correlation between technophobia and social networks highlights the supportive role of social connections in digital health adoption. One possible explanation is that socially engaged older adults are more inclined to adopt digital health services when supported by their social environment.64 Furthermore, the accessibility, convenience, and continuous availability of social networks reduce the social cost of interaction, thereby fostering older adults’ engagement with digital health services and alleviating technophobia.65 While family support is generally considered beneficial, our findings echo previous research suggesting its limited effect on reducing technophobia.66 This may be due to generational gaps and the lack of practical technical assistance.67 In contrast, peer influence appears to exert a more significant impact on older adults’ technology attitudes.68 Therefore, at this level, interventions should focus on strengthening peer-based engagement and creating supportive social environments to reduce technophobia.",
+        "bbox": [
+            97,
+            590,
+            504,
+            892
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "The living environment includes occupational factors, socioeconomic status, and the natural and built surroundings. At this level, per capita monthly income was the only factor identified as being associated with technophobia, demonstrating a weak negative correlation. Per capita monthly income reflects an individual’s financial capacity and overall quality of life. Prior studies have identified financial cost as a key barrier to the adoption of digital health technologies among older adults.69 Economic constraints can lead to psychological stress and hesitation, particularly when digital services or medical procedures are perceived as financially burdensome.4 Furthermore, poor device performance and heightened price sensitivity—especially among long-term hospitalized individuals—may further limit the acceptance and adaptability of digital health tools, thereby exacerbating technophobia.37,70",
+        "bbox": [
+            97,
+            891,
+            504,
+            923
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            514,
+            90,
+            922,
+            303
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "Limitation",
+        "text_level": 2,
+        "bbox": [
+            515,
+            324,
+            621,
+            340
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "First, most existing studies on technophobia are observational, limiting the ability to establish causal relationships. Second, research involving older adults has been conducted exclusively in Chinese populations, constraining the generalizability and cross-cultural applicability of the findings. Third, the small number of eligible studies prevented a formal assessment of publication bias, introducing potential risk of bias. Fourth, although this study applies the health ecological model to systematically categorize correlates of technophobia, identifying all relevant factors and disentangling their specific contributions remains challenging. Notably, the pathways through which social, environmental, and institutional factors—beyond individual-level determinants—shape technophobia are still poorly understood. Future studies should adopt robust, large-scale, multicenter designs to clarify causal mechanisms, with particular emphasis on broader contextual influences in digital health adoption.",
+        "bbox": [
+            514,
+            346,
+            922,
+            621
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "Conclusion",
+        "text_level": 2,
+        "bbox": [
+            515,
+            641,
+            626,
+            659
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "In digital health contexts, older adults exhibit elevated levels of technophobia, particularly concerning privacy and security. Using the health ecological model, we identified key correlates across four levels. At the individual level, low educational attainment, limited digital health literacy, poor language proficiency, and high neuroticism— especially among older women—characterized a high-risk group. At the behavioral level, low self-efficacy, limited technology use, and infrequent Internet use emerged as significant risk factors. Within interpersonal networks, broader social connections exerted a protective effect, while family support showed only a marginal association. At the environmental level, income was weakly linked to technophobia. These findings underscore the importance of stratifying high-risk populations across ecological domains to better capture subgroup differences in technophobia and to inform precision-targeted interventions.",
+        "bbox": [
+            512,
+            664,
+            922,
+            925
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "header",
+        "text": "Song et al.",
+        "bbox": [
+            100,
+            50,
+            174,
+            65
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "page_number",
+        "text": "15",
+        "bbox": [
+            897,
+            50,
+            919,
+            64
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "Acknowledgments",
+        "text_level": 2,
+        "bbox": [
+            78,
+            90,
+            230,
+            104
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "We thank the authors of the primary studies for their valuable contributions.",
+        "bbox": [
+            77,
+            108,
+            480,
+            137
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "ORCID iDs",
+        "text_level": 2,
+        "bbox": [
+            78,
+            155,
+            171,
+            168
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "Xiaofang Song https://orcid.org/0009-0000-4974-2177   \nShasha Li https://orcid.org/0000-0003-4198-2314   \nLiying Dong https://orcid.org/0009-0009-5350-0205   \nYue Li https://orcid.org/0009-0002-5274-9761   \nXinyu Yang https://orcid.org/0009-0002-8340-9890   \nJianyi Bao https://orcid.org/0009-0000-1139-7072   \nShufang Liao https://orcid.org/0009-0001-8554-1556   \nYingxue Xi https://orcid.org/0009-0003-5332-1510   \nGuojing Guo https://orcid.org/0009-0001-9069-1321",
+        "bbox": [
+            77,
+            171,
+            435,
+            310
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "Contributorship",
+        "text_level": 2,
+        "bbox": [
+            78,
+            325,
+            210,
+            340
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "Xiaofang Song: conceptualization, literature search, data extraction, and writing—original draft. Shasha Li: supervision, methodology, and writing—review and editing. Liying Dong and Yue Li: Data extraction and quality assessment. Xinyu Yang and Jianyi Bao: Formal analysis and interpretation of results. Shufang Liao, Yingxue Xi, and Guojing Guo: Manuscript editing and reference management. All authors read and approved the final manuscript.",
+        "bbox": [
+            77,
+            343,
+            482,
+            450
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "Funding",
+        "text_level": 2,
+        "bbox": [
+            78,
+            465,
+            147,
+            480
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "The authors disclosed receipt of the following financial support for the research, authorship, and/or publication of this article: This work was supported by the National Outstanding Youth Science Fund Project of National Natural Science Foundation of China (grant number no. 72204084).",
+        "bbox": [
+            77,
+            482,
+            482,
+            559
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "Declaration of conflicting interests",
+        "text_level": 2,
+        "bbox": [
+            78,
+            575,
+            356,
+            590
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "The authors declared no potential conflicts of interest with respect to the research, authorship, and/or publication of this article.",
+        "bbox": [
+            77,
+            592,
+            480,
+            622
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "Data availability statement",
+        "text_level": 2,
+        "bbox": [
+            78,
+            640,
+            297,
+            654
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "All data used in this study are from publicly available sources.",
+        "bbox": [
+            78,
+            658,
+            465,
+            672
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "Supplemental material",
+        "text_level": 2,
+        "bbox": [
+            78,
+            689,
+            265,
+            703
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "Supplemental material for this article is available online.",
+        "bbox": [
+            78,
+            707,
+            426,
+            721
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "References",
+        "text_level": 2,
+        "bbox": [
+            78,
+            737,
+            173,
+            752
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "list",
+        "sub_type": "ref_text",
+        "list_items": [
+            "1. Wang Z, Li L, Tang S, et al. Digital health: opportunities and challenges. Digit Med Health 2023; 1: 7–31.",
+            "2. Liu M, Luo J, Li L, et al. Design and development of a diseasespecific clinical database system to increase the availability of hospital data in China. Health Inf Sci Syst 2023; 11: 11.",
+            "3. World Health Organization. Global strategy on digital health 2020-2025. https://apps.who.int/iris/handle/10665/ 344249. (accessed 18 August 2021).",
+            "4. Peng Y, Gao Y, Yong J, et al. The current status and influencing factors of technophobia among the elderly from the perspective of digital health. Chin J Nurs 2023; 58: 1345–1350.",
+            "5. Khasawneh OY. Technophobia: examining its hidden factors and defining it. Technol Soc 2018; 54: 93–100.",
+            "6. Osiceanu ME. Psychological implications of modern technologies: “technofobia” versus “technophilia”. Procedia-Soc Behav Sci 2015; 180: 1137–1144.",
+            "7. Sun E, Gao Y, Ye X, et al. Validity and reliability of the Chinese version of the technophobia scale in older adults. Chin J Nurs 2022; 57: 380–384.",
+            "8. Di Giacomo D, Ranieri J, D’Amico M, et al. Psychological barriers to digital living in older adults: computer anxiety as predictive mechanism for technophobia. Behav Sci 2019; 9: 96.",
+            "9. Pirhonen J, Lolich L, Tuominen K, et al. “These devices have not been made for older people’s needs”—older adults’ perceptions of digital technologies in Finland and Ireland. Technol Soc 2020; 62: 101287.",
+            "10. Fagherazzi G, Goetzinger C, Ally Rashid M, et al. Digital health strategies to fight COVID-19 worldwide: challenges, recommendations, and a call for papers. J Med Internet Res 2020; 22: e19284.",
+            "11. Guo X, Sun Y, Wang N, et al. The dark side of elderly acceptance of preventive mobile health services in China. Electron Mark 2013; 49: 49–61.",
+            "12. World Health Organization. World report on ageing and health. https://apps.who.int/iris/handle/10665/186463. (accessed 30 September 2025).",
+            "13. Zhao Y. Ethical research of the intelligent endowment. J Shanghai Jiaotong Univ (Philos Soc Sci) 2022; 19: 2689.",
+            "14. Baham C, Kalgotra P, Shadbad FN, et al. Generational differences in handling technology interruptions: a qualitative study. Eur J Inf Syst 2023; 32: 858–878.",
+            "15. Vodanovich S, Sundaram D and Myers M. Research commentary—digital natives and ubiquitous information systems. Inf Syst Res 2010; 21: 711–723.",
+            "16. Li L, Pan S and Yu L. Status and influencing factors of digital health anxiety in elderly patients with cancer pain. Chin J Pract Nurs 2023; 39: 2224–2229.",
+            "17. Xie Y, Zhang X , Cao G, et al. Correlation analysis between technology anxiety and e-health literacy among urban elderly people. J Mod Clin Med 2023; 49: 279–282.",
+            "18. Wang Y, Li S, Ni Y, et al. Research progress on assessment tools and status quo of loneliness in the elderly. Occup Health 2022; 38: 3006–3015.",
+            "19. Collins AE. Health ecology and environmental management in Mozambique. Health Place 2002; 8: 263–272.",
+            "20. Richard L, Gauvin L, Raine K, et al. Ecological models revisited: their uses and evolution in health promotion over two decades. Annu Rev Public Health 2011; 32: 307–326.",
+            "21. Liu Z, Doege D, Thong MSY, et al. The relationship between posttraumatic growth and health-related quality of life in adult cancer survivors: a systematic review. J Affect Disord 2020; 276: 159–168.",
+            "22. Fabbri M, Hassan Murad M, Wennberg AM, et al. Health literacy and outcomes among patients with heart failure: a"
+        ],
+        "bbox": [
+            87,
+            757,
+            480,
+            785
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "page_number",
+        "text": "16",
+        "bbox": [
+            80,
+            51,
+            102,
+            64
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "header",
+        "text": "DIGITAL HEALTH",
+        "bbox": [
+            776,
+            50,
+            897,
+            64
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "list",
+        "sub_type": "ref_text",
+        "list_items": [
+            "systematic review and meta-analysis. Heart Fail 2020; 8: 451–460.",
+            "23. Borenstein M, Hedges LV, Higgins JP, et al. Introduction to meta-analysis. Hoboken (NJ): John Wiley & Sons, 2021.",
+            "24. Higgins JPT, Thomas J, Chandler J, et al. (eds) Cochrane handbook for systematic reviews of interventions (Version 6.4). London (UK): Cochrane, 2023. https://training. cochrane.org/handbook.",
+            "25. Cohen J. Statistical power analysis for the behavioral sciences. New York (NY): Routledge, 2013.",
+            "26. Sinkovics RR, Stöttinger B, Bodo B, et al. Reluctance to use technology-related products: development of a technophobia scale. Thunderbird Int Bus Rev 2002; 44; 477–494.",
+            "27. Lester D, Yang B, James S, et al. A Short Computer Anxiety Scale. Percept Mot Skills 2005; 100: 964–968.",
+            "28. Heinssen RK Jr, Glass CR, Knight LA, et al. Assessing computer anxiety: development and validation of the computer anxiety rating scale. Comput Human Behav 1987; 3: 49–59.",
+            "29. Rosen LD, Sears DC and Weil MM. Measuring technophobia. A manual for the administration and scoring of three instruments: Computer Anxiety Rating Scale (Form C), General Attitudes Toward Computers Scale (Form C) and Computer Thoughts Survey (Form C). [Computerphobia Reduction Program], 1992. Available to order from: http:// www.technostress.com/WRmeasorder.htm.",
+            "30. Wu Q, Liu C, Liu L, et al. Current status and influencing factors analysis of medical technophobia in elderly patients seeking medical treatment. J Nurs Sci 2023; 38: 17–20.",
+            "31. Tao X, Liao F, Wang L, et al. Correlation analysis between technical anxiety and home care readiness in aged caregivers of stroke patients. Chin J Mod Nurs 2023; 29: 2601–2606.",
+            "32. Zhang D. Survey on acceptance and it’s influencing factors of telehome health management system for the elderly based on technology acceptance model theory. Dissertation, Southern Medical University, 2013. http://101.42.170.182:8085/ kcms2/article/abstract?v=WdAl4K16JyUPHCfI qytJkDOVd wNkpmtMK1L7YrRoeCPUUzLj3mLi8VW8fUgUDl6_d_ DPtOJ7S8rfbZBP7u_xl56BIyRwDxGngCx_TJvhccXmPC EnDXtK6T3Euwt2RB22K0nr6vVFPOJRu1cvEnLQ4w== uniplatform=NZKPTlanguage=CHS.",
+            "33. Weil MM and Rosen LD. The psychological impact of technology from a global perspective: a study of technological sophistication and technophobia in university students from twenty-three countries. Comput Human Behav 1995; 11: 95–113.",
+            "34. Chu PC and Spires EE. Validating the computer anxiety rating scale: effects of cognitive style and computer courses on computer anxiety. Comput Human Behav 1991; 7: 7–21.",
+            "35. Nimrod G. Not good days for technophobes: older internet users during the COVID-19 pandemic. Educ Gerontol 2021; 47: 160– 171.",
+            "36. Nimrod G. Technophobia among older Internet users. Educ Gerontol 2018; 44: 148–162.",
+            "37. Tang X, Guo Y, Chen X, et al. Status quo and influencing factors of technophobia in elderly patients with chronic",
+            "diseases under intelligent medical environment. Chin Nurs Res 2023; 37: 3925–3930.",
+            "38. Yang Q, Xin X, Li X et al. The mediating effect of selfperceived aging between digital health literacy and technophobia of rural elderly. Mod Prevent Med 2024; 51: 471–475.",
+            "39. Guo X, Huang X, Jia P, et al. Latent profile analysis of technophobia among the community elderly from the perspective of digital health. J Nurs Sc 2024; 39: 102–106.",
+            "40. Sun E and Ye X. Older and fearing new technologies? The relationship between older adults’ technophobia and subjective age. Aging Ment Health 2024; 28: 569–576.",
+            "41. Korobili S, Togia A, Malliari A, et al. Computer anxiety and attitudes among undergraduate students in Greece. Comput Human Behav 2010; 26: 309–405.",
+            "42. Anthony LM, Clarke MC, Anderson SJ, et al. Technophobia and personality subtypes in a sample of South African university students. Comput Human Behav 2000; 16: 31–44.",
+            "43. Sinha J and Serin N. Online health information seeking and preventative health actions: cross-generational online survey study. J Med Internet Res 2024; 26: e48977.",
+            "44. Beer D. Power through the algorithm? Participatory web cultures and the technological unconscious. New Media Soc 2009; 11: 985–1002.",
+            "45. Chee SY. Age-related digital disparities, functional limitations, and social isolation: unraveling the grey digital divide between baby boomers and the silent generation in senior living facilities. Aging Ment Health 2024; 28: 621–632.",
+            "46. Jansson M, Liisanantti J, Ala-Kokko T, et al. The negative impact of interface design, customizability, inefficiency, malfunctions, and information retrieval on user experience: a national usability survey of ICU clinical information systems in Finland. Int J Med Inf 2022; 159: 104680.",
+            "47. Lopez-Aguado M, Gutiérrez-Provecho L, Díaz JQ, et al. Social exclusion and the digital divide. J E-Learn Knowl Soc 2022; 18: 74–82.",
+            "48. Sun X, Yan W, Zhou H, et al. Internet use and need for digital health technology among the elderly: a cross-sectional survey in China. BMC Public Health 2020; 20: 1386.",
+            "49. Zou Y, Sun K and Afnan T, et al. Cross-contextual examination of older adults’ privacy concerns, behaviors, and vulnerabilities. Privacy-Enhanc Technol (PoPETs) 2024; 2024: 133–150.",
+            "50. Schroeder T, Dodds L, Georgiou A, et al. Older adults and new technology: mapping review of the factors associated with older adults’ intention to adopt digital technologies. JMIR Aging 2023; 6; e44564.",
+            "51. Wang S, Molassiotis A, Guo C, et al. Association between social integration and risk of dementia: a systematic review and meta-analysis of longitudinal studies. J Am Geriatr Soc 2023; 71: 632–645.",
+            "52. Song Z, Wong C, Bergmann L, et al. China’s prefectural digital divide: spatial analysis and multivariate determinants of ICT diffusion. Int J Inf Manag 2020; 52: 102075.",
+            "53. Rüegger D, Stieger M, Allemand C, et al. Leveraging the potential of personality traits for digital health interventions:"
+        ],
+        "bbox": [
+            129,
+            90,
+            502,
+            118
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "header",
+        "text": "Song et al.",
+        "bbox": [
+            100,
+            50,
+            174,
+            65
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "page_number",
+        "text": "17",
+        "bbox": [
+            897,
+            50,
+            919,
+            64
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "list",
+        "sub_type": "ref_text",
+        "list_items": [
+            "a literature review on digital markers for conscientiousness and neuroticism. In: MCIS 2017 Proceedings, 2017.",
+            "54. Zhang Q and Yang Y. On language ability and its enhancement. Linguist Sci 2013; 12: 566–578.",
+            "55. Smith B and Magnani JW. New technologies, new disparities: the intersection of electronic health and digital health literacy. Int J Cardiol 2019; 292: 280–282.",
+            "56. Paige SR, Stellefson M, Krieger JL, et al. Proposing a transactional model of eHealth literacy: concept analysis. J Med Internet Res 2018; 20: e10175.",
+            "57. Schwarzer R, Bäßler J, Kwiatek P, et al. The assessment of optimistic self-beliefs: comparison of the German, Spanish, and Chinese versions of the general self-efficacy scale. Appl Psychol 1997; 46: 69–88.",
+            "58. Jordan EW and Stroup DF. The behavioral antecedents of computer fear. J Data Educ 1982; 22: 7–9.",
+            "59. Tencent Research Institute. How does the new digital environment impact the life of the elderly? https://www.tisi.org/ 19587 (2021, accessed 11 September 2022).",
+            "60. Wang L and Jin L. Willingness or preference: on the attitude of the disabled elderly using smart senior care products. J Northwest Univ (Philosophy Soc Sci Ed) 2021; 51: 89–97.",
+            "61. Wilson G, Gates JR, Vijayakumar S, et al. Understanding older adults’ use of social technology and the factors influencing use. Ageing Soc 2023; 43: 222–245.",
+            "62. Hu S. Research on optimal allocation of medical resources in the internet medical environment (PhD Dissertation,",
+            "Graduate School of the Chinese Academy of Social Sciences). 2022. DOI:10.27642/d.cnki.gskyy.2022.000012.",
+            "63. Roten YS and Vanheems R. The dimensions of phygital autonomy: losing some, gaining some. J Marketing Manage 2024; 40: 996–1029.",
+            "64. Li Q, Jiang Y and Zhong Y. Research on the key factors of mobile medical technology acceptance for the elderly. China Health Industry 2017; 14: 161–162.",
+            "65. Li Y and Wang J. Application of life and social skills training in elderly patients with bipolar disorder in remission. Chin J Gen Pract 2022; 20: 1724–1727.",
+            "66. Choi NG and Dinitto DM. The digital divide among lowincome homebound older adults: internet use patterns, eHealth literacy, and attitudes toward computer/internet use. J Med Internet Res 2013; 15: e93.",
+            "67. Quan-Haase A and Martin K. Digital inequality: differences in young adults’ use of the Internet. Sociology 2011; 35: 602–621.",
+            "68. Hunsaker A and Hargittai E. A review of Internet use among older adults. New Media Soc 2018; 20: 3937–3954 .",
+            "69. Huang H, Cao S, Xiao M, et al. Community-dwelling elder’s acceptance of gerontechnology and its influencing factors: a qualitative descriptive study. Nurs J Chin Peoples Liberation Army 2021; 38: 4–7.",
+            "70. Xiao F, Yuan X, Han T, et al. The disease cognition level and influencing factors of first-degree relatives of patients with gastric cancer. J Nurs Sci 2022; 37: 26–29."
+        ],
+        "bbox": [
+            109,
+            90,
+            480,
+            118
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "page_number",
+        "text": "18",
+        "bbox": [
+            80,
+            51,
+            102,
+            64
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "header",
+        "text": "DIGITAL HEALTH",
+        "bbox": [
+            776,
+            50,
+            897,
+            64
+        ],
+        "page_idx": 17
+    }
+]

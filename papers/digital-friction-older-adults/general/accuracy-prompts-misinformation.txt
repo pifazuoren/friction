@@ -1,0 +1,7 @@
+English Title: Accuracy prompts are a replicable and generalizable approach for reducing the spread of misinformation
+Chinese Title: 准确性提示是一种可复制且可推广的减少错误信息传播的方法
+Category: general
+Page URL: https://www.nature.com/articles/s41467-022-30073-5
+PDF URL: https://www.nature.com/articles/s41467-022-30073-5.pdf
+Notes: Nature open access
+Download Status: metadata_only

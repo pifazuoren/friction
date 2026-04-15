@@ -1,0 +1,226 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{beaver}
+
+\usepackage[UTF8]{ctex}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+
+\title[0311report]{report}
+\date{2026-03-11}
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\section{问题与目标}
+
+\begin{frame}{1月版本的核心问题}
+    \begin{itemize}
+        \item \textbf{没做平行世界，影响归因分析}
+        \item \textbf{冲击系数固定}：正or负面对个体的冲击幅度几乎保持为常数，不因不同个体/事件等而改变
+        \item \textbf{问卷太简单}
+        \item \textbf{机制闭环不完整}：状态变化对后续行为路径影响弱
+        \item \textbf{触发偏概率注入}
+    \end{itemize}
+    \vspace{0.3cm}
+\end{frame}
+
+\begin{frame}{初步改造}
+    \begin{itemize}
+        \item 平行世界
+        \item 状态更新改为动态变化（环境+个体特征+当前step共同决定）
+        \item 问卷扩展为更多维(acceptance / trust / helplessness / behavior)
+        \item 状态变化影响后续行为路径
+        \item 触发改为多段判定+审计日志，降低无依据触发
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{初步改造示意图}
+    \centering
+    \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{\detokenize{/Users/pifazuoren/Downloads/IMG_5454 2.jpg}}
+\end{frame}
+
+\section{机制升级}
+
+\begin{frame}{触发机制完善}
+    \begin{enumerate}
+        \item 抽取当步信号：\texttt{step\_outcome / consumed\_time / failure\_pressure / success\_support}
+        \item 数字语境检测：\texttt{检测action or status or intention }
+        \item llm主导判定：\texttt{产出数字性+场景+置信度}
+        \item 规则兜底：\texttt{first gate + status gate}
+        \item 回退：\texttt{上述均未命中时才进入}
+    \end{enumerate}
+    \vspace{0.2cm}
+    每次 attempt 都写入 \texttt{decision\_json}，存放路径来源、置信度、放行理由、\texttt{roll}、\texttt{event\_total\_prob}，便于审查。
+\end{frame}
+
+
+
+\begin{frame}{Hybrid校准与历史惯性}
+    \begin{itemize}
+        \item Hybrid 不让 LLM 直接决定是否数字，而是输出倍率：\texttt{risk\_mult/protect\_mult/neg\_impact\_mult/pos\_impact\_mult}
+        \item 系统按 \(\alpha\) 融合 rule 与 LLM，低置信/跳变过大自动回退 rule
+        \item attempt-hazard 引入短期记忆：近期事件密度、失败压力变化、refractory 衰减
+    \end{itemize}
+    \vspace{0.2cm}
+    \[
+    z_{total}=0.45 z_{prior}+0.55 z_{context}+offset-refractory+0.16\Delta fail+0.08\Delta mean
+    \]
+    \[
+    p_{total}=\sigma(z_{total}),\quad
+    p^- = p_{total}\cdot r_{neg},\quad
+    p^+ = p_{total}(1-r_{neg})
+    \]
+\end{frame}
+
+\begin{frame}{Prompt Engineering改造前后对比}
+    \begin{center}
+        \small
+        \begin{tabular}{p{3.3cm}p{2.8cm}p{2.8cm}}
+            \toprule
+            指标 & 改造前 & 改造后 \\
+            \midrule
+            Hybrid 生效次数 & \(0\)（均回退为rule） & \(126\)（均为hybrid） \\
+            非数字事件占比 & \(23/53=43.4\%\) & \(0/83=0\%\) \\
+            高质量触发样本 & \(27/53=50.9\%\) & \(78/83=94\%\) \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+    \vspace{0.2cm}
+    \begin{itemize}
+        \item 样本纯度与可解释性显著提升。
+    \end{itemize}
+\end{frame}
+
+\section{初步实验}
+
+\begin{frame}{实验配置与规模}
+    \begin{itemize}
+        \item Group ID：\texttt{digital\_friction\_parallel\_20260311\_002952}
+        \item 世界：A=\texttt{baseline\_low\_friction}，B=\texttt{high\_friction\_low\_assist}，C=\texttt{low\_friction\_high\_assist}
+        \item 配对：4 组 seed（101--104），每组 A/B/C 同 seed
+        \item 总子实验数：\(4\times 3=12\)
+        \item 每次子实验：6个agents，单阶段1天，30分钟步长
+        \item 运行总时长约 7.4 小时（平均每子实验约 37 分钟）
+    \end{itemize}
+\end{frame}
+
+
+\section{结果}
+
+\begin{frame}{行为指标结果（4组seed平均）}
+    \begin{center}
+        \small
+        \begin{tabular}{lccc}
+            \toprule
+            World & AttemptRate & EmitGivenAttempt & NegShare \\
+            \midrule
+            A Baseline & 0.3637 & 0.2608 & 0.2640 \\
+            B High Friction & 0.3429 & 0.5727 & 0.5402 \\
+            C Low Friction + Assist & 0.2856 & 0.1505 & 0.1116 \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+    \vspace{0.2cm}
+
+\end{frame}
+
+\begin{frame}{心理状态变化（末值-初值，4组seed平均）}
+    \begin{center}
+        \small
+        \begin{tabular}{lccc}
+            \toprule
+            World & Helplessness \(\Delta\) & Trust \(\Delta\) & Avoidance \(\Delta\) \\
+            \midrule
+            A Baseline & -5.58 & +1.73 & -2.19 \\
+            B High Friction & +33.08 & -40.61 & +29.86 \\
+            C Low Friction + Assist & -8.50 & +7.37 & -4.35 \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+    \vspace{0.2cm}
+
+\end{frame}
+
+\begin{frame}{Survey扩展指标（末轮-首轮，4组seed平均）}
+    \begin{center}
+        \scriptsize
+        \begin{tabular}{lccc}
+            \toprule
+            指标 & A Baseline & B High Friction & C Low Friction + Assist \\
+            \midrule
+            TechAcceptance\(\Delta\) & +3.13 & +0.63 & -2.92 \\
+            SurveyTrust\(\Delta\) & -0.83 & +0.63 & -4.79 \\
+            SurveyAvoidance\(\Delta\) & +0.42 & -3.33 & -4.38 \\
+            HelplessIndex\(\Delta\) & +3.13 & +0.31 & -1.56 \\
+            WithdrawalIndex\(\Delta\) & -1.81 & +5.90 & -0.35 \\
+            DelayOnline\(\Delta\) & -1.88 & +5.00 & -4.38 \\
+            ProxyReliance\(\Delta\) & -6.04 & +8.33 & +1.67 \\
+            OfflineSwitch\(\Delta\) & +2.50 & +4.38 & +1.67 \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+    \vspace{0.15cm}
+    \tiny 注：本页由 \texttt{agent\_survey} 两轮问卷直接计算（末轮-首轮），用于补充展示。
+\end{frame}
+
+\begin{frame}{Survey扩展指标配对差值（B-A, C-A）}
+    \begin{center}
+        \scriptsize
+        \begin{tabular}{lcc}
+            \toprule
+            指标 & B-A 均值差 & C-A 均值差 \\
+            \midrule
+            TechAcceptance\(\Delta\) & -2.50 & -6.04 \\
+            SurveyTrust\(\Delta\) & +1.46 & -3.96 \\
+            SurveyAvoidance\(\Delta\) & -3.75 & -4.79 \\
+            HelplessIndex\(\Delta\) & -2.81 & -4.69 \\
+            WithdrawalIndex\(\Delta\) & +7.71 & +1.46 \\
+            DelayOnline\(\Delta\) & +6.88 & -2.50 \\
+            ProxyReliance\(\Delta\) & +14.38 & +7.71 \\
+            OfflineSwitch\(\Delta\) & +1.88 & -0.83 \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+\end{frame}
+
+
+
+\begin{frame}{配对差值统计（B-A, C-A）}
+    \begin{center}
+        \small
+        \begin{tabular}{lcc}
+            \toprule
+            指标 & B-A 均值差 & C-A 均值差 \\
+            \midrule
+            NegShare & +0.2762 & -0.1524 \\
+            Helplessness\(\Delta\) & +38.66 & -2.92 \\
+            Trust\(\Delta\) & -42.33 & +5.64 \\
+            Avoidance\(\Delta\) & +32.06 & -2.15 \\
+            \bottomrule
+        \end{tabular}
+    \end{center}
+    \vspace{0.2cm}
+\end{frame}
+
+\section{结论与下一步}
+
+
+\begin{frame}{下一步计划}
+    \begin{itemize}
+        \item 增加子实验次数
+        \item 对于参数，做敏感性分析（步长、alpha、hazard窗口）
+        \item 进一步校准初始化与冲击系数（这个感觉很难。。）
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \centering
+    \Huge{请老师批评指正orz}
+\end{frame}
+
+\end{document}

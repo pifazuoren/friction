@@ -1,0 +1,33 @@
+agent_id,category,run_len,start_day,start_t,end_day,end_t,sample_start_action,sample_end_action
+500007323,meal,2,5,25201,5,28801,Select a meal to purchase or prepare,Prepare or purchase the meal
+500007323,mobility,1,5,54001,5,54001,Travel to the local shopping center,Travel to the local shopping center
+500007323,other,4,5,39601,5,50401,Sit down comfortably,Dispose of waste properly
+500019134,meal,9,5,7201,5,36001,Prepare a meal at home,Clean up after the meal
+500019134,mobility,1,4,1,4,1,Stay at home as no need to travel,Stay at home as no need to travel
+500019134,other,2,0,21601,0,25201,Check if there is a shopping list,Dress appropriately for shopping
+500019134,sleep,6,2,10801,2,28801,Prepare for sleep by turning off all electronic devices,Start the day with a light morning routine
+500022131,meal,9,4,79201,5,21601,Select a simple meal suitable for the weather and time,Dispose of the meal's leftovers properly
+500022131,mobility,1,0,21601,0,21601,Start the day with a brief outdoor walk,Start the day with a brief outdoor walk
+500022131,other,4,4,57601,4,68401,Prepare a comfortable sleeping environment,Perform bedtime routine
+500022131,sleep,5,3,50401,3,64801,Relaxation before sleep,Lie down in bed
+500023827,meal,2,4,75601,4,79201,Enjoy the meal outside,Dispose of the meal's waste properly
+500023827,mobility,1,5,10801,5,10801,Take a leisurely walk to enjoy the sunny weather,Take a leisurely walk to enjoy the sunny weather
+500023827,other,2,5,3601,5,7201,Observe the stars or moon if visibility is good,Participate in a local outdoor activity or join a group if interested
+500023827,sleep,2,4,82801,5,1,Relax and enjoy the peaceful atmosphere outdoors,Engage in light reading or a leisure activity
+500025041,other,1,4,57601,4,57601,Check out and purchase the selected items,Check out and purchase the selected items
+500033414,meal,6,1,28801,1,46801,Ensure the kitchen is ready for meal preparation,"Reflect on the day and the meal, enhancing the feeling of relief and contentment"
+500033414,mobility,1,6,10801,6,10801,Take a short walk or gentle stretch to relax the body,Take a short walk or gentle stretch to relax the body
+500033414,other,6,2,82801,3,14401,Create a calming environment,Assess current state of tiredness
+500033414,sleep,5,0,54001,0,68401,"Prepare for sleep, e.g., changing into comfortable clothing",Close your eyes and initiate the sleep process
+500038614,meal,7,1,1,1,21601,Start the day with a healthy breakfast,Reflect on the meal as a moment of peace in a quiet day
+500038614,mobility,1,3,50401,3,50401,Take a short walk outside to appreciate the sunny weather,Take a short walk outside to appreciate the sunny weather
+500038614,other,4,1,82801,2,7201,Prepare a comfortable sleeping environment,Adjust room temperature to a comfortable level
+500038614,sleep,4,2,10801,2,21601,Relax to calm the mind,Close your eyes and begin to drift off to sleep
+500055517,meal,11,2,75601,3,25201,"Plan a simple, nutritious meal based on comfort",Reflect on the meal and the day
+500055517,mobility,1,1,25201,1,25201,Begin the day at home to minimize travel,Begin the day at home to minimize travel
+500055517,other,10,4,36001,5,68401,Reflect on the day's contentment,Proceed to the checkout
+500055517,sleep,4,0,57601,0,68401,Ensure the room is comfortable for sleep,Relax and unwind to facilitate sleep
+500055778,meal,10,1,7201,1,39601,Ensure the home environment is prepared for cooking and eating,Plan and prepare the meal considering the quiet day and current emotions
+500055778,mobility,1,1,43201,1,43201,Prepare or order food since no need to travel,Prepare or order food since no need to travel
+500055778,other,4,0,68401,0,79201,Prepare a comfortable sleeping environment,Check the temperature and weather suitability for sleeping
+500055778,sleep,6,2,46801,2,64801,Prepare for sleep by adjusting the room environment,Lie down in bed and relax mindfully to initiate sleep

@@ -1,0 +1,3 @@
+agent_id,day,t,scenario,outcome,roll,source,alpha,p_negative_interval,p_positive_interval,scenario_entry_reason,status_gate_matched,digital_exposure,digital_exposure_from_status,llm_status,llm_calls_for_agent,step_type,step_intention
+4,0,25201,ride_hailing,positive,0.006518601416265479,hybrid,0.30527451418540696,0.005150210278678177,0.004595859396731187,matched,False,True,True,ok,1,other,Get dressed for a shopping trip
+3,0,28801,info_ad_click,negative,0.005947723639619706,hybrid,0.30527451418540696,0.011334221880676959,0.0016353268856135696,min_stage_attempt_force,False,True,False,ok,1,other,Select preferred mode of communication

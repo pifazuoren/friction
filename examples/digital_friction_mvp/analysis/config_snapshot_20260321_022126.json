@@ -1,0 +1,15 @@
+{
+  "group_id": "20260321_022126",
+  "config_fingerprint": "71b9829c2d1e5ace",
+  "config_payload": {
+    "world_batch": [
+      "baseline_low_friction",
+      "high_friction_low_assist",
+      "low_friction_high_assist"
+    ],
+    "AGENT_COUNT": "6",
+    "STAGE_DAYS": "2",
+    "STAGE_MODE": "full",
+    "STAGE_SINGLE_NAME": "steady"
+  }
+}

@@ -1,0 +1,82 @@
+agent_id,rank,action,count,pct_in_agent
+500007323,1,Visit a local park to engage in outdoor activities,1,8.33
+500007323,2,Find a suitable outdoor eating spot,1,8.33
+500007323,3,Check the availability of seating and weather conditions,1,8.33
+500007323,4,Select a meal to purchase or prepare,1,8.33
+500007323,5,Prepare or purchase the meal,1,8.33
+500007323,6,Assess available food options,1,8.33
+500007323,7,Choose a food option to eat,1,8.33
+500007323,8,Sit down comfortably,1,8.33
+500007323,9,Enjoy the food,1,8.33
+500007323,10,Determine if additional food is needed,1,8.33
+500019134,1,Serve the meal,4,2.78
+500019134,2,Enjoy the meal at home,3,2.08
+500019134,3,Enjoy the meal,3,2.08
+500019134,4,Clean up after eating,2,1.39
+500019134,5,Prepare the bedroom for sleep,2,1.39
+500019134,6,Start cooking the meal,2,1.39
+500019134,7,Ensure a comfortable sleep environment,2,1.39
+500019134,8,Ensure a comfortable sleeping environment,2,1.39
+500019134,9,Clean up after the meal,2,1.39
+500019134,10,Lie down in the bed,2,1.39
+500022131,1,Serve the meal,4,2.78
+500022131,2,Ensure a comfortable sleeping environment,4,2.78
+500022131,3,Enjoy the meal,3,2.08
+500022131,4,Lie down in bed,2,1.39
+500022131,5,Clean up after eating,2,1.39
+500022131,6,Engage in light reading or watching a movie,2,1.39
+500022131,7,Relaxation before sleep,2,1.39
+500022131,8,Start the day with a brief outdoor walk,1,0.69
+500022131,9,Prepare a light breakfast in the comfort of home,1,0.69
+500022131,10,Engage in a leisurely read or puzzle activity,1,0.69
+500023827,1,Prepare the meal in a portable container,1,9.09
+500023827,2,Pack the necessary utensils and a blanket,1,9.09
+500023827,3,Find a comfortable outdoor spot to eat,1,9.09
+500023827,4,Set up the blanket and utensils,1,9.09
+500023827,5,Enjoy the meal outside,1,9.09
+500023827,6,Dispose of the meal's waste properly,1,9.09
+500023827,7,Relax and enjoy the peaceful atmosphere outdoors,1,9.09
+500023827,8,Engage in light reading or a leisure activity,1,9.09
+500023827,9,Observe the stars or moon if visibility is good,1,9.09
+500023827,10,Participate in a local outdoor activity or join a group if interested,1,9.09
+500025041,1,Check out and purchase the selected items,1,100.0
+500033414,1,Clean up after eating,6,4.17
+500033414,2,Enjoy the meal,5,3.47
+500033414,3,Ensure a comfortable sleeping environment,4,2.78
+500033414,4,Prepare a comfortable sleeping environment,4,2.78
+500033414,5,Serve the meal,3,2.08
+500033414,6,Cook the meal,2,1.39
+500033414,7,Set the dining table,2,1.39
+500033414,8,Engage in a calming activity,2,1.39
+500033414,9,Return home from current location,2,1.39
+500033414,10,Cook a meal suitable for the evening,2,1.39
+500038614,1,Adjust room temperature to a comfortable level,3,2.08
+500038614,2,Prepare a comfortable sleep environment,3,2.08
+500038614,3,Ensure a comfortable sleep environment,2,1.39
+500038614,4,Serve the meal,2,1.39
+500038614,5,Clean up after eating,2,1.39
+500038614,6,Prepare a comfortable sleeping environment,2,1.39
+500038614,7,Prepare breakfast,2,1.39
+500038614,8,Prepare for rest,2,1.39
+500038614,9,Check the room temperature,1,0.69
+500038614,10,Adjust the room temperature if necessary,1,0.69
+500055517,1,Enjoy the meal,4,3.33
+500055517,2,Eat the meal,3,2.5
+500055517,3,Clean up after eating,2,1.67
+500055517,4,Prepare the sleeping environment,2,1.67
+500055517,5,Start cooking the meal,2,1.67
+500055517,6,Prepare a comfortable sleep environment,2,1.67
+500055517,7,Serve the prepared meal,2,1.67
+500055517,8,Ensure a comfortable sleeping environment,2,1.67
+500055517,9,Serve the meal,2,1.67
+500055517,10,Check the current shopping list,1,0.83
+500055778,1,Enjoy the meal,5,3.47
+500055778,2,Return home from current location,4,2.78
+500055778,3,Serve the meal,3,2.08
+500055778,4,"Enjoy the meal at home, focusing on the present experience",2,1.39
+500055778,5,Start cooking the meal,2,1.39
+500055778,6,Ensure a comfortable sleeping environment,2,1.39
+500055778,7,Prepare the meal,2,1.39
+500055778,8,Cook the meal,2,1.39
+500055778,9,"Engage in a calming activity, such as reading, to promote relaxation",2,1.39
+500055778,10,Determine shopping list based on current needs,1,0.69

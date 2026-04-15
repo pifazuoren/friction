@@ -1,0 +1,4 @@
+stage,slots,step.decision_attempt_count,step.event_emitted_count,step.no_event_count,step.scenario_pre_match_miss_count,step.scenario_skip_count,step.digital_exposure_count,step.digital_supply_seeded_count,step.digital_supply_surface_count,step.digital_supply_completed_count,decision_rate_pct,emit_per_attempt_pct,emit_per_slot_pct,pre_match_miss_pct,skip_pct,digital_exposure_pct
+steady,1728,521.0,3.0,518.0,1226.0,1207.0,269.0,24.0,60.0,24.0,30.150462962962965,0.5758157389635317,0.1736111111111111,70.94907407407408,69.84953703703704,15.567129629629632
+shock,1728,567.0,5.0,562.0,1199.0,1161.0,344.0,18.0,27.0,18.0,32.8125,0.8818342151675485,0.28935185185185186,69.38657407407408,67.1875,19.90740740740741
+recovery,1728,545.0,5.0,540.0,1217.0,1183.0,311.0,18.0,32.0,17.0,31.539351851851855,0.9174311926605505,0.28935185185185186,70.42824074074075,68.46064814814815,17.997685185185187

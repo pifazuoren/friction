@@ -1,0 +1,33 @@
+{
+  "status": "failed",
+  "error_message": "[Errno 1] Operation not permitted (originated from sysctl() malloc 1/3)",
+  "exp_name": "digital_friction_parallel_stage6_single_1day_task_windows_smoke_20260407_v2_p000_high_friction_low_assist_20260407_233222",
+  "exp_id": "5b421496-48b5-4490-96af-ff4fdd2f346c",
+  "world_name": "high_friction_low_assist",
+  "seed": 101,
+  "experiment_mode": "parallel_worlds",
+  "parallel_group_name": "stage6_single_1day_task_windows_smoke_20260407_v2",
+  "world_batch": [
+    "baseline_low_friction",
+    "high_friction_low_assist",
+    "high_friction_high_assist",
+    "low_friction_high_assist"
+  ],
+  "pair_index": 0,
+  "pair_seed": 101,
+  "world_order": 1,
+  "config_fingerprint": "9aa3d682e45d5a42",
+  "agent_count": 10,
+  "stage_mode": "single",
+  "stage_count": 1,
+  "stage_days": 1,
+  "total_days": 1,
+  "decision_interval_minutes": 30,
+  "decision_intervals_per_day": 48,
+  "opportunities_per_agent": 48,
+  "opportunities_total": 480,
+  "economy_block_enabled": true,
+  "economy_binding_audit_strict": false,
+  "agent_plan_prompt_profile": "off",
+  "written_at": "2026-04-07T23:32:25"
+}

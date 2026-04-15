@@ -1,0 +1,7 @@
+English Title: Digital divide as a determinant of health in the U.S. older adults: prevalence, trends, and risk factors
+Chinese Title: 美国老年人数字鸿沟作为健康决定因素：现状、趋势与风险因素
+Category: older_adults
+Page URL: https://bmcgeriatr.biomedcentral.com/articles/10.1186/s12877-024-05612-y
+PDF URL: https://link.springer.com/content/pdf/10.1186/s12877-024-05612-y.pdf
+Notes: BMC open access
+Download Status: metadata_only

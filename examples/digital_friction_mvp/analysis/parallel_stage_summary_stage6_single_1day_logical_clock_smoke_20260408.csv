@@ -1,0 +1,5 @@
+group_id,pair_index,pair_seed,world_order,world_name,exp_id,status,stage_index,stage_name,agent_count,task_count,attempt_rate,success_rate,help_seek_rate,abandon_rate,negative_feedback_rate,helplessness_delta,day,t,step
+stage6_single_1day_logical_clock_smoke_20260408,0,101,0,baseline_low_friction,a30098fb-f6e6-4931-ac7e-99025c6695bf,ok,0,steady,10,0,0.0,0.0,0.0,0.0,0.0,0.0,1,21601.0,121601
+stage6_single_1day_logical_clock_smoke_20260408,0,101,1,high_friction_low_assist,bfc78f0f-7985-43fa-863a-7b74fd2a2496,ok,0,steady,10,0,0.0,0.0,0.0,0.0,0.0,0.0,1,21601.0,121601
+stage6_single_1day_logical_clock_smoke_20260408,0,101,2,high_friction_high_assist,931c4848-5894-400a-8429-3b9f01de0f55,ok,0,steady,10,0,0.0,0.0,0.0,0.0,0.0,0.0,1,21601.0,121601
+stage6_single_1day_logical_clock_smoke_20260408,0,101,3,low_friction_high_assist,b8b8f7d1-b2a5-4449-b11e-a936b633c5c8,ok,0,steady,10,0,0.0,0.0,0.0,0.0,0.0,0.0,1,21601.0,121601

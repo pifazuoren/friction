@@ -1,0 +1,4 @@
+stage_idx,stage_name,decision_attempt,event_emitted,scenario_skip,pre_match_miss,status_gate_attempt,status_gate_hit,digital_exposure
+1,steady,175,2,401,411,2,0,87
+2,shock,213,2,363,389,0,0,80
+3,recovery,154,2,422,438,0,0,55

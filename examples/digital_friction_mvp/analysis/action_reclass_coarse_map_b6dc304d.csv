@@ -1,0 +1,2318 @@
+action,behavior_coarse,count
+Enjoy the meal,饮食相关,79
+Return home from current location,出行移动,79
+Clean up after eating,饮食相关,53
+Lie down in bed,睡眠相关,47
+Serve the meal,饮食相关,42
+Prepare a comfortable sleeping environment,睡眠相关,38
+Ensure a comfortable sleeping environment,睡眠相关,37
+Return to home,出行移动,33
+Return to home from current location,出行移动,30
+Clean up after the meal,饮食相关,28
+Eat the meal,饮食相关,28
+Start cooking the meal,饮食相关,28
+Enjoy the meal at home,饮食相关,25
+Prepare the sleeping environment,睡眠相关,23
+Adjust the room temperature if necessary,家居环境管理,21
+Lie down in the bed,睡眠相关,21
+Relax and unwind,放松与情绪调节,20
+Change into comfortable sleepwear,家居环境管理,19
+Ensure a comfortable sleep environment,睡眠相关,19
+Prepare for bed,睡眠相关,19
+Prepare the bedroom for sleep,睡眠相关,19
+Relax and prepare for sleep,睡眠相关,19
+Prepare a comfortable sleep environment,睡眠相关,17
+Prepare a meal at home,饮食相关,17
+Reflect on the meal experience,饮食相关,17
+Prepare and cook the meal,饮食相关,16
+Cook the meal,饮食相关,15
+Relax in a comfortable position,放松与情绪调节,15
+Prepare and cook a meal,饮食相关,14
+Serve the cooked meal,饮食相关,14
+Adjust the room temperature to a comfortable level,家居环境管理,13
+Enjoy a relaxing evening with a meal at home,饮食相关,12
+Prepare for sleep,睡眠相关,12
+Consume the prepared meal,饮食相关,11
+Engage in a calming activity,放松与情绪调节,11
+Engage in a relaxing activity,放松与情绪调节,10
+Enjoy the meal alone or with loved ones,饮食相关,10
+Enjoy the meal in a comfortable setting,饮食相关,10
+Lay down in bed,睡眠相关,10
+Reflect on the meal and the day,饮食相关,10
+Set the room temperature to a comfortable level,家居环境管理,10
+Set the table with utensils and plates,饮食相关,10
+Set up a comfortable sleeping environment,睡眠相关,10
+Close your eyes and drift off to sleep,睡眠相关,9
+Dress appropriately for the weather,其他,9
+Get into bed,睡眠相关,9
+Plan for the rest of the day,睡眠相关,9
+Prepare and cook the meal at home,饮食相关,9
+Prepare ingredients,饮食相关,9
+Return to my residence,出行移动,9
+Travel to home,出行移动,9
+Unlock and enter the home,出行移动,9
+Begin working on assigned tasks,工作任务,8
+"Engage in a calming activity, such as reading or listening to soothing music",放松与情绪调节,8
+"Engage in a calming activity, such as reading, to help relax",放松与情绪调节,8
+Engage in a relaxing activity to unwind,放松与情绪调节,8
+Enjoy the meal in a relaxed atmosphere,饮食相关,8
+Fall asleep,睡眠相关,8
+Prepare a home-cooked meal,饮食相关,8
+Prepare a meal,饮食相关,8
+Prepare a shopping list,购物采购,8
+Prepare for cooking,饮食相关,8
+Prepare ingredients and cooking utensils,饮食相关,8
+Select and prepare ingredients,饮食相关,8
+Serve the meal in a comfortable setting,饮食相关,8
+Change into comfortable pajamas,家居环境管理,7
+Cook a home-cooked meal,饮食相关,7
+Cook a nutritious meal,饮食相关,7
+Ensure the sleeping environment is comfortable,睡眠相关,7
+Enter the bedroom,睡眠相关,7
+Get into bed and lie down,睡眠相关,7
+Lie down and close your eyes to initiate sleep,睡眠相关,7
+Prepare ingredients and cook the meal,饮食相关,7
+Prepare shopping bag and wallet,购物采购,7
+Reflect on the meal and the day's tranquility,饮食相关,7
+Relax and wind down,睡眠相关,7
+Retire to the bedroom,睡眠相关,7
+Shop for the planned items,购物采购,7
+Sit down and enjoy the meal,饮食相关,7
+Start the cooking process,饮食相关,7
+Adjust room temperature if necessary,家居环境管理,6
+Choose a suitable communication method,计划与决策,6
+Determine necessary items based on daily needs,购物采购,6
+Eat the prepared meal,饮食相关,6
+"Engage in a calming activity, such as reading",放松与情绪调节,6
+Engage in a relaxing activity such as reading or listening to music,放松与情绪调节,6
+Engage in a relaxing activity to wind down,睡眠相关,6
+Engage in light reading or other leisure activities,放松与情绪调节,6
+Enjoy a leisurely dinner at home,饮食相关,6
+Enjoy breakfast,饮食相关,6
+"Enjoy the meal alone or possibly with a light, quiet activity afterward",饮食相关,6
+Enjoy the meal alone to reflect on the quiet day,饮食相关,6
+"Enjoy the meal outside, taking into account the tranquility and relief mentioned",数字设备与账号操作,6
+Ensure the room is comfortable for sleep,睡眠相关,6
+Enter sleep mode,睡眠相关,6
+Head towards home,出行移动,6
+Listen to soothing music,放松与情绪调节,6
+Open the front door,出行移动,6
+Plan the meal,饮食相关,6
+Prepare a meal considering the tranquility of the day and your satisfaction with it,饮食相关,6
+Prepare and cook a meal at home,饮食相关,6
+Prepare for sleep by setting up a comfortable environment,睡眠相关,6
+Prepare shopping list based on needs,购物采购,6
+Prepare the bedroom,睡眠相关,6
+Prepare the kitchen for cooking,饮食相关,6
+Prepare the meal,饮食相关,6
+Read a book for leisure,放松与情绪调节,6
+Relax body and mind,放松与情绪调节,6
+Relax in a comfortable chair and read a book,放松与情绪调节,6
+Relax with a good book,放松与情绪调节,6
+Return home after shopping,购物采购,6
+Return home from workplace,工作任务,6
+Return to home from workplace,工作任务,6
+Return to my home,出行移动,6
+Return to my home from the current location,出行移动,6
+Serve and enjoy the meal,饮食相关,6
+Set the alarm for the next day,睡眠相关,6
+Set the alarm if needed,睡眠相关,6
+Set the room temperature to a comfortable level for sleep,睡眠相关,6
+Set up a comfortable sleep environment,睡眠相关,6
+Shop by comparing prices and qualities of items,购物采购,6
+Start cooking the chosen meal,饮食相关,6
+Travel back to home,出行移动,6
+Travel to the chosen shopping location,购物采购,6
+Travel to the nearest shopping center,购物采购,6
+Travel to the selected shopping location,购物采购,6
+Turn off all electronic devices,数字设备与账号操作,6
+Assess current comfort level,家居环境管理,5
+Begin cooking a meal,饮食相关,5
+Dim the lights to create a relaxing environment,放松与情绪调节,5
+Eat the meal at home,饮食相关,5
+Engage in a calming activity to induce sleep,睡眠相关,5
+Enjoy the meal alone or with family if available,饮食相关,5
+Ensure all necessary ingredients are available,饮食相关,5
+Ensure the bedroom is comfortable,睡眠相关,5
+Lay down in the bed,睡眠相关,5
+Prepare and cook the selected meal,饮食相关,5
+Prepare the bed for sleep,睡眠相关,5
+Reflect on how the tranquility has contributed to a sense of satisfaction,放松与情绪调节,5
+"Reflect on the simplicity of the meal and the day, reinforcing the emotion of satisfaction",饮食相关,5
+Relax and unwind before sleep,睡眠相关,5
+Return home with purchased items,购物采购,5
+Return home with the purchased items,购物采购,5
+Select a friend to call,社交沟通,5
+Select items from the shopping list,购物采购,5
+Serve the meal on a table,饮食相关,5
+Set the table for the meal,饮食相关,5
+"Shop based on the prepared list, considering the income and consumption level",购物采购,5
+Travel to the nearest shopping center or store,购物采购,5
+Wear comfortable clothing suitable for the weather,家居环境管理,5
+Attempt to fall asleep,睡眠相关,4
+Begin cooking a meal that is easy to prepare and suitable for evening consumption,饮食相关,4
+Begin cooking the meal,饮食相关,4
+Begin meal preparation,饮食相关,4
+Begin shopping for items on the list and any additional needs,购物采购,4
+Begin the meal preparation process,饮食相关,4
+Begin work on tasks,工作任务,4
+Change into comfortable sleep attire,睡眠相关,4
+Consider any additional activities or relaxation to round off the evening following the meal,饮食相关,4
+Consume the meal,饮食相关,4
+"Cook a simple, satisfying meal",饮食相关,4
+Determine shopping list based on needs,购物采购,4
+"Engage in a calming activity that brings joy, such as reading or listening to music",放松与情绪调节,4
+"Engage in a calming activity, such as reading or meditation",放松与情绪调节,4
+Engage in a calming bedtime routine,睡眠相关,4
+"Engage in a hobby, such as gardening or puzzles",放松与情绪调节,4
+Engage in calming activities such as reading or meditating,放松与情绪调节,4
+Engage in gentle reading or a puzzle,放松与情绪调节,4
+Engage in light activity or read a book to relax,放松与情绪调节,4
+Engage in light reading or a hobby to occupy time,放松与情绪调节,4
+Engage in light reading or research to prepare for work,工作任务,4
+Engage in relaxing activities,放松与情绪调节,4
+Enjoy a home-cooked meal,饮食相关,4
+Enjoy the meal alone,饮食相关,4
+Enjoy the meal alone in the tranquility of home,饮食相关,4
+Enjoy the meal alone or invite a close friend or family member if desired,社交沟通,4
+Enjoy the meal alone or with companionship,饮食相关,4
+Enjoy the meal and find solace in the routine,饮食相关,4
+Enjoy the meal in a relaxed manner to savor the day's tranquility,饮食相关,4
+Enjoy the meal in a relaxed setting,饮食相关,4
+Enjoy the meal in a tranquil and comfortable setting,饮食相关,4
+Enjoy the meal in peace,饮食相关,4
+Enjoy the meal outside,饮食相关,4
+Ensure comfortable sleeping environment,睡眠相关,4
+Ensure the environment is conducive for sleep,睡眠相关,4
+Ensure the room is comfortable for sleeping,睡眠相关,4
+Ensure the room is dark to facilitate sleep,睡眠相关,4
+Go to bed,睡眠相关,4
+Leave workplace,工作任务,4
+Lie down and drift off to sleep,睡眠相关,4
+Lie down and prepare for sleep,睡眠相关,4
+Lie down in the prepared bed,睡眠相关,4
+Listen to relaxing music or an audio book,放松与情绪调节,4
+"Perform a relaxing activity (e.g., reading or listening to calm music) to unwind",放松与情绪调节,4
+Perform relaxation techniques,放松与情绪调节,4
+"Plan a light evening activity, like reading or meditation, to conclude the day",放松与情绪调节,4
+Practice relaxation techniques,放松与情绪调节,4
+Prepare a home-cooked meal as it aligns with the feeling of simplicity and peace today,饮食相关,4
+Prepare a meal based on available ingredients,饮食相关,4
+Prepare a meal considering dietary needs and preferences,饮食相关,4
+Prepare a meal with available ingredients,饮食相关,4
+Prepare a nourishing lunch considering retirement age and current temperature,饮食相关,4
+Prepare a nutritious and easy-to-consume meal due to advanced age,饮食相关,4
+Prepare a nutritious meal considering the tranquil and fulfilling feeling of the day,饮食相关,4
+Prepare a nutritious meal for lunch to enjoy at home,饮食相关,4
+Prepare a shopping list based on needs,购物采购,4
+Prepare a simple meal at home,饮食相关,4
+"Prepare a simple, nourishing meal suitable for your age and health",饮食相关,4
+Prepare and consume the meal,饮食相关,4
+Prepare and cook the planned meal,饮食相关,4
+Prepare and enjoy an evening meal,饮食相关,4
+Prepare breakfast,饮食相关,4
+Prepare dinner as a home-cooked meal,饮食相关,4
+Prepare for bed by changing into comfortable clothing,睡眠相关,4
+Prepare for meal,饮食相关,4
+Prepare for rest,睡眠相关,4
+Prepare for sleep by creating a comfortable environment,睡眠相关,4
+Prepare for sleep by dimming lights,睡眠相关,4
+Prepare for sleep by relaxing,睡眠相关,4
+Prepare for sleep by winding down,睡眠相关,4
+Prepare for travel,出行移动,4
+Prepare ingredients and start cooking,饮食相关,4
+Prepare ingredients for a meal,饮食相关,4
+Prepare ingredients for the meal,饮食相关,4
+Prepare meal using available ingredients,饮食相关,4
+Prepare the ingredients for cooking,饮食相关,4
+Prepare the meal based on the assessed options,饮食相关,4
+Prepare the meal based on the preference of the day,饮食相关,4
+Prepare the meal using available ingredients,饮食相关,4
+Prepare the meal with a focus on tranquility,饮食相关,4
+"Prepare the selected meal, considering the current weather and temperature",饮食相关,4
+Prepare the sleep environment,睡眠相关,4
+Prepare the sleeping area,睡眠相关,4
+Purchase necessary items,购物采购,4
+Read a book or listen to calm music,放松与情绪调节,4
+Read a book or magazine,放松与情绪调节,4
+Read a book or magazine for some quiet entertainment,放松与情绪调节,4
+Reflect on the day's events,放松与情绪调节,4
+Reflect on the day's tranquility during the meal,饮食相关,4
+Reflect on the tranquility of the morning,放松与情绪调节,4
+Relax and drift off to sleep,睡眠相关,4
+Relax and enjoy the calm atmosphere,放松与情绪调节,4
+Relax and enjoy the quiet day,放松与情绪调节,4
+Relax and unwind from the day's activities,放松与情绪调节,4
+Relax and unwind to prepare for sleep,睡眠相关,4
+Relax in a comfortable chair with a book,放松与情绪调节,4
+Relax in a comfortable position in the living room,放松与情绪调节,4
+"Relax with a book or hobby, immersing myself in a peaceful activity",放松与情绪调节,4
+Review and organize personal belongings to maintain a peaceful space,计划与决策,4
+Review the day's events in a journal,放松与情绪调节,4
+Savor the meal and reflect on the day's contentment,饮食相关,4
+Select a friend to contact,社交沟通,4
+Select and prepare ingredients for a meal,饮食相关,4
+Set the alarm for an appropriate wake-up time,睡眠相关,4
+Set the alarm for the next day if needed,睡眠相关,4
+Set the room temperature to 23C,家居环境管理,4
+Set the table,饮食相关,4
+Stay home to enjoy tranquility,放松与情绪调节,4
+Travel to the shopping center,购物采购,4
+Unlock the front door,出行移动,4
+Wash the dishes,饮食相关,4
+Wind down by engaging in a calming activity,睡眠相关,4
+Adjust to a comfortable sleeping position,睡眠相关,3
+Arrive at the dining location,饮食相关,3
+Assess available food options at current location,饮食相关,3
+Assess available food options at workplace,工作任务,3
+Assess current sleepiness level,计划与决策,3
+Assess the available options based on current preferences,计划与决策,3
+"Begin a leisurely walk, focusing on the surroundings",出行移动,3
+Begin cooking a home-cooked meal,饮食相关,3
+"Begin preparing a meal with a simple dish, reflecting on the day's calm and balance",饮食相关,3
+Begin the process of falling asleep,睡眠相关,3
+Begin to wind down and transition into sleep,睡眠相关,3
+Check current contacts list,其他,3
+Check inventory for available food items,购物采购,3
+Choose a friend to call,社交沟通,3
+Choose a meal or order food from the selected location,饮食相关,3
+Choose the nearest shopping center based on mobility and convenience,购物采购,3
+Close your eyes and allow yourself to drift off to sleep,睡眠相关,3
+Complete the shopping task,工作任务,3
+Consume the chosen food item or meal,饮食相关,3
+Consume the food at the current location,饮食相关,3
+Consume the meal at the chosen location,饮食相关,3
+Determine the distance and time required to reach a nearby restaurant or open-air dining area,饮食相关,3
+Dim the lights,家居环境管理,3
+Dim the lights to create a sleep-friendly atmosphere,睡眠相关,3
+Drive to the nearest shopping center,购物采购,3
+End the walk and return to the starting point,出行移动,3
+Engage in a calming activity such as reading or meditation,放松与情绪调节,3
+Engage in a calming activity to relax before sleep,睡眠相关,3
+Engage in a relaxing activity to calm the mind,放松与情绪调节,3
+Enjoy a meal,饮食相关,3
+Enjoy the meal alone as a moment of self-reflection and appreciation of the day's tranquility,饮食相关,3
+Enjoy the meal alone as a reflection of the day's peacefulness,饮食相关,3
+Enjoy the meal alone or with companions,饮食相关,3
+"Enjoy the meal alone, reflecting on the day's tranquility",饮食相关,3
+Enjoy the meal in a comfortable setting at home,饮食相关,3
+"Enjoy the meal outside, savoring the sunny atmosphere",饮食相关,3
+Enjoy the meal prepared,饮食相关,3
+Ensure a comfortable environment,家居环境管理,3
+Ensure all necessary items are in reach for easy access,购物采购,3
+Ensure comfort for sleep,睡眠相关,3
+Ensure comfort in sleeping environment,睡眠相关,3
+Ensure food is ready and served,饮食相关,3
+Ensure kitchen essentials are available,饮食相关,3
+Ensure leftovers are stored properly,其他,3
+Ensure the bedroom environment is conducive to sleep,睡眠相关,3
+Ensure the kitchen is ready for cooking,饮食相关,3
+Ensure the room is cool and comfortable,家居环境管理,3
+Enter home and secure doors,出行移动,3
+Enter the kitchen,饮食相关,3
+Enter the store and proceed to the aisles with the shopping list,购物采购,3
+Head home,出行移动,3
+Head to the chosen shopping location using the most comfortable and time-efficient method of transportation,购物采购,3
+Head to the selected outdoor venue,其他,3
+Head towards the nearest park,出行移动,3
+Head towards the nearest supermarket,购物采购,3
+Initiate the sleep process,睡眠相关,3
+Leave home and travel to the nearest shopping area,购物采购,3
+Leave workplace and start journey home,工作任务,3
+Leave workplace to travel home,工作任务,3
+Lie down and go to sleep,睡眠相关,3
+Lie down in bed in a comfortable position,睡眠相关,3
+Locate the venue and navigate to it,其他,3
+Move from current location to home,出行移动,3
+Move from current location to the house,出行移动,3
+Move from outside to inside the house,出行移动,3
+Move towards home,其他,3
+Navigate within the store to find items on the shopping list,购物采购,3
+Order and consume the meal,饮食相关,3
+Perform a calming bedtime routine,睡眠相关,3
+Plan a meal based on the day's emotions and tranquility,饮食相关,3
+Plan the route to the dining location,饮食相关,3
+Practice relaxation techniques to ease into sleep,睡眠相关,3
+Prep ingredients and cook the planned meal,饮食相关,3
+Prepare a meal based on dietary preferences and restrictions,饮食相关,3
+Prepare a meal that suits your taste,饮食相关,3
+Prepare a nutritious meal,饮食相关,3
+Prepare a simple meal considering the tranquil mood,饮食相关,3
+"Prepare a simple, nutritious meal for lunch",饮食相关,3
+Prepare and cook the meal with ease,饮食相关,3
+Prepare and serve the meal,饮食相关,3
+Prepare dinner using available ingredients,饮食相关,3
+Prepare for a comfortable sleep environment,睡眠相关,3
+Prepare for bed by changing into comfortable attire,睡眠相关,3
+Prepare for relaxation,放松与情绪调节,3
+Prepare for sleep by ensuring a comfortable environment,睡眠相关,3
+Prepare or order food for an outdoor meal,饮食相关,3
+Prepare shopping list,购物采购,3
+Prepare the bedroom for a comfortable sleep environment,睡眠相关,3
+Prepare the meal at home,饮食相关,3
+Prepare the meal in a comfortable and safe environment,饮食相关,3
+Proceed to the checkout counter and pay for the purchased items,购物采购,3
+Proceed to the chosen eating option,饮食相关,3
+Proceed to the shopping location,购物采购,3
+Relax and unwind before sleeping,睡眠相关,3
+Relax and unwind in preparation for sleep,睡眠相关,3
+Relax mind and body,放松与情绪调节,3
+Retire to my bedroom,睡眠相关,3
+Retrieve contact information,社交沟通,3
+Return home,出行移动,3
+Return home from the current location,出行移动,3
+Return home to prepare for eating,饮食相关,3
+Return home with the shopping items,购物采购,3
+Return to home from the current location,出行移动,3
+Return to home safely,出行移动,3
+Return to home to prepare the meal,饮食相关,3
+Return to my home from current location,出行移动,3
+Return to the home,出行移动,3
+Return to the home environment,出行移动,3
+Return to the house,出行移动,3
+Review current savings and budget for shopping,购物采购,3
+Review necessary shopping list,购物采购,3
+Secure and close all entry points to ensure safety,家居环境管理,3
+Select and purchase the items on the shopping list,购物采购,3
+Select nearest shopping location based on current location,购物采购,3
+Serve the prepared meal,饮食相关,3
+Set out to the planned shopping destination,购物采购,3
+Set the alarm for morning if needed,睡眠相关,3
+Set the alarm for the desired wake-up time,睡眠相关,3
+Set the alarm for the next morning,睡眠相关,3
+Set the table with a pleasant setting,饮食相关,3
+Sit down and order food or find a seat,饮食相关,3
+Start cooking a home-cooked meal,饮食相关,3
+Start preparing the meal,饮食相关,3
+Take the necessary transportation to the shopping center,购物采购,3
+Transport the food to the selected outdoor location,饮食相关,3
+Travel from workplace to home,工作任务,3
+Travel to local shopping center,购物采购,3
+Travel to local supermarket,购物采购,3
+Travel to the chosen dining location,饮食相关,3
+Travel to the chosen location,出行移动,3
+Travel to the grocery store,购物采购,3
+Travel to the nearest store,购物采购,3
+Travel to the nearest store or market by foot or public transportation,购物采购,3
+Travel to the selected dining establishment,饮食相关,3
+Travel to the selected dining location if necessary,饮食相关,3
+Travel to the selected store,购物采购,3
+Travel to the selected store using a suitable mode of transport,购物采购,3
+Unlock and enter home,出行移动,3
+Walk to the grocery store,购物采购,3
+ Lie down in a comfortable position,睡眠相关,2
+ Lie down in bed,睡眠相关,2
+ Lie down in the bed,睡眠相关,2
+Access a communication device such as a phone or a tablet,数字设备与账号操作,2
+Access my contact list,社交沟通,2
+Access my phone,数字设备与账号操作,2
+Access phone,数字设备与账号操作,2
+Access phone or device,数字设备与账号操作,2
+Adjust room temperature if necessary for comfort,家居环境管理,2
+Adjust room temperature if necessary to 23C,家居环境管理,2
+Adjust room temperature to 23C if necessary,家居环境管理,2
+Adjust room temperature to a comfortable level,家居环境管理,2
+Adjust room temperature to a comfortable level if necessary,家居环境管理,2
+Adjust the bedroom temperature if necessary,睡眠相关,2
+Adjust the room temperature if necessary to 23C,家居环境管理,2
+Adjust the room temperature to a comfortable level for sleep,睡眠相关,2
+Adjust the room temperature to be comfortable,家居环境管理,2
+"After the meal, clear the dishes and wash them if necessary",饮食相关,2
+Appreciate the tranquility of the evening,放松与情绪调节,2
+Assess and confirm home meal options,饮食相关,2
+Assess available options for shopping due to retirement income level,购物采购,2
+Assess available time for shopping,购物采购,2
+Assess current energy levels,计划与决策,2
+Assess current environment,家居环境管理,2
+Assess current fatigue level,计划与决策,2
+Assess current hunger level and decide what to eat,饮食相关,2
+Assess current state of alertness,计划与决策,2
+Assess current surroundings for suitable dining options,饮食相关,2
+Assess home-cooked meal preparation,饮食相关,2
+Assess income and needs,计划与决策,2
+Assess meal preparation needs,饮食相关,2
+Assess meal quality and satisfaction,饮食相关,2
+Assess personal needs and budget for shopping,购物采购,2
+Assess shopping needs based on daily activities,购物采购,2
+Assess sleepiness,计划与决策,2
+Assess sleepiness level,计划与决策,2
+Assess the available food options at the current location,饮食相关,2
+Begin a relaxing morning with a quiet breakfast,饮食相关,2
+Begin preparing a home-cooked meal,饮食相关,2
+Begin preparing a meal,饮食相关,2
+Begin preparing a meal if not already done,饮食相关,2
+Begin preparing food if necessary,饮食相关,2
+Begin preparing the ingredients for cooking,饮食相关,2
+Begin preparing the meal,饮食相关,2
+Begin preparing the selected dish,其他,2
+Begin preparing the selected meal,饮食相关,2
+Begin sleep by closing eyes and adopting a comfortable sleep position,睡眠相关,2
+Begin to drift off to sleep,睡眠相关,2
+Begin to fall asleep,睡眠相关,2
+Begin to pack personal items,购物采购,2
+Begin to wind down and prepare for sleep,睡眠相关,2
+Call a friend,社交沟通,2
+Change into comfortable attire,家居环境管理,2
+Change into comfortable clothing suitable for walking,家居环境管理,2
+Check and adjust room temperature to comfortable level,家居环境管理,2
+Check availability and make a reservation if necessary,其他,2
+Check current availability of outdoor seating,其他,2
+Check current inventory at home,购物采购,2
+Check current location for any available shopping options,购物采购,2
+Check current needs and list items to purchase,购物采购,2
+Check current needs for shopping,购物采购,2
+Check existing food supplies or make a shopping list,购物采购,2
+Check for available friends to contact,社交沟通,2
+Check for contacts,其他,2
+Check for ingredients to prepare a meal,饮食相关,2
+Check if environment is suitable for sleeping,睡眠相关,2
+Check inventory of food supplies,购物采购,2
+Check my schedule for any planned social activities,计划与决策,2
+Check my schedule for available friends,社交沟通,2
+Check pantry and fridge for ingredients,饮食相关,2
+Check phone contacts for friends' numbers,数字设备与账号操作,2
+Check phone for contacts,数字设备与账号操作,2
+Check phone for recent messages,数字设备与账号操作,2
+Check the environment for comfort,家居环境管理,2
+Check the meal prep,饮食相关,2
+Check the temperature to ensure it is comfortable for sleep,睡眠相关,2
+Choose a food item or decide to prepare a meal,饮食相关,2
+Choose a meal from the menu that is healthy and easily digestible,饮食相关,2
+Choose a method to contact friends,社交沟通,2
+"Choose a place based on comfort, food options, and cost",饮食相关,2
+Choose a suitable meal based on preference and availability,饮食相关,2
+Choose home-cooked meal options,饮食相关,2
+Chooses a meal based on current health and preference,饮食相关,2
+Clean up after breakfast,饮食相关,2
+Clean up after dining,饮食相关,2
+Clean up after eating to maintain a clean living space,饮食相关,2
+Clean up after eating to maintain a peaceful environment,饮食相关,2
+Clean up after eating to maintain the home's order,饮食相关,2
+Clean up after eating to maintain the peace of the home,饮食相关,2
+Clean up after meal,饮食相关,2
+Clean up after the meal to maintain a comfortable environment,饮食相关,2
+Clean up and store leftover food or packaging,购物采购,2
+Clean up the kitchen after eating,饮食相关,2
+Clean up the kitchen and utensils used during the meal,饮食相关,2
+Clean up the meal area,饮食相关,2
+Clean up the meal area to maintain a clean environment,饮食相关,2
+Clean up the table and store leftover food,购物采购,2
+Clear the dining area after eating,饮食相关,2
+Clear the meal area after eating to maintain a clean and comfortable environment,饮食相关,2
+Clear the plates and utensils after eating,饮食相关,2
+"Clear the table, preparing for a restful rest following the meal",饮食相关,2
+Close eyes and drift into sleep,睡眠相关,2
+Close the bedroom curtains to block out light,睡眠相关,2
+Close the bedroom door,睡眠相关,2
+Close the bedroom door and begin to sleep,睡眠相关,2
+Close the bedroom door for privacy,睡眠相关,2
+Close the bedroom door to signal readiness for sleep,睡眠相关,2
+Close the curtains or blinds to create a darker sleeping environment,睡眠相关,2
+Close the curtains to block out light,家居环境管理,2
+Close the curtains to create a dark environment,家居环境管理,2
+Close the curtains to ensure darkness for better sleep,睡眠相关,2
+Close the eyes and drift off to sleep,睡眠相关,2
+Close the eyes and prepare for sleep,睡眠相关,2
+Close the eyes and relax,放松与情绪调节,2
+Close your eyes and drift into sleep,睡眠相关,2
+"Close your eyes and relax, starting the sleep process",睡眠相关,2
+Complete the purchase,购物采购,2
+Conclude meal preparation,饮食相关,2
+Consider having a small dessert if desired,计划与决策,2
+Consider preparing a light snack or drink to enjoy while relaxing,放松与情绪调节,2
+Consume the food item,饮食相关,2
+Consume the meal in a comfortable setting,饮食相关,2
+Consume the meal prepared,饮食相关,2
+Contemplate the underlying feeling of hope,其他,2
+Cook breakfast,饮食相关,2
+Cook the main dish,饮食相关,2
+Cook the meal following a chosen recipe,饮食相关,2
+Create a comfortable environment for reflection,放松与情绪调节,2
+Decide on the type of shopping needed based on personal needs,购物采购,2
+Determine if additional activities are needed to wind down,睡眠相关,2
+Determine if there's a need for shopping based on income and consumption level,购物采购,2
+Determine necessary shopping items based on current needs,购物采购,2
+Determine necessary shopping items based on needs and preferences,购物采购,2
+Determine shopping list based on daily needs,购物采购,2
+Determine shopping list based on needs and preferences,购物采购,2
+Determine shopping needs,购物采购,2
+Determine shopping needs based on existing needs and preferences,购物采购,2
+Determine the shopping list based on needs,购物采购,2
+Determine the type of shopping needed based on income and consumption level,购物采购,2
+Dim the lights in the living area,家居环境管理,2
+Dim the lights to create a conducive sleeping environment,睡眠相关,2
+Dim the lights to create a relaxing atmosphere,放松与情绪调节,2
+Dim the lights to create a restful atmosphere,家居环境管理,2
+Dim the lights to create a restful environment,家居环境管理,2
+Dim the lights to signal the body to wind down,睡眠相关,2
+Dispose of the meal-related waste properly,饮食相关,2
+Dress appropriately for shopping,购物采购,2
+Dress appropriately for the sunny weather,其他,2
+Dress appropriately for the weather and temperature,家居环境管理,2
+Dress comfortably for a shopping trip,购物采购,2
+Eat dinner,饮食相关,2
+Eat the home-cooked meal,饮食相关,2
+Eat the prepared food,饮食相关,2
+Eats the meal,饮食相关,2
+End current activities at workplace,工作任务,2
+End current work activities,工作任务,2
+End work duties,工作任务,2
+End work or activities at the workplace,工作任务,2
+"Engage in a calming activity (e.g., reading or listening to soothing music)",放松与情绪调节,2
+"Engage in a calming activity (e.g., reading) to relax the mind",放松与情绪调节,2
+"Engage in a calming activity (e.g., reading, meditation)",放松与情绪调节,2
+Engage in a calming activity (if desired),放松与情绪调节,2
+Engage in a calming activity (optional),放松与情绪调节,2
+Engage in a calming activity before sleep,睡眠相关,2
+Engage in a calming activity like reading or listening to soothing music,放松与情绪调节,2
+Engage in a calming activity or meditation,放松与情绪调节,2
+Engage in a calming activity such as reading or listening to soothing music,放松与情绪调节,2
+Engage in a calming activity such as reading or listening to soothing music to aid in relaxation,放松与情绪调节,2
+Engage in a calming activity such as reading or meditation to relax,放松与情绪调节,2
+Engage in a calming activity to ease into sleep,睡眠相关,2
+Engage in a calming activity to help with relaxation,放松与情绪调节,2
+Engage in a calming activity to induce relaxation,放松与情绪调节,2
+Engage in a calming activity to reinforce the feeling of hope,放松与情绪调节,2
+Engage in a calming activity to relax,放松与情绪调节,2
+"Engage in a calming activity to relax (e.g., reading, meditation)",放松与情绪调节,2
+Engage in a calming activity to relax mind and body,放松与情绪调节,2
+Engage in a calming activity to wind down,睡眠相关,2
+"Engage in a calming activity, if desired (e.g., reading a book, meditating, etc.)",放松与情绪调节,2
+"Engage in a calming activity, if needed, to relax",放松与情绪调节,2
+"Engage in a calming activity, such as deep breathing or reading",放松与情绪调节,2
+"Engage in a calming activity, such as reading or meditating, to settle down",放松与情绪调节,2
+"Engage in a calming activity, such as reading, to aid in relaxation",放松与情绪调节,2
+Engage in a calming pre-sleep activity,睡眠相关,2
+Engage in a light breathing exercise to help induce sleep,睡眠相关,2
+Engage in a light reading activity,放松与情绪调节,2
+Engage in a light reading or meditation to calm thoughts,放松与情绪调节,2
+Engage in a light reading or meditation to help with relaxation,放松与情绪调节,2
+Engage in a quiet activity to calm the mind,放松与情绪调节,2
+"Engage in a quiet, reflective moment post-meal to appreciate the day's tranquility",饮食相关,2
+"Engage in a relaxing activity after eating, such as reading or light meditation, to extend the sense of peace and contentment",饮食相关,2
+Engage in a relaxing activity before lying down,放松与情绪调节,2
+Engage in a relaxing activity before sleep to help with relaxation,睡眠相关,2
+Engage in a relaxing activity like reading or listening to calm music to ease into sleep,睡眠相关,2
+"Engage in a relaxing activity, such as reading or meditation",放松与情绪调节,2
+Engage in a relaxing bedtime routine,睡眠相关,2
+Engage in a relaxing routine to induce sleep,睡眠相关,2
+"Engage in calming activity, such as reading a book or listening to soothing music",放松与情绪调节,2
+Engage in light household activities to make the environment comfortable,家居环境管理,2
+Engage in light reading or listening to soft music to induce relaxation,放松与情绪调节,2
+Engage in light reading or meditation if desired,放松与情绪调节,2
+Engage in light reading or meditation to help relax the mind,放松与情绪调节,2
+Engage in light reading or meditation to relax the mind,放松与情绪调节,2
+Engage in light reading or meditation to settle down,放松与情绪调节,2
+Enjoy a leisurely morning with coffee or tea,其他,2
+Enjoy a light evening snack,其他,2
+Enjoy a light snack or tea to keep energy levels up,其他,2
+Enjoy a moment of relaxation following the meal,饮食相关,2
+Enjoy a quiet meal,饮食相关,2
+"Enjoy a quiet meal with a focus on simple, nourishing dishes",饮食相关,2
+Enjoy a relaxing bath,放松与情绪调节,2
+Enjoy a warm cup of tea or coffee,其他,2
+Enjoy breakfast in a relaxed manner,饮食相关,2
+Enjoy the current peaceful mood,其他,2
+Enjoy the current tranquility of the home environment,放松与情绪调节,2
+Enjoy the meal alone or with companionship if desired,饮食相关,2
+"Enjoy the meal alone, allowing the quiet day to continue and to maintain the sense of tranquility",饮食相关,2
+"Enjoy the meal alone, allowing time for reflection on the day's peacefulness",饮食相关,2
+"Enjoy the meal alone, as no one is expected to join",饮食相关,2
+"Enjoy the meal alone, in reflection of the day's tranquility",饮食相关,2
+Enjoy the meal at a comfortable temperature,饮食相关,2
+Enjoy the meal in a relaxed manner,饮食相关,2
+Enjoy the meal in a relaxing manner,饮食相关,2
+Enjoy the meal in the calm atmosphere,饮食相关,2
+Enjoy the meal once it's ready,饮食相关,2
+Enjoy the meal outdoors,饮食相关,2
+"Enjoy the meal, focusing on the nourishment and the moment of tranquility",饮食相关,2
+Enjoy the quiet moments of the home environment,放松与情绪调节,2
+Enjoy the quiet morning at home,放松与情绪调节,2
+Enjoy the tranquility of home and its simplicity,放松与情绪调节,2
+Enjoy the tranquility of the park,放松与情绪调节,2
+Ensure a comfortable eating environment,饮食相关,2
+Ensure a comfortable seating arrangement for dining,饮食相关,2
+Ensure a hygienic cooking environment,饮食相关,2
+Ensure all devices are turned off or on silent mode,数字设备与账号操作,2
+Ensure all necessary cooking supplies are available,购物采购,2
+Ensure all necessary ingredients are available for cooking,饮食相关,2
+Ensure comfort and convenience at home for meal preparation,饮食相关,2
+Ensure comfort and safety in the living environment,家居环境管理,2
+Ensure comfort in current living environment,家居环境管理,2
+Ensure comfort in the sleeping area,睡眠相关,2
+Ensure comfort in the sleeping environment,睡眠相关,2
+Ensure comfortable sleep environment,睡眠相关,2
+Ensure food is properly cooked and safe to eat,饮食相关,2
+Ensure home is ready for meal preparation,饮食相关,2
+Ensure kitchen is set up for cooking,饮食相关,2
+Ensure kitchen supplies are available,购物采购,2
+Ensure meal is enjoyable and comforting,饮食相关,2
+Ensure meal is in line with retirement lifestyle and dietary needs,饮食相关,2
+Ensure mealtime is peaceful and enjoyable,其他,2
+Ensure personal comfort and safety,家居环境管理,2
+Ensure room is dark for better sleep,睡眠相关,2
+Ensure that the meal is healthy and nourishing for a person of your age and current health status,饮食相关,2
+Ensure the bedroom is comfortable for sleep,睡眠相关,2
+Ensure the environment is suitable for meal preparation,饮食相关,2
+Ensure the home is secure and comfortable for the night,家居环境管理,2
+Ensure the kitchen is clean and equipped for cooking,饮食相关,2
+Ensure the kitchen is equipped with necessary ingredients and utensils,饮食相关,2
+Ensure the kitchen is set for cooking,饮食相关,2
+Ensure the living space is comfortable for sleep,睡眠相关,2
+Ensure the living space is comfortable for sleeping,睡眠相关,2
+Ensure the meal is balanced for health,饮食相关,2
+Ensure the meal is enjoyable and fulfilling,饮食相关,2
+Ensure the meal is enjoyable and satisfies the need to eat,饮食相关,2
+Ensure the meal is nutritious and fulfilling for dinner,饮食相关,2
+Ensure the meal is prepared to a safe temperature,饮食相关,2
+Ensure the meal is ready and at a suitable serving temperature,饮食相关,2
+Ensure the room is conducive to sleep,睡眠相关,2
+Ensure the room is dark and quiet,放松与情绪调节,2
+Ensure the room is quiet and dark,放松与情绪调节,2
+Ensure the room is quiet and has appropriate temperature,放松与情绪调节,2
+Ensure the room is suitable for sleep,睡眠相关,2
+Ensure the sleep environment is comfortable,睡眠相关,2
+Ensure you enjoy your meal in a comfortable and safe environment,饮食相关,2
+Enter restful state,其他,2
+Enter the bedroom and lie down,睡眠相关,2
+Enter the house,出行移动,2
+Evaluate available food options at the workplace,工作任务,2
+Evaluate available food options at workplace,工作任务,2
+Evaluate available ingredients and plan the meal,饮食相关,2
+Evaluate the current location for suitable dining options,饮食相关,2
+Evaluate the current weather and decide on the best shopping time,购物采购,2
+"Evaluate the day's experience to appreciate the simple, fulfilling moments",其他,2
+Fall asleep naturally,睡眠相关,2
+Focus on sleep until morning,睡眠相关,2
+"Gather necessary items (e.g., pillow, blanket, glasses, etc.)",购物采购,2
+Get dressed for shopping,购物采购,2
+Get dressed for the shopping trip,购物采购,2
+"Get dressed in comfortable, weather-appropriate clothing",家居环境管理,2
+Go to bed at a reasonable hour to ensure enough sleep,睡眠相关,2
+Go to sleep,睡眠相关,2
+Have a healthy breakfast,饮食相关,2
+Identify a friend to contact,社交沟通,2
+Identify shopping list based on current needs and preferences,购物采购,2
+Identify shopping list based on daily needs,购物采购,2
+"If applicable, prepare the chosen food item or order it",饮食相关,2
+"If necessary, adjust the room temperature to a comfortable level",家居环境管理,2
+"If needed, prepare ingredients",饮食相关,2
+Initiate sleep,睡眠相关,2
+Lay down in the bed at an appropriate time for rest,睡眠相关,2
+Leave workplace to head home,工作任务,2
+Lie down and close the eyes,睡眠相关,2
+Lie down and close your eyes,睡眠相关,2
+Lie down and initiate sleep,睡眠相关,2
+Lie down and relax,睡眠相关,2
+Lie down and rest,睡眠相关,2
+Lie down in bed and assume a comfortable sleep position,睡眠相关,2
+Lie down in bed and attempt to fall asleep,睡眠相关,2
+Lie down in bed and relax,睡眠相关,2
+Lie down in the bed and initiate the sleep process,睡眠相关,2
+List shopping needs,购物采购,2
+Listen to calming music,放松与情绪调节,2
+Listen to some soft music to relax,放松与情绪调节,2
+Listen to soothing music to enhance the peaceful atmosphere,放松与情绪调节,2
+Maintain a sense of balance and hope,其他,2
+Maintain current routine and comfort,家居环境管理,2
+Make purchases and ensure items meet personal needs,购物采购,2
+Monitor cooking process and adjust as necessary,饮食相关,2
+Monitor cooking progress and adjust as needed,饮食相关,2
+Monitor cooking progress to ensure food is prepared to desired specifications,饮食相关,2
+Monitor the cooking process to ensure meal is properly prepared,饮食相关,2
+Monitor the meal and adjust cooking if needed,饮食相关,2
+Order food,饮食相关,2
+Order or select the meal,饮食相关,2
+"Pack essentials or a small bag with wallet, shopping list, and water",购物采购,2
+Perform a brief stretching or meditation to maintain well-being,放松与情绪调节,2
+Perform a calming pre-sleep routine,睡眠相关,2
+Perform a calming routine to relax,放松与情绪调节,2
+Perform a calming routine to relax the mind,放松与情绪调节,2
+Perform a relaxation routine to settle the mind,放松与情绪调节,2
+Perform a relaxing activity to unwind,放松与情绪调节,2
+Perform a relaxing bedtime routine,睡眠相关,2
+Perform a short meditation or light reading to calm the mind,放松与情绪调节,2
+Perform calming activity,放松与情绪调节,2
+Perform light stretching or exercises,其他,2
+Perform light stretching or yoga,其他,2
+Perform morning hygiene routine,其他,2
+Perform relaxation techniques to calm the mind,放松与情绪调节,2
+Perform relaxing bedtime routine,睡眠相关,2
+Place an order or wait for service,其他,2
+Plan a meal based on current weather and temperature,饮食相关,2
+Plan a meal considering the peace of the day,饮食相关,2
+Plan a routine for the following day to maintain a sense of routine and contentment,计划与决策,2
+Plan a simple and comforting meal for tonight,饮食相关,2
+Plan a simple meal based on comfort and ease,饮食相关,2
+Plan a simple meal considering current time and environment,饮食相关,2
+Plan a simple meal that brings contentment,饮食相关,2
+"Plan a simple, home-cooked lunch based on current health and dietary needs",饮食相关,2
+Plan and prepare a simple meal,饮食相关,2
+Plan and prepare ingredients for a meal,饮食相关,2
+Plan meal options,饮食相关,2
+Plan meal options based on available ingredients,饮食相关,2
+Plan meal options considering dietary preferences and ingredients at home,饮食相关,2
+Plan meal selection based on preferences and ingredients available,饮食相关,2
+Plan shopping list,购物采购,2
+Plan shopping list based on daily needs,购物采购,2
+Plan shopping list based on known preferences,购物采购,2
+Plan simple yet nourishing meal options,饮食相关,2
+Plan the shopping list based on daily needs,购物采购,2
+Plan the shopping list based on needs and preferences,购物采购,2
+"Practice a calming activity (e.g., reading or meditation) if needed",放松与情绪调节,2
+Practice a calming activity like reading or meditation,放松与情绪调节,2
+"Practice a calming activity, such as reading or listening to music",放松与情绪调节,2
+Practice a calming bedtime routine,睡眠相关,2
+Practice deep breathing or meditation to relax,放松与情绪调节,2
+Practice gentle stretching or yoga,其他,2
+Practice light stretching to maintain flexibility,其他,2
+Practice light stretching to stay flexible,其他,2
+Practice mindfulness or meditation,放松与情绪调节,2
+Practice mindfulness or meditation to deepen the reflection,放松与情绪调节,2
+Practice relaxation techniques if needed,放松与情绪调节,2
+Practice relaxation techniques to induce sleep,睡眠相关,2
+Preheat the oven and prepare cooking ingredients,饮食相关,2
+Prepare a comfortable bed and change into comfortable night attire,睡眠相关,2
+Prepare a comfortable resting environment,家居环境管理,2
+Prepare a comfortable seating area with natural light,家居环境管理,2
+Prepare a comfortable work environment at home,工作任务,2
+Prepare a comfortable working environment at home,家居环境管理,2
+Prepare a healthy breakfast,饮食相关,2
+Prepare a healthy morning snack,其他,2
+Prepare a light breakfast,饮食相关,2
+"Prepare a light, calming bedtime snack",睡眠相关,2
+"Prepare a light, nutritious breakfast",饮食相关,2
+Prepare a meal at home considering the tranquility of the day and current temperature,饮食相关,2
+Prepare a meal considering current time and weather,饮食相关,2
+Prepare a meal considering the weather and temperature,饮食相关,2
+Prepare a meal to satisfy the need for sustenance,饮食相关,2
+Prepare a meal using available ingredients,饮食相关,2
+Prepare a meal with portable food if a café or restaurant is not available,饮食相关,2
+Prepare a meal with simple and easy-to-cook ingredients,饮食相关,2
+Prepare a nutritious breakfast considering the pleasant weather and comfortable temperature,饮食相关,2
+Prepare a quiet workspace,工作任务,2
+Prepare a relaxing environment,放松与情绪调节,2
+Prepare a shopping list based on current needs and budget,购物采购,2
+Prepare a shopping list based on daily necessities,购物采购,2
+Prepare a shopping list based on needs and preferences,购物采购,2
+Prepare a simple and nutritious meal considering the current weather and temperature,饮食相关,2
+Prepare a simple breakfast at home,饮食相关,2
+Prepare a simple meal,饮食相关,2
+Prepare a simple meal as today was tranquil and there's no need for elaborate preparation,饮食相关,2
+Prepare a simple meal based on comfort and nutritional needs,饮食相关,2
+Prepare a simple meal considering age and physical comfort,饮食相关,2
+Prepare a simple meal considering health and dietary needs,饮食相关,2
+Prepare a simple meal considering the quiet day and my age,饮食相关,2
+Prepare a simple meal considering weather and temperature,饮食相关,2
+Prepare a simple meal considering weather and time,饮食相关,2
+Prepare a simple meal or snack,饮食相关,2
+Prepare a simple meal that can be enjoyed at home,饮食相关,2
+Prepare a simple meal to enjoy at home,饮食相关,2
+"Prepare a simple, nourishing meal",饮食相关,2
+"Prepare a simple, nutritious breakfast based on available ingredients",饮食相关,2
+"Prepare a simple, nutritious meal",饮食相关,2
+"Prepare a small snack or meal for later, given the early hour",饮食相关,2
+Prepare a warm herbal tea to relax,放松与情绪调节,2
+Prepare all necessary ingredients,饮食相关,2
+Prepare and consume the selected food,饮食相关,2
+Prepare and cook a meal that is easy to prepare,饮食相关,2
+"Prepare and cook a simple meal, considering ease and enjoyment",饮食相关,2
+Prepare and cook the desired food,饮食相关,2
+Prepare bed for comfortable sleep,睡眠相关,2
+Prepare bed for rest,睡眠相关,2
+Prepare breakfast as a home meal,饮食相关,2
+Prepare breakfast ingredients,饮食相关,2
+Prepare dining area,饮食相关,2
+Prepare dining area with necessary items,购物采购,2
+Prepare for a comfortable meal at home,饮食相关,2
+Prepare for a home-cooked meal,饮食相关,2
+"Prepare for a restful night, maintaining a positive state of joy as you wind down",睡眠相关,2
+"Prepare for bed (change into comfortable clothing, adjust the room temperature if necessary)",睡眠相关,2
+"Prepare for bed (e.g., remove unnecessary items, set up the bed)",购物采购,2
+Prepare for bed by changing into comfortable pajamas,睡眠相关,2
+Prepare for bed with a comfortable sleepwear,睡眠相关,2
+Prepare for bed with necessary items,购物采购,2
+Prepare for breakfast,饮食相关,2
+Prepare for cooking at home,饮食相关,2
+Prepare for dinner,饮食相关,2
+Prepare for rest by changing into comfortable clothing,睡眠相关,2
+Prepare for sleep by changing into comfortable clothing,睡眠相关,2
+Prepare for sleep by changing into comfortable sleepwear,睡眠相关,2
+Prepare for sleep by dimming the lights,睡眠相关,2
+Prepare for sleep by ensuring comfort,睡眠相关,2
+Prepare for sleep by relaxing and winding down,睡眠相关,2
+Prepare for sleep with comfortable environment,睡眠相关,2
+Prepare for the meal,饮食相关,2
+Prepare ingredients for cooking,饮食相关,2
+Prepare ingredients if necessary,饮食相关,2
+Prepare kitchen for cooking,饮食相关,2
+Prepare meal based on available ingredients,饮食相关,2
+Prepare meal ingredients,饮食相关,2
+Prepare necessary payment methods and shopping list,购物采购,2
+Prepare or buy the selected food item,购物采购,2
+"Prepare or enter home, if already there",出行移动,2
+Prepare or heat up leftovers for a meal,饮食相关,2
+Prepare or order the selected meal,饮食相关,2
+Prepare personal items for the outing,购物采购,2
+Prepare shopping list based on current needs,购物采购,2
+Prepare side dishes and beverages,饮食相关,2
+Prepare some leftovers from today’s cooking,饮食相关,2
+Prepare the bed with clean sheets,睡眠相关,2
+Prepare the bedroom for a comfortable sleep,睡眠相关,2
+Prepare the bedroom for rest,睡眠相关,2
+Prepare the bedroom with appropriate temperature,睡眠相关,2
+Prepare the ingredients and cook the meal,饮食相关,2
+Prepare the ingredients for a simple meal,饮食相关,2
+Prepare the ingredients for the meal,饮食相关,2
+Prepare the kitchen area for cooking,饮食相关,2
+Prepare the kitchen environment,饮食相关,2
+Prepare the kitchen environment for cooking,饮食相关,2
+Prepare the kitchen for meal preparation,饮食相关,2
+Prepare the lunch in a calm and peaceful setting,饮食相关,2
+Prepare the meal based on available ingredients,饮食相关,2
+Prepare the meal if not pre-made,饮食相关,2
+Prepare the meal if there is available equipment,饮食相关,2
+Prepare the meal in a comfortable and relaxing manner,饮食相关,2
+Prepare the meal in a comfortable and relaxing setting,饮食相关,2
+Prepare the meal in the kitchen,饮食相关,2
+Prepare the meal ingredients,饮食相关,2
+Prepare the meal using the available ingredients,饮食相关,2
+Prepare the meal with accessible ingredients,饮食相关,2
+Prepare the necessary ingredients and cooking utensils,饮食相关,2
+Prepare the necessary ingredients for the meal,饮食相关,2
+Prepare the selected meal,饮食相关,2
+Prepare the selected meal in a relaxed manner,饮食相关,2
+Prepare the shopping list based on needs,购物采购,2
+Prepare to go to bed,睡眠相关,2
+Prepares the kitchen,饮食相关,2
+Prepares the selected meal,饮食相关,2
+Proceed to the checkout and pay for purchases,购物采购,2
+Read a book or listen to soothing music to unwind,放松与情绪调节,2
+Read or engage in a hobby to start the day positively,放松与情绪调节,2
+Recall moments of joy and sadness,其他,2
+Reflect on the day and express gratitude for the simple joy,放松与情绪调节,2
+Reflect on the day and practice mindfulness to relax,放松与情绪调节,2
+Reflect on the day and relax,放松与情绪调节,2
+Reflect on the day and the meal,饮食相关,2
+Reflect on the day's events and feelings,放松与情绪调节,2
+Reflect on the day's events and maintain a positive outlook,放松与情绪调节,2
+Reflect on the day's experiences and the sense of satisfaction gained from a tranquil day,放松与情绪调节,2
+Reflect on the day's peace and simplicity,放松与情绪调节,2
+Reflect on the day's peacefulness,放松与情绪调节,2
+Reflect on the day's peacefulness over the meal,饮食相关,2
+Reflect on the day's thoughts,放松与情绪调节,2
+Reflect on the day's thoughts and feelings,放松与情绪调节,2
+Reflect on the day's tranquility while eating,饮食相关,2
+Reflect on the meal,饮食相关,2
+Reflect on the meal and day,饮食相关,2
+"Reflect on the meal and day, possibly enjoying a moment of relaxation or leisure",饮食相关,2
+Reflect on the meal and enjoy the tranquility of the day,饮食相关,2
+Reflect on the meal and feelings,饮食相关,2
+Reflect on the meal and its ingredients,饮食相关,2
+Reflect on the meal and its satisfaction,饮食相关,2
+Reflect on the meal and its taste,饮食相关,2
+Reflect on the meal and the calm day,饮食相关,2
+Reflect on the meal and the day's calmness,饮食相关,2
+Reflect on the meal and the day's events,饮食相关,2
+Reflect on the meal and the day's peacefulness,饮食相关,2
+Reflect on the passage of time and the tranquility experienced,放松与情绪调节,2
+Reflect on the peaceful day,放松与情绪调节,2
+Reflect on the peaceful day with the meal,饮食相关,2
+Reflect on the peacefulness of the day,放松与情绪调节,2
+Reflect on the peacefulness of the day post-meal,饮食相关,2
+Reflect on the simplicity and value of peace during the meal,饮食相关,2
+Reflect on the simplicity of uneventful days and the fulfillment they bring,放松与情绪调节,2
+Reflect on today's peaceful day,放松与情绪调节,2
+Relax after meal,饮食相关,2
+Relax after the meal to digest,饮食相关,2
+Relax after the peaceful day,放松与情绪调节,2
+Relax and enjoy the peaceful evening at home,放松与情绪调节,2
+Relax and enjoy the quiet atmosphere,放松与情绪调节,2
+Relax and enjoy the quiet of the home,放松与情绪调节,2
+Relax and enjoy the tranquility of the home environment,放松与情绪调节,2
+Relax and practice relaxation techniques to calm the mind,放松与情绪调节,2
+Relax and reflect on the day's events after finishing the meal,饮食相关,2
+Relax and reflect on the quiet day with the meal,饮食相关,2
+Relax and rest after eating,饮食相关,2
+Relax and take it easy after eating,饮食相关,2
+Relax and unwind from the day,放松与情绪调节,2
+Relax and unwind from the day's events,放松与情绪调节,2
+Relax and unwind in the tranquil atmosphere,放松与情绪调节,2
+Relax and unwind to facilitate sleep,睡眠相关,2
+"Relax and unwind, possibly with a light activity",放松与情绪调节,2
+"Relax and unwind, reflecting on the day's tranquility",放松与情绪调节,2
+Relax before bedtime,睡眠相关,2
+Relax in a calm and serene state,放松与情绪调节,2
+Relax in a comfortable chair or sofa to wind down,睡眠相关,2
+Relax in a comfortable chair to focus on reflection,放松与情绪调节,2
+Relax in a comfortable chair to unwind,放松与情绪调节,2
+Relax in a seated or lying position,放松与情绪调节,2
+Relax in the comfort of home,放松与情绪调节,2
+Relax in the comfortable home environment,放松与情绪调节,2
+Relax in the current environment,放松与情绪调节,2
+Relax in the current room,放松与情绪调节,2
+Relax in the living room,放松与情绪调节,2
+Relax in the living room to unwind,放松与情绪调节,2
+Relax in your favorite chair or bed,睡眠相关,2
+Relax mind,放松与情绪调节,2
+Relax mind through deep breathing or meditation,放松与情绪调节,2
+Relax or engage in a low-energy activity after the meal,饮食相关,2
+Relax the body and mind,放松与情绪调节,2
+Relax the body and mind with deep breathing or light stretching,放松与情绪调节,2
+Remove all distractions and set aside any electronics,其他,2
+Remove all electronic devices to reduce distractions,数字设备与账号操作,2
+Remove any distractions or electronics from the bedroom,睡眠相关,2
+Remove any electronic devices to minimize disturbances,数字设备与账号操作,2
+Remove distractions,其他,2
+Remove distractions from the bedroom,睡眠相关,2
+Reserve a table if necessary,其他,2
+Reserve a table if needed,其他,2
+"Reserve a table, if necessary, considering the current time and weather",其他,2
+Rest and relax after meal,饮食相关,2
+Rest and relax after the meal,饮食相关,2
+Retire to bed,睡眠相关,2
+Retrieve any necessary ingredients or cooking utensils,饮食相关,2
+Retrieve contact list,社交沟通,2
+Retrieve phone,数字设备与账号操作,2
+Review and prepare shopping list,购物采购,2
+Review any current promotions or discounts available,计划与决策,2
+Review contacts list,计划与决策,2
+Review current needs and budget,购物采购,2
+Review daily tasks or to-do list,工作任务,2
+Review meal options,饮食相关,2
+Review meal preparation options,饮食相关,2
+Review or set the day's agenda,计划与决策,2
+Review the day and calm the mind,放松与情绪调节,2
+Review the day's activities and feelings,计划与决策,2
+Review the day's activities and reflect,放松与情绪调节,2
+Review the day's events and thoughts to foster a peaceful state of mind,计划与决策,2
+Review the ingredients and plan a meal based on current supplies,购物采购,2
+Review today's tasks and goals,工作任务,2
+Review work-related tasks for the day,工作任务,2
+"Savor the meal alone in the quiet of your home, reflecting on the day's tranquility",饮食相关,2
+Savor the simplicity of a home-cooked meal,饮食相关,2
+Seek out available food options,饮食相关,2
+Select a comfortable place to sit and enjoy the evening weather,家居环境管理,2
+Select a food item that suits the weather and temperature,饮食相关,2
+Select a friend to call or message,社交沟通,2
+Select a healthy and easy-to-prepare meal,饮食相关,2
+Select a home-cooked meal that is both nourishing and enjoyable,饮食相关,2
+Select a meal based on preferences and ingredients available,饮食相关,2
+Select a method of communication,其他,2
+Select a nutritious meal option considering age and health,饮食相关,2
+Select a simple meal option that suits the current weather and temperature,饮食相关,2
+Select a simple meal to prepare based on comfort and ease,饮食相关,2
+Select a simple yet nourishing meal based on the current weather and temperature,饮食相关,2
+"Select a simple, nutritious meal considering the temperature",饮食相关,2
+Select a suitable communication method,其他,2
+Select a suitable food item based on available options,饮食相关,2
+Select a suitable method for contacting friends,社交沟通,2
+Select a suitable outdoor eating location based on the current weather and temperature,饮食相关,2
+Select a time to call,社交沟通,2
+Select an easy meal option considering current emotion and day's tranquility,饮食相关,2
+Select an eating place that aligns with current health and dietary needs,饮食相关,2
+Select and prepare ingredients for the meal,饮食相关,2
+Select appropriate friends to contact,社交沟通,2
+Select items based on needs,购物采购,2
+Select items within budget,购物采购,2
+Select necessary items for purchase,购物采购,2
+Select preferred method of contact,社交沟通,2
+Serve and arrange the meal,饮食相关,2
+Serve and consume the meal,饮食相关,2
+Serve and eat the prepared meal,饮食相关,2
+Serve the cooked meal on plates,饮食相关,2
+Serve the meal and enjoy,饮食相关,2
+Serve the meal and enjoy it,饮食相关,2
+Serve the meal and set the table,饮食相关,2
+Serve the meal and sit down comfortably to enjoy it,饮食相关,2
+Serve the meal and sit down to eat,饮食相关,2
+Serve the meal in a comfortable setting to enhance the satisfaction and joy of the mealtime,饮食相关,2
+Serve the meal in a comfortable setting to maintain the tranquil mood,饮食相关,2
+Serve the meal on a comfortable chair or couch,饮食相关,2
+Serve the meal on a pleasant setting,饮食相关,2
+Serve the meal on plates,饮食相关,2
+Serve the meal on the dining table,饮食相关,2
+Set a calming bedtime routine,睡眠相关,2
+Set a calming environment with appropriate temperature,放松与情绪调节,2
+Set an alarm for an appropriate wake-up time,睡眠相关,2
+Set an alarm for an appropriate wake-up time if necessary,睡眠相关,2
+Set an alarm if needed,睡眠相关,2
+Set the alarm clock if necessary and then lie down in the bed,睡眠相关,2
+Set the alarm clock if needed,睡眠相关,2
+Set the alarm for a comfortable wake-up time,睡眠相关,2
+Set the alarm for the next day if necessary,睡眠相关,2
+Set the alarm if necessary,睡眠相关,2
+Set the bedroom temperature to a comfortable level,睡眠相关,2
+Set the dining table with appropriate items,购物采购,2
+Set the dining table with utensils and a pleasant ambiance,饮食相关,2
+Set the environment for relaxation,放松与情绪调节,2
+Set the table and prepare utensils,饮食相关,2
+Set the table for an intimate meal at home,饮食相关,2
+Set the table with appropriate tableware and decor to enhance the dining experience,饮食相关,2
+Set the table with appropriate utensils and place settings,饮食相关,2
+Set the table with appropriate utensils and settings,饮食相关,2
+Set the table with cutlery and plates,饮食相关,2
+Set the table with necessary utensils and plates,饮食相关,2
+Set up a calming bedtime routine,睡眠相关,2
+Set up a comfortable sleeping position,睡眠相关,2
+Set up a comfortable work environment,工作任务,2
+Set up a comfortable workspace at home to ensure productivity,工作任务,2
+Set up a sleep schedule,睡眠相关,2
+Set up my bed with clean sheets and pillows,睡眠相关,2
+Set up the meal in a comfortable and safe outdoor space,饮食相关,2
+Shop for the items on the list,购物采购,2
+Sit down and eat,饮食相关,2
+Sit down and start eating,饮食相关,2
+Sit down comfortably and enjoy the meal,饮食相关,2
+Sit down to eat the prepared meal,饮食相关,2
+"Sit down to eat, savoring each bite with joy",饮食相关,2
+Sit down to enjoy the meal,饮食相关,2
+Sit down to enjoy the meal in peace,饮食相关,2
+Sleep peacefully,睡眠相关,2
+Start cooking,饮食相关,2
+Start cooking a meal,饮食相关,2
+Start cooking the selected meal,饮食相关,2
+Start meal preparation if needed,饮食相关,2
+Start preparing a home-cooked meal,饮食相关,2
+Start preparing a meal,饮食相关,2
+Start preparing dinner considering the current time and the need for a meal,饮食相关,2
+Start the day with a healthy breakfast,饮食相关,2
+Start the day with a leisurely breakfast,饮食相关,2
+Start the day with a light breakfast to sustain energy levels,饮食相关,2
+Start the evening routine to prepare for dinner,饮食相关,2
+Start the preparation for cooking,饮食相关,2
+Stay at home and utilize current location,其他,2
+Stay at home as the location is already there,其他,2
+Stay at home to maintain comfort and tranquility after a quiet day,放松与情绪调节,2
+Stay at home to prepare a meal,饮食相关,2
+Stay at home to prepare for dinner,饮食相关,2
+Stay at home to prepare meal,饮食相关,2
+Stay home as the day has started,其他,2
+Stay home due to current location,其他,2
+Stay home due to the pleasant weather and comfortable temperature,家居环境管理,2
+Take a leisurely walk around the home garden to appreciate the beauty of the surroundings,出行移动,2
+Take a moment to meditate or practice deep breathing to enhance tranquility,放松与情绪调节,2
+Take a peaceful walk or sit in a tranquil spot at home,出行移动,2
+Take a relaxing bath or shower to help unwind,放松与情绪调节,2
+Take a short walk around the house to enjoy the quiet,出行移动,2
+Take a warm bath or shower to relax,放松与情绪调节,2
+Take care of any necessary dishes afterward,饮食相关,2
+"Take in the calm atmosphere of the home, contributing to the sense of relief",放松与情绪调节,2
+Take in the sunny weather while eating,饮食相关,2
+Take short breaks to rest and relax,睡眠相关,2
+Take time to savor the meal and the quiet day,饮食相关,2
+Turn off all electronic devices to reduce distractions,数字设备与账号操作,2
+Turn off electronic devices to relax,数字设备与账号操作,2
+Wait for food to be ready if preparation is needed,饮食相关,2
+Wait for food to be served or bring prepared food,饮食相关,2
+Wait for the table to be ready or for a seat to open up,其他,2
+Wash dishes,饮食相关,2
+Wash dishes after eating,饮食相关,2
+Wash dishes or place them in the dishwasher,饮食相关,2
+Wash dishes post-meal,饮食相关,2
+Wash the dishes after eating,饮食相关,2
+Wash the dishes after eating to keep the home clean and organized,饮食相关,2
+Wash the dishes after eating to maintain cleanliness,饮食相关,2
+Wash the dishes after finishing the meal,饮食相关,2
+Wash the dishes and clean up,饮食相关,2
+Wash the dishes to maintain a clean environment,饮食相关,2
+Wash the dishes to maintain cleanliness,饮食相关,2
+Wash the utensils,其他,2
+Washes the utensils and clears the table,其他,2
+Wind down and engage in a calming activity,睡眠相关,2
+Wind down by practicing a calming activity,睡眠相关,2
+Wind down to relax,睡眠相关,2
+Wind down with a calming activity,睡眠相关,2
+Write a short poem or passage to capture the peacefulness,放松与情绪调节,2
+Write down thoughts and feelings in a journal,放松与情绪调节,2
+ Lie down and get into a restful state,睡眠相关,1
+ Lie down in bed and attempt to fall asleep,睡眠相关,1
+ Lie down in bed and close the curtains,睡眠相关,1
+ Lie down in bed and close your eyes,睡眠相关,1
+ Lie down in bed and close your eyes to drift off to sleep,睡眠相关,1
+ Lie down in bed and prepare for sleep,睡眠相关,1
+ Lie down in bed and relax,睡眠相关,1
+ Lie down in the bed and practice relaxation techniques to induce sleep,睡眠相关,1
+ Lie down in the prepared bed,睡眠相关,1
+ Lie down in the prepared sleeping area,睡眠相关,1
+Access a list of friends' contact information,社交沟通,1
+Access a mobile device to find a taxi service app,数字设备与账号操作,1
+Access phone contacts,数字设备与账号操作,1
+Access phone or communication device,数字设备与账号操作,1
+Access phone or contact list,数字设备与账号操作,1
+Access your contact list and select a friend to call,社交沟通,1
+Achieve sleep,睡眠相关,1
+Adjust bedding to comfort level,家居环境管理,1
+Adjust room temperature if necessary to ensure comfort,家居环境管理,1
+Adjust room temperature if needed,家居环境管理,1
+Adjust room temperature to 23C if needed,家居环境管理,1
+Adjust room temperature to a comfortable level for sleep,睡眠相关,1
+Adjust room temperature to be comfortable,家居环境管理,1
+Adjust sleep environment for comfort,睡眠相关,1
+Adjust sleep environment if needed,睡眠相关,1
+Adjust sleep environment to optimal comfort,睡眠相关,1
+Adjust sleep schedule to current time,睡眠相关,1
+Adjust temperature if needed,家居环境管理,1
+Adjust the bedroom temperature to be conducive for sleep,睡眠相关,1
+Adjust the living space temperature to 23C if necessary,家居环境管理,1
+Adjust the room environment to optimal sleep conditions,睡眠相关,1
+Adjust the room temperature if necessary for comfort,家居环境管理,1
+Adjust the room temperature if necessary to be conducive to sleep,睡眠相关,1
+Adjust the room temperature if needed,家居环境管理,1
+Adjust the room temperature to 23C,家居环境管理,1
+Adjust the room temperature to 23C for comfort,家居环境管理,1
+Adjust the room temperature to 23C for optimal sleep,睡眠相关,1
+Adjust the room temperature to 23C if needed,家居环境管理,1
+Adjust the room temperature to be conducive for sleep,睡眠相关,1
+Adjust the room temperature to be conducive to sleep,睡眠相关,1
+Adjust the room temperature to comfort level,家居环境管理,1
+Adjust the room to a conducive state for sleep,睡眠相关,1
+"Adjust the sleep environment (e.g., temperature, darkness)",睡眠相关,1
+Adjust the sleep environment to your preference,睡眠相关,1
+Adjust the sleep position,睡眠相关,1
+Adjust the sleep temperature to 23°C,睡眠相关,1
+Adjust the sleeping environment to be comfortable,睡眠相关,1
+Adjust the sleeping position,睡眠相关,1
+Adjust the temperature to comfort,家居环境管理,1
+Adjust to a comfortable sleeping environment,睡眠相关,1
+Adjust to comfortable sleeping environment,睡眠相关,1
+Arrive at home,出行移动,1
+Arrive at the dining location and make a reservation if needed,饮食相关,1
+Arrive at the restaurant,出行移动,1
+Assess available food options nearby,饮食相关,1
+Assess available home-cooked meal options,饮食相关,1
+Assess comfort of the current sleeping environment,睡眠相关,1
+Assess current comfort and adjust if needed,家居环境管理,1
+Assess current comfort and environmental conditions,家居环境管理,1
+Assess current comfort and surroundings,家居环境管理,1
+Assess current comfort level of sleeping environment,睡眠相关,1
+Assess current comfort of sleeping environment,睡眠相关,1
+Assess current condition and ensure comfort,家居环境管理,1
+Assess current energy level and comfort,家居环境管理,1
+Assess current energy levels and comfort,家居环境管理,1
+Assess current energy levels and restlessness,计划与决策,1
+Assess current energy levels to decide if a light nap is needed,计划与决策,1
+Assess current environment for comfortability to sleep,睡眠相关,1
+Assess current environment to ensure comfort for sleeping,睡眠相关,1
+Assess current fatigue level and decide if sleep is necessary,睡眠相关,1
+Assess current food availability,饮食相关,1
+Assess current level of fatigue,计划与决策,1
+Assess current level of fatigue to determine if an early sleep routine is necessary,睡眠相关,1
+Assess current location for suitable eating options,饮食相关,1
+Assess current location suitability for eating,饮食相关,1
+Assess current meal preparation status,饮食相关,1
+Assess current state and ensure comfort,家居环境管理,1
+Assess current state and ensure comfort level is suitable for sleeping,睡眠相关,1
+Assess current state for comfort and readiness to sleep,睡眠相关,1
+Assess current state of readiness for cooking,饮食相关,1
+Assess current state of restfulness,计划与决策,1
+Assess current state of wakefulness,计划与决策,1
+Assess if any food is available for meal preparation,饮食相关,1
+Assess mobility and shopping needs considering age and weather,购物采购,1
+Assess need for food preparation,饮食相关,1
+Assess need for rest based on emotional state,睡眠相关,1
+Assess the availability of food at the current location,饮食相关,1
+Assess the available food at home,饮食相关,1
+Assess the current environment for any adjustments to the sleep setup,睡眠相关,1
+Assess the meal's quality and satisfaction,饮食相关,1
+Assess the need for rest given the calm and contentment,睡眠相关,1
+Assess the weather conditions and ensure they are suitable for eating outside,饮食相关,1
+Begin a peaceful morning routine,其他,1
+Begin breakfast,饮食相关,1
+Begin shopping according to the prepared list,购物采购,1
+Begin shopping by purchasing the listed items,购物采购,1
+Begin the day with a morning routine,其他,1
+Begin the day with a short walk outside to enjoy the weather,出行移动,1
+Begin the journey back to home,其他,1
+Begin the journey back to home from workplace,工作任务,1
+Begin the journey home,其他,1
+Begin the process of falling asleep by lying down,睡眠相关,1
+Begin the process of sleep,睡眠相关,1
+Begin the process of sleep preparation,睡眠相关,1
+Begin the relaxation process,放松与情绪调节,1
+Begin the sleep process,睡眠相关,1
+Begin the winding down process by reducing exposure to screens,其他,1
+Begin the winding down process for sleep,睡眠相关,1
+Begin the winding-down process,睡眠相关,1
+Begin to get into a resting position,其他,1
+Begin to mentally recollect peaceful moments of the day,其他,1
+Begin to relax and drift off to sleep,睡眠相关,1
+Begin to relax and prepare for sleep,睡眠相关,1
+Begin to relax mind and body,放松与情绪调节,1
+Begin to relax the body and mind,放松与情绪调节,1
+Begin to wind down and allow the body to prepare for sleep,睡眠相关,1
+Begin to wind down and practice relaxation techniques,睡眠相关,1
+Begin to wind down by reducing light exposure,睡眠相关,1
+Begin to wind down for sleep,睡眠相关,1
+Begin winding down with deep breathing exercises,其他,1
+Breathe deeply to center oneself,其他,1
+Brush teeth and wash face to prepare for sleep,睡眠相关,1
+Buy the items on the list,购物采购,1
+Call a friend for a phone chat,数字设备与账号操作,1
+Call a friend from my phone to schedule a time to meet,数字设备与账号操作,1
+Call or message a friend to initiate contact,社交沟通,1
+Call or message friends,社交沟通,1
+"Call or send a message to friends, expressing the wish to connect and share the peaceful atmosphere of the day",社交沟通,1
+"Change clothes to comfortable, weather-appropriate attire",家居环境管理,1
+Change into comfortable clothes,家居环境管理,1
+Change into comfortable clothing,家居环境管理,1
+Change into comfortable night attire,家居环境管理,1
+Check and adjust the temperature in the room to a comfortable level,家居环境管理,1
+"Check and confirm the location and time of the nearest shopping center, ensuring it is open",购物采购,1
+Check and dress appropriately for the weather,其他,1
+Check and ensure the comfort of the bed,睡眠相关,1
+Check and review the menu or items you plan to bring,购物采购,1
+Check availability of outdoor seating,其他,1
+Check available communication devices,数字设备与账号操作,1
+Check available communication methods,其他,1
+Check available contact methods,社交沟通,1
+Check available food options nearby,饮食相关,1
+Check comfort of bed,睡眠相关,1
+Check comfort of sleeping area,睡眠相关,1
+Check comfort of sleeping environment,睡眠相关,1
+Check comfort of the sleeping environment,睡眠相关,1
+Check contact information,社交沟通,1
+Check current comfortability of sleeping environment,睡眠相关,1
+Check current contact list,社交沟通,1
+Check current contact list for available friends,社交沟通,1
+Check current contact list for friends available to meet,社交沟通,1
+Check current funds or plan budget for the shopping trip,购物采购,1
+Check current list of necessary items to buy,购物采购,1
+Check current location and weather suitability for shopping,购物采购,1
+Check current location for nearby stores or shopping centers,购物采购,1
+Check current location suitability for eating,饮食相关,1
+Check current savings or budget for shopping,购物采购,1
+Check current shopping list,购物采购,1
+Check current time,其他,1
+Check current time and assess sleep readiness,睡眠相关,1
+Check current time to assess if it's an appropriate time for sleep,睡眠相关,1
+Check current time to determine if it's mealtime,计划与决策,1
+Check existing contacts list,其他,1
+Check existing shopping list,购物采购,1
+Check for a comfortable sleep environment,睡眠相关,1
+Check for any available friends to contact,社交沟通,1
+Check for any discomfort that may interfere with sleep,睡眠相关,1
+Check for any need of rest or discomfort,睡眠相关,1
+Check for any scheduled calls or meetings with friends,社交沟通,1
+Check for availability of friends online,数字设备与账号操作,1
+Check for available communication channels,其他,1
+Check for available contacts,其他,1
+Check for comfort and necessary conditions for sleep,睡眠相关,1
+Check for comfort and tidiness of the sleeping area,睡眠相关,1
+Check for comfort items,购物采购,1
+Check for contact information of friends,社交沟通,1
+Check for friends' availability,社交沟通,1
+Check for friends' contact information,社交沟通,1
+Check for outdoor seating availability at local cafes or restaurants,其他,1
+Check for phone calls or messages from friends,数字设备与账号操作,1
+Check for phone contacts,数字设备与账号操作,1
+Check for seating availability at nearby outdoor cafes or restaurants,其他,1
+Check if any friends are available for a call,社交沟通,1
+Check if any friends are available to contact,社交沟通,1
+Check if any nearby cafes or restaurants are open and have outdoor seating,其他,1
+Check if any nearby outdoor eating options are open,饮食相关,1
+Check if comfortable sleep conditions are met,睡眠相关,1
+Check if comfortable sleeping conditions are met,睡眠相关,1
+Check if environment is conducive for sleep,睡眠相关,1
+Check if shopping list is complete,购物采购,1
+Check if the environment is conducive for sleep,睡眠相关,1
+Check if the environment is suitable for sleep,睡眠相关,1
+Check if the home environment is conducive for sleep,睡眠相关,1
+Check if the room is comfortable for sleep,睡眠相关,1
+Check if the room is conducive for sleep,睡眠相关,1
+Check if there are ingredients at home,饮食相关,1
+Check if there are shopping items already at home,购物采购,1
+Check inventory for necessary ingredients,购物采购,1
+Check my contact list,社交沟通,1
+Check my contact list for availability,社交沟通,1
+Check my current contact list,社交沟通,1
+Check my phone contacts,数字设备与账号操作,1
+Check my phone for any missed calls or messages from friends,数字设备与账号操作,1
+Check my phone for contact information,数字设备与账号操作,1
+Check on any food preparation for the day,饮食相关,1
+Check pantry and fridge for available food,饮食相关,1
+Check pantry for ingredients,饮食相关,1
+Check phone contacts for availability,数字设备与账号操作,1
+Check phone contacts for available friends,数字设备与账号操作,1
+Check phone contacts for recent friends' contact information,数字设备与账号操作,1
+Check phone contacts list for friends,数字设备与账号操作,1
+Check phone for available contacts,数字设备与账号操作,1
+Check phone for available friends,数字设备与账号操作,1
+Check phone for friend contact information,数字设备与账号操作,1
+Check sleep environment,睡眠相关,1
+Check the alarm clock to ensure it's set for a comfortable sleep duration,睡眠相关,1
+Check the availability of shopping stores or markets within walking distance,购物采购,1
+Check the comfort of the bed,睡眠相关,1
+Check the comfort of the bed and ensure it is suitable for sleep,睡眠相关,1
+Check the comfort of the sleeping environment,睡眠相关,1
+Check the contact information of close friends,社交沟通,1
+Check the contact information of friends,社交沟通,1
+Check the contact list,社交沟通,1
+Check the contact list for available friends,社交沟通,1
+Check the contact list for friends,社交沟通,1
+Check the contacts list,其他,1
+Check the current time to ensure it's nearing bedtime,睡眠相关,1
+Check the fridge and decide what to cook,饮食相关,1
+Check the fridge and pantry for ingredients,饮食相关,1
+Check the ingredients available for breakfast,饮食相关,1
+Check the list of items needed,购物采购,1
+Check the nearest shopping center locations and hours,购物采购,1
+Check the opening hours of the selected store,购物采购,1
+Check the phone for available contacts,数字设备与账号操作,1
+Check the phone's battery level,数字设备与账号操作,1
+Check the room for comfort and safety,家居环境管理,1
+Check the room for comfort and security,家居环境管理,1
+Check the room temperature and adjust if necessary,家居环境管理,1
+Check the room temperature and adjust if needed to a comfortable level,家居环境管理,1
+Check the room temperature and comfort,家居环境管理,1
+Check the room temperature to ensure it's comfortable for sleeping,睡眠相关,1
+Check the shopping list,购物采购,1
+Check the sleep environment for comfort,睡眠相关,1
+Check the temperature and comfort of the bed,睡眠相关,1
+Check the time and consider any evening medication if needed,计划与决策,1
+Check the time and make sure it's appropriate to go to bed,睡眠相关,1
+Check the weather and temperature to determine clothing choices,家居环境管理,1
+Check the weather and traffic updates for a suitable shopping time,数字设备与账号操作,1
+Check weather conditions for safe travel,出行移动,1
+Checkout and pay for the items,购物采购,1
+Choose a contact to call,社交沟通,1
+Choose a dining establishment based on availability and personal preference,饮食相关,1
+Choose a friend to call or message,社交沟通,1
+Choose a meal option based on available resources,饮食相关,1
+Choose a meal that is appropriate for the weather,饮食相关,1
+Choose a method of communication,计划与决策,1
+Choose a method of contact,社交沟通,1
+Choose a nearby café or restaurant if there is one,计划与决策,1
+Choose a nearby dining option,饮食相关,1
+Choose a nearby eatery if one is suitable,计划与决策,1
+Choose a nearby grocery store,购物采购,1
+Choose a shopping location that is convenient and has the desired items,购物采购,1
+Choose a shopping time that minimizes weather influence,购物采购,1
+Choose a suitable meal from workplace options,工作任务,1
+Choose a suitable outdoor dining spot based on weather and comfort,饮食相关,1
+Choose a suitable outdoor restaurant or seating area,计划与决策,1
+Choose a suitable venue based on available options and distance,计划与决策,1
+Choose an eating option within walking distance,饮食相关,1
+Choose an outdoor dining spot with pleasant ambiance,饮食相关,1
+Choose communication method,计划与决策,1
+Choose the closest grocery store,购物采购,1
+Choose the closest shopping location considering mobility and time of day,购物采购,1
+Choose the most convenient and accessible option for shopping,购物采购,1
+Choose the most convenient method to reach out,计划与决策,1
+"Choose the most convenient shopping method (e.g., online or physical store)",数字设备与账号操作,1
+Choose the nearest and most convenient store,购物采购,1
+Close all electronic devices,数字设备与账号操作,1
+Close all electronic devices to avoid distractions,数字设备与账号操作,1
+"Close eyes and attempt to relax, focusing on achieving sleep",睡眠相关,1
+Close eyes and initiate sleep,睡眠相关,1
+Close eyes and initiate the sleep process,睡眠相关,1
+Close eyes and prepare for sleep,睡眠相关,1
+Close eyes and sleep,睡眠相关,1
+Close eyes and transition into sleep mode,睡眠相关,1
+Close eyes to initiate sleep,睡眠相关,1
+"Close my eyes and begin to relax, transitioning to sleep",睡眠相关,1
+Close my eyes and drift off to sleep,睡眠相关,1
+Close my eyes and fall asleep,睡眠相关,1
+"Close my eyes and relax, preparing to fall asleep",睡眠相关,1
+Close the bedroom curtains,睡眠相关,1
+Close the bedroom curtains for better sleep,睡眠相关,1
+Close the bedroom curtains for darkness,睡眠相关,1
+Close the bedroom curtains for privacy and darkness,睡眠相关,1
+Close the bedroom curtains or blinds to reduce light exposure,睡眠相关,1
+Close the bedroom curtains to block light,睡眠相关,1
+Close the bedroom curtains to create a conducive sleeping environment,睡眠相关,1
+Close the bedroom curtains to enhance darkness,睡眠相关,1
+Close the bedroom door and turn off lights to signal to the body that it is time to sleep,睡眠相关,1
+Close the bedroom door and turn off the lights,睡眠相关,1
+Close the bedroom door and turn off the lights to signal the start of sleep,睡眠相关,1
+Close the bedroom door to maintain privacy,睡眠相关,1
+Close the bedroom lights,睡眠相关,1
+Close the blinds or curtains to ensure darkness for sleep,睡眠相关,1
+Close the curtains,家居环境管理,1
+Close the curtains for a darker environment,家居环境管理,1
+Close the curtains or blinds to block out sunlight,家居环境管理,1
+Close the curtains or blinds to darken the room,家居环境管理,1
+Close the curtains or blinds to ensure privacy and darkness,家居环境管理,1
+Close the curtains to block light,家居环境管理,1
+Close the curtains to block out sunlight,家居环境管理,1
+Close the curtains to create a comfortable atmosphere,家居环境管理,1
+Close the curtains to create a conducive sleep environment,睡眠相关,1
+Close the curtains to create a dark environment for sleeping,睡眠相关,1
+Close the curtains to create a restful atmosphere,家居环境管理,1
+Close the curtains to create a sleep-conducive environment,睡眠相关,1
+Close the curtains to ensure a conducive sleeping environment,睡眠相关,1
+Close the curtains to ensure a dark environment,家居环境管理,1
+Close the curtains to ensure darkness for sleep,睡眠相关,1
+Close the curtains to ensure privacy and create a relaxing environment,放松与情绪调节,1
+Close the curtains to reduce light,家居环境管理,1
+Close the curtains to simulate darkness,家居环境管理,1
+Close the door for security and comfort,家居环境管理,1
+"Close the eyes and allow oneself to relax, preparing for sleep",睡眠相关,1
+"Close the eyes and begin to relax, allowing sleep to come naturally",睡眠相关,1
+Close the eyes and drift into sleep,睡眠相关,1
+Close the eyes and initiate the sleep process,睡眠相关,1
+Close the eyes and take deep breaths to relax,放松与情绪调节,1
+Close the eyes and transition into sleep,睡眠相关,1
+Close the eyes to initiate sleep,睡眠相关,1
+Close the window and adjust the room temperature if necessary,家居环境管理,1
+Close the window to ensure a quiet room,放松与情绪调节,1
+Close the windows and curtains to create a comfortable sleeping environment,睡眠相关,1
+Close your eyes and allow yourself to fall asleep,睡眠相关,1
+Close your eyes and begin the sleep process,睡眠相关,1
+Close your eyes and begin to drift off to sleep,睡眠相关,1
+Close your eyes and drift into a peaceful sleep,睡眠相关,1
+Close your eyes and fall asleep,睡眠相关,1
+Close your eyes and focus on relaxation techniques,放松与情绪调节,1
+Close your eyes and follow a calming breathing pattern to induce sleep,睡眠相关,1
+Close your eyes and initiate the process of falling asleep,睡眠相关,1
+Close your eyes and initiate the sleep process,睡眠相关,1
+Close your eyes and practice deep breathing,其他,1
+Close your eyes and practice mindfulness or deep breathing to promote relaxation,放松与情绪调节,1
+Close your eyes and relax,放松与情绪调节,1
+Close your eyes and relax until you fall asleep,睡眠相关,1
+"Close your eyes and relax, preparing for sleep",睡眠相关,1
+Close your eyes and take a deep breath to induce sleep,睡眠相关,1
+Close your eyes and take deep breaths to calm down,放松与情绪调节,1
+Close your eyes and take deep breaths to initiate sleep,睡眠相关,1
+Close your eyes to drift off to sleep,睡眠相关,1
+Complete the shopping by purchasing the necessary items,购物采购,1
+Complete the shopping with the shopping list,购物采购,1
+Concentrate on calming thoughts to facilitate sleep,睡眠相关,1
+Concentrate on deep breathing and relaxation techniques to fall asleep,睡眠相关,1
+Concentrate on relaxation and sleep,睡眠相关,1
+Concentrate on relaxing thoughts to fall asleep,睡眠相关,1
+Concentrate on relaxing thoughts to help fall asleep,睡眠相关,1
+Conclude the meal with a sense of contentment,饮食相关,1
+Conduct shopping based on the prepared list,购物采购,1
+Conduct the shopping activity,购物采购,1
+Confirm comfort of sleep environment,睡眠相关,1
+Confirm the need for sleep,睡眠相关,1
+Confirm the taxi request and provide any additional details if required,其他,1
+Consciously decide to fall asleep in a peaceful and restful manner,睡眠相关,1
+Consciously focus on sleep and relax all muscles,睡眠相关,1
+Consciously prepare for sleep,睡眠相关,1
+Consciously relax and initiate sleep,睡眠相关,1
+Consciously relax body and mind,放松与情绪调节,1
+Consider a calming activity to relax,放松与情绪调节,1
+Consider any dietary restrictions or preferences for meal selection,饮食相关,1
+Consider any small joys that came from the day's simplicity,计划与决策,1
+Consider preparing any leftovers for tomorrow,计划与决策,1
+Consider using blackout curtains if necessary,家居环境管理,1
+Consider whether to store any remaining food for later,购物采购,1
+Consume the meal at the workplace,工作任务,1
+Contemplate the tranquility of the day while resting,放松与情绪调节,1
+Create a calming bedtime routine to relax the body and mind,睡眠相关,1
+Create a comfortable sleeping environment,睡眠相关,1
+Decide on shopping location based on convenience and needs,购物采购,1
+Decide on the most convenient time to go shopping,购物采购,1
+Determine nearest shopping locations based on current location and convenience,购物采购,1
+Determine shopping needs based on daily routine,购物采购,1
+Determine the closest shopping destination,购物采购,1
+Determine the exact address of the destination,出行移动,1
+Determine the most convenient store or shopping center for the chosen shopping type,购物采购,1
+Determine the most convenient store to visit,购物采购,1
+Dim lights to create a calming environment,放松与情绪调节,1
+Dim lights to create a restful environment,家居环境管理,1
+Dim the lights in the room to create a calming atmosphere,放松与情绪调节,1
+Dim the lights in the room to create a relaxing atmosphere,放松与情绪调节,1
+Dim the lights to create a conducive sleep environment,睡眠相关,1
+Dim the lights to create a sleep-friendly environment,睡眠相关,1
+Dim the lights to create a sleep-inducing environment,睡眠相关,1
+Dim the lights to create a soothing environment,家居环境管理,1
+Dim the lights to signal the body it's time to rest,睡眠相关,1
+Dim the lights to signal the body to relax,放松与情绪调节,1
+Dim the lights to signal the brain that it's time to sleep,睡眠相关,1
+Dim the lights to signal the end of the day,家居环境管理,1
+Dispose of any waste from the meal,饮食相关,1
+Dispose of any waste properly,其他,1
+Dispose of any waste properly after the meal,饮食相关,1
+Dispose of food waste appropriately after eating,饮食相关,1
+Dispose of meal waste appropriately,饮食相关,1
+Dispose of the mealware responsibly after the meal,饮食相关,1
+Dress appropriately for outdoor activities,其他,1
+Dress appropriately for the weather and walking,其他,1
+"Dress appropriately for the weather, as it is sunny and the temperature is moderate",家居环境管理,1
+Dress in comfortable clothes,家居环境管理,1
+Eat the meal alone to maintain personal space and peace,饮食相关,1
+Eat the meal at workplace,工作任务,1
+End the reflection with a moment of gratitude for the tranquility,放松与情绪调节,1
+End work duties and prepare to leave workplace,工作任务,1
+End workday and prepare to leave workplace,工作任务,1
+"Engage in a calming activity before bed, such as reading",睡眠相关,1
+"Engage in a calming activity before sleep, if desired",睡眠相关,1
+Engage in a calming activity before sleeping (if needed),睡眠相关,1
+"Engage in a calming activity if needed (e.g., reading or meditating) before lying down",放松与情绪调节,1
+Engage in a calming activity or meditation to facilitate sleep,睡眠相关,1
+Engage in a calming activity to help fall asleep,睡眠相关,1
+Engage in a calming activity to prepare for sleep,睡眠相关,1
+Engage in a calming activity to promote sleep,睡眠相关,1
+Engage in a calming activity to signal the body it's time to rest,睡眠相关,1
+Engage in a calming activity to signal to the body it's time to sleep,睡眠相关,1
+"Engage in a calming activity, such as reading, to induce sleep",睡眠相关,1
+Engage in a calming routine,放松与情绪调节,1
+Engage in a light reading or meditation to calm the mind,放松与情绪调节,1
+"Engage in a quiet, restful activity to help signal to the body that it's time to sleep",睡眠相关,1
+"Engage in a relaxing activity (e.g., reading) to induce sleep",睡眠相关,1
+"Engage in a relaxing activity before sleeping (e.g., reading)",睡眠相关,1
+"Engage in a relaxing activity or simply rest, savoring the peacefulness of the day",睡眠相关,1
+Engage in a relaxing activity to calm the mind before sleep,睡眠相关,1
+Engage in a relaxing activity to ease into sleep,睡眠相关,1
+Engage in a relaxing activity to help fall asleep,睡眠相关,1
+Engage in a relaxing activity to prepare for sleep,睡眠相关,1
+Engage in a relaxing activity to unwind before sleeping,睡眠相关,1
+"Engage in a relaxing activity, such as reading, to help in winding down",放松与情绪调节,1
+Engage in calming activities,放松与情绪调节,1
+Engage in calming activities to induce sleep,睡眠相关,1
+Engage in calming activities to relax before sleep,睡眠相关,1
+Engage in gentle relaxation techniques,放松与情绪调节,1
+Engage in light breathing exercises or meditation to calm the mind,放松与情绪调节,1
+Engage in light breathing exercises to calm the mind,放松与情绪调节,1
+Engage in light reading or meditation to induce sleep,睡眠相关,1
+Enjoy a comfortable indoor meal,饮食相关,1
+Enjoy a cup of coffee in the garden to connect with the serene weather,其他,1
+Enjoy a quiet moment of reflection or relaxation,放松与情绪调节,1
+Enjoy a restful sleep,睡眠相关,1
+"Enjoy the meal alone or possibly invite a close friend or family member, if the mood suits",社交沟通,1
+Enjoy the meal alone or with a companion if desired,饮食相关,1
+Enjoy the meal and the peaceful day,饮食相关,1
+"Enjoy the meal without rushing, savoring the tranquility",饮食相关,1
+Enjoy the peaceful atmosphere of the home,其他,1
+Enjoy the peaceful morning,其他,1
+Enjoy the quiet and contentment of the evening,放松与情绪调节,1
+Ensure a calm and quiet environment to promote sleep,睡眠相关,1
+Ensure a comfortable sleeping environment by adjusting lighting and sounds,睡眠相关,1
+Ensure a comfortable temperature for sleep,睡眠相关,1
+Ensure a quiet room for sleep,睡眠相关,1
+Ensure a safe and secure sleep environment,睡眠相关,1
+Ensure a suitable temperature for sleep,睡眠相关,1
+Ensure all electronic devices are turned off or on silent mode,数字设备与账号操作,1
+Ensure all electronic devices are turned off to create a quiet environment,数字设备与账号操作,1
+Ensure all necessary ingredients and utensils are available,饮食相关,1
+Ensure all necessary items for sleep are in reach,购物采购,1
+Ensure all necessary items for sleep are within reach,购物采购,1
+Ensure all necessary nighttime activities are complete,其他,1
+Ensure all necessary preparations for a restful sleep are in place,睡眠相关,1
+Ensure any necessary items like a glass of water or tissues are within reach before lying down,购物采购,1
+Ensure bedroom environment is conducive to sleep,睡眠相关,1
+Ensure comfort and safety for sleeping,睡眠相关,1
+Ensure comfort for sleeping,睡眠相关,1
+Ensure comfort in sleeping area,睡眠相关,1
+Ensure comfort in the sleep environment,睡眠相关,1
+Ensure comfortability for sleeping,睡眠相关,1
+Ensure comfortability in the sleeping environment,睡眠相关,1
+Ensure cooking equipment is turned off and cool down before sitting down to eat,饮食相关,1
+Ensure home environment is suitable for eating,饮食相关,1
+Ensure home is prepared for meal,饮食相关,1
+"Ensure hydration, if not already done",其他,1
+Ensure meal is enjoyable and satisfying,饮食相关,1
+Ensure meal is suitable for retirement age diet,饮食相关,1
+Ensure proper waste disposal after meal,饮食相关,1
+Ensure room temperature is comfortable for sleep,睡眠相关,1
+Ensure satisfaction with meal,饮食相关,1
+Ensure that all necessary items are within reach,购物采购,1
+Ensure that the meal is ready to be served,饮食相关,1
+Ensure the bedroom environment is conducive for sleep,睡眠相关,1
+Ensure the bedroom is at a comfortable temperature for sleep,睡眠相关,1
+Ensure the bedroom is comfortable and conducive to sleep,睡眠相关,1
+Ensure the environment is conducive to sleep,睡眠相关,1
+Ensure the environment is conducive to sleeping,睡眠相关,1
+"Ensure the environment is suitable for eating (e.g., clear away clutter)",饮食相关,1
+Ensure the food is safe and suitable for consumption,饮食相关,1
+Ensure the fridge is restocked,其他,1
+Ensure the home environment is comfortable and conducive to sleep,睡眠相关,1
+Ensure the home environment is conducive for sleep,睡眠相关,1
+Ensure the living environment is conducive to sleep,睡眠相关,1
+Ensure the living space is conducive to sleep,睡眠相关,1
+Ensure the meal is consumed safely,饮食相关,1
+Ensure the room is at a comfortable temperature,家居环境管理,1
+Ensure the room is at a comfortable temperature for sleep,睡眠相关,1
+Ensure the room is at a comfortable temperature for sleeping,睡眠相关,1
+Ensure the room is at a suitable temperature for sleeping,睡眠相关,1
+Ensure the room is comfortable,家居环境管理,1
+Ensure the room is conducive for sleep,睡眠相关,1
+Ensure the room is conducive to sleep (cool and quiet),睡眠相关,1
+Ensure the room is conducive to sleep by adjusting temperature and lighting,睡眠相关,1
+Ensure the room is conducive to sleep; adjust temperature if necessary,睡眠相关,1
+Ensure the room is cool and comfortable at 23C,家居环境管理,1
+Ensure the room is dark,家居环境管理,1
+Ensure the room is quiet and conducive to sleep,睡眠相关,1
+"Ensure the room is suitable for sleep (quiet, comfortable temperature)",睡眠相关,1
+Ensure the room temperature is suitable,家居环境管理,1
+Ensure the sleeping environment is comfortable and ready,睡眠相关,1
+Ensure the sleeping environment is comfortable and suitable,睡眠相关,1
+Enter a relaxed state,其他,1
+Enter a relaxed state of mind,其他,1
+Enter a restful sleep state,睡眠相关,1
+Enter a state of calm and readiness for sleep,睡眠相关,1
+Enter a state of rest,睡眠相关,1
+Enter a state of sleep,睡眠相关,1
+Enter bedroom,睡眠相关,1
+Enter bedroom and lie down,睡眠相关,1
+Enter home,出行移动,1
+Enter home safely,出行移动,1
+Enter into a state of relaxation and drift off to sleep,睡眠相关,1
+Enter rest mode,睡眠相关,1
+Enter sleep mode and rest,睡眠相关,1
+Enter sleep mode by lying down,睡眠相关,1
+Enter sleep mode by lying down in the bed,睡眠相关,1
+Enter sleep mode mentally,睡眠相关,1
+"Enter sleep mode, allowing for rest and rejuvenation",睡眠相关,1
+Enter the bed,睡眠相关,1
+Enter the bedroom and lie down in bed,睡眠相关,1
+Enter the bedroom to begin the sleep process,睡眠相关,1
+Enter the destination address in the app,数字设备与账号操作,1
+Enter the house and prepare for sleep,睡眠相关,1
+Enter the sleep phase,睡眠相关,1
+Enter the sleeping environment,睡眠相关,1
+Enter the sleeping environment at the current time,睡眠相关,1
+Enter the sleeping position,睡眠相关,1
+Evaluate available food options at current location,饮食相关,1
+Evaluate available food options nearby,饮食相关,1
+Evaluate existing food supplies,购物采购,1
+Evaluate hunger level and plan menu,计划与决策,1
+Evaluate the current weather conditions to ensure safety and comfort,家居环境管理,1
+Evaluate the meal's taste and quality,饮食相关,1
+Evaluate the taste and satisfaction of the meal,饮食相关,1
+Execute shopping list and purchase necessary items,购物采购,1
+Exit home and go to the nearest shopping center,购物采购,1
+Fall asleep in a tranquil environment,睡眠相关,1
+Find a comfortable seating arrangement,家居环境管理,1
+Find a comfortable spot to eat,饮食相关,1
+Find a suitable outdoor dining location,饮食相关,1
+Find a suitable outdoor seating area,其他,1
+Find an outdoor dining location suitable for an older adult,饮食相关,1
+Focus on breathing and ease into sleep,睡眠相关,1
+Focus on breathing deeply and slowly to promote sleep,睡眠相关,1
+Focus on deep breathing to promote relaxation and prepare for sleep,睡眠相关,1
+Focus on maintaining a peaceful sleep environment,睡眠相关,1
+Focus on relaxation techniques,放松与情绪调节,1
+Focus on relaxation techniques to aid in falling asleep,睡眠相关,1
+Focus on relaxation techniques to initiate sleep,睡眠相关,1
+Focus on relaxing your body and mind to fall asleep,睡眠相关,1
+Focus on sleep-inducing thoughts or visualization,睡眠相关,1
+Gather any leftover food to store properly for future use,购物采购,1
+Gather any leftovers for future meals if needed,其他,1
+Gather necessary ingredients for a simple meal to maintain ease of cooking,饮食相关,1
+Gently brush teeth to prepare for sleep,睡眠相关,1
+Gently close and lower bedroom lights to signal the body it's time to sleep,睡眠相关,1
+Get comfortable in the bed,睡眠相关,1
+Get dressed in comfortable clothing suitable for the weather,家居环境管理,1
+Get into a comfortable sleeping position,睡眠相关,1
+Get into bed and prepare for sleep,睡眠相关,1
+Get into bed and settle down for sleep,睡眠相关,1
+Get into bed at a comfortable temperature,睡眠相关,1
+Get into comfortable clothing,家居环境管理,1
+Get into comfortable night attire,家居环境管理,1
+Get into comfortable sleepwear,家居环境管理,1
+Get ready for shopping,购物采购,1
+Get ready for shopping by dressing comfortably and safely,购物采购,1
+"Get ready to leave home, considering the weather and temperature",出行移动,1
+Get ready to leave home; wear comfortable clothing and footwear,出行移动,1
+Go to bed at a reasonable hour,睡眠相关,1
+Go to bed at a reasonable hour for a 63-year-old,睡眠相关,1
+Go to bed at a reasonable time for your age and activity level,睡眠相关,1
+Go to bed at a time conducive to rest,睡眠相关,1
+Go to bed at an appropriate time for a 7-8 hour sleep cycle,睡眠相关,1
+Go to sleep in the bedroom,睡眠相关,1
+Go to the bedroom,睡眠相关,1
+Go to the nearest shopping center,购物采购,1
+Go to the nearest supermarket,购物采购,1
+Go to the shopping location,购物采购,1
+Gradually reduce activities to signal the body to wind down,睡眠相关,1
+Greet pets if any are at home,其他,1
+Identify a suitable friend to contact,社交沟通,1
+Identify close friends,社交沟通,1
+Identify friends to contact,社交沟通,1
+Identify friends to contact based on current location and common interests,社交沟通,1
+Identify nearby stores or markets for convenience,其他,1
+Identify nearby stores with shopping needs,购物采购,1
+Identify shopping needs,购物采购,1
+Identify shopping needs based on daily consumption,购物采购,1
+Identify suitable food item for the weather and temperature,饮食相关,1
+Identify suitable friends to contact,社交沟通,1
+Identify the preferred mode of contact,社交沟通,1
+"If suitable, find a quiet spot to sit and enjoy the sunny weather",放松与情绪调节,1
+Initiate contact via phone call,数字设备与账号操作,1
+Initiate sleep by lying down in the bed,睡眠相关,1
+Initiate sleep routine,睡眠相关,1
+Lay down and begin to wind down,睡眠相关,1
+Lay down and close eyes,睡眠相关,1
+Lay down and get into a comfortable position,睡眠相关,1
+Lay down and relax in the bed,睡眠相关,1
+Lay down and rest,睡眠相关,1
+Lay down in bed and adjust pillows,睡眠相关,1
+Lay down in bed and drift off to sleep,睡眠相关,1
+Lay down in bed and initiate the sleep process,睡眠相关,1
+Lay down in bed in a relaxed position,睡眠相关,1
+Lay down in bed with the intention to sleep,睡眠相关,1
+Lay down in the bed and practice relaxation techniques if feeling anxious,睡眠相关,1
+Lay down in the bed to initiate the sleep process,睡眠相关,1
+Lay in bed and prepare to fall asleep,睡眠相关,1
+Lay in bed in a relaxed state and gradually drift off to sleep,睡眠相关,1
+Lay in bed with intention to sleep,睡眠相关,1
+Lay in the bed,睡眠相关,1
+Leave home,出行移动,1
+Leave home for the selected shopping location,购物采购,1
+Leave home for the shopping destination,购物采购,1
+Leave home to go to the nearest shopping center,购物采购,1
+Leave workplace and initiate journey home,工作任务,1
+Leave workplace and travel back to home,工作任务,1
+Lie down and allow yourself to drift off to sleep,睡眠相关,1
+Lie down and assume a comfortable sleeping position,睡眠相关,1
+Lie down and close eyes,睡眠相关,1
+Lie down and close eyes to initiate sleep,睡眠相关,1
+Lie down and close the eyes to signal readiness for sleep,睡眠相关,1
+Lie down and close the eyes to transition into sleep,睡眠相关,1
+Lie down and fall asleep,睡眠相关,1
+Lie down and initiate the process of falling asleep,睡眠相关,1
+Lie down and initiate the sleep process,睡眠相关,1
+Lie down and practice relaxation techniques to promote sleep,睡眠相关,1
+Lie down and take a few deep breaths to relax,睡眠相关,1
+Lie down and transition into a state of relaxation before sleeping,睡眠相关,1
+Lie down in a comfortable position,睡眠相关,1
+Lie down in bed and adjust the pillows to a comfortable position,睡眠相关,1
+Lie down in bed and adjust the room temperature if necessary,睡眠相关,1
+Lie down in bed and adopt a comfortable sleeping position,睡眠相关,1
+Lie down in bed and allow the body to relax,睡眠相关,1
+Lie down in bed and close the curtains to create a dark environment,睡眠相关,1
+Lie down in bed and close the eyes to drift off to sleep,睡眠相关,1
+Lie down in bed and close the eyes to initiate sleep,睡眠相关,1
+Lie down in bed and close your eyes,睡眠相关,1
+Lie down in bed and focus on breathing deeply to calm the mind,睡眠相关,1
+Lie down in bed and focus on relaxation techniques,睡眠相关,1
+Lie down in bed and focus on relaxing breathing techniques,睡眠相关,1
+Lie down in bed and focus on winding down for sleep,睡眠相关,1
+Lie down in bed and get comfortable,睡眠相关,1
+Lie down in bed and initiate the sleep process,睡眠相关,1
+"Lie down in bed and practice a relaxing sleep-inducing activity, such as deep breathing or meditation",睡眠相关,1
+Lie down in bed and prepare to fall asleep,睡眠相关,1
+Lie down in bed and start winding down,睡眠相关,1
+Lie down in bed at a suitable time,睡眠相关,1
+Lie down in bed at an appropriate time for rest,睡眠相关,1
+Lie down in bed in a quiet room,睡眠相关,1
+Lie down in bed in a relaxed position,睡眠相关,1
+Lie down in bed in a restful position,睡眠相关,1
+Lie down in bed to fall asleep,睡眠相关,1
+Lie down in bed to initiate sleep,睡眠相关,1
+Lie down in bed to initiate the sleep process,睡眠相关,1
+Lie down in bed to sleep,睡眠相关,1
+Lie down in the bed and adjust the position to your comfort,睡眠相关,1
+Lie down in the bed and assume a comfortable sleep position,睡眠相关,1
+Lie down in the bed and assume a comfortable sleeping position,睡眠相关,1
+Lie down in the bed and close the eyes to initiate sleep,睡眠相关,1
+Lie down in the bed and prepare for sleep,睡眠相关,1
+Lie down in the bed and relax,睡眠相关,1
+Lie down in the bed and start to drift off to sleep,睡眠相关,1
+Lie down in the bed and take a moment to relax,睡眠相关,1
+Lie down in the bed in a comfortable position,睡眠相关,1
+Lie down in the bed to begin the sleeping process,睡眠相关,1
+Lie down in the bed to initiate the sleep process,睡眠相关,1
+Lie down in the bed to sleep,睡眠相关,1
+Lie down in the bed to start winding down,睡眠相关,1
+Lie down in the bed to start winding down for sleep,睡眠相关,1
+Lie down in the comfortable bed,睡眠相关,1
+Lie down in the prepared sleep environment and drift off to sleep,睡眠相关,1
+Locate a comfortable outdoor seating area,家居环境管理,1
+Locate a quiet and comfortable outdoor area to sit,放松与情绪调节,1
+Locate the nearest shopping center,购物采购,1
+Lock the door for security,其他,1
+Log into work-related accounts,数字设备与账号操作,1
+Maintain a calm and restful atmosphere,放松与情绪调节,1
+Maintain a comfortable room temperature,家居环境管理,1
+Maintain a comfortable sleep position,睡眠相关,1
+Maintain a comfortable sleeping position,睡眠相关,1
+Maintain a relaxed and comfortable posture to ensure restful sleep,睡眠相关,1
+Maintain current location as it is home,其他,1
+Make a cup of tea or coffee to relax,放松与情绪调节,1
+Make a reservation or wait for an open table if necessary,其他,1
+Make purchases from the shopping list,购物采购,1
+Monitor comfort throughout the sleep period,睡眠相关,1
+Navigate to preferred stores within the shopping center,购物采购,1
+Navigate to the chosen eatery,其他,1
+"Navigate to the shopping center, considering the sunny weather and comfortable temperature",购物采购,1
+Obtain the identified food item,饮食相关,1
+Obtain the menu and decide on a meal to order,饮食相关,1
+Open the app and select the option to request a taxi,数字设备与账号操作,1
+Order a meal that suits your mood and preferences,饮食相关,1
+Order food and enjoy the meal,饮食相关,1
+Order food and enjoy the meal outside,饮食相关,1
+Order food or select items from a menu,购物采购,1
+Pack essentials like water and sunglasses,其他,1
+"Pack essentials such as wallet, keys, and sunglasses",其他,1
+Park the car and enter the shopping center,购物采购,1
+Pay for the purchases and carry them back home,其他,1
+Perform a brief relaxation exercise,放松与情绪调节,1
+"Perform a calming activity, such as reading or listening to soft music, to ease into sleep",睡眠相关,1
+Perform a relaxing activity to ease into sleep,睡眠相关,1
+Perform a short meditation or yoga session to enhance tranquility,放松与情绪调节,1
+Perform any necessary relaxation or pre-sleep routine,睡眠相关,1
+Perform bedtime routine,睡眠相关,1
+Perform light stretching or relaxation exercises,放松与情绪调节,1
+Perform pre-sleep routine,睡眠相关,1
+Perform relaxation techniques to wind down,睡眠相关,1
+Perform the shopping tasks as listed on the shopping list,工作任务,1
+Pick up the phone,数字设备与账号操作,1
+Pick up the phone and call a friend,数字设备与账号操作,1
+Pick up the phone and dial the first friend's number,数字设备与账号操作,1
+Pick up the phone or activate the video call device,数字设备与账号操作,1
+Pick up the phone to call a friend,数字设备与账号操作,1
+Plan the mode of transportation to reach the chosen dining location,饮食相关,1
+Plan the route based on the distance to the nearest shopping center,购物采购,1
+Plan the route to the nearest grocery store,购物采购,1
+Plan the route to the nearest shopping center,购物采购,1
+Plan the route to the nearest shopping center considering weather and time,购物采购,1
+Plan the route to the shopping destination,购物采购,1
+Plan the shopping route,购物采购,1
+Postpone any non-essential activities to ensure time for the meal,饮食相关,1
+Practice a relaxing bedtime routine,睡眠相关,1
+Practice calming techniques if needed,放松与情绪调节,1
+Practice deep breathing or meditation to calm down,放松与情绪调节,1
+Practice deep breathing or meditation to induce sleep,睡眠相关,1
+Practice deep breathing to induce sleep,睡眠相关,1
+Practice gentle relaxation techniques to aid in falling asleep,睡眠相关,1
+Practice relaxation techniques to facilitate the onset of sleep,睡眠相关,1
+Practice relaxation techniques to promote sleep,睡眠相关,1
+Practice relaxation techniques to unwind,放松与情绪调节,1
+Preheat the oven for cooking,饮食相关,1
+Prep the bedroom for sleep by adjusting the temperature and light,睡眠相关,1
+Prepare a calming cup of tea,放松与情绪调节,1
+Prepare a calming morning beverage,放松与情绪调节,1
+"Prepare a comfortable sleeping environment, ensuring the bed is made and the room is quiet",睡眠相关,1
+Prepare a comfortable sleeping position,睡眠相关,1
+Prepare a comfortable sleeping space,睡眠相关,1
+Prepare a cup of tea or coffee to enjoy during relaxation,放松与情绪调节,1
+Prepare a nighttime routine,其他,1
+Prepare a relaxing bed with fresh sheets,睡眠相关,1
+Prepare a shopping bag,购物采购,1
+Prepare a shopping bag or basket,购物采购,1
+Prepare a shopping bag or cart,购物采购,1
+Prepare a shopping bag or list for ease of mobility,购物采购,1
+Prepare a sleeping environment,睡眠相关,1
+Prepare a small bag with essentials,其他,1
+"Prepare a suitable sleep environment, such as changing bedding",睡眠相关,1
+Prepare and enter the home environment,家居环境管理,1
+Prepare and leave home for the store,购物采购,1
+Prepare any necessary nighttime items,购物采购,1
+"Prepare any necessary personal items (e.g., pillow, blanket) to enhance sleep comfort",购物采购,1
+Prepare any personal items or special requests for the meal,购物采购,1
+Prepare for a comfortable sleeping environment,睡眠相关,1
+Prepare for a restful sleep,睡眠相关,1
+Prepare for a short walk or drive to the store,购物采购,1
+"Prepare for bed (brush teeth, wash face, etc.)",睡眠相关,1
+"Prepare for bed (change into comfortable clothing, set up pillows and blankets)",睡眠相关,1
+Prepare for bed by brushing teeth and changing into comfortable pajamas,睡眠相关,1
+Prepare for bed by changing into comfortable clothes,睡眠相关,1
+Prepare for bed by changing into comfortable sleepwear,睡眠相关,1
+Prepare for bed by setting up the bedroom,睡眠相关,1
+Prepare for bed by turning off electronic devices,数字设备与账号操作,1
+Prepare for bed with appropriate attire,睡眠相关,1
+Prepare for bed with comfortable attire,睡眠相关,1
+"Prepare for bed, change into comfortable sleepwear",睡眠相关,1
+"Prepare for bed, including changing into comfortable pajamas",睡眠相关,1
+"Prepare for bed, including dressing in comfortable attire",睡眠相关,1
+"Prepare for bed, including washing up and changing into comfortable clothes",睡眠相关,1
+Prepare for bedtime,睡眠相关,1
+Prepare for bedtime by changing into comfortable nightwear,睡眠相关,1
+Prepare for bedtime by dimming lights,睡眠相关,1
+Prepare for bedtime by setting the environment to a comfortable temperature,睡眠相关,1
+Prepare for bedtime routine,睡眠相关,1
+Prepare for rest by ensuring a comfortable environment,睡眠相关,1
+Prepare for rest by ensuring comfort,睡眠相关,1
+Prepare for rest with comfortable bed settings,睡眠相关,1
+"Prepare for sleep (e.g., take off heavy clothing, set up the bed)",睡眠相关,1
+Prepare for sleep by adjusting the room temperature,睡眠相关,1
+Prepare for sleep by adjusting the room temperature to 23C if necessary,睡眠相关,1
+Prepare for sleep by changing into comfortable pajamas,睡眠相关,1
+Prepare for sleep by dimming lights and adjusting room temperature if necessary,睡眠相关,1
+Prepare for sleep by dimming lights and setting the room temperature,睡眠相关,1
+Prepare for sleep by dimming lights if necessary,睡眠相关,1
+Prepare for sleep by ensuring a calm environment,睡眠相关,1
+Prepare for sleep by ensuring the environment is comfortable,睡眠相关,1
+Prepare for sleep by ensuring the room is comfortable,睡眠相关,1
+Prepare for sleep by setting a calming environment,睡眠相关,1
+Prepare for sleep by setting up the bed,睡眠相关,1
+Prepare for sleep by setting up the bedroom,睡眠相关,1
+Prepare for sleep by setting up the environment,睡眠相关,1
+Prepare for sleep by turning off electronic devices,数字设备与账号操作,1
+Prepare for sleep by turning off electronics,睡眠相关,1
+Prepare for sleep by turning off the lights,睡眠相关,1
+Prepare for sleep by winding down and avoiding electronic devices,数字设备与账号操作,1
+"Prepare for sleep, including changing into comfortable pajamas",睡眠相关,1
+"Prepare for sleep, such as adjusting the room temperature and lighting",睡眠相关,1
+"Prepare for the trip, ensuring all personal items and necessary transportation are in order",购物采购,1
+Prepare necessary bedtime items,购物采购,1
+"Prepare necessary items for bedtime (e.g., glasses, medication)",购物采购,1
+Prepare necessary items like transportation (if needed) and clothing (for weather conditions),购物采购,1
+Prepare or purchase food to be eaten outside,购物采购,1
+Prepare or select food to eat,饮食相关,1
+Prepare sleep environment,睡眠相关,1
+Prepare sleep environment with appropriate clothing and bed settings,睡眠相关,1
+Prepare sleep space,睡眠相关,1
+Prepare sleeping area,睡眠相关,1
+Prepare sleeping area for relaxation,睡眠相关,1
+Prepare sleeping area if necessary,睡眠相关,1
+Prepare the bed,睡眠相关,1
+Prepare the bed for a good night's sleep,睡眠相关,1
+Prepare the bed for a restful sleep,睡眠相关,1
+Prepare the bed for comfort,睡眠相关,1
+Prepare the bed for sleeping,睡眠相关,1
+Prepare the bed with clean sheets and pillows,睡眠相关,1
+Prepare the bedroom by adjusting the temperature and lighting,睡眠相关,1
+Prepare the bedroom environment for sleep,睡眠相关,1
+Prepare the cooking area,饮食相关,1
+Prepare the dining area,饮食相关,1
+Prepare the food for consumption,饮食相关,1
+Prepare the food item,饮食相关,1
+Prepare the sleeping area (adjust temperature if necessary),睡眠相关,1
+Prepare the sleeping area for comfort,睡眠相关,1
+Prepare the sleeping area with comfort in mind,睡眠相关,1
+"Prepare the sleeping environment (adjust room temperature, if necessary)",睡眠相关,1
+Prepare the sleeping environment for comfort,睡眠相关,1
+Prepare to drift into sleep,睡眠相关,1
+Prepare to eat at the selected location,饮食相关,1
+Prepare to eat the selected meal,饮食相关,1
+Prepare to fall asleep,睡眠相关,1
+Prepare to have a meal at home,饮食相关,1
+Prepare to leave home for the shopping destination,购物采购,1
+Prepare to rest,睡眠相关,1
+Prepare to rest by winding down,睡眠相关,1
+"Prepare to wind down, possibly with a calming activity",睡眠相关,1
+"Prepare transportation (e.g., car, public transport) considering the weather and temperature",家居环境管理,1
+Prepares for sleep,睡眠相关,1
+Prepares the kitchen for cooking,饮食相关,1
+Purchase food or order delivery,购物采购,1
+Purchase items from the shopping list,购物采购,1
+Purchase the necessary items,购物采购,1
+Reflect on meal experience,饮食相关,1
+Reflect on the day's peace,放松与情绪调节,1
+Reflect on the day's peacefulness during the meal,饮食相关,1
+Reflect on the day's plans and mood before starting the day,放松与情绪调节,1
+Reflect on the day’s peacefulness,放松与情绪调节,1
+Reflect on the meal and day's tranquility,饮食相关,1
+Reflect on the meal experience and gratitude,饮食相关,1
+Reflect on the quiet day while eating,饮食相关,1
+Reflect on the tranquility of the day after eating,饮食相关,1
+Relax and allow body to rest,睡眠相关,1
+Relax and allow myself to drift off to sleep,睡眠相关,1
+Relax and allow oneself to fall asleep,睡眠相关,1
+Relax and allow the body to transition into sleep,睡眠相关,1
+Relax and calm the mind to signal the body for sleep,睡眠相关,1
+Relax and clear mind for sleep,睡眠相关,1
+Relax and close your eyes,放松与情绪调节,1
+Relax and close your eyes to signal to the body it is time to sleep,睡眠相关,1
+Relax and focus on breathing to fall asleep,睡眠相关,1
+Relax and focus on sleep,睡眠相关,1
+Relax and lie down in bed,睡眠相关,1
+Relax and practice a calming routine to induce sleep,睡眠相关,1
+Relax and prepare mind for sleep,睡眠相关,1
+Relax and prepare the mind for sleep,睡眠相关,1
+Relax and prepare your mind for sleep,睡眠相关,1
+"Relax and rest, as it's a sunny day and you are retired",睡眠相关,1
+Relax and settle down for sleep,睡眠相关,1
+Relax and settle into sleep mode,睡眠相关,1
+Relax and take deep breaths to induce sleep,睡眠相关,1
+Relax and take deep breaths to prepare for sleep,睡眠相关,1
+Relax and take deep breaths to wind down,睡眠相关,1
+Relax and unwind before bedtime,睡眠相关,1
+Relax and unwind for a peaceful sleep,睡眠相关,1
+Relax and unwind in a comfortable environment,放松与情绪调节,1
+Relax and unwind to create a serene bedtime routine,睡眠相关,1
+Relax and unwind to enhance sleep quality,睡眠相关,1
+Relax and unwind to foster a peaceful sleep,睡眠相关,1
+Relax and unwind to prepare the body for sleep,睡眠相关,1
+Relax and unwind to signal the body it is time to sleep,睡眠相关,1
+Relax and wind down after a day of activities,睡眠相关,1
+Relax and wind down after a peaceful day,睡眠相关,1
+Relax and wind down before lying down,睡眠相关,1
+Relax and wind down before sleep,睡眠相关,1
+Relax and wind down from the day's activities,睡眠相关,1
+Relax and wind down to induce sleep,睡眠相关,1
+Relax and wind down to promote sleep,睡眠相关,1
+Relax and wind down to signal the body it is time for sleep,睡眠相关,1
+Relax before bed to help with sleep,睡眠相关,1
+Relax before bed to induce sleep,睡眠相关,1
+Relax before sleep,睡眠相关,1
+Relax body and mind before bedtime,睡眠相关,1
+Relax for a few minutes,放松与情绪调节,1
+Relax for a few minutes before bed,睡眠相关,1
+Relax for a few minutes before sleep,睡眠相关,1
+Relax for a few minutes to help unwind and prepare for sleep,睡眠相关,1
+Relax for a few minutes to prepare for sleep,睡眠相关,1
+Relax for a few minutes to unwind,放松与情绪调节,1
+Relax for a few minutes to wind down,睡眠相关,1
+Relax for a few moments before lying down,放松与情绪调节,1
+Relax in a comfortable chair or on the couch,放松与情绪调节,1
+Relax in a comfortable position in bed,睡眠相关,1
+Relax in a comfortable position in the bedroom,睡眠相关,1
+Relax in bed,睡眠相关,1
+Relax in bed for a few minutes,睡眠相关,1
+Relax in bed to prepare for sleep,睡眠相关,1
+Relax in current location to transition into sleep mode,睡眠相关,1
+Relax in the living room for a few minutes,放松与情绪调节,1
+Relax mentally and physically to initiate sleep,睡眠相关,1
+Relax mind and body to prepare for sleep,睡眠相关,1
+"Relax mind and body, ready to fall asleep",睡眠相关,1
+Relax the body and mind to induce sleep,睡眠相关,1
+Relax to settle into a calm state,放松与情绪调节,1
+Relax to wind down,睡眠相关,1
+Relax with a short nap or meditation,放松与情绪调节,1
+Relaxation activities to induce sleep,睡眠相关,1
+Relaxation and preparation for sleep,睡眠相关,1
+Relaxation and wind down before bed,睡眠相关,1
+Relaxation before sleep,睡眠相关,1
+Relaxation before sleeping,睡眠相关,1
+Relaxation techniques to encourage sleep,睡眠相关,1
+Relaxation to promote sleep,睡眠相关,1
+Remove any electronic devices that might interfere with sleep,数字设备与账号操作,1
+Remove any electronic devices that might keep you awake,数字设备与账号操作,1
+Remove any electronic devices to minimize distractions,数字设备与账号操作,1
+Remove electronic devices that might interfere with sleep,数字设备与账号操作,1
+Remove or cover any distractions,其他,1
+Rest after finishing the meal,饮食相关,1
+Rest and relax,睡眠相关,1
+Rest and unwind following the meal,饮食相关,1
+Rest for a while to digest the meal and continue enjoying the quiet day,饮食相关,1
+Rest for a while to ensure that you are relaxed after the meal,饮食相关,1
+Rest in a comfortable and familiar environment,睡眠相关,1
+Retire to bed to sleep,睡眠相关,1
+Retire to bedroom,睡眠相关,1
+Retire to the bedroom to rest,睡眠相关,1
+Retire to your bed,睡眠相关,1
+Retrieve a list of contact numbers for friends,社交沟通,1
+Retrieve a list of friends' contact information,社交沟通,1
+"Retrieve and clean up any personal items needed for social interaction, such as a phone or glasses",数字设备与账号操作,1
+Retrieve contacts list,其他,1
+Return home from the workplace,工作任务,1
+Return home with purchases,出行移动,1
+Return to the kitchen,饮食相关,1
+Return to workplace,工作任务,1
+Review inventory to check for meal ingredients,购物采购,1
+Review shopping list,购物采购,1
+Review the menu at the selected outdoor dining spot,饮食相关,1
+Review the morning's weather forecast,计划与决策,1
+Review transportation options and choose one,计划与决策,1
+Review weather conditions and dress appropriately,计划与决策,1
+Review weather conditions for appropriate attire,计划与决策,1
+Secure the home,其他,1
+Seek a comfortable seating area,家居环境管理,1
+Seek a suitable eating spot nearby,饮食相关,1
+Seek out food available outside,饮食相关,1
+Select a close friend,社交沟通,1
+Select a comfortable space at home for the call,社交沟通,1
+Select a comfortable spot at home,家居环境管理,1
+Select a comfortable spot in the home for the call,社交沟通,1
+Select a communication method,其他,1
+Select a convenient place to meet,其他,1
+Select a dining option based on availability and suitability,饮食相关,1
+Select a meal option,饮食相关,1
+"Select a method of communication (e.g., phone, email, social media)",数字设备与账号操作,1
+Select a method to contact friends,社交沟通,1
+Select a nearby café or restaurant if available,其他,1
+Select a nearby eatery if desired,其他,1
+Select a nearby grocery store for convenience,购物采购,1
+Select a recipe and gather necessary ingredients,饮食相关,1
+Select a simple meal option,饮食相关,1
+Select a suitable contact method,社交沟通,1
+Select a suitable eating spot outdoors,饮食相关,1
+Select a suitable food item for breakfast,饮食相关,1
+Select a suitable friend to call,社交沟通,1
+Select a suitable meal option,饮食相关,1
+Select a suitable outdoor dining location,饮食相关,1
+Select a suitable outdoor dining location based on availability and comfort,饮食相关,1
+Select a suitable outdoor dining location nearby,饮食相关,1
+Select a suitable restaurant or location to eat outside,饮食相关,1
+Select a suitable time for the call,社交沟通,1
+Select a suitable time to call friends,社交沟通,1
+Select a suitable time to call or meet friends,社交沟通,1
+Select a suitable time to call or message friends,社交沟通,1
+Select a time to call friends,社交沟通,1
+Select an appropriate recipe for cooking,饮食相关,1
+Select and purchase necessary items,购物采购,1
+Select appropriate communication method based on current technology availability,其他,1
+Select friends to contact,社交沟通,1
+Select items from the shopping list and place them in the shopping cart,购物采购,1
+Select nearby stores with easy access,其他,1
+Select phone or device to call,数字设备与账号操作,1
+Select the best time for a call,社交沟通,1
+Select the most comfortable way to call my friends,社交沟通,1
+Select the most suitable time for a call,社交沟通,1
+Select the nearest and most convenient shopping location,购物采购,1
+Serve and arrange the meal on the dining table,饮食相关,1
+Serve and eat the home-cooked lunch,饮食相关,1
+Serve and enjoy the breakfast at home,饮食相关,1
+Serve and present the meal,饮食相关,1
+Serve breakfast,饮食相关,1
+Serve food,饮食相关,1
+Serve prepared meal,饮食相关,1
+Serve the meal on a comfortable setting,饮食相关,1
+Serve the meal on a plate,饮食相关,1
+Serve the meal on a suitable tableware,饮食相关,1
+Serve the prepared food,饮食相关,1
+Serve the prepared meal on plates,饮食相关,1
+Set a calming routine to signal to body it's time to sleep,睡眠相关,1
+Set a comfortable room temperature,家居环境管理,1
+Set a comfortable sleeping temperature,睡眠相关,1
+Set a relaxing sleep environment with minimal noise and light,睡眠相关,1
+Set a sleep routine,睡眠相关,1
+Set a sleep schedule and stick to it to maintain routine,睡眠相关,1
+Set a sleep timer or alarm if needed,睡眠相关,1
+Set a soothing sleep environment with soft lighting,睡眠相关,1
+Set a timer or alarm for sleep,睡眠相关,1
+Set an alarm for a reasonable wake-up time,睡眠相关,1
+Set an alarm for morning,睡眠相关,1
+Set an alarm for morning if necessary,睡眠相关,1
+Set an alarm for morning wake-up time if necessary,睡眠相关,1
+Set an alarm for tomorrow if necessary,睡眠相关,1
+Set an alarm if necessary,睡眠相关,1
+Set an alarm if necessary for an early morning routine,睡眠相关,1
+Set an alarm if necessary for the morning,睡眠相关,1
+Set an alarm if necessary for the next day,睡眠相关,1
+Set an alarm if needed for any morning activities,睡眠相关,1
+Set an alarm if needed for the next day,睡眠相关,1
+Set aside any devices or activities that might interfere with sleep,数字设备与账号操作,1
+Set aside any devices to avoid distractions,数字设备与账号操作,1
+Set out for the shopping location,购物采购,1
+Set out from home to the nearest shopping center,购物采购,1
+"Set sleep aids (e.g., white noise machine)",睡眠相关,1
+Set the alarm,睡眠相关,1
+Set the alarm clock for the next morning,睡眠相关,1
+Set the alarm for 8 hours later,睡眠相关,1
+Set the alarm for a good night's rest,睡眠相关,1
+Set the alarm for a restful sleep duration,睡眠相关,1
+Set the alarm for morning,睡眠相关,1
+Set the alarm for necessary activities,睡眠相关,1
+Set the alarm for the morning if necessary,睡眠相关,1
+Set the alarm for the next day (if needed),睡眠相关,1
+"Set the alarm for the next day, if necessary",睡眠相关,1
+"Set the alarm for the next morning, if needed",睡眠相关,1
+Set the alarm for tomorrow,睡眠相关,1
+Set the alarm for tomorrow morning,睡眠相关,1
+Set the alarm if necessary for a restful sleep,睡眠相关,1
+Set the alarm if necessary for the next day,睡眠相关,1
+Set the alarm if needed for any morning appointments or routines,睡眠相关,1
+Set the alarm if needed for morning activities,睡眠相关,1
+Set the alarm if needed for the next day,睡眠相关,1
+Set the dining area,饮食相关,1
+Set the dining table,饮食相关,1
+Set the dining table with utensils and serve the meal,饮食相关,1
+Set the environment for sleep,睡眠相关,1
+Set the room temperature and lighting to a comfortable level for sleep,睡眠相关,1
+Set the room temperature to 23C for comfort,家居环境管理,1
+Set the room temperature to a comfortable level for sleeping,睡眠相关,1
+Set the room temperature to comfortable level,家居环境管理,1
+Set the room to a conducive environment for sleep,睡眠相关,1
+Set the table in a comfortable and inviting manner,饮食相关,1
+Set the table with appropriate diningware,饮食相关,1
+Set the table with utensils and a meal tray,饮食相关,1
+Set the time for sleep,睡眠相关,1
+Set up a bedtime routine,睡眠相关,1
+"Set up a comfortable sleep environment, ensuring it is quiet and conducive to sleep",睡眠相关,1
+"Set up a comfortable sleep environment, including adjusting the room temperature if necessary",睡眠相关,1
+Set up a relaxing sleep environment,睡眠相关,1
+Set up alarm clock for morning wake-up,睡眠相关,1
+"Set up any necessary sleep aids (e.g., pillows, blanket)",睡眠相关,1
+Set up bed for a comfortable sleep,睡眠相关,1
+Set up bed for rest,睡眠相关,1
+Set up bed with pillows and blankets,睡眠相关,1
+Set up the bed comfortably,睡眠相关,1
+Set up the bed for a comfortable sleep,睡眠相关,1
+Set up the bedroom to a conducive sleeping state,睡眠相关,1
+Set up the bedroom with comfortable bedding,睡眠相关,1
+Set up the sleep environment,睡眠相关,1
+Set up the sleeping environment,睡眠相关,1
+Set up the sleeping environment comfortably,睡眠相关,1
+Set up the sleeping environment with comfort in mind,睡眠相关,1
+Shop for essential items,购物采购,1
+Shop for necessary items,购物采购,1
+Sit down at the dining table,饮食相关,1
+"Sit down at the dining table, setting a pleasant meal environment",饮食相关,1
+Sit down comfortably,其他,1
+Sleep in a tranquil state,睡眠相关,1
+Sleep peacefully throughout the night,睡眠相关,1
+Start breathing exercises to help calm the mind and prepare for sleep,睡眠相关,1
+Start the process of falling asleep,睡眠相关,1
+Start the sleep process,睡眠相关,1
+Stay at home,其他,1
+Stay at home as no need to move to a different location,其他,1
+Stay at home as the day starts,其他,1
+Stay at home due to current location,其他,1
+Stay at home to enjoy the tranquility of the quiet day,放松与情绪调节,1
+Stay in a state of rest and sleep until morning,睡眠相关,1
+Stay in bed for the duration of the sleep target,睡眠相关,1
+Stay in bed to relax after the morning reflection,睡眠相关,1
+Stay in bed until wake-up,睡眠相关,1
+Stay in the current location to maintain comfort,家居环境管理,1
+Take a brief nap to rejuvenate,其他,1
+Take a comfortable seat,家居环境管理,1
+Take a deep breath and allow yourself to drift off to sleep,睡眠相关,1
+Take a moment to appreciate the calm of the evening,放松与情绪调节,1
+Take a moment to appreciate the peacefulness of the day,其他,1
+Take a moment to enjoy the meal's preparation,饮食相关,1
+Take a moment to reflect on the day's calmness,放松与情绪调节,1
+Take a short walk around the house to maintain mobility,出行移动,1
+Take care of any necessary morning medication,其他,1
+Take deep breaths and clear the mind,其他,1
+Take necessary medication or supplements if required,其他,1
+Take necessary medications or care of health if required,其他,1
+Take off any heavy clothing to regulate body temperature,家居环境管理,1
+Take time to reflect on the quiet day,放松与情绪调节,1
+Transition into sleep mode,睡眠相关,1
+Travel back to my residence,出行移动,1
+Travel to the grocery store to start shopping,购物采购,1
+Travel to the nearest shopping area,购物采购,1
+Travel to the nearest supermarket or shopping center,购物采购,1
+Travel to the selected restaurant or location,出行移动,1
+Travel to the shopping center or market,购物采购,1
+Travel to the shopping center using preferred mode of transportation,购物采购,1
+Travel to the shopping center using the preferred mode of transport,购物采购,1
+Travel to the shopping location,购物采购,1
+Turn off all electronic devices and embrace the darkness to signal the body for sleep,数字设备与账号操作,1
+Turn off all electronic devices and establish a calming routine,数字设备与账号操作,1
+Turn off all electronic devices to create a conducive environment for sleep,数字设备与账号操作,1
+Turn off all electronic devices to create a sleep-friendly environment,数字设备与账号操作,1
+Turn off all electronic devices to ensure a good night's sleep,数字设备与账号操作,1
+Turn off all electronic devices to minimize disturbances,数字设备与账号操作,1
+Turn off all electronic devices to reduce exposure to blue light,数字设备与账号操作,1
+Turn off all electronic devices to relax,数字设备与账号操作,1
+Turn off all lights to create a dark environment,家居环境管理,1
+Turn off any distracting lights or sounds,家居环境管理,1
+Turn off any electronic devices to avoid distractions,数字设备与账号操作,1
+Turn off any electronic devices to minimize light and noise,数字设备与账号操作,1
+Turn off any lights or electronic devices that might disrupt sleep,数字设备与账号操作,1
+Turn off any unnecessary lights to create a comfortable sleep environment,睡眠相关,1
+Turn off any unnecessary lights to simulate nighttime,家居环境管理,1
+Turn off electronic devices,数字设备与账号操作,1
+Turn off electronic devices and establish a calming routine,数字设备与账号操作,1
+Turn off electronic devices to ensure a good night's sleep,数字设备与账号操作,1
+Turn off electronic devices to minimize light and noise,数字设备与账号操作,1
+Turn off electronic devices to promote relaxation,数字设备与账号操作,1
+Turn off electronic devices to reduce disturbances,数字设备与账号操作,1
+Turn off electronics,其他,1
+Turn off lights,家居环境管理,1
+Turn off lights to create a conducive sleep environment,睡眠相关,1
+Turn off lights to signal the end of the day,家居环境管理,1
+Turn off or adjust lighting to a suitable level for sleep,睡眠相关,1
+Turn off or dim the lights,家居环境管理,1
+Turn off the lights,家居环境管理,1
+"Turn off the lights and adjust room temperature, if necessary",家居环境管理,1
+Turn off the lights and relax,放松与情绪调节,1
+Turn off unnecessary lights,家居环境管理,1
+Turn off unnecessary lights and sounds to create a conducive sleep environment,睡眠相关,1
+Turn off unnecessary lights to create a calm environment,放松与情绪调节,1
+Unlock the door,其他,1
+Verify that the home is prepared for a meal,数字设备与账号操作,1
+Visualize a future filled with positive anticipation,其他,1
+Wait for the eating option to be ready,饮食相关,1
+Wait for the food to be served,饮食相关,1
+Wait for the meal to be prepared and served,饮食相关,1
+Wake up and engage in a short exercise routine,其他,1
+Wake up and gather myself for social interaction,其他,1
+Wake up and perform light stretching to start the day,其他,1
+Wake up and prepare for the day,其他,1
+Wake up naturally or with a routine,其他,1
+Wash hands after eating,饮食相关,1
+Wash hands after the meal,饮食相关,1
+Wind down and relax before bedtime,睡眠相关,1
+Wind down and relax before sleeping,睡眠相关,1
+Wind down by setting a comfortable room temperature,睡眠相关,1
+Wind down with a relaxing activity,睡眠相关,1

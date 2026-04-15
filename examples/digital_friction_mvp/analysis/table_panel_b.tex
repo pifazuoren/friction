@@ -1,0 +1,42 @@
+% Panel B only: paired effects vs baseline (vertical layout)
+% Requires: \usepackage{booktabs}
+
+\begin{table}[t]
+\centering
+\caption{Paired effects vs baseline in vertical layout (Stage 6, 10-day, 3-seed)}
+\label{tab:digital_friction_stage6_20260408_panel_b}
+\scriptsize
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.12}
+
+\begin{tabular}{p{3.7cm}p{2.4cm}cc}
+\toprule
+Contrast vs baseline & Metric & Mean $\Delta$ & 95\% CI \\
+\midrule
+High Friction + Low Assist & Attempt rate & -0.349 & [-0.390, -0.301] \\
+ & Neg. share & +0.449 & [+0.418, +0.472] \\
+ & Helplessness & +18.614 & [+16.829, +20.143] \\
+ & Trust & -19.783 & [-20.425, -19.400] \\
+ & Avoidance & +7.167 & [+4.850, +8.350] \\
+\midrule
+High Friction + High Assist & Attempt rate & -0.116 & [-0.144, -0.078] \\
+ & Neg. share & +0.195 & [+0.171, +0.219] \\
+ & Helplessness & +14.645 & [+9.296, +18.175] \\
+ & Trust & -22.017 & [-29.950, -14.575] \\
+ & Avoidance & +12.033 & [+4.325, +17.650] \\
+\midrule
+Low Friction + High Assist & Attempt rate & +0.109 & [+0.093, +0.133] \\
+ & Neg. share & -0.170 & [-0.181, -0.155] \\
+ & Helplessness & -27.158 & [-30.085, -24.262] \\
+ & Trust & +40.083 & [+34.625, +44.000] \\
+ & Avoidance & -35.408 & [-41.475, -30.375] \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.3em}
+\begin{minipage}{0.98\linewidth}
+\footnotesize
+\textit{Notes.} Mean paired differences across 3 seed-matched pairs, with bootstrap 95\% CI from the experiment outputs.
+Wilcoxon p-values for nonzero contrasts are 0.25 (small-sample setting, n=3), so this table is mainly descriptive of direction and magnitude.
+\end{minipage}
+\end{table}

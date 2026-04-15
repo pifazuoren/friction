@@ -1,0 +1,7 @@
+English Title: Older adults in the digital health era: insights on the digital health related knowledge, habits and attitudes of the 65 year and older population
+Chinese Title: 数字健康时代的老年人：关于65岁及以上人群数字健康相关知识、习惯与态度的洞见
+Category: older_adults
+Page URL: https://bmcgeriatr.biomedcentral.com/articles/10.1186/s12877-023-04437-5
+PDF URL: https://link.springer.com/content/pdf/10.1186/s12877-023-04437-5.pdf
+Notes: BMC open access
+Download Status: metadata_only
