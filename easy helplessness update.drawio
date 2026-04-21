@@ -1,0 +1,70 @@
+<mxfile host="app.diagrams.net" agent="Codex">
+  <diagram id="easy-helplessness-update" name="Page-1">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Easy Helplessness Update Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=26;fontStyle=1;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="340" y="30" width="720" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="task" value="Digital Task" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=20;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="520" y="110" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="appraisal" value="Task Appraisal&#xa;felt control / risk / value" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="500" y="230" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="self_efficacy" value="Task Self-Efficacy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="140" y="240" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="event" value="Event Result&#xa;success / failure / avoid" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=18;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="470" y="360" width="280" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="avoid_reason" value="Avoid Reason" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="860" y="370" width="210" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uncontrollability" value="Event-level&#xa;Uncontrollability" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cfe2f3;strokeColor=#5b9bd5;fontSize=22;fontStyle=1;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="455" y="500" width="310" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="success_memory" value="Controllable Success&#xa;Memory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="120" y="515" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="update" value="Helplessness&#xa;Update" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cfe2f3;strokeColor=#5b9bd5;fontSize=22;fontStyle=1;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="495" y="650" width="230" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="next" value="Next Round" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=20;fontColor=#1f1f1f;" vertex="1" parent="1">
+          <mxGeometry x="520" y="790" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_task_appraisal" edge="1" parent="1" source="task" target="appraisal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;endArrow=classic;endFill=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_efficacy_appraisal" edge="1" parent="1" source="self_efficacy" target="appraisal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=3;endArrow=classic;endFill=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_appraisal_event" edge="1" parent="1" source="appraisal" target="event" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;endArrow=classic;endFill=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_event_avoid" edge="1" parent="1" source="event" target="avoid_reason" value="if avoid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=3;dashed=1;endArrow=classic;endFill=1;fontSize=13;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_event_uncontrollability" edge="1" parent="1" source="event" target="uncontrollability" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;endArrow=classic;endFill=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_avoid_uncontrollability" edge="1" parent="1" source="avoid_reason" target="uncontrollability" value="mainly helpless_avoid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=3;dashed=1;endArrow=classic;endFill=1;fontSize=13;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_memory_appraisal" edge="1" parent="1" source="success_memory" target="appraisal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=3;endArrow=classic;endFill=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_memory_uncontrollability" edge="1" parent="1" source="success_memory" target="uncontrollability" value="buffer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=3;dashed=1;endArrow=classic;endFill=1;fontSize=13;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_uncontrollability_update" edge="1" parent="1" source="uncontrollability" target="update" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;endArrow=classic;endFill=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_update_next" edge="1" parent="1" source="update" target="next" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;endArrow=classic;endFill=1;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

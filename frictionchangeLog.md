@@ -886,3 +886,547 @@
 - 已运行验证命令：
   - `latexmk -xelatex -interaction=nonstopmode -halt-on-error /Users/pifazuoren/Downloads/AgentSociety-main/0408report.tex`
     - 结果：通过，已生成 `/Users/pifazuoren/Downloads/AgentSociety-main/0408report.pdf`
+
+## 2026-04-15
+
+### Step 1 命名清理：`perceived_uncontrollability` -> `event_level_uncontrollability`
+- 目的：
+  - 落实 `changetodo.md` 的第一步，先把“事件后的不可控体验”和 `felt_control` 的概念边界分开
+  - 在不改 helplessness 公式强弱的前提下，统一代码中的主字段命名
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/uncontrollability_calibrator.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/metrics.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_uncontrollability_calibrator.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 将 `AttemptOutcome`、`HelplessnessUpdateInput`、`RecentEpisode` 的主字段统一改为 `event_level_uncontrollability`
+  - 将规则侧命名同步改为 `rule_event_level_uncontrollability`
+  - 将 `infer_perceived_uncontrollability(...)` 重命名为 `infer_event_level_uncontrollability(...)`
+  - 将 calibrator 的 JSON schema、prompt、解析键与 agent 决策/落盘字段同步切到新命名
+  - 将 attempt rows 数据表字段同步改为 `event_level_uncontrollability / rule_event_level_uncontrollability`
+  - 只在旧 event log / old recent episode 读取入口保留最小兼容，不做双写和长期冗余兜底
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/proto/models.py examples/digital_friction_mvp/proto/outcome_model.py examples/digital_friction_mvp/proto/uncontrollability_calibrator.py examples/digital_friction_mvp/proto/state_update.py examples/digital_friction_mvp/proto/experience_memory.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/metrics.py`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_uncontrollability_calibrator.py examples/digital_friction_mvp/tests/test_outcome_model.py -q`
+- 备注：
+  - 本轮只做术语和字段边界清理，不调整 helplessness 更新强度、不引入 attribution、不改 block 架构
+  - 数据读取兼容仅保留在必要入口，避免为旧命名长期维持双轨代码
+
+### Step 2 收窄 helplessness 主公式：移除失败次数的直接主导作用
+- 目的：
+  - 落实 `changetodo.md` 的第二步，让 helplessness 更新不再由 `consecutive_failures` 直接线性推高
+  - 保留失败历史追踪，但把它从主公式里移出
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 删除 `repetition_delta(...)` 这条直接加项逻辑
+  - 保留 `next_consecutive_failures` 的更新，用于事件历史追踪和后续上游判断
+  - 负向事件的 `raw_delta` 现在只由 `base + event_level_uncontrollability + efficacy_loss + control_loss - support_buffer` 构成
+  - 新增测试，确认在低不可控条件下，失败 streak 本身不再机械推高 helplessness
+- 验证：
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py -q`
+- 备注：
+  - 本轮只收窄“失败次数直接加分”这一点，没有同时改 `felt_control` 的位置，也没有引入 attribution
+  - `repetition_delta` 字段暂时保留在结果结构里，但值固定为 `0.0`，避免这一步同时扩大接口改动面
+
+### Step 2.1 清理无效结果字段：删除 `repetition_delta`
+- 目的：
+  - 把已经失效的结果字段从接口和日志中彻底移除，避免后续阅读代码或分析输出时误以为“失败次数仍是正式主项”
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 从 `HelplessnessUpdateResult` 中删除 `repetition_delta`
+  - 删除 `state_update.py` 返回结果中的对应字段
+  - 删除 `agent.py` 中 `paper_backed_core.update_breakdown` 的对应输出
+  - 调整 `test_state_update.py`，改为只验证“失败 streak 不再改变 raw delta / final delta”
+- 验证：
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py -q`
+- 备注：
+  - 这一步属于结构清理，不改变当前 helplessness 数值逻辑
+
+### Step 3 收窄 felt_control 的位置：退出负向 helplessness 主公式
+- 目的：
+  - 落实 `changetodo.md` 的第三步，让 `felt_control` 不再作为负向 helplessness 的直接惩罚项
+  - 保留 `felt_control` 在 success/mastery 相关判断中的作用，避免同一个控制感被重复计入
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 删除 `control_loss_term(...)` 及其在负向事件 `raw_delta` 中的直接加项
+  - 从 `HelplessnessUpdateResult` 和 `paper_backed_core.update_breakdown` 中删除 `control_loss_term`
+  - 保留 `felt_control` 在 `mastery_recovery_term(...)` 中的 success/mastery 判断作用
+  - 将测试改为验证：在相同 `event_level_uncontrollability` 和 `task_self_efficacy` 下，单独改变 `felt_control` 不应直接改变负向 delta
+- 验证：
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py -q`
+- 备注：
+  - 本轮只处理 `state_update.py` 里的直接计入，不涉及 appraisal、memory 或 attribution 的进一步重构
+
+### Step 3.5 轻量接入 event-level attribution
+- 目的：
+  - 在 `event_level_uncontrollability` 之后补上一层最轻量的 `event-level attribution`
+  - 先让系统能够记录“这次失败是更像 self / situation、transient / stable、task_specific / family_generalizing”，但暂时不把它接进 helplessness 主公式
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/attribution_inference.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_schema.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_attribution_inference.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 为 `AttemptOutcome` 增加事件级 attribution 字段：
+    - `event_attribution_locus`
+    - `event_attribution_stability`
+    - `event_attribution_scope`
+    - `event_attribution_explanation`
+    - `event_attribution_confidence/source/status/cache_hit`
+  - 新增 `EventAttributionResult` 和独立 helper：`proto/attribution_inference.py`
+  - attribution 只对 `failure_after_attempt / failure_even_with_help / abandon_midway` 触发
+  - 使用 bounded LLM classification + confidence gating：
+    - 有 LLM 且 `PROTO_LLM_PSYCHOLOGY_MODE=hybrid` 时判别
+    - 低置信度、不可用或关闭时回退到保守标签
+  - 将 attribution 写入：
+    - `outcome`
+    - `decision`
+    - `paper_backed_core`
+    - status 中的 `proto_event_attribution`
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/proto/models.py examples/digital_friction_mvp/proto/attribution_inference.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/state_schema.py examples/digital_friction_mvp/tests/test_attribution_inference.py`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_attribution_inference.py -q`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_uncontrollability_calibrator.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_attribution_inference.py -q`
+- 备注：
+  - 本轮只做“事件级 attribution 的判别与记录”，还没有让 `stability / scope` 真正进入 persistence/generalization 后果链
+  - 没有新增一套 attribution rule baseline，也没有扩成 task-family 全局大分数，先保持轻量
+
+### Step 4 让 avoid_reason 在 compat 下游真正分流
+- 目的：
+  - 落实 `changetodo.md` 第 4 步里最关键的一半：不要再把所有 `avoid_without_attempt` 都当成同一种 downstream 后果
+  - 让 `helpless_avoid / risk_avoid / low_value_avoid` 在 trust 和 avoidance 的兼容层更新里表现出不同含义
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/compat.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_compat_mapping.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 为 `apply_compatibility_updates(...)` 增加 `avoid_reason` 输入
+  - 将 `avoid_without_attempt` 的 compat 更新改为按 `avoid_reason` 分流：
+    - `helpless_avoid`：更强 trust 下降与 avoidance 上升
+    - `risk_avoid`：较弱 trust 下降，中度 avoidance 上升
+    - `low_value_avoid`：几乎不伤 trust，只给较弱 avoidance 上升
+  - `agent.py` 在 compat 更新时显式传入 `outcome.avoid_reason`
+  - 新增测试，确认三种 avoid reason 的 downstream 后果不再同质
+- 验证：
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_compat_mapping.py -q`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_uncontrollability_calibrator.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_attribution_inference.py examples/digital_friction_mvp/tests/test_compat_mapping.py -q`
+- 备注：
+  - 本轮只先改 compat/downstream，不额外扩到 memory 的 task-family attribution summary 或 persistence/generalization 后果
+
+### Step 4.5 先把 attribution 的 stability/scope 沉淀进 task-family memory
+- 目的：
+  - 先不让 `stability / scope` 改 helplessness 数值，只把它们稳定写进 `task_domain_memory`
+  - 为后续接 persistence / task-family generalization 后果链准备好数据层
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 为 `TaskDomainState` 增加轻量 attribution summary 字段：
+    - `dominant_attribution_stability`
+    - `dominant_attribution_scope`
+    - `recent_stable_attribution_ratio`
+    - `recent_generalizing_attribution_ratio`
+    - `attribution_summary`
+  - 在 `update_task_domain_memory(...)` 中，当负向事件带有 attribution 标签时，用简单 EMA 更新 task-family 级 summary
+  - 在 `agent.py` 的 task-relevant memory packet 中补入同 task family 的 attribution summary，便于后续直接复用
+  - 新增测试，确认 negative attribution 会进入 task-family memory，mixed attribution 会把 ratio 拉回中间
+- 验证：
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_experience_memory.py -q`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_uncontrollability_calibrator.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_attribution_inference.py examples/digital_friction_mvp/tests/test_compat_mapping.py -q`
+- 备注：
+  - 本轮还没有让 `stability / scope` 真正改变恢复速度或跨任务扩散，只先落 memory summary
+
+### Step 4.5 后半段：让 attribution 进入恢复速度与同类任务泛化
+- 目的：
+  - 把前一轮已经写入 memory 的 attribution summary 变成轻量后果机制
+  - 只接两个最小、最直观的 effects：
+    - `stable attribution` 让成功后的恢复更慢
+    - `family_generalizing attribution` 轻度拖累相邻 task family
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 在 `update_task_domain_memory(...)` 中：
+    - 成功事件的 `task_self_efficacy` 恢复幅度，会被 `recent_stable_attribution_ratio` 乘上一个恢复倍率
+    - 最近越倾向把失败看成稳定问题，后续一次成功带来的恢复就越有限
+  - 新增 `_TASK_FAMILY_NEIGHBORS` 与 `_apply_task_family_generalization(...)`
+    - 当失败事件的 `event_attribution_scope` 为 `family_generalizing` 时，对相邻 task family 施加轻度 `task_self_efficacy` 惩罚
+    - `mixed` 只施加更弱的同类泛化惩罚
+  - 保持实现范围很窄：
+    - 不直接改 helplessness 主公式
+    - 不扩成全局复杂传播网络
+    - 只在 `experience_memory` 这一层做最小可解释实现
+- 新增验证：
+  - `stable attribution history` 会让相同成功事件的恢复幅度更小
+  - `family_generalizing attribution` 会拉低相邻 task family 的 `task_self_efficacy`
+  - `mixed` 的泛化强度弱于 `family_generalizing`
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/proto/experience_memory.py examples/digital_friction_mvp/tests/test_experience_memory.py`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_experience_memory.py -q`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_uncontrollability_calibrator.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_attribution_inference.py examples/digital_friction_mvp/tests/test_compat_mapping.py -q`
+- 结果：
+  - `test_experience_memory.py`：`23 passed`
+  - 核心测试集：`54 passed`
+- 备注：
+  - 这一步现在已经把 attribution 从“只记录”推进到了“产生轻量后果”
+  - 但后果仍然被严格限制在 recovery/generalization 两条小通道里，没有把系统重新做重
+
+### Step 5 精简 mastery 机制，只保留一个长期保护主项
+- 目的：
+  - 把“成功后的即时恢复”和“长期 mastery 保护”分开，但不再保留太多细碎奖励项
+  - 让 `controllable_success_memory` 更明确地成为唯一长期保护主项
+  - 让高质量 mastery 不只降低后续打击，还能把 attribution 往更可恢复的方向拉回
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - `state_update.py`
+    - 把原来较碎的 `mastery_recovery_term(...)` 收成更简单的 `success_recovery_bonus(...)`
+    - 即时恢复现在只保留三层清楚逻辑：
+      - `success_self` 恢复最强
+      - `success_with_help + enabling_support` 次之
+      - 其余帮助成功最弱
+      - 如果这次成功结束了 failure streak，再给一个统一的小加成
+    - 不再让 `felt_control / expected_help_effectiveness / support_quality` 在即时恢复里重复层层加码
+  - `experience_memory.py`
+    - `_controllable_success_gain(...)` 改成更明确的“高质量 mastery”门槛：
+      - `success_self` 只有在 `felt_control` 足够高且 `event_level_uncontrollability` 足够低时才显著积累长期保护
+      - `success_with_help` 只有 `enabling_support` 才能少量积累长期保护
+      - `substituting_support` 不再进入长期 mastery 保护
+    - 新增 `_rewrite_attribution_after_mastery(...)`
+      - 当出现高质量 mastery 时，task-family memory 中的 `recent_stable_attribution_ratio` 和 `recent_generalizing_attribution_ratio` 会被往下拉
+      - 也就是让“我总是不行 / 这类任务都不行”的解释开始回到更可恢复、更局部的状态
+- 新增验证：
+  - `success recovery` 不再直接依赖 `felt_control`
+  - `success_self` 仍明显强于 `success_with_help`
+  - `enabling_support` 仍强于 `substituting_support`
+  - `substituting_support` 不再积累长期 `controllable_success_memory`
+  - 高质量 mastery 会把 attribution 从 `stable / family_generalizing` 往 `mixed / task_specific` 方向拉回
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/proto/state_update.py examples/digital_friction_mvp/proto/experience_memory.py examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_experience_memory.py`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_experience_memory.py -q`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_uncontrollability_calibrator.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_attribution_inference.py examples/digital_friction_mvp/tests/test_compat_mapping.py -q`
+- 结果：
+  - `test_state_update.py + test_experience_memory.py`：`37 passed`
+  - 核心测试集：`56 passed`
+- 备注：
+  - 这一轮还没有动 `support_buffer` 的 direct path，那会留到 Task 6
+  - 但 mastery 这条线已经从“多个小 bonus 并列”收成了“一个简单即时恢复 + 一个长期保护主项”的结构
+
+### Step 6 把 support 从直接减分器改成以间接修复为主
+- 目的：
+  - 让 support 不再在失败事件后直接给 helplessness “减分”
+  - 保留 support 的作用，但把主要作用放回已经存在的间接通道：
+    - `task_self_efficacy`
+    - `support_mode`
+    - `controllable_success_memory`
+    - attribution / mastery 的后续修复
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 从 `apply_helplessness_update(...)` 中删除负向事件里的 `support_buffer` 直接减项
+  - 失败类事件现在的主更新重新收回到：
+    - 小 outcome base
+    - `event_level_uncontrollability`
+    - `task_self_efficacy` 放大
+    - `controllable_success_memory` 保护
+  - 保留 `support_buffer` 结果字段，但它现在稳定为 `0.0`
+    - 这样不会打断现有日志结构
+    - 同时也避免继续让 support 作为隐藏 direct path 留在主公式里
+- 新增验证：
+  - `failure_even_with_help` 场景下，`enabling_support` 和 `substituting_support` 不再因为 direct buffer 而产生不同 helplessness delta
+  - 帮助成功时的差异仍然保留在 success recovery 路径中，而不是被这一步删掉
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/proto/state_update.py examples/digital_friction_mvp/tests/test_state_update.py`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py -q`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_uncontrollability_calibrator.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_attribution_inference.py examples/digital_friction_mvp/tests/test_compat_mapping.py -q`
+- 结果：
+  - `test_state_update.py`：`14 passed`
+  - 核心测试集：`57 passed`
+- 备注：
+  - 这一轮先只去掉了 support 的强 direct effect，没有再额外引入新的 support 公式
+  - 也就是说，support 现在主要通过已有的间接路径起作用，代码保持了最小修改和较清楚的结构
+
+### Step 6.1 删除失效的 `support_buffer` 结果字段
+- 目的：
+  - 把已经不再参与计算、且始终为 `0.0` 的结果字段彻底删除
+  - 避免日志和结构继续暗示 support 还保留 direct buffer 路径
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 从 `HelplessnessUpdateResult` 中删除 `support_buffer`
+  - 从 `apply_helplessness_update(...)` 的返回结果中删除该字段
+  - 从 `agent.py` 的 `update_breakdown` 日志里删除该字段
+  - 测试改为只验证“support 不再直接改变负向 helplessness delta”，不再检查一个已删除字段
+- 结果：
+  - `support_buffer` 现在不再出现在 proto 的 helplessness update 结果结构和日志输出里
+  - 机制表达与代码结构进一步对齐：support 只保留间接修复含义
+
+### Step H 收窄 `effective_helplessness`，不再混入 control/help/emotion
+- 目的：
+  - 把 `effective_helplessness` 收回到“当前无助压力”的更窄含义
+  - 避免把 `felt_control`、`expected_help_effectiveness` 和情绪压力重新混成 helplessness 的替身
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - `extract_memory_features(...)` 中的 `effective_helplessness` 现在只保留：
+    - `helplessness_score`
+    - `task_specific_pressure`
+    - `recent_failure_pressure`
+  - 不再把下面这些量直接加回 `effective_helplessness`：
+    - `control_shift`
+    - `help_shift`
+    - `emotion_pressure`
+  - `task_appraisal_shift` 仍保留，但收窄为仅反映 `perceived_task_difficulty`
+    - 它现在更像一个审计/解释信号
+    - 不再直接进入 helplessness 通道
+  - `emotion_pressure` 仍保留为诊断字段
+    - hybrid 模式下仍会被计算
+    - 但不再直接推高 `effective_helplessness`
+- 新增验证：
+  - hybrid 模式下 `emotion_pressure` 会出现，但 `effective_helplessness` 不因情绪字段直接变化
+  - `task_appraisal_shift` 可以反映任务难度变化，但不再直接推高 `effective_helplessness`
+  - 同样难度下，`felt_control` 和 `expected_help_effectiveness` 的变化不再直接改变 `effective_helplessness`
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/proto/experience_memory.py examples/digital_friction_mvp/tests/test_experience_memory.py`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_experience_memory.py -q`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_uncontrollability_calibrator.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_attribution_inference.py examples/digital_friction_mvp/tests/test_compat_mapping.py -q`
+- 结果：
+  - `test_experience_memory.py`：`25 passed`
+  - 核心测试集：`58 passed`
+- 备注：
+  - 这一轮没有删除 `emotion_pressure` 和 `task_appraisal_shift` 字段本身
+  - 只是把它们从 `effective_helplessness` 中剥离出来，避免继续和 helplessness 构念混在一起
+
+### Step 8.1 清理旧字段残留：删除 `perceived_uncontrollability` fallback
+- 目的：
+  - 把 `event_level_uncontrollability` 的命名清理彻底收尾
+  - 避免运行时和测试里继续保留旧字段 fallback，造成口径不统一
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 从 `RecentEpisode.from_dict(...)` 中删除对旧字段 `perceived_uncontrollability` 的兼容读取
+  - 从 `agent.py` 的 recent outcome tail 构造中删除对旧字段的 fallback
+  - 将测试里旧格式 episode buffer 示例统一改成 `event_level_uncontrollability`
+- 结果：
+  - `examples/digital_friction_mvp/proto/`
+  - `examples/digital_friction_mvp/tests/`
+  中已不再出现 `perceived_uncontrollability`
+- 备注：
+  - 旧字段名现在只保留在历史文档、旧日志和 changetodo 讨论中
+  - 运行时代码和测试口径已经统一到 `event_level_uncontrollability`
+
+### Step 6.2 补强 support 对 attribution 的修复作用
+- 目的：
+  - 把 Task 6 里还没单独落地的那半步补上
+  - 明确体现：`enabling_support` 在失败后更不容易形成 `stable / family_generalizing attribution`
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/attribution_inference.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_attribution_inference.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 在 `infer_event_attribution(...)` 中增加一个非常轻的 post-guard：
+    - 只对 `failure_even_with_help / abandon_midway` 生效
+    - 只对 `enabling_support` 生效
+    - 不新增 helplessness 公式，不碰主更新链
+  - 当 LLM 给出的高置信度 attribution 为：
+    - `stable`
+    - `family_generalizing`
+    且事件属于 `enabling_support` 的失败时，guard 会把它们各自下调一档到 `mixed`
+  - `substituting_support` 不会触发这条 guard
+  - `judge_confidence` 保持不变，避免额外引入阈值边角
+  - 如果 guard 生效，结果 `source` 会标记为 `llm_classified_support_guarded`
+- 新增验证：
+  - 同样的 LLM 输出下，`substituting_support` 仍可保留 `stable / family_generalizing`
+  - 同样的 LLM 输出下，`enabling_support` 会被轻度拉回到 `mixed / mixed`
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/proto/attribution_inference.py examples/digital_friction_mvp/tests/test_attribution_inference.py`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_attribution_inference.py -q`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_uncontrollability_calibrator.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_attribution_inference.py examples/digital_friction_mvp/tests/test_compat_mapping.py -q`
+- 结果：
+  - `test_attribution_inference.py`：`4 passed`
+  - 核心测试集：`59 passed`
+- 备注：
+  - 这一轮不是让 support 直接决定 attribution
+  - 而是在 LLM 标签基础上，加了一层很小、可解释、可测试的修复性 guard
+
+### Step 8.2 收口剩余尾巴：旧字段测试、保守 attribution、avoid memory、stream 与 interview 输入
+- 目的：
+  - 把上一次核查里剩下的几处“还能跑，但还没严格符合 changetodo”的尾巴收干净
+  - 尤其处理：
+    - 完整测试目录中的旧字段残留
+    - 低置信度 attribution 仍改状态的问题
+    - `risk_avoid / low_value_avoid` 仍混入 helplessness memory 压力的问题
+    - `digital_failure_attribution` stream topic 尚未真正写入的问题
+    - attribution 尤其 `locus` 还没明确进入 interview 输入面的情况
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/attribution_inference.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/llm_psychology.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_llm_psychology.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_attribution_inference.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_parallel_summary.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 测试层统一旧字段命名：
+    - `test_llm_psychology.py` 的 `AttemptOutcome` 夹具改回 `event_level_uncontrollability`
+    - `test_parallel_summary.py` 的 sqlite 夹具列改回
+      - `event_level_uncontrollability`
+      - `rule_event_level_uncontrollability`
+  - attribution low-confidence / fallback 现在改成真正“保守不生效”：
+    - `_fallback_result(...)` 不再返回 `mixed / task_specific`
+    - 改为统一返回 `not_applicable`
+    - 这样低置信度、请求错误、不可用等情况不会再把 attribution 写进后续状态
+  - task-family attribution summary 现在只接受真正生效的 attribution：
+    - `experience_memory.py` 中 `_update_attribution_summary(...)` 新增 `event_attribution_status == "ok"` 检查
+    - 只有高置信度、正式生效的 attribution 才会进入长期记忆
+  - recent avoid memory 改成只让 helpless avoid 进入无助主通道：
+    - `_summarize_recent_episode_buffer(...)` 中 `recent_avoid_ratio` 只统计
+      - `outcome_type == "avoid_without_attempt"`
+      - 且 `avoid_reason == "helpless_avoid"`
+    - `risk_avoid` 和 `low_value_avoid` 不再继续通过 `recent_failure_pressure` 间接推高 `effective_helplessness`
+  - attribution stream topic 正式落地：
+    - 在 `agent.py` 中新增 `_record_event_attribution_stream(...)`
+    - 只有 `event_attribution.status == "ok"` 时才写入
+    - stream topic 为：
+      - `digital_failure_attribution`
+  - interview / narrative 输入面正式接入 attribution：
+    - `resolve_stage_interview(...)` 新增 `latest_event_attribution`
+    - `resolve_final_interview(...)` 新增 `latest_event_attribution`
+    - `agent.do_interview(...)` 里把 `proto_event_attribution` 明确传进去
+    - `_summarize_event_log_for_interview(...)` 还增加了：
+      - `dominant_attribution_locus`
+      - `dominant_attribution_stability`
+      - `dominant_attribution_scope`
+    - 这样 stage/final interview 不再只是看到 outcome 和 task family，也能看到 attribution 侧的解释线索
+- 新增验证：
+  - 低置信度 attribution 现在回退到 `not_applicable`，不再留下实际 attribution effect
+  - `risk_avoid` 不再像 `helpless_avoid` 那样进入 `recent_failure_pressure`
+  - 完整 `tests` 目录重新跑通，不再被旧字段 `perceived_uncontrollability` 卡住
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/proto/attribution_inference.py examples/digital_friction_mvp/proto/experience_memory.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/llm_psychology.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_attribution_inference.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_parallel_summary.py`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_attribution_inference.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_parallel_summary.py -q`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests -q`
+- 结果：
+  - 聚焦测试：`44 passed`
+  - 完整测试目录：`118 passed`
+- 备注：
+  - 这一轮没有扩大 helplessness 主公式
+  - 改动重点是把“已经决定好的理论口径”真正落实到测试、memory、副通道和叙事输入面
+
+### Step 8.3 Attribution Prompt 重构为更像 AgentSociety 的自我解释模块
+- 目的：
+  - 把 `event attribution` 从“外部标签分类器”改成更像 AgentSociety 原生 `thought / reflection / interview` 风格的“agent 自我解释模块”
+  - 减少原 prompt 被单一示例锚定到 `mixed + stable + task_specific` 的问题
+  - 在不改输出 schema 的前提下，让 attribution 真正读取 `profile / current state / same-task memory / cross-task memory / reflection`
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/attribution_inference.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - `attribution_inference.py`
+    - `system prompt` 从
+      - `strict JSON-only classifier`
+      - 改为
+      - `bounded self-explanation module for an older adult agent`
+    - prompt 主体改成：
+      - `goal`
+      - `dimension_definitions`
+      - `decision_rules`
+      - `context_blocks`
+      - `reference_cases`
+      - `output_requirements`
+      - `json_schema_template`
+    - 明确把三个标签维度解释成 agent 自己在回答的心理问题：
+      - `locus`: 主要怪谁
+      - `stability`: 会不会继续发生
+      - `scope`: 会不会扩散到类似任务
+    - 去掉旧版本里单一的 `mixed / stable / task_specific` 输出示例锚点
+    - 改成 3 个平衡 reference cases：
+      - 单次混乱受挫 -> `situation / transient / task_specific`
+      - 跨任务重复失败 -> `self / stable / family_generalizing`
+      - enabling support 下失败 -> `mixed / mixed / task_specific`
+    - 新增轻量辅助函数：
+      - `_compact_text(...)`
+      - `_normalize_block(...)`
+      - `_stable_json_text(...)`
+    - cache key 现在加入更多 attribution 真正依赖的上下文摘要，避免新 prompt 还继续吃旧的粗粒度缓存
+  - `agent.py`
+    - 新增 `_extract_cross_task_event_tail(...)`
+      - 从 event log 中抽最近的异任务数字事件，作为 `cross-task memory`
+    - 新增 `_build_relevant_mastery_summary(...)`
+      - 汇总 same-task controllable success / mastery 相关线索
+    - 新增 `_latest_stage_quote(...)`
+      - 从已有 stage interview history 中抽最近一句 short quote
+    - 调用 `infer_event_attribution(...)` 时新增传入：
+      - `helplessness_now`
+      - `trust_now`
+      - `avoidance_now`
+      - `profile_summary`
+      - `same_task_recent_context`
+      - `cross_task_recent_context`
+      - `relevant_mastery_summary`
+      - `latest_daily_reflection`
+      - `latest_stage_quote`
+- 结果：
+  - attribution prompt 现在更接近 AgentSociety 原生“状态 + 记忆 + 事件 -> 自我解释”的风格
+  - 仍保持原有输出字段不变：
+    - `event_attribution_locus`
+    - `event_attribution_stability`
+    - `event_attribution_scope`
+    - `event_attribution_explanation`
+    - `judge_confidence`
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/proto/attribution_inference.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/tests/test_attribution_inference.py`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_attribution_inference.py -q`
+  - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests -q`
+- 结果：
+  - `test_attribution_inference.py`：`4 passed`
+  - 完整测试目录：`118 passed`
+- 备注：
+  - 这一轮只重构了 prompt 和上下文输入面，没有新增 attribution 输出字段
+  - support guard、低置信度回退、memory 接口等既有机制保持不变

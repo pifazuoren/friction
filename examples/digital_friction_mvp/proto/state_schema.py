@@ -419,6 +419,12 @@ def build_proto_status_attributes() -> list[MemoryAttribute]:
             description="latest bounded strategy deliberation snapshot",
         ),
         MemoryAttribute(
+            name="proto_event_attribution",
+            type=dict,
+            default_or_value={},
+            description="latest event-level attribution snapshot",
+        ),
+        MemoryAttribute(
             name="proto_stage_interview",
             type=dict,
             default_or_value={},
@@ -563,6 +569,7 @@ def build_initial_proto_status(
         "proto_last_reflection_day": -1,
         "proto_task_appraisal": {},
         "proto_strategy_deliberation": {},
+        "proto_event_attribution": {},
         "proto_stage_interview": {},
         "proto_stage_interview_history": [],
         "proto_final_interview": {},

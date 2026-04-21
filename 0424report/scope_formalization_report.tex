@@ -1,0 +1,189 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{beaver}
+
+\usepackage[UTF8,fontset=fandol]{ctex}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, shapes.geometric, calc, fit}
+
+\newcommand{\framebottomnote}[1]{%
+    \vfill
+    \par\noindent
+    {\tiny\color{black!65}\parbox{0.96\linewidth}{#1}\par}%
+    \vspace*{-0.75cm}%
+}
+
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+
+\title[Scope 形式化表达]{Scope 形式化表达}
+\subtitle{面向当前 digital friction 实验的初步 formulation}
+\date{2026-04-20}
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\section{问题定义}
+
+\begin{frame}[t]{相关论文如何理解 Scope}
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Learned Helplessness in Humans: Critique and Reformulation}
+
+\textit{Lyn Y. Abramson, Martin E. P. Seligman, John D. Teasdale}
+\begin{itemize}
+    \item Abramson, Seligman, and Teasdale (1978) 认为，人类的 helplessness 不能只看其结果是否不可控，更关键的是\textbf{人怎样解释这次 noncontingency}
+    \item \mbox{\textbf{scope决定generality}}，如果个体把失败理解成“这一类事我都不行”，无助就更容易从当前任务扩散出去
+\end{itemize}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{Situation Similarity and the Generalization of Learned Helplessness}
+
+\textit{Marika Tiggemann, A. H. Winefield}
+\begin{itemize}
+    \item Tiggemann and Winefield (1978) 发现，learned helplessness 在相似任务上明显出现，但在不相似的任务上几乎不泛化
+    \item 这说明 helplessness 的跨任务扩散不是无边界的，而是受\textbf{场景相似度}约束
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.15cm}
+\centering
+\small
+\[
+\text{Failure} \rightarrow \text{Attribution Scope} \rightarrow \text{Task-Family Spillover}
+\]
+\end{frame}
+
+\section{形式化表达}
+
+\begin{frame}[c]{Gaussian为什么被选中作为scope的形式化更新方式}
+\small
+\begin{center}
+\begin{minipage}[t][0.78\textheight][t]{0.84\textwidth}
+\justifying
+\begin{itemize}
+    \item 如果一次数字事件失败的 Scope 归因也会扩散，那它应该优先影响相似任务，而不是平均地扩散到所有任务。由于目前缺少针对 Scope 的成熟形式化研究，这里\textbf{借鉴了人类泛化机制中的距离衰减写法。}
+    \item Lucas et al. (2015) 和 Wu et al. (2018) 在人类泛化建模里，正是用高斯过程来表达这种“按距离衰减”的关系
+    \item Lee et al. (2021) 进一步指出，泛化梯度常接近高斯形状；按心理距离缩放后，又和 Shepard 的指数衰减规律一致，所以 Gaussian 在这里既符合直觉，也有认知建模上的理论支撑
+\end{itemize}
+
+\vspace{0.1cm}
+\textbf{区分：}我们借用的是距离衰减形式，不是把 scope 和人类泛化当成同一个变量。
+
+\vfill
+{\tiny \color{black!60}\textbf{人类泛化机制：}人会把一次经验推广到相似情境中，而且这种推广会随着相似度下降而减弱。}
+\end{minipage}
+\end{center}
+\end{frame}
+
+\begin{frame}[t]{Gaussian Kernel 版本}
+\scriptsize
+\justifying
+\[
+d(i,j)=1-S_{ij}
+\]
+
+\[
+w_{ij}=\exp\!\left(-\frac{d(i,j)^2}{2\sigma(g_t)^2}\right), \qquad j\neq i
+\]
+
+\[
+\hat w_{ij}=\frac{w_{ij}}{\sum_{k\neq i} w_{ik}}
+\]
+
+\[
+\Delta SE^{\text{spill}}_{j,t}
+=
+-\beta\, U_t\, P(g_t)\, \hat w_{ij}
+\]
+
+\vspace{0.1cm}
+\raggedright
+\textbf{标注：}Gaussian 不是 scope 本身，而是 scope 发生扩散时的强度写法。
+\end{frame}
+
+\section{实验接入}
+
+\begin{frame}[t]{在当前实验中如何加入}
+\scriptsize
+\begin{columns}[T]
+\begin{column}{0.53\textwidth}
+\textbf{当前最稳妥的接法}
+\begin{enumerate}
+    \item 保持 \texttt{attribution\_inference.py} 继续输出离散 scope 标签
+    \item 先不让 scope 直接进入 helplessness 的主更新
+    \item 为 4 个 task family 定义一个 similarity matrix \(S_{ij}\)
+    \item 只有在 scope 指向跨任务泛化时，才触发 task-family 层面的 spillover
+    \item spillover 先更新其他 family 的 \texttt{task\_self\_efficacy}
+    \item 再由 self-efficacy 间接影响后续 decision / attempt / outcome
+\end{enumerate}
+
+\vspace{0.06cm}
+\textbf{最重要的机制约束}
+\[
+\text{scope} \rightarrow \text{generalization}
+\]
+\[
+\text{not} \quad \text{scope} \rightarrow \Delta \text{helplessness directly}
+\]
+
+\vspace{0.04cm}
+\textbf{一句话：}scope label $\rightarrow$ spillover $\rightarrow$ self-efficacy $\rightarrow$ later behavior
+\end{column}
+
+\begin{column}{0.43\textwidth}
+\textbf{当前建议的起点}
+
+\vspace{0.02cm}
+\raggedright
+先用：
+
+\[
+\textbf{离散 scope 标签 + similarity matrix spillover}
+\]
+
+\vspace{0.02cm}
+如果后续想把扩散强度写得更平滑，再升级为 Gaussian kernel。
+
+\vspace{0.05cm}
+\textbf{建议的初始 similarity matrix}
+
+\vspace{0.08cm}
+\centering
+\begin{tabular}{lcccc}
+\toprule
+ & L & A & P & H \\
+\midrule
+L & 1.0 & 0.3 & 0.8 & 0.2 \\
+A & 0.3 & 1.0 & 0.2 & 0.7 \\
+P & 0.8 & 0.2 & 1.0 & 0.2 \\
+H & 0.2 & 0.7 & 0.2 & 1.0 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.1cm}
+\raggedright
+{\tiny
+L = login\_verification, A = appointment\_registration\\
+P = payment\_checkout, H = health\_info\_lookup
+}
+
+\vspace{0.05cm}
+{\tiny
+直觉上，L--P 更近，A--H 更近，跨组传播更弱。
+}
+\end{column}
+\end{columns}
+\end{frame}
+
+\end{document}

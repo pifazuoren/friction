@@ -1,0 +1,25 @@
+{
+  "group_id": "exp_20260415_allhybrid1",
+  "config_fingerprint": "5bbecce286fc88e7",
+  "config_payload": {
+    "world_batch": [
+      "baseline_low_friction",
+      "high_friction_low_assist",
+      "high_friction_high_assist",
+      "low_friction_high_assist"
+    ],
+    "AGENT_COUNT": "10",
+    "PROTO_LLM_DAILY_REFLECTION_ENABLED": "true",
+    "PROTO_LLM_EVENT_APPRAISAL_ENABLED": "true",
+    "PROTO_LLM_FINAL_INTERVIEW_ENABLED": "true",
+    "PROTO_LLM_PSYCHOLOGY_MODE": "hybrid",
+    "PROTO_LLM_STAGE_INTERVIEW_ENABLED": "true",
+    "PROTO_LLM_STRATEGY_DELIBERATION_ENABLED": "true",
+    "PROTO_LLM_TASK_APPRAISAL_ENABLED": "true",
+    "PROTO_LLM_UNCONTROLLABILITY_MODE": "hybrid",
+    "PROTO_LOGICAL_CLOCK_ENABLED": "true",
+    "STAGE_DAYS": "7",
+    "STAGE_MODE": "single",
+    "STAGE_SINGLE_NAME": "steady"
+  }
+}

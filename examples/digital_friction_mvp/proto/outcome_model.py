@@ -45,7 +45,7 @@ def friction_tier_from_env(task: DigitalTask, env: dict[str, Any]) -> int:
     return 2
 
 
-def infer_perceived_uncontrollability(
+def infer_event_level_uncontrollability(
     *,
     task: DigitalTask,
     outcome_type: str,
@@ -225,7 +225,7 @@ def resolve_attempt_outcome(
     support_quality = support_quality_from_env(env)
     friction_tier = friction_tier_from_env(task, env)
     if strategy.strategy_type == "avoid":
-        perceived_uncontrollability = infer_perceived_uncontrollability(
+        event_level_uncontrollability = infer_event_level_uncontrollability(
             task=task,
             outcome_type="avoid_without_attempt",
             friction_tier=friction_tier,
@@ -237,12 +237,12 @@ def resolve_attempt_outcome(
             help_used=False,
             negative_feedback=False,
             support_quality=support_quality,
-            perceived_uncontrollability=perceived_uncontrollability,
+            event_level_uncontrollability=event_level_uncontrollability,
             friction_tier=friction_tier,
             success_probability=0.0,
             abandon_probability=0.0,
             note="avoided_before_attempt",
-            rule_perceived_uncontrollability=perceived_uncontrollability,
+            rule_event_level_uncontrollability=event_level_uncontrollability,
         )
 
     success_probability = _success_probability(
@@ -282,7 +282,7 @@ def resolve_attempt_outcome(
         in {"failure_after_attempt", "failure_even_with_help", "abandon_midway"}
         else 0
     )
-    perceived_uncontrollability = infer_perceived_uncontrollability(
+    event_level_uncontrollability = infer_event_level_uncontrollability(
         task=task,
         outcome_type=outcome_type,
         friction_tier=friction_tier,
@@ -295,10 +295,10 @@ def resolve_attempt_outcome(
         negative_feedback=outcome_type
         in {"failure_after_attempt", "failure_even_with_help", "abandon_midway"},
         support_quality=support_quality,
-        perceived_uncontrollability=perceived_uncontrollability,
+        event_level_uncontrollability=event_level_uncontrollability,
         friction_tier=friction_tier,
         success_probability=success_probability,
         abandon_probability=abandon_probability,
         note=f"roll={roll:.4f}",
-        rule_perceived_uncontrollability=perceived_uncontrollability,
+        rule_event_level_uncontrollability=event_level_uncontrollability,
     )

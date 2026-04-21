@@ -10,6 +10,7 @@ from agentsociety.cityagent import SocietyAgent
 from config_runtime import load_runtime_config
 
 from .attempt_strategy import choose_attempt_strategy, compute_rule_strategy_weights
+from .attribution_inference import infer_event_attribution
 from .compat import apply_compatibility_updates
 from .experience_memory import (
     extract_memory_features,
@@ -156,11 +157,17 @@ def _summarize_event_log_for_interview(event_log: list[dict[str, Any]]) -> dict[
         "help_used_count": 0,
         "top_task_family": "",
         "top_outcome_type": "",
+        "dominant_attribution_locus": "not_applicable",
+        "dominant_attribution_stability": "not_applicable",
+        "dominant_attribution_scope": "not_applicable",
     }
     if not event_log:
         return summary
     task_counts: dict[str, int] = {}
     outcome_counts: dict[str, int] = {}
+    attribution_locus_counts: dict[str, int] = {}
+    attribution_stability_counts: dict[str, int] = {}
+    attribution_scope_counts: dict[str, int] = {}
     for item in event_log:
         summary["event_count"] += 1
         decision = item.get("decision", {}) if isinstance(item, dict) else {}
@@ -177,6 +184,29 @@ def _summarize_event_log_for_interview(event_log: list[dict[str, Any]]) -> dict[
             task_counts[task_family] = task_counts.get(task_family, 0) + 1
         if outcome_type:
             outcome_counts[outcome_type] = outcome_counts.get(outcome_type, 0) + 1
+        locus = str(
+            decision.get("event_attribution_locus", "")
+            if isinstance(decision, dict)
+            else ""
+        ).strip()
+        stability = str(
+            decision.get("event_attribution_stability", "")
+            if isinstance(decision, dict)
+            else ""
+        ).strip()
+        scope = str(
+            decision.get("event_attribution_scope", "")
+            if isinstance(decision, dict)
+            else ""
+        ).strip()
+        if locus and locus != "not_applicable":
+            attribution_locus_counts[locus] = attribution_locus_counts.get(locus, 0) + 1
+        if stability and stability != "not_applicable":
+            attribution_stability_counts[stability] = (
+                attribution_stability_counts.get(stability, 0) + 1
+            )
+        if scope and scope != "not_applicable":
+            attribution_scope_counts[scope] = attribution_scope_counts.get(scope, 0) + 1
         if outcome_type in {"success_self", "success_with_help"}:
             summary["success_count"] += 1
         if outcome_type == "avoid_without_attempt":
@@ -196,6 +226,18 @@ def _summarize_event_log_for_interview(event_log: list[dict[str, Any]]) -> dict[
     if outcome_counts:
         summary["top_outcome_type"] = max(
             outcome_counts.items(), key=lambda item: (item[1], item[0])
+        )[0]
+    if attribution_locus_counts:
+        summary["dominant_attribution_locus"] = max(
+            attribution_locus_counts.items(), key=lambda item: (item[1], item[0])
+        )[0]
+    if attribution_stability_counts:
+        summary["dominant_attribution_stability"] = max(
+            attribution_stability_counts.items(), key=lambda item: (item[1], item[0])
+        )[0]
+    if attribution_scope_counts:
+        summary["dominant_attribution_scope"] = max(
+            attribution_scope_counts.items(), key=lambda item: (item[1], item[0])
         )[0]
     return summary
 
@@ -278,8 +320,8 @@ def _extract_same_task_event_tail(
                 "strategy_type": str(decision.get("strategy_type", "")).strip(),
                 "avoid_reason": str(decision.get("avoid_reason", "")).strip(),
                 "support_quality": _safe_int(decision.get("support_quality"), 0),
-                "perceived_uncontrollability": _safe_int(
-                    decision.get("perceived_uncontrollability"),
+                "event_level_uncontrollability": _safe_int(
+                    decision.get("event_level_uncontrollability"),
                     0,
                 ),
             }
@@ -287,6 +329,87 @@ def _extract_same_task_event_tail(
         if len(tail) >= int(limit):
             break
     return list(reversed(tail))
+
+
+def _extract_cross_task_event_tail(
+    *,
+    task_family: str,
+    event_log: Any,
+    limit: int = 4,
+) -> list[dict[str, Any]]:
+    if not isinstance(event_log, list):
+        return []
+    tail: list[dict[str, Any]] = []
+    for item in reversed(event_log):
+        if not isinstance(item, dict):
+            continue
+        decision = item.get("decision", {})
+        if not isinstance(decision, dict):
+            decision = {}
+        current_task_family = str(
+            item.get("scenario") or decision.get("task_family") or ""
+        ).strip()
+        if not current_task_family or current_task_family == str(task_family):
+            continue
+        tail.append(
+            {
+                "task_family": current_task_family,
+                "day": _safe_int(item.get("day"), 0),
+                "outcome_type": str(decision.get("primary_reason", "")).strip(),
+                "avoid_reason": str(decision.get("avoid_reason", "")).strip(),
+                "support_mode": str(decision.get("support_mode", "")).strip(),
+                "event_level_uncontrollability": _safe_int(
+                    decision.get("event_level_uncontrollability"),
+                    0,
+                ),
+            }
+        )
+        if len(tail) >= int(limit):
+            break
+    return list(reversed(tail))
+
+
+def _build_relevant_mastery_summary(
+    task_relevant_memory_packet: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "same_task_controllable_success_memory": round(
+            _safe_float(
+                task_relevant_memory_packet.get(
+                    "same_task_controllable_success_memory",
+                    0.0,
+                )
+            ),
+            4,
+        ),
+        "has_controllable_success_evidence": bool(
+            task_relevant_memory_packet.get("has_controllable_success_evidence", False)
+        ),
+        "help_success_rate_same_task": round(
+            _safe_float(
+                task_relevant_memory_packet.get("help_success_rate_same_task", 0.5)
+            ),
+            4,
+        ),
+        "recent_same_task_outcomes_tail": list(
+            task_relevant_memory_packet.get("recent_same_task_outcomes_tail", [])
+        ),
+        "same_task_attribution_summary": str(
+            task_relevant_memory_packet.get("same_task_attribution_summary", "")
+        ).strip(),
+    }
+
+
+def _latest_stage_quote(stage_interview_history: Any) -> str:
+    if not isinstance(stage_interview_history, list):
+        return ""
+    for item in reversed(stage_interview_history):
+        if not isinstance(item, dict):
+            continue
+        quote = str(item.get("short_quote", "")).strip()
+        if quote:
+            return quote[:120]
+    return ""
 
 
 def _build_task_relevant_memory_packet(
@@ -340,6 +463,25 @@ def _build_task_relevant_memory_packet(
             controllable_success_memory,
             4,
         ),
+        "same_task_dominant_attribution_stability": str(
+            task_state.get("dominant_attribution_stability", "mixed")
+        ),
+        "same_task_dominant_attribution_scope": str(
+            task_state.get("dominant_attribution_scope", "task_specific")
+        ),
+        "same_task_recent_stable_attribution_ratio": round(
+            _safe_float(task_state.get("recent_stable_attribution_ratio", 0.0)),
+            4,
+        ),
+        "same_task_recent_generalizing_attribution_ratio": round(
+            _safe_float(
+                task_state.get("recent_generalizing_attribution_ratio", 0.0)
+            ),
+            4,
+        ),
+        "same_task_attribution_summary": str(
+            task_state.get("attribution_summary", "")
+        ).strip(),
         "same_task_help_attempt_count": _safe_int(
             family_help.get("help_attempt_count"),
             0,
@@ -540,12 +682,42 @@ class DigitalHelplessnessAgent(SocietyAgent):
         *,
         task_appraisal: Any,
         strategy_deliberation: Any,
+        event_attribution: Any,
     ) -> None:
         await self.memory.status.update("proto_task_appraisal", task_appraisal.to_dict())
         await self.memory.status.update(
             "proto_strategy_deliberation",
             strategy_deliberation.to_dict(),
         )
+        await self.memory.status.update(
+            "proto_event_attribution",
+            event_attribution.to_dict(),
+        )
+
+    async def _record_event_attribution_stream(
+        self,
+        *,
+        task: Any,
+        outcome: Any,
+        event_attribution: Any,
+    ) -> None:
+        if str(getattr(event_attribution, "status", "")) != "ok":
+            return
+        description = (
+            f"[{task.task_family}] "
+            f"{outcome.outcome_type}; "
+            f"locus={event_attribution.event_attribution_locus}; "
+            f"stability={event_attribution.event_attribution_stability}; "
+            f"scope={event_attribution.event_attribution_scope}; "
+            f"{str(event_attribution.event_attribution_explanation).strip()[:180]}"
+        ).strip()
+        try:
+            await self.memory.stream.add(
+                topic="digital_failure_attribution",
+                description=description[:600],
+            )
+        except Exception:
+            return
 
     async def do_interview(self, question: str) -> str:
         stage_match = _STAGE_INTERVIEW_MARKER.match(str(question or "").strip())
@@ -569,6 +741,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
             latest_daily_reflection = await self.memory.status.get(
                 "proto_daily_reflection", {}
             )
+            latest_event_attribution = await self.memory.status.get(
+                "proto_event_attribution", {}
+            )
             event_log = _decode_json_list(await self.memory.status.get("event_log", []))
             result = await resolve_stage_interview(
                 llm=getattr(self, "llm", None),
@@ -579,6 +754,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 latest_task_appraisal=latest_task_appraisal,
                 latest_digital_emotion=latest_digital_emotion,
                 latest_daily_reflection=latest_daily_reflection,
+                latest_event_attribution=latest_event_attribution,
                 event_log_summary=_summarize_event_log_for_interview(event_log),
             )
             return json.dumps(result.to_dict(), ensure_ascii=False)
@@ -591,6 +767,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
             latest_daily_reflection = await self.memory.status.get(
                 "proto_daily_reflection", {}
             )
+            latest_event_attribution = await self.memory.status.get(
+                "proto_event_attribution", {}
+            )
             stage_interview_history = await self.memory.status.get(
                 "proto_stage_interview_history", []
             )
@@ -600,6 +779,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 stage_interview_history=stage_interview_history,
                 latest_digital_emotion=latest_digital_emotion,
                 latest_daily_reflection=latest_daily_reflection,
+                latest_event_attribution=latest_event_attribution,
                 survey_summary=survey_summary,
                 event_log_summary=_summarize_event_log_for_interview(event_log),
             )
@@ -748,6 +928,21 @@ class DigitalHelplessnessAgent(SocietyAgent):
             recent_episode_summary=recent_episode_summary,
             event_log=event_log,
         )
+        cross_task_recent_context = {
+            "recent_cross_task_events_tail": _extract_cross_task_event_tail(
+                task_family=task.task_family,
+                event_log=event_log,
+                limit=4,
+            )
+        }
+        relevant_mastery_summary = _build_relevant_mastery_summary(
+            task_relevant_memory_packet
+        )
+        stage_interview_history = await self.memory.status.get(
+            "proto_stage_interview_history",
+            [],
+        )
+        latest_stage_quote = _latest_stage_quote(stage_interview_history)
         world_context = {
             "digital_stage": current_stage_key,
             "friction_level": _safe_int(env.get("friction_level", 0), 0),
@@ -850,8 +1045,8 @@ class DigitalHelplessnessAgent(SocietyAgent):
             pre_event_task_appraisal=task_appraisal.to_dict(),
             task_relevant_memory=task_relevant_memory_packet,
         )
-        outcome.perceived_uncontrollability = calibration.final_value
-        outcome.rule_perceived_uncontrollability = calibration.rule_value
+        outcome.event_level_uncontrollability = calibration.final_value
+        outcome.rule_event_level_uncontrollability = calibration.rule_value
         outcome.uncontrollability_source = calibration.source
         outcome.uncontrollability_llm_value = calibration.llm_value
         outcome.uncontrollability_llm_confidence = calibration.confidence
@@ -884,6 +1079,35 @@ class DigitalHelplessnessAgent(SocietyAgent):
             )
             outcome.support_mode = str(support_mode_result["label"])
             outcome.support_mode_source = str(support_mode_result["source"])
+        event_attribution = await infer_event_attribution(
+            llm=getattr(self, "llm", None),
+            task=task,
+            outcome=outcome,
+            task_self_efficacy=memory_features.task_self_efficacy,
+            felt_control=task_appraisal.felt_control,
+            recent_same_task_failure_count=memory_features.recent_same_task_failure_count,
+            helplessness_now=helplessness,
+            trust_now=trust,
+            avoidance_now=avoidance,
+            profile_summary=profile_summary,
+            same_task_recent_context=task_relevant_memory_packet,
+            cross_task_recent_context=cross_task_recent_context,
+            relevant_mastery_summary=relevant_mastery_summary,
+            latest_daily_reflection=current_daily_reflection,
+            latest_stage_quote=latest_stage_quote,
+        )
+        outcome.event_attribution_locus = event_attribution.event_attribution_locus
+        outcome.event_attribution_stability = (
+            event_attribution.event_attribution_stability
+        )
+        outcome.event_attribution_scope = event_attribution.event_attribution_scope
+        outcome.event_attribution_explanation = (
+            event_attribution.event_attribution_explanation
+        )
+        outcome.event_attribution_confidence = event_attribution.judge_confidence
+        outcome.event_attribution_source = event_attribution.source
+        outcome.event_attribution_status = event_attribution.status
+        outcome.event_attribution_cache_hit = event_attribution.cache_hit
         current_task_snapshot = (
             task_domain_memory.get(task.task_family, {})
             if isinstance(task_domain_memory, dict)
@@ -949,7 +1173,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 outcome_type=outcome.outcome_type,
                 consecutive_failures=consecutive_failures,
                 support_quality=outcome.support_quality,
-                perceived_uncontrollability=outcome.perceived_uncontrollability,
+                event_level_uncontrollability=outcome.event_level_uncontrollability,
                 task_self_efficacy=memory_features.task_self_efficacy,
                 felt_control=task_appraisal.felt_control,
                 expected_help_effectiveness=task_appraisal.expected_help_effectiveness,
@@ -963,6 +1187,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             avoidance_now=avoidance,
             outcome_type=outcome.outcome_type,
             help_used=outcome.help_used,
+            avoid_reason=outcome.avoid_reason,
         )
         memory_update = update_experience_memory(
             task=task,
@@ -991,8 +1216,10 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "friction_type": task.friction_type,
             "strategy_type": strategy.strategy_type,
             "support_quality": outcome.support_quality,
-            "perceived_uncontrollability": outcome.perceived_uncontrollability,
-            "rule_perceived_uncontrollability": outcome.rule_perceived_uncontrollability,
+            "event_level_uncontrollability": outcome.event_level_uncontrollability,
+            "rule_event_level_uncontrollability": (
+                outcome.rule_event_level_uncontrollability
+            ),
             "uncontrollability_source": outcome.uncontrollability_source,
             "uncontrollability_llm_confidence": outcome.uncontrollability_llm_confidence,
             "avoid_reason": outcome.avoid_reason,
@@ -1000,6 +1227,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "avoid_reason_confidence": outcome.avoid_reason_confidence,
             "support_mode": outcome.support_mode,
             "support_mode_source": outcome.support_mode_source,
+            "event_attribution_locus": outcome.event_attribution_locus,
+            "event_attribution_stability": outcome.event_attribution_stability,
+            "event_attribution_scope": outcome.event_attribution_scope,
+            "event_attribution_confidence": outcome.event_attribution_confidence,
+            "event_attribution_source": outcome.event_attribution_source,
             "event_appraisal_source": event_appraisal.source,
             "event_appraisal_confidence": event_appraisal.confidence,
             "pre_event_felt_control": float(task_appraisal.felt_control),
@@ -1058,9 +1290,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "strategy_type": strategy.strategy_type,
             "outcome_type": outcome.outcome_type,
             "support_quality": int(outcome.support_quality),
-            "perceived_uncontrollability": int(outcome.perceived_uncontrollability),
-            "rule_perceived_uncontrollability": int(
-                outcome.rule_perceived_uncontrollability
+            "event_level_uncontrollability": int(
+                outcome.event_level_uncontrollability
+            ),
+            "rule_event_level_uncontrollability": int(
+                outcome.rule_event_level_uncontrollability
             ),
             "uncontrollability_source": str(outcome.uncontrollability_source),
             "uncontrollability_llm_confidence": float(
@@ -1098,17 +1332,12 @@ class DigitalHelplessnessAgent(SocietyAgent):
                         },
                         "update_breakdown": {
                             "base_delta": float(update_result.base_delta),
-                            "repetition_delta": float(update_result.repetition_delta),
                             "uncontrollability_delta": float(
                                 update_result.uncontrollability_delta
                             ),
                             "efficacy_loss_term": float(
                                 update_result.efficacy_loss_term
                             ),
-                            "control_loss_term": float(
-                                update_result.control_loss_term
-                            ),
-                            "support_buffer": float(update_result.support_buffer),
                             "mastery_recovery_term": float(
                                 update_result.mastery_recovery_term
                             ),
@@ -1135,14 +1364,15 @@ class DigitalHelplessnessAgent(SocietyAgent):
                                 else {}
                             ),
                         },
-                        "perceived_uncontrollability": {
-                            "final": int(outcome.perceived_uncontrollability),
-                            "rule": int(outcome.rule_perceived_uncontrollability),
+                        "event_level_uncontrollability": {
+                            "final": int(outcome.event_level_uncontrollability),
+                            "rule": int(outcome.rule_event_level_uncontrollability),
                             "source": str(outcome.uncontrollability_source),
                             "llm_confidence": float(
                                 outcome.uncontrollability_llm_confidence
                             ),
                         },
+                        "event_attribution": event_attribution.to_dict(),
                         "task_specific_self_efficacy": float(
                             memory_features.task_self_efficacy
                         ),
@@ -1317,6 +1547,12 @@ class DigitalHelplessnessAgent(SocietyAgent):
         await self._persist_proto_decision_state(
             task_appraisal=task_appraisal,
             strategy_deliberation=strategy_deliberation,
+            event_attribution=event_attribution,
+        )
+        await self._record_event_attribution_stream(
+            task=task,
+            outcome=outcome,
+            event_attribution=event_attribution,
         )
         await self.memory.status.update(
             "task_domain_memory", memory_update["task_domain_memory"]

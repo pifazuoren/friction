@@ -33,6 +33,27 @@ OutcomeType = Literal[
     "avoid_without_attempt",
 ]
 
+EventAttributionLocus = Literal[
+    "self",
+    "mixed",
+    "situation",
+    "not_applicable",
+]
+
+EventAttributionStability = Literal[
+    "transient",
+    "mixed",
+    "stable",
+    "not_applicable",
+]
+
+EventAttributionScope = Literal[
+    "task_specific",
+    "mixed",
+    "family_generalizing",
+    "not_applicable",
+]
+
 
 @dataclass(slots=True)
 class DigitalTask:
@@ -80,12 +101,12 @@ class AttemptOutcome:
     help_used: bool
     negative_feedback: bool
     support_quality: int
-    perceived_uncontrollability: int
+    event_level_uncontrollability: int
     friction_tier: int
     success_probability: float
     abandon_probability: float
     note: str = ""
-    rule_perceived_uncontrollability: int = 0
+    rule_event_level_uncontrollability: int = 0
     uncontrollability_source: str = "rule"
     uncontrollability_llm_value: int | None = None
     uncontrollability_llm_confidence: float = 0.0
@@ -98,6 +119,14 @@ class AttemptOutcome:
     avoid_reason_note: str = ""
     support_mode: str = "not_applicable"
     support_mode_source: str = "not_applicable"
+    event_attribution_locus: EventAttributionLocus = "not_applicable"
+    event_attribution_stability: EventAttributionStability = "not_applicable"
+    event_attribution_scope: EventAttributionScope = "not_applicable"
+    event_attribution_explanation: str = ""
+    event_attribution_confidence: float = 0.0
+    event_attribution_source: str = "not_applicable"
+    event_attribution_status: str = "not_called"
+    event_attribution_cache_hit: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -109,7 +138,7 @@ class HelplessnessUpdateInput:
     outcome_type: OutcomeType
     consecutive_failures: int
     support_quality: int
-    perceived_uncontrollability: int
+    event_level_uncontrollability: int
     task_self_efficacy: float
     felt_control: float
     expected_help_effectiveness: float
@@ -124,11 +153,8 @@ class HelplessnessUpdateResult:
     helplessness_after: float
     delta: float
     base_delta: float
-    repetition_delta: float
     uncontrollability_delta: float
     efficacy_loss_term: float
-    control_loss_term: float
-    support_buffer: float
     recovery_bonus: float
     mastery_recovery_term: float
     raw_delta_before_damping: float
@@ -142,9 +168,30 @@ class HelplessnessUpdateResult:
 
 
 @dataclass(slots=True)
+class EventAttributionResult:
+    mode: str
+    status: str
+    source: str
+    event_attribution_locus: EventAttributionLocus
+    event_attribution_stability: EventAttributionStability
+    event_attribution_scope: EventAttributionScope
+    event_attribution_explanation: str
+    judge_confidence: float
+    cache_hit: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(slots=True)
 class TaskDomainState:
     task_self_efficacy: float
     controllable_success_memory: float = 0.0
+    dominant_attribution_stability: str = "mixed"
+    dominant_attribution_scope: str = "task_specific"
+    recent_stable_attribution_ratio: float = 0.0
+    recent_generalizing_attribution_ratio: float = 0.0
+    attribution_summary: str = ""
     attempt_count: int = 0
     success_count: int = 0
     failure_count: int = 0
@@ -165,6 +212,19 @@ class TaskDomainState:
             controllable_success_memory=float(
                 payload.get("controllable_success_memory", 0.0)
             ),
+            dominant_attribution_stability=str(
+                payload.get("dominant_attribution_stability", "mixed")
+            ),
+            dominant_attribution_scope=str(
+                payload.get("dominant_attribution_scope", "task_specific")
+            ),
+            recent_stable_attribution_ratio=float(
+                payload.get("recent_stable_attribution_ratio", 0.0)
+            ),
+            recent_generalizing_attribution_ratio=float(
+                payload.get("recent_generalizing_attribution_ratio", 0.0)
+            ),
+            attribution_summary=str(payload.get("attribution_summary", "")),
             attempt_count=int(payload.get("attempt_count", 0)),
             success_count=int(payload.get("success_count", 0)),
             failure_count=int(payload.get("failure_count", 0)),
@@ -211,7 +271,7 @@ class RecentEpisode:
     help_used: bool
     help_source: str
     negative_feedback: bool
-    perceived_uncontrollability: int
+    event_level_uncontrollability: int
     helplessness_delta: float
 
     def to_dict(self) -> dict[str, Any]:
@@ -229,8 +289,8 @@ class RecentEpisode:
             help_used=bool(payload.get("help_used", False)),
             help_source=str(payload.get("help_source", "none")),
             negative_feedback=bool(payload.get("negative_feedback", False)),
-            perceived_uncontrollability=int(
-                payload.get("perceived_uncontrollability", 0)
+            event_level_uncontrollability=int(
+                payload.get("event_level_uncontrollability", 0)
             ),
             helplessness_delta=float(payload.get("helplessness_delta", 0.0)),
         )

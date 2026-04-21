@@ -16,7 +16,7 @@ CALIBRATABLE_OUTCOMES = {
 }
 SUCCESS_OUTCOMES = {"success_self", "success_with_help"}
 _EXPECTED_KEYS = {
-    "perceived_uncontrollability",
+    "event_level_uncontrollability",
     "confidence",
     "reason",
 }
@@ -235,14 +235,14 @@ def _sanitize_payload(payload: Any) -> tuple[dict[str, Any] | None, str]:
     if set(payload.keys()) != _EXPECTED_KEYS:
         return None, "invalid_schema"
 
-    perceived = payload.get("perceived_uncontrollability")
-    if isinstance(perceived, bool):
+    event_level = payload.get("event_level_uncontrollability")
+    if isinstance(event_level, bool):
         return None, "invalid_schema"
     try:
-        perceived_value = int(perceived)
+        event_level_value = int(event_level)
     except (TypeError, ValueError):
         return None, "invalid_schema"
-    if perceived_value not in {0, 1, 2}:
+    if event_level_value not in {0, 1, 2}:
         return None, "invalid_schema"
 
     confidence_raw = payload.get("confidence")
@@ -259,7 +259,7 @@ def _sanitize_payload(payload: Any) -> tuple[dict[str, Any] | None, str]:
 
     return (
         {
-            "perceived_uncontrollability": perceived_value,
+            "event_level_uncontrollability": event_level_value,
             "confidence": confidence,
             "reason": reason_raw.strip()[:120],
         },
@@ -370,20 +370,20 @@ async def _query_llm_payload(
         return None, "request_error"
 
     system_prompt = (
-        "You are a strict JSON-only calibrator for perceived uncontrollability in a "
+        "You are a strict JSON-only calibrator for event-level uncontrollability in a "
         "digital-friction simulation. Judge whether this event makes the person feel "
         "that continued effort can no longer change the result. Output exactly one "
         "valid JSON object and nothing else."
     )
     user_prompt = {
-        "task": "Estimate perceived_uncontrollability for this single event.",
+        "task": "Estimate event_level_uncontrollability for this single event.",
         "scale_definition": {
             "0": "low uncontrollability: the problem feels clear, recoverable, and still manageable",
             "1": "medium uncontrollability: noticeable obstacle or uncertainty, but not total loss of control",
             "2": "high uncontrollability: the person strongly feels the situation is out of control, especially under high friction, repeated failures, or failure even with help",
         },
         "constraints": {
-            "perceived_uncontrollability": [0, 1, 2],
+            "event_level_uncontrollability": [0, 1, 2],
             "confidence": [0.0, 1.0],
             "reason_max_chars": 120,
             "guideline": "Stay close to the rule baseline unless there is strong evidence to deviate.",
@@ -397,7 +397,7 @@ async def _query_llm_payload(
         ],
         "context": payload,
         "output_schema_example": {
-            "perceived_uncontrollability": 1,
+            "event_level_uncontrollability": 1,
             "confidence": 0.72,
             "reason": "Repeated failure under meaningful friction suggests moderate loss of control.",
         },
@@ -437,14 +437,14 @@ async def _query_llm_payload(
             "role": "system",
             "content": (
                 "You are a strict JSON reformatter. Return exactly one valid JSON object "
-                "with keys: perceived_uncontrollability, confidence, reason."
+                "with keys: event_level_uncontrollability, confidence, reason."
             ),
         },
         {
             "role": "user",
             "content": (
                 "Rules:\n"
-                "- perceived_uncontrollability must be 0, 1, or 2\n"
+                "- event_level_uncontrollability must be 0, 1, or 2\n"
                 "- confidence must be a float in [0,1]\n"
                 "- reason must be <= 120 chars\n"
                 "- Do not output markdown or extra text\n"
@@ -500,7 +500,11 @@ async def calibrate_uncontrollability(
     config = load_runtime_config()
     mode = str(config.proto_llm_uncontrollability_mode)
     rule_value = int(
-        getattr(outcome, "rule_perceived_uncontrollability", outcome.perceived_uncontrollability)
+        getattr(
+            outcome,
+            "rule_event_level_uncontrollability",
+            outcome.event_level_uncontrollability,
+        )
     )
 
     if mode != "hybrid":
@@ -598,7 +602,7 @@ async def calibrate_uncontrollability(
         if bool(config.proto_llm_uncontrollability_cache_enabled):
             _CALIBRATION_CACHE[cache_key] = payload
 
-    llm_value = int(payload["perceived_uncontrollability"])
+    llm_value = int(payload["event_level_uncontrollability"])
     confidence = _clamp(payload["confidence"], 0.0, 1.0)
     reason = str(payload["reason"]).strip()[:120]
     if confidence < float(config.proto_llm_uncontrollability_min_confidence):

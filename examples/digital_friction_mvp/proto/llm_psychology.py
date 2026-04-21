@@ -1874,7 +1874,8 @@ async def resolve_stage_interview(
     latest_task_appraisal: Any,
     latest_digital_emotion: Any,
     latest_daily_reflection: Any,
-    event_log_summary: Any,
+    event_log_summary: Any = None,
+    latest_event_attribution: Any = None,
 ) -> StageInterviewResult:
     config = load_runtime_config()
     mode = str(config.proto_llm_psychology_mode)
@@ -1914,6 +1915,9 @@ async def resolve_stage_interview(
             else {},
             "latest_daily_reflection": copy.deepcopy(latest_daily_reflection)
             if isinstance(latest_daily_reflection, dict)
+            else {},
+            "latest_event_attribution": copy.deepcopy(latest_event_attribution)
+            if isinstance(latest_event_attribution, dict)
             else {},
             "event_log_summary": copy.deepcopy(event_log_summary)
             if isinstance(event_log_summary, dict)
@@ -1982,7 +1986,8 @@ async def resolve_final_interview(
     latest_digital_emotion: Any,
     latest_daily_reflection: Any,
     survey_summary: Any,
-    event_log_summary: Any,
+    event_log_summary: Any = None,
+    latest_event_attribution: Any = None,
 ) -> FinalInterviewResult:
     config = load_runtime_config()
     mode = str(config.proto_llm_psychology_mode)
@@ -2014,6 +2019,9 @@ async def resolve_final_interview(
             else {},
             "latest_daily_reflection": copy.deepcopy(latest_daily_reflection)
             if isinstance(latest_daily_reflection, dict)
+            else {},
+            "latest_event_attribution": copy.deepcopy(latest_event_attribution)
+            if isinstance(latest_event_attribution, dict)
             else {},
             "survey_summary": copy.deepcopy(survey_summary)
             if isinstance(survey_summary, dict)

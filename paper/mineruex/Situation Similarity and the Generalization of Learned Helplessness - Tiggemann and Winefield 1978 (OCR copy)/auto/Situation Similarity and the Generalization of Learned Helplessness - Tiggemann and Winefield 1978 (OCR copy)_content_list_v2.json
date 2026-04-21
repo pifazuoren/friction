@@ -1,0 +1,1597 @@
+[
+    [
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "Situation Similarity and the Generalization of Learned Helplessness"
+                    }
+                ],
+                "level": 1
+            },
+            "bbox": [
+                214,
+                152,
+                782,
+                196
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Marika Tiggemann and A. H. Winefield"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                207,
+                504,
+                223
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Source note: This local copy was reconstructed from a publicly accessible Scribd OCR/HTML version because the publisher PDF was not directly downloadable in this environment. The text may contain OCR noise and line-break artifacts."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                231,
+                782,
+                277
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Situation similarity and the generalization of learned helplessness"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                306,
+                686,
+                321
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Marika Tiggemann & A. H. Winefield"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                328,
+                493,
+                344
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "To cite this article: Marika Tiggemann & A. H. Winefield (1978) Situation similarity and the generalization of learned helplessness, Quarterly Journal of Experimental Psychology, 30:4, 725-735, DOI: 10.1080/14640747808400697"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                351,
+                782,
+                398
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Quarterly Journal of Experimental Psychology (1978) 30, 725-735"
+                    }
+                ]
+            },
+            "bbox": [
+                214,
+                404,
+                692,
+                420
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "SITUATION SIMILARITY AND T H E GENERALIZATION OF LEARNED HELPLESSNESS MARIKA TIGGEMANN AND A. H. WINEFIELD Department of Psychology, University of Adelaide"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                425,
+                784,
+                473
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "An experiment is reported which investigated the effects of situation similarity on learned helplessness. After initial pretreatment strong helplessness effects were found on a similar, but not on a dissimilar, test task. It was concluded that situation similarity is an important determinant of the generalization of the learned helplessness phenomenon."
+                    }
+                ]
+            },
+            "bbox": [
+                210,
+                479,
+                782,
+                556
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Introduction Overmier and Seligman (1967) and Seligman and Maier (1967) used the term “learned helplessness” to describe the interference with subsequent escape/ avoidance learning observed in dogs exposed to prior inescapable shock. Maier and Seligman (1976) state the “cornerstone” of the theory of learned helplessness to be that an organism can actively learn that an outcome is independent of its responses. It is this learned expectation of independence between responding and reinforcement which is assumed to underlie the motivational, cognitive and emotional deficits of helplessness. The phenomenon of learned helplessness has now been demonstrated in a variety of species other than dogs (reviewed in Seligman, 1975). Many studies, employing a variety of tasks, instructions and outcomes, have followed the first attempt to produce learned helplessness in man (Thornton and Jacobs, 1971). It has been demonstrated, for example, that uncontrollable aversive events have effects on non-aversively motivated behaviour (Hiroto and Seligman, 1975 ; Miller and Seligman, 1975) and further, that nontraumatic uncontrollable events can also produce helplessness (Hiroto and Seligman, 1975; Klein, Fencil-Morse and Seligman, 1976). Hiroto and Seligman (1975) have argued that learned helplessness may be an induced personality trait similar to Rotter’s (1966) concept of external control (the internal-external locus of control dimension refers to the extent an individual perceives events to be"
+                    }
+                ]
+            },
+            "bbox": [
+                210,
+                561,
+                784,
+                852
+            ]
+        },
+        {
+            "type": "page_number",
+            "content": {
+                "page_number_content": [
+                    {
+                        "type": "text",
+                        "content": "1"
+                    }
+                ]
+            },
+            "bbox": [
+                493,
+                876,
+                503,
+                888
+            ]
+        }
+    ],
+    [
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "under his control). Hiroto (1974) found that “externals” did indeed become more helpless than “internals” and suggested a single process to underlie learned helplessness, externality and the perceptual set of chance-the expectancy that responding and reinforcement are independent. I t seems, then,"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                157,
+                782,
+                219
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "0033-555~/78/040725 + II /O @ 1978 The Experimental Psychology Society"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                226,
+                767,
+                242
+            ]
+        },
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "726 M. TIGGEMANN AND A. H. WINEFIELD"
+                    }
+                ],
+                "level": 2
+            },
+            "bbox": [
+                214,
+                247,
+                568,
+                263
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "that assignment of causality for lack of control may be an important variable influencing learned helplessness. Dweck and Reppucci (1973) and Dweck (1975) found that persistent children are more likely than helpless children to attribute their failure to lack of effort rather than to lack of ability. Klein et at. (1976) concluded that it is failure which leads to a decreased belief in personal competence that produces helplessness deficits in man. Although there have been several studies of learned helplessness in humans, most have been designed merely to demonstrate the effect and not to delineate the conditions under which helpless or other behaviour is likely to occur. This experiment represents an attempt to investigate the effect of the intuitively im- portant variable “situation similarity”. This concept is, of course, allied very closely with the crucial issue of generalization of learned helplessness from one situation to another. Although claims have been made to the contrary (e.g."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                271,
+                782,
+                469
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Hiroto and Seligman, 1975) we, in accord with Wortman and Brehm (1975), believe that there has been no really convincing demonstration of the learned helplessness phenomenon in humans. As Roth and Bootzin (1974) have pointed out, in order to parallel the learned helplessness paradigm with animals it is essential that the training and testing situations be clearly different and perceived as unrelated. We are interested in generalization to a new situation, rather than in whether an induced external expectancy will continue to control behaviour in the same situation. Rarely has this been achieved. Typically investigators have employed the same task for training and testing (e.g. Fosco and Geer, 1971; Glass and Singer, 1972) or similar tasks (e.g. Thornton and Jacobs, 1971; Sherrod and Downs, 1974; Roth and Kubal, 1975) administered in the same room or by the same experimenter, or both (e.g. Hiroto, 1974; Hiroto and Seligman, 1975). The purpose of the present experiment was to compare the effects of lack of control in two different situations following the same pretreatment, a pretreatment unlike those of previous studies in that it involved an instrumental task with a nonaversive outcome. It was hypothesized that there would be more helplessness produced in the “similar” test situation than in the “dissimilar” test situation. “Similarity” here involved all the aspects not systematically controlled in the above studies, vix. the nature of the task, the nature of the outcome, whether or not part of the same experiment. The “dissimilar” situation, then, consisted of the administration of a different task resulting in a different outcome in a different room by a different experimenter. We did not hypothesize as to the actual amount of helplessness or otherwise likely to be observed in this situation, as none of the previous studies of the supposed generalization of learned helplessness have used pretreatment and test tasks which were sufficiently dissimilar to allow prediction as to whether generalization would or would not occur."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                474,
+                784,
+                854
+            ]
+        },
+        {
+            "type": "page_number",
+            "content": {
+                "page_number_content": [
+                    {
+                        "type": "text",
+                        "content": "2"
+                    }
+                ]
+            },
+            "bbox": [
+                493,
+                876,
+                504,
+                888
+            ]
+        }
+    ],
+    [
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": []
+            },
+            "bbox": [
+                212,
+                157,
+                782,
+                189
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Method Subjects Subjects were 60 undergraduate students, 30 men and 30 women, recruited from the first-year Psychology course at Adelaide University. Subjects who were to do the “ dissimilar” test task were recruited simultaneously for two independent experiments."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                195,
+                782,
+                257
+            ]
+        },
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "GENERALIZATION OF LEARNED HELPLESSNESS 727"
+                    }
+                ],
+                "level": 2
+            },
+            "bbox": [
+                214,
+                263,
+                647,
+                279
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Apparatus Pretreatment The apparatus consisted of a microswitch held by the subject in his hand and two lights 14 cm apart set 40 cm in front of the subject. In the escapable condition pressing the switch four times terminated a buzzer. In the inescapable condition the switch had no effect on the buzzer. Similar test task The apparatus consisted of two buttons 12 cm apart set in a diamond shape within easy reach of the subject and one amber light 40 cm in front of the subject. The response which terminated the buzzer was pressing the left button once and the right button twice in any order."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                286,
+                784,
+                409
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Dissimilar test task The dissimilar test task was the anagram task devised by Hiroto and Seligman (1975)."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                415,
+                782,
+                445
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Twenty anagrams were chosen from Tresselt and Mayzner (1966)each having the common letter order 3-4-2-5-1, i.e. the first letter of the solution word was the fifth letter of the anagram, the second letter of the solution word was the third letter of the anagram, etc. (e.g. DGUEJ). The actual words chosen were those used by Winefield and Tiggemann (1978)."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                452,
+                782,
+                529
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Procedure Because we wished to compare helplessness effects across our “similar” and “dissimilar” situations it was necessary to employ the full triadic design for each situation. This involved in effect, two separate, parallel, experiments. Subjects, then, were assigned to one of the following six groups: (I)Escapable similar test; (2) Inescapable similar test; (3)Control similar test; (4)Escapable dissimilar test; ( 5 ) Inescapable dissimilar test; (6)Control dis- similar test. Groups (I) and (4)received the same escapable pretreatment, groups ( 2 ) and ( 5 ) received the same inescapable pretreatment, and groups (3)and (6)received no pre- treatment."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                535,
+                784,
+                672
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Pretreatment Subjects in the inescapable groups [ ( z ) and (5)] were yoked painvise to subjects in the escapable groups [(I)and (4)]on the basis of sex and duration of the buzzer. All subjects were instructed as follows: “From time to time a buzzer will come on. It is your task to try and stop the buzzer. There is a signalling system whereby one of the two lights will go on each time the noise stops. If the green light goes on then you have made the correct response and have stopped the buzzer. If, on the other hand, the red light goes on, then you have not stopped the buzzer, but rather the buzzer has stopped automatically according to the computer preprogrammed schedule.” These instructions were adapted from Hiroto and Seligman (1975)but differ in one impor- tant way. Whereas their subjects were told “when that tone comes on there is something you can do to stop it”, we did not specifically instruct subjects that the task was soluble. Our intention was to eliminate the possibility that subjects show helplessness effects on the test task because they simply do not believe the experimenter when he tells them that the test task is soluble. The pretreatments consisted of 45 unsignalled trials of the buzzer of 5 s duration, IT1 ranging 1-25 s. Subjects in the escapable groups could terminate the buzzer and receive the green light by pressing the microswitch 4 times. Subjects in the inescapable groups received the same 45 unsignalled trials of the buzzer as their yoked escapable counterpart,"
+                    }
+                ]
+            },
+            "bbox": [
+                210,
+                678,
+                784,
+                847
+            ]
+        },
+        {
+            "type": "page_number",
+            "content": {
+                "page_number_content": [
+                    {
+                        "type": "text",
+                        "content": "3"
+                    }
+                ]
+            },
+            "bbox": [
+                493,
+                876,
+                504,
+                888
+            ]
+        }
+    ],
+    [
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": []
+            },
+            "bbox": [
+                210,
+                159,
+                784,
+                295
+            ]
+        },
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "728 M. TIGGEMANN AND A. H. WINEFIELD"
+                    }
+                ],
+                "level": 2
+            },
+            "bbox": [
+                214,
+                301,
+                568,
+                316
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "the buzzer terminating at the same instant for both members of the pair. Nothing they did altered this. After the initial pretreatment half the escapable and half the inescapable subjects were tested on the similar test task. The other half of the subjects were tested on the dissimilar test task."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                324,
+                782,
+                385
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Similar test task This task, which was done by Groups (I), (2)and (3), was conducted in the same room by the same experimenter, the first author (MT), and was again instrumental in nature having the same buzzer as outcome. Subjects were given the following instructions: “You will be given some trials in which a buzzer will be presented to you. Whenever you hear the buzzer come on there is something you can do to stop it.” The test phase consisted of 20 10-9 trials, each trial comprising 5 s light plus 5 s buzzer,"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                392,
+                782,
+                500
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "with IT1 ranging 1-45 s. The response of pressing the left button once and the right button twice terminated the trial. Although the instructions specified escape contingencies only, avoidance responses were possible by responding in the first 5 s when the light was on. If the subject did not avoid or escape the buzzer a latency of 10 s was recorded for that trial, Three dependent measures were obtained: (I) mean latency; (2) number of failures to escape; (3) trials to a criterion of 3 successive escape responses."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                505,
+                782,
+                612
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Dissimilar test task This task was done by Groups (4), (5) and (6). After pretreatment the experimental subjects were conducted up the stairs to another room and handed over to another experi- menter (AHW). The time taken to do this was comparable to that which similar test task subjects had to wait between the tasks for the experimenter to obtain computer printout. The second experimenter explained to subjects that he was collecting norms on anagram solution times and instructed subjects as follows: “I am going to ask you to solve some anagrams. As you know anagrams are words with the letters scrambled. You have to try to unscramable them so they form a word. The solutions must be words in current English usage - slang words and proper names are not permitted. There could be a pattern or principle by which to solve the anagrams, but it’s up to you to work out what it is.” The 20 patterned anagrams were then presented to subjects on individual index cards. If a subject had not solved the anagram within 100 s, then that was recorded as the latency for that trial and he was shown the next anagram. Three dependent measures analogous to those of the instrumental test task were obtained: (I) mean latency; (2) number of failures to solve; (3) trials to a criterion of three consecutive anagrams solved in less than 15 s each."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                617,
+                784,
+                847
+            ]
+        },
+        {
+            "type": "page_number",
+            "content": {
+                "page_number_content": [
+                    {
+                        "type": "text",
+                        "content": "4"
+                    }
+                ]
+            },
+            "bbox": [
+                493,
+                876,
+                504,
+                888
+            ]
+        }
+    ],
+    [
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": []
+            },
+            "bbox": [
+                212,
+                157,
+                782,
+                204
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Post-experimental questionnaire A post-experimental questionnaire was given to all subjects in order to assess the effective- ness of the helplessness manipulations and to investigate attribution of causality. Corre- lations were also calculated between questionnaire scores and performance measures. All subjects were then fully debriefed. Inescapable groups were told that the buzzer had been inescapable for them. Dissimilar test task subjects, who had been recruited for what they thought were two separate experiments, were told of the deception and given apologies. There was no evidence of any hostility or negative feelings toward the experi- ment or experimenters, subjects typically expressing the view that as far as experiments go it was quite “fun”."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                212,
+                782,
+                363
+            ]
+        },
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "GENERALIZATION OF LEARNED HELPLESSNESS 729"
+                    }
+                ],
+                "level": 2
+            },
+            "bbox": [
+                214,
+                368,
+                647,
+                383
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Results Performance Pretreatment All subjects in the escapable groups learnt the appropriate escape response Mean trials to escape were 6.5 for the “similar” group and 6.2 for the “dissimilar” group "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\left( \\mathrm { ~ t ~ } < \\sim \\right)"
+                    },
+                    {
+                        "type": "text",
+                        "content": ". The number of responses made for the yoked inescapable groups was also similar (similar "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { X = 2 . 1 }"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", dissimilar X "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "= 1 . 7 , \\mathrm { t } < \\sim )"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                391,
+                782,
+                468
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Similar test task The three dependent measures were highly correlated. For mean latency and number of failures "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { r } = 0 . 7 6"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", for mean latency and trials to criterion "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { r } = 0 . 7 6"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", and for number of failures and trials to criterion "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { r } = 0 . 9 4"
+                    },
+                    {
+                        "type": "text",
+                        "content": "(all "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { P ^ { \\ast } S { < } O ^ { \\ast } O O I ) }"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                474,
+                782,
+                535
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "T o properly demonstrate learned helplessness two conditions should be fulfilled : firstly, the inescapable group must perform worse than the escapable and control groups and, secondly, there should be no difference in performance between these latter groups. Orthogonal planned comparisons here revealed that the inescapable group did indeed perform significantly worse than the combined escapable and control groups on all three response measures (respective t’s for mean latency, number of failures to escape and trials to criterion = 3-71, "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "4 – 4 9 , 3 – 5 6 , \\mathrm { d f } = 2 7 , \\mathrm { P } < )"
+                    },
+                    {
+                        "type": "text",
+                        "content": ". No difference was found between escapable and control groups (t’s = 1-43,0.20, 0.04, d f = 27, P>). Thus it can be seen that we have demonstrated learned helplessness with the similar test task. The magnitude of the effect can be gauged from the performance measure means given in Table I. TABLE I Similar test task: means and standard deviations (in parentheses) of three response measures"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                542,
+                782,
+                741
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Group Mean latency Number failed Trials of criterion ~"
+                    }
+                ]
+            },
+            "bbox": [
+                214,
+                746,
+                617,
+                762
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Escapable 5-63(2.05) 1.6 (3‘13) 4‘7(3.20) Inescapable 8.60 (1.36) 10.9 (8.61) 12.5 (8.06) Control 6.71 (1.58) 1.1 (2.60) 4‘6 (4‘72)"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                768,
+                782,
+                800
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "The number of subjects to reach a criterion of three consecutive avoidance responses, while too few to analyse statistically, does tend to confirm the above result. There were four subjects in the escapable group and one in the control group who reached avoidance criterion, while no subject in the inescapable yoked group did so."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                806,
+                782,
+                853
+            ]
+        },
+        {
+            "type": "page_number",
+            "content": {
+                "page_number_content": [
+                    {
+                        "type": "text",
+                        "content": "5"
+                    }
+                ]
+            },
+            "bbox": [
+                493,
+                876,
+                504,
+                888
+            ]
+        }
+    ],
+    [
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": []
+            },
+            "bbox": [
+                212,
+                157,
+                781,
+                189
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Dissimilar test task Again the three dependent measures correlated highly together (for mean latency and number of failures to solve "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { r = 0 . 9 5 }"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", for mean latency and trials to criterion "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { r } = 0 . 8 0"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", and for number of failures to solve and trials to criterion, "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { r } = 0 . 7 4 ."
+                    },
+                    {
+                        "type": "text",
+                        "content": ", all P’s to-001)."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                195,
+                781,
+                257
+            ]
+        },
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "730 M. TIGGEMA\" AND A. H. WINEFIELD"
+                    }
+                ],
+                "level": 2
+            },
+            "bbox": [
+                214,
+                262,
+                550,
+                279
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "For the dissimilar test task, however, there was no evidence at all of learned helplessness, the means actually tending in the opposite direction, as can be seen in Table 11. Neither the overall analyses of variance (on all measures F<I, df = "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "2 , 2 7 , \\mathrm { P { > } 0 . 5 0 ) }"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", nor either of the planned comparisons between the inescapable"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                286,
+                781,
+                348
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "TABLE I1 Dissimilar test task :means and standard deviations (inparentheses) of three response measures"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                353,
+                782,
+                385
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Group Mean latency Number failed Trials to criterion -~ Escapable 32.11 (20.11) 4’3 (3’37) 9’2 (7’13) Inescapable 26-31(16.00) 3’1 (2’23) 8.3 (6.83) Control 35 ’87 (23*89) 4’6 (3’92) 11.6 (7.60)"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                391,
+                781,
+                439
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "vs. the combined escapable and control groups "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "( \\mathrm { ~ t ~ } ^ { \\prime } \\mathrm { ~ s ~ }"
+                    },
+                    {
+                        "type": "text",
+                        "content": "for mean latency, number of failures and trials to criterion = 0.98, 1.07,0.75, df = 27, P>),or between the escapable and control groups (t’s = 0.42, 0.21, 0.75, df = 27, P>) approach significance."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                444,
+                782,
+                506
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Questionnaire scores All analyses of the questionnaire data were carried out with non-parametric tests because the measures used were ordinal. All probability values reported here are two-tailed as clear-cut predictions were often hard to formulate. T o preclude the possibility that differences in subsequent performance might be due to individual differences in perceived aversiveness of the buzzer, subjects in the pretreatment groups were asked to rate the sound on a seven-point scale from -3 (extremely unpleasant) to +3 (extremely pleasant). As intended all ratings were close to the neutral o (similar escapable "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "8 = - 0 . 3 ."
+                    },
+                    {
+                        "type": "text",
+                        "content": ", similar inescapable "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "8 = - 0 . 3"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", dissimilar escapable8 = 0.2,dissimilar inescapable8 =-0.5) with no difference between the escapable and inescapable groups (Mann-Whitney "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { U } = 1 6 3 , \\mathrm { n }"
+                    },
+                    {
+                        "type": "text",
+                        "content": "= n, = 20, P>o-Io). Correlations with performance (Kendall’s taus because of the large number of tied ranks) were done separately for each of the four experimental groups. Correlations for the escapable groups were not significant. From Table 111, however, it can be seen that for the similar inescapable group, there were significant positive correlations between performance and rated aversiveness of the"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                512,
+                782,
+                756
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "TABLE I11 Correlations (Kendall’s taus) and associated probability values (in parentheses) between buzzer rating and test task performance for yoked inescapable groups"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                761,
+                781,
+                808
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Group Mean latency Number failed Trials to criterion Similar IE 0.616 (0.014) 0.616 (0.014) 0.510 (0.044) Dissimilar IE -0258 (0.299) -0.416 (0.095) -0.659"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                814,
+                782,
+                845
+            ]
+        },
+        {
+            "type": "page_number",
+            "content": {
+                "page_number_content": [
+                    {
+                        "type": "text",
+                        "content": "6"
+                    }
+                ]
+            },
+            "bbox": [
+                493,
+                876,
+                504,
+                888
+            ]
+        }
+    ],
+    [
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "GENERALIZATION OF LEARNED HELPLESSNESS 731"
+                    }
+                ],
+                "level": 2
+            },
+            "bbox": [
+                214,
+                179,
+                645,
+                195
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "buzzer. For the dissimilar group, on the other hand, correlations were negative but only statistically significant on the “Trials to Criterion” measure. There were no significant differences in amount of trying on the pretreatment task between the four experimental groups as measured by ratings on a five-point scale (Kruskal-Wallis H = 3-74, df = 3, P>o-Io), nor was there any change in amount of trying from pretreatment to test trials for the similar groups (escapable U = 28.5, inescapable "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { U } = 4 9 , \\mathrm { n } , = \\mathrm { n } 2 = 1 0 , \\mathrm { P } > )"
+                    },
+                    {
+                        "type": "text",
+                        "content": ". Both dissimilar groups, however, tried harder on the anagram task (escapable "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { ~ U ~ } = 2 \\mathrm { ~ 0 ~ . ~ 5 ~ }"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", inescapable U = 21.5, "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { n } , = \\mathrm { ~ n ~ 2 ~ } = 1 0 , \\mathrm { P } { < } \\mathrm { o } ^ { * } \\mathrm { o } 5 )"
+                    },
+                    {
+                        "type": "text",
+                        "content": ",which, since escapable and inescapable groups were not differentially affected, probably meant that the anagram task was more interesting. There were no significant correlations between performance and amount of trying in either Task I or Task 2, nor were there any significant correlations with"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                203,
+                782,
+                400
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "frustration rating. As expected, the inescapablegroups rated the pretreatment task as more frustrating than the escapable groups "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "( \\mathrm { U } = 8 4 . 5 , \\mathrm { n } 1 = \\mathrm { n } 2 = 2 0"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { P } { < } \\infty I J"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", but no such difference was found for the two test tasks (similar "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "U = 4 \\mathcal { B } _ { . }"
+                    },
+                    {
+                        "type": "text",
+                        "content": "dissimilar "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "u = 3 9 , \\ 7 2 , = n \\ 2 = 1 0 , \\ P > O \\cdot I O \\ )"
+                    },
+                    {
+                        "type": "text",
+                        "content": ". Two questions (those of Hiroto and Seligman, 1975) were asked to check the effectiveness of the inescapability manipulations in the pretreatment. Inescapable groups rated both question I “the extent to which you believed you couldn’t solve the problem” and question 2 “the extent to which you believed the problem was unsolvable-that it couldn’t be solved” more highly on a five-point scale than the escapable groups (question I escapable "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "x = I - \\delta _ { 3 }"
+                    },
+                    {
+                        "type": "text",
+                        "content": "inescapable x = 4-7, U = 16.5, n1 = n 2 = 20, P<;question 2 escapable "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "R = 1 . 6 ,"
+                    },
+                    {
+                        "type": "text",
+                        "content": "inescapable - X = 3.6, U = 34, n, = n2 = 20, P<ooI).We can consider question I to reflect largely the extent to which a subject attributes his failure to himself and question 2 the extent to which he attributes it to the task. If this is so, the measure question a-question I must indicate his relatiwe attribution of causality. We found that inescapable groups attributed outcomes more to themselves than did escapable groups (question 2-question I escapable "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { X = - 0 ^ { 3 } 1 }"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", inescapable ;p=- 1.3, U = 65, n, = n2 = 20, P<). The same two questions were asked in relation to the test task for the similar groups. Again the inescapable groups rated both more highly than the escapable groups (question I escapable R = I 4,inescapable R = 4.1, U = 8, n1 = n 2 = 10, P<;question 2 escapable "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "X = 1 . 8"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", inescapable R = 3.5, U = 13.5, n1 = n 2 = 10, P<). For the dissimilar task the escapable and inescapable groups did not differ on two corresponding questions designed to tap attribution of causality: “rate honestly your anagram solving ability (compared to Psychology I students)” (escapable X "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "= 3 { - } 6"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", inescapable 2 = 3-4, U = 42, n1 = n2 = 10, P>)and “rate the difficulty of the actual anagrams in the task” (escapable "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { f t } = 2 . 6 ,"
+                    },
+                    {
+                        "type": "text",
+                        "content": ", inescapable "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { R } = 2 \\mathrm { - } 2"
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { U } = 3 3 , \\mathrm { \\ : n } , = \\mathrm { n } 2 = 1 0 , \\mathrm { \\ : P } > )"
+                    },
+                    {
+                        "type": "text",
+                        "content": ". It can be seen, then, that the ratings confirm the performance results. In the dissimilar test task inescapable subjects neither performed worse nor rated themselves as more helpless, even though they had done so on the pretreatment task. For the similar inescapable group, positive correlations were obtained for per- formance measures and ratings on question I "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "( \\mathrm { ~ 4 ~ s = o . g 1 5 , 0 . g 1 5 , 0 . 3 3 9 , n ^ { \\prime } s = 1 0 }"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                406,
+                782,
+                847
+            ]
+        },
+        {
+            "type": "page_header",
+            "content": {
+                "page_header_content": [
+                    {
+                        "type": "text",
+                        "content": "(0.009)"
+                    }
+                ]
+            },
+            "bbox": [
+                214,
+                157,
+                266,
+                172
+            ]
+        },
+        {
+            "type": "page_number",
+            "content": {
+                "page_number_content": [
+                    {
+                        "type": "text",
+                        "content": "7"
+                    }
+                ]
+            },
+            "bbox": [
+                493,
+                876,
+                504,
+                888
+            ]
+        }
+    ],
+    [
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": []
+            },
+            "bbox": [
+                212,
+                157,
+                782,
+                204
+            ]
+        },
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "732 M. TIGGEMANN AND A. H. WINEFIELD"
+                    }
+                ],
+                "level": 2
+            },
+            "bbox": [
+                214,
+                210,
+                568,
+                226
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "equation_inline",
+                        "content": "\\mathrm { P ^ { \\prime } s = 0 . 0 3 9 , 0 . 0 3 9 , 0 . 1 7 3 ) }"
+                    },
+                    {
+                        "type": "text",
+                        "content": "but not on question 2 nor on question 2-question I. That is, inescapable subjects performance worsened as they rated themselves less able to solve the problem. For the dissimilar test task the pattern of correlations was quite different. For the escapable group performance worsened as they rated their own ability as lower "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "( \\mathrm { T } ^ { \\prime } \\mathrm { S } = 0 . 6 3 3 , 0 . 6 5 5 , 0 ^ { * } 4 9 2 , \\mathrm { n } ^ { \\prime } \\mathrm { s } = 1 0 , \\mathrm { P } ^ { \\prime } \\mathrm { s } = { \\mathrm { o } } _ { \\mathrm { o } 1 1 , 0 } 0 0 9 , 0 { \\sim } 0 4 8 )"
+                    },
+                    {
+                        "type": "text",
+                        "content": "2, and as attribution for failure was made relatively more to the self than to the task as indicated by the measure question 2-question I "
+                    },
+                    {
+                        "type": "equation_inline",
+                        "content": "( \\mathrm { T ^ { \\prime } S } = - 0 , 5 9 6 , - 0 . 6 4 3"
+                    },
+                    {
+                        "type": "text",
+                        "content": "-0.464, n’s = 10, P’s = 0-017, 0-010, 0.062). For the inescapable group, on the other hand, significant correlations were obtained only with question 2 ratings (T’S = 0.775, 0.772, 0.437, n’s = 10,P’s = 0.002, 0.002, 0.079). Here poorer performance was associated with rating the actual anagrams as more difficult, i.e. attributing failure to the task."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                233,
+                782,
+                415
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Discussion Ou; results have demonstrated that the variable “situation similarity” does have a limiting effect on the learned helplessness phenomenon. Our initial hypothesis, that there would be more helplessness induced in the similar test situation than in the dissimilar one, was clearly confirmed. The very strong helplessness effects obtained in our similar test situation were at least as marked as those found by other investigators using similar tasks, e.g. Hiroto and Seligman (1975), despite the fact that they have always employed aversive outcomes. Here we have demonstrated helplessness on an instrumental task with an outcome (a buzzer) rated by subjects as nonaversive. The correlations we obtained for the inescapable groups between buzzer ratings and performance are difficult to interpret. Contrary to expectation, as the buzzer was rated more aversive, performance improved on the similar task but became worse on the dissimilar task. I t is interesting to speculate whether we might have been able to eliminate the helplessness effects found in the similar task by actually making the buzzer more aversive. It is more likely, however, that the obtained correlations merely reflect the fact that similar task subjects experienced the buzzer in both pretreatment and testing phases, whereas the dissimilar task subjects only heard the buzzer in pretreatment. Not only did we find more helplessness produced in our similar test task than in our dissimilar test task, but we actually found no evidence whatsoever of helpless- ness in this latter situation. Hiroto and Seligman (1975) have argued that since Iearned helplessness is neither short-lived nor highly specific, but rather general across motivations and tasks, it may be conceptualized as “the rudiment of a ‘trait’ ”. T h e extremely wide generalization they imply seems to us implausible and, indeed, our results cast doubt upon it. Our test situation was truly dissimilar to the training situation, unlike the claimed “dissimilar” situations of many other studies attempting to demonstrate generality, which have, in fact, either employed the same or similar tasks (e.g. Thornton and Jacobs, 1971 ; Fosco and Geer, 1971 ;Glass and"
+                    }
+                ]
+            },
+            "bbox": [
+                210,
+                422,
+                784,
+                847
+            ]
+        },
+        {
+            "type": "page_number",
+            "content": {
+                "page_number_content": [
+                    {
+                        "type": "text",
+                        "content": "8"
+                    }
+                ]
+            },
+            "bbox": [
+                493,
+                876,
+                504,
+                888
+            ]
+        }
+    ],
+    [
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Singer, 1972; Sherrod and Downs, 1974) or made no attempt to separate the two parts of the experiment (e.g. Hiroto, 1974; Hiroto and Seligman, 1975). I n our experiment subjects were given a different task (cognitive vs."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                157,
+                782,
+                204
+            ]
+        },
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "GENERALIZATION OF LEARNED HELPLESSNESS 73 3"
+                    }
+                ],
+                "level": 2
+            },
+            "bbox": [
+                214,
+                210,
+                655,
+                226
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "instrumental) resulting in a different outcome (failure vs. buzzer) in a different location by a different experimenter ostensibly as part of a different experiment. We found no generalization. Our finding can in no way be attributed to the particular tasks employed. The anagram test task has been validated repeatedly by others (e.g. Hiroto, 1974; Hiroto and Seligman, 1975; Miller and Seligman, 1975) and by ourselves (Winefield and Tiggemann, 1978). Had we conducted only the second sub-experiment, vix. the anagram test task, we may have been open to criticism of our pretreatment as inappropriate or insufficient. The helplessness effects we found for our similar situation, however, simultaneously deny this possibility and validate our pretreatment task. We have subjected people to a pretreatment capable of producing very strong learned helplessness effects and then tested them in a dissimilar but often used test situation in which strong helplessness effects have been observed, and have found no evidence of helpless-"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                233,
+                784,
+                431
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "ness. This finding is further supported by Cole and Coyne’s (1977) recently published study of cross-situational generalization which obtained similar results to ours. Unlike us, they did not vary the nature of the task and they used aversive rather than nonaversive pretreatment outcomes. Together the two experiments present impressive evidence of the importance of situation similarity as a determinant of the generalization of learned helplessness. The questionnaire results confirm the performance results and verify the effectiveness of our helplessness manipulations. In the instrumental pretreat- ments both inescapable groups felt more helpless than the escapable groups. I n the test phase similar inescapable subjects felt more helpless and performed more poorly, whereas dissimilar inescapable subjects did not. The correlations we obtained did not display the same type of pattern for the similar and dissimilar test task, suggesting that different principles apply to the two different situations. This lends further support to the conclusion that our failure to demonstrate generalization was not caused by inappropriate or in some way weak stimulus parameters. The question which logically arises next, is precisely what is necessary for generalization of learned helplessness to occur. Other studies aimed at demons- trating helplessness have shown that there exist many variables which are sufficient. These studies which have found helplessness, have frequently failed to control adequately only one variable, a variable different in different studies. Placing our own study, which employed a truly dissimilar task, and failed to demonstrate help- lessness, in this context leads logically to the conclusion that only one aspect of the situation need be similar, and that probably this can be any aspect. Subjects will generalize on the basis of any or all of outcome, task, experiment or experi- menter. In fact, if we believe Seligman’s statement that “Men and animals are born generalizers” (Seligman, 1975, p.36) it may well be that subjects actively try to impose order and extract similarities and hence will generalize on the basis of the slightest similarity, the appropriateness or otherwise of such behaviour being arguable. The above may tie in with the fact that in our study when we did find helplessness effects, failure tended to be correlated with relative attribution to self rather than to the task. Where we found no helplessness, on the other hand, in our dis-"
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                438,
+                784,
+                847
+            ]
+        },
+        {
+            "type": "page_number",
+            "content": {
+                "page_number_content": [
+                    {
+                        "type": "text",
+                        "content": "9"
+                    }
+                ]
+            },
+            "bbox": [
+                493,
+                876,
+                504,
+                888
+            ]
+        }
+    ],
+    [
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": []
+            },
+            "bbox": [
+                212,
+                157,
+                784,
+                219
+            ]
+        },
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "734 M. TIGGEMANN AND A. H. WINEFIELD"
+                    }
+                ],
+                "level": 2
+            },
+            "bbox": [
+                214,
+                226,
+                568,
+                241
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "similar anagram task, the performance of inescapable subjects tended to become poorer with attribution to the task. These correlations support Klein et aZ.’s (1976) argument that attribution of helplessness to personal failure may be an important delineating condition of the learned helplessness phenomenon. It may be that subjects felt able to generalize their feelings of their own responsibiiity to a similar test situation, but not to a truly dissimilar situation. With no basis for generalization the task characteristics become all important, which could explain our findings of no helplessness and a correlation between performance and attribution to the task for the dissimilar inescapable group. In conclusion, then, we feel that we have demonstrated clearly the importance of situation similarity for the occurrence of learned helplessness. Using a similar test task we obtained very strong helplessness effects, whereas with a dissimilar test task we failed to demonstrate any generalization of learned helplessness at all."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                248,
+                782,
+                446
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "We feel that claims to the wide generality of the phenomenon and extrapolation to a “trait-like system of expectancies that responding is futile” (Hiroto and Seligman, 1975) must be treated with caution in the light of our findings."
+                    }
+                ]
+            },
+            "bbox": [
+                212,
+                453,
+                782,
+                500
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "References COLE,C. S. and COYNE, J. C. (1977). Situational specificity of laboratory-induced learned helplessness. Journal of Abnormal Psychology, 86, 615-23. DWECK, C. S. (1975). The role of expectations and attributions in the alleviation of learned helplessness. Journal of Personality and Social Psychology, 31, 674-85. DWECK, C. S. and REPPUCCI,N. D. (1973). Learned helplessness and reinforcement responsibility in children. Journal of Personality and Social Psychology, 25, 109-16. Fosco, E. and GEER,J. (1971). Effects of gaining control over aversive stimuli after differing amounts of no control. Psychological Reports, 29, I 153-4. J. E. (1972). Urban Stress: Experiments on Noise and Social GLASS,D. C. and SINGER, Stressors. New York: Academic Press. HIROTO, D. S. (1974). Locus of control and learned helplessness. Journal of Experimental Psychology, 102,187-93. HIROTO, M. E. P. (1975). Generality of learned helplessness in man. D. S. and SELIGMAN, Journal of Personality and Social Psychology, 31, 31 1-27. KLEIN,D. C., FENCIL-MORSE, E. and SELIGMAN, M. E. P. (1976). Learned helplessness, depression, and the attribution of failure. Journal of Personality and Social Psychology, 33, 508-16. MAIER, S. F. and SELIGMAN, M. E. P. (1976). Learned helplessness: Theory and evidence. Journal of Experimental Psychology, 105, 3-46. MILLER, W. R. and SELIGMAN, M. E. P. (1975). Depression and learned helplessness in man. Journal of Abnormal Psychology, 84, 228-38. OVERMIER, J. B. and SELIGMAN, M. E. P. (1967). Effects of inescapable shock upon sub- sequent escape and avoidance responding. Journal of Comparative and Physiological Psychology, 63, 28-33. ROTH,S. and BOOTZIN, R. R. (1974). Effects of experimentally induced expectancies of"
+                    }
+                ]
+            },
+            "bbox": [
+                210,
+                505,
+                784,
+                854
+            ]
+        },
+        {
+            "type": "page_number",
+            "content": {
+                "page_number_content": [
+                    {
+                        "type": "text",
+                        "content": "10"
+                    }
+                ]
+            },
+            "bbox": [
+                488,
+                876,
+                508,
+                888
+            ]
+        }
+    ],
+    [
+        {
+            "type": "list",
+            "content": {
+                "list_type": "reference_list",
+                "list_items": [
+                    {
+                        "item_type": "text",
+                        "item_content": [
+                            {
+                                "type": "text",
+                                "content": "external control: An investigation of learned helplessness. Journal of Personality and Social Psychology, 29,25 3-64. ROTH,S. and KUBAL,L. (1975). Effects of noncontingent reinforcement on tasks of differing importance : Facilitation and learned helplessness. Journal of Personality and Social Psychology, 32, 68-91. ROTTER, J. B. (1966). Generalized expectancies of internal versus external control of re- inforcements. Psychological Monographs, 80, (whole No. 609)."
+                            }
+                        ]
+                    },
+                    {
+                        "item_type": "text",
+                        "item_content": [
+                            {
+                                "type": "text",
+                                "content": "GENERALIZATION OF LEARNED HELPLESSNESS 735 SELIGMAN, M. E. P. (1975). Helplessness. San Francisco: Freeman. SELIGMAN, M. E. P. and MAIER,S. F. (1967). Failure to escape traumatic shock. Journal of Experimental Psychology, 74, 1-9. SHERROD, D. R. and DOWNS,R. (1974). Environmental determinants of altruism: The effects of stimulus overload and perceived control on helping. Journal of Experimental Social Psychology, 10,468- 79. THORNTON, J. W. and JACOBS, P. D. (1971). Learned helplessness in human subjects. Journal of Experimental Psychology, 87, 367-72. TRESSELT, M. E. and MAYZNER, M. S. (1966). Normative solution times for a sample of I 34 solution words and 378 associated anagrams. Psychonomic Monograph Supplements, I, 293-8. WINEFIELD, A. H. and TIGGEMANN, M. (1978). The effects of uncontrollable and un- predictable events on anagram solving. Quarterly Journal of Experimental Psychology, 30,711-18. WORTMAN, C . B. and BREHM,J. W. (1975). Responses to uncontrollable outcomes: An integration of reactance theory and the learned helplessness model. In BERKOWITZ,"
+                            }
+                        ]
+                    },
+                    {
+                        "item_type": "text",
+                        "item_content": [
+                            {
+                                "type": "text",
+                                "content": "L. E, (Ed.), Advances in Experimental Social Psychology. New York: Academic Press. Revised manuscript received 6 June 1978"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "bbox": [
+                214,
+                157,
+                782,
+                250
+            ]
+        },
+        {
+            "type": "page_number",
+            "content": {
+                "page_number_content": [
+                    {
+                        "type": "text",
+                        "content": "11"
+                    }
+                ]
+            },
+            "bbox": [
+                488,
+                876,
+                508,
+                888
+            ]
+        }
+    ]
+]

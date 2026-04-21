@@ -1,0 +1,53 @@
+% Auto-generated summary table for:
+% exp_20260416_allhybrid1
+% Source files:
+% - parallel_world_summary_exp_20260416_allhybrid1.csv
+% - parallel_world_paired_stats_exp_20260416_allhybrid1.csv
+% - parallel_world_paired_qc_exp_20260416_allhybrid1.csv
+% Requires: \usepackage{booktabs,graphicx}
+
+\begin{table}[t]
+\centering
+\caption{Digital friction experiment (7-day, all-hybrid LLM configuration): world-level outcomes and paired effects vs baseline}
+\label{tab:digital_friction_exp_20260416_allhybrid1}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+
+\textbf{Panel A. Absolute outcomes across worlds (mean$\pm$SD over 3 seeds)}\\[2pt]
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lcccccc}
+\toprule
+World & Attempt rate & Success rate & Help-seek rate & Abandon rate & Neg. share & Helplessness $\Delta$ \\
+\midrule
+Baseline (Low Friction) & 0.724$\pm$0.015 & 0.391$\pm$0.019 & 0.357$\pm$0.010 & 0.099$\pm$0.006 & 0.460$\pm$0.022 & 19.099$\pm$1.672 \\
+High Friction + Low Assist & 0.399$\pm$0.029 & 0.044$\pm$0.008 & 0.218$\pm$0.021 & 0.122$\pm$0.014 & 0.889$\pm$0.020 & 46.784$\pm$1.346 \\
+High Friction + High Assist & 0.664$\pm$0.057 & 0.281$\pm$0.025 & 0.436$\pm$0.041 & 0.123$\pm$0.020 & 0.577$\pm$0.008 & 29.170$\pm$2.314 \\
+Low Friction + High Assist & 0.821$\pm$0.023 & 0.573$\pm$0.010 & 0.480$\pm$0.009 & 0.042$\pm$0.002 & 0.301$\pm$0.022 & 1.811$\pm$1.859 \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{0.6em}
+\textbf{Panel B. Paired effects vs baseline (mean difference [95\% CI], n=3 pairs)}\\[2pt]
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lccccc}
+\toprule
+Contrast vs baseline & $\Delta$Attempt rate & $\Delta$Neg. share & $\Delta$Helplessness & $\Delta$Trust & $\Delta$Avoidance \\
+\midrule
+High Friction + Low Assist & -0.325 [-0.340, -0.316] & +0.429 [+0.413, +0.439] & +27.686 [+25.850, +29.913] & -26.392 [-28.275, -23.175] & +17.717 [+15.625, +20.200] \\
+High Friction + High Assist & -0.060 [-0.129, -0.009] & +0.118 [+0.100, +0.146] & +10.071 [+7.983, +13.391] & -8.958 [-9.800, -8.000] & +8.192 [+5.825, +9.725] \\
+Low Friction + High Assist & +0.097 [+0.090, +0.109] & -0.159 [-0.177, -0.149] & -17.288 [-18.433, -15.357] & +30.475 [+23.725, +36.475] & -27.458 [-29.175, -26.000] \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{0.4em}
+\begin{minipage}{0.98\linewidth}
+\footnotesize
+\textit{Notes.}
+Experiment setup from manifest/config: 4 worlds, 3 paired seeds (101/201/301), 10 agents per world, single steady stage, 7 days, 30-minute logical-clock decision interval.
+All LLM psychology switches are enabled, with \texttt{PROTO\_LLM\_PSYCHOLOGY\_MODE=hybrid} and \texttt{PROTO\_LLM\_UNCONTROLLABILITY\_MODE=hybrid}.
+All paired QC rows pass (\texttt{qc\_pass}=1).
+Wilcoxon p-values in paired stats are 0.25 for nonzero contrasts (small-sample limit at n=3), so Panel B is primarily descriptive about effect direction and magnitude.
+\end{minipage}
+\end{table}

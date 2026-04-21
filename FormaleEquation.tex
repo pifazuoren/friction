@@ -1,0 +1,276 @@
+\documentclass[11pt]{article}
+\usepackage[UTF8,fontset=fandol]{ctex}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue,
+    pdftitle={Formal Equation of the Helplessness Update Mechanism},
+    pdfauthor={Codex}
+}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\clip}{\mathrm{clip}}
+\newcommand{\ind}{\mathbf{1}}
+
+\title{Helplessness Update 的形式化公式与可信性分析}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{说明}
+本文将当前项目中 \texttt{examples/digital\_friction\_mvp/proto/state\_update.py} 的 helplessness update 机制整理为一组可读的形式化公式，并对每个公式的可信性做初步分析。
+
+这里所说的“可信性”分为两层：
+\begin{itemize}
+    \item \textbf{代码一致性}：该公式是否严格对应当前实现。
+    \item \textbf{理论可信性}：该公式的结构、方向和变量位置是否有较强理论或文献支持。
+\end{itemize}
+
+需要特别说明的是：本文中的大多数\textbf{结构关系}是理论驱动的，但许多\textbf{具体系数}仍属于机制原型阶段的启发式参数，而不是实证拟合参数。
+
+\section{符号定义}
+设：
+\begin{itemize}
+    \item $H_t$：第 $t$ 次数字事件发生前的 helplessness。
+    \item $\Delta_t$：第 $t$ 次事件带来的 helplessness 增量。
+    \item $o_t$：本次结果类型（outcome type）。
+    \item $U_t$：本次事件的 event-level uncontrollability。
+    \item $SE_t$：当前任务上的 task self-efficacy。
+    \item $M_t$：当前任务上的 controllable success memory。
+    \item $r_t$：本次回避原因（avoid reason）。
+    \item $s_t$：本次支持模式（support mode）。
+    \item $F_t$：当前连续失败次数（consecutive failures）。
+\end{itemize}
+
+定义截断函数：
+\[
+\clip(x,l,u)=\max(l,\min(x,u)).
+\]
+
+\section{形式化公式}
+
+\subsection{主更新式}
+\begin{equation}
+H_{t+1}=\clip(H_t+\Delta_t,\ 0,\ 100).
+\label{eq:main-update}
+\end{equation}
+
+\subsection{Outcome 的基础增量}
+\begin{equation}
+b(o_t)=
+\begin{cases}
+-1.4, & o_t=\text{success\_self},\\
+-0.7, & o_t=\text{success\_with\_help},\\
+0.6, & o_t=\text{failure\_after\_attempt},\\
+0.9, & o_t=\text{failure\_even\_with\_help},\\
+0.45, & o_t=\text{abandon\_midway},\\
+0.15, & o_t=\text{avoid\_without\_attempt}.
+\end{cases}
+\label{eq:base-delta}
+\end{equation}
+
+\subsection{成功分支}
+若本次结果属于成功类事件，则：
+\begin{equation}
+\Delta_t=b(o_t)-R(o_t,s_t,F_t),
+\qquad
+o_t\in\{\text{success\_self},\text{success\_with\_help}\}.
+\label{eq:success-branch}
+\end{equation}
+
+其中恢复项 $R(o_t,s_t,F_t)$ 定义为：
+\begin{equation}
+R(o_t,s_t,F_t)=
+\begin{cases}
+1.0+0.25\,\ind(F_t>0), &
+o_t=\text{success\_self},\\[4pt]
+0.35+0.25\,\ind(F_t>0), &
+o_t=\text{success\_with\_help},\ s_t=\text{enabling\_support},\\[4pt]
+0.10+0.25\,\ind(F_t>0), &
+o_t=\text{success\_with\_help},\ s_t\neq \text{enabling\_support}.
+\end{cases}
+\label{eq:recovery-bonus}
+\end{equation}
+
+\subsection{失败类事件的核心子项}
+
+\paragraph{(1) 事件级不可控感项}
+\begin{equation}
+u(U_t)=
+\begin{cases}
+0.0, & U_t=0,\\
+1.2, & U_t=1,\\
+2.4, & U_t=2.
+\end{cases}
+\label{eq:uncontrollability}
+\end{equation}
+
+\paragraph{(2) 自我效能损伤项}
+\begin{equation}
+e(SE_t)=\clip\!\left(\frac{50-SE_t}{22},\ 0,\ 1.6\right).
+\label{eq:efficacy-loss}
+\end{equation}
+
+\paragraph{(3) 回避原因调节项}
+\begin{equation}
+a(r_t)=
+\begin{cases}
+1.0, & r_t=\text{helpless\_avoid},\\
+0.35, & r_t=\text{risk\_avoid},\\
+0.15, & r_t=\text{low\_value\_avoid},\\
+1.0, & \text{otherwise}.
+\end{cases}
+\label{eq:avoid-multiplier}
+\end{equation}
+
+\paragraph{(4) 可控成功保护项}
+先定义 protection：
+\begin{equation}
+\pi(M_t)=\clip(0.45M_t,\ 0,\ 0.45).
+\label{eq:success-protection}
+\end{equation}
+
+实际进入失败缩放的是：
+\begin{equation}
+m(M_t)=1-\pi(M_t).
+\label{eq:success-protection-mult}
+\end{equation}
+
+\paragraph{(5) 阻尼项}
+\begin{equation}
+d(H_t)=\clip\!\left(1-0.45\frac{H_t}{100},\ 0.55,\ 1.0\right).
+\label{eq:damping}
+\end{equation}
+
+\subsection{失败/放弃/回避分支}
+先定义原始失败冲击项：
+\begin{equation}
+x_t=b(o_t)+u(U_t)+e(SE_t).
+\label{eq:raw-failure}
+\end{equation}
+
+若本次结果为不尝试直接回避，则进一步考虑回避原因：
+\begin{equation}
+\tilde{x}_t=
+\begin{cases}
+\max(0,\ a(r_t)x_t), & o_t=\text{avoid\_without\_attempt},\\
+x_t, & \text{otherwise}.
+\end{cases}
+\label{eq:avoid-adjusted}
+\end{equation}
+
+于是失败类事件的 helplessness 增量为：
+\begin{equation}
+\Delta_t=
+\max(0,\ \tilde{x}_t\,m(M_t))\,d(H_t),
+\quad
+o_t\in\{
+\text{failure\_after\_attempt},
+\text{failure\_even\_with\_help},
+\text{abandon\_midway},
+\text{avoid\_without\_attempt}
+\}.
+\label{eq:failure-branch}
+\end{equation}
+
+\subsection{连续失败次数的更新}
+\begin{equation}
+F_{t+1}=
+\begin{cases}
+0, & o_t\in\{\text{success\_self},\text{success\_with\_help}\},\\
+F_t, & o_t=\text{avoid\_without\_attempt},\\
+F_t+1, & o_t\in\{\text{failure\_after\_attempt},\text{failure\_even\_with\_help},\text{abandon\_midway}\}.
+\end{cases}
+\label{eq:failure-streak}
+\end{equation}
+
+\section{可信性分析}
+
+\subsection{总体结论}
+整体上，这组公式具备以下特点：
+\begin{itemize}
+    \item \textbf{代码一致性高}：几乎所有公式都可以与当前实现逐项对齐。
+    \item \textbf{理论结构可信}：不可控感、自我效能、可控成功记忆、回避分型这些结构关系有明确理论依据。
+    \item \textbf{参数仍偏启发式}：大量常数项与缩放系数是当前原型的机制化设定，而非实证拟合值。
+\end{itemize}
+
+\subsection{分项可信性表}
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{L{2.8cm}L{1.8cm}L{1.8cm}L{8.0cm}}
+\toprule
+\textbf{公式项} & \textbf{代码一致性} & \textbf{理论可信性} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{公式项} & \textbf{代码一致性} & \textbf{理论可信性} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+主更新式 $\eqref{eq:main-update}$ & 很高 & 高 &
+这是对当前状态更新逻辑的直接抽象，没有额外理论争议。它本质上只是把 helplessness 表示成一个受限区间上的状态变量。 \\
+
+基础增量 $b(o_t)$，式 $\eqref{eq:base-delta}$ & 很高 & 中等 &
+不同 outcome 的方向与排序有理论支持，例如成功应恢复、失败应上升、help 失败比普通失败更伤。但具体系数（如 $0.9$、$-1.4$）来自工程参数，而非论文直接估计。 \\
+
+成功恢复项 $R(o_t,s_t,F_t)$，式 $\eqref{eq:recovery-bonus}$ & 很高 & 中高 &
+\texttt{success\_self} 恢复最大、\texttt{enabling\_support} 次之，符合 mastery experience 与 agency preservation 的理论方向；结束失败 streak 后额外恢复，也符合“重新建立 contingency”的逻辑。具体 bonus 值仍是参数化设定。 \\
+
+不可控感项 $u(U_t)$，式 $\eqref{eq:uncontrollability}$ & 很高 & 很高 &
+这是当前机制中理论可信性最强的一项。核心思想与 learned helplessness 文献高度一致：真正伤害主动性的，不是负面结果本身，而是“我做什么都没用”的不可控体验。风险主要在于三档离散映射与数值间距属于实现选择。 \\
+
+自我效能损伤项 $e(SE_t)$，式 $\eqref{eq:efficacy-loss}$ & 很高 & 高 &
+Bandura 及老年数字使用文献都支持 self-efficacy 作为关键中介或放大器。该项的结构与位置合理，但线性函数形状和上限 $1.6$ 是启发式而非实证拟合。 \\
+
+回避原因调节项 $a(r_t)$，式 $\eqref{eq:avoid-multiplier}$ & 很高 & 高 &
+“并非所有 avoid 都等于 helplessness”这一分类结构非常可信，且与 TAM/UTAUT 及老年数字接受文献一致。倍率本身（$1.0,0.35,0.15$）目前仍属于机制原型参数。 \\
+
+可控成功保护项 $\pi(M_t),m(M_t)$，式 $\eqref{eq:success-protection}$--$\eqref{eq:success-protection-mult}$ & 很高 & 高 &
+这项与 mastery experience、preescape protection、digital empowerment 等思路高度一致：真正自己掌握的成功会降低后续脆弱性。其理论位置较稳，但保护上限 $0.45$ 与线性增长方式仍属启发式。 \\
+
+阻尼项 $d(H_t)$，式 $\eqref{eq:damping}$ & 很高 & 中等 &
+代码上完全一致，工程上也合理：当 helplessness 已经很高时，进一步上升应有边际递减，以避免数值爆炸。理论上可以解释为“高位饱和”或“边际伤害递减”，但不像 uncontrollability 与 self-efficacy 那样有直接文献锚点。 \\
+
+失败分支总式 $\eqref{eq:failure-branch}$ & 很高 & 高 &
+该式很好地体现了当前机制的主张：负面结果不是直接累积，而是通过不可控感、自我效能、回避原因与可控成功记忆共同塑造本次增量。整体结构可信，精确乘加结构则仍是当前原型的设计选择。 \\
+
+连续失败更新式 $\eqref{eq:failure-streak}$ & 很高 & 中等 &
+作为辅助记忆变量，该式合理且清晰：成功清零、失败累加、回避保持不变。它的可信性主要来自记忆逻辑而非核心理论，因此不应被表述为 helplessness 的主驱动。 \\
+
+\end{longtable}
+
+\subsection{哪些部分最值得在汇报中强调}
+如果需要向老师说明“哪些公式最站得住”，建议优先强调以下三项：
+\begin{itemize}
+    \item \textbf{事件级不可控感项}：这是当前机制中最核心、也最有理论锚点的一项。
+    \item \textbf{自我效能损伤项}：它解释了为什么同样失败，对不同 agent 的心理冲击会不同。
+    \item \textbf{可控成功保护项}：它解释了为什么“真正自己掌握的成功”比“被别人替代完成”更有长期保护作用。
+\end{itemize}
+
+\subsection{哪些部分需要更谨慎地表述}
+以下部分更适合在论文或汇报中表述为“当前原型中的参数化设定”，而不是“已验证的实证系数”：
+\begin{itemize}
+    \item 基础增量的具体数值，如 $-1.4$、$0.9$、$0.15$；
+    \item 不可控感从 $\{0,1,2\}$ 映射到 $\{0,1.2,2.4\}$ 的具体幅度；
+    \item 自我效能损伤项的线性系数与上界；
+    \item 回避倍率与保护项上限；
+    \item 阻尼项的线性系数与上下截断边界。
+\end{itemize}
+
+\section{一句话总结}
+从当前代码出发，这组形式化公式已经足够清楚地表达出 helplessness update 的主机制：\textbf{负向结果不会直接机械累积，而是主要通过事件级不可控感，并在自我效能、回避原因和可控成功记忆的共同作用下，更新 helplessness。}
+
+但与此同时，\textbf{当前最可信的是结构关系，而不是系数本身}。因此，在论文或答辩中，最稳妥的表述方式是：这是一组\textbf{理论驱动、代码一致、参数待进一步校准}的形式化更新规则。
+
+\end{document}

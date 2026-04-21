@@ -32,8 +32,8 @@ def ensure_attempt_rows_table(db_path: Path, table_name: str) -> None:
             strategy_type TEXT,
             outcome_type TEXT,
             support_quality INTEGER,
-            perceived_uncontrollability INTEGER,
-            rule_perceived_uncontrollability INTEGER,
+            event_level_uncontrollability INTEGER,
+            rule_event_level_uncontrollability INTEGER,
             uncontrollability_source TEXT,
             uncontrollability_llm_confidence REAL,
             helplessness_before REAL,
@@ -52,7 +52,8 @@ def ensure_attempt_rows_table(db_path: Path, table_name: str) -> None:
         for row in cur.execute(f"PRAGMA table_info({table_name})").fetchall()
     }
     for column_name, column_type in (
-        ("rule_perceived_uncontrollability", "INTEGER"),
+        ("event_level_uncontrollability", "INTEGER"),
+        ("rule_event_level_uncontrollability", "INTEGER"),
         ("uncontrollability_source", "TEXT"),
         ("uncontrollability_llm_confidence", "REAL"),
     ):
@@ -109,16 +110,16 @@ def write_attempt_rows(
         INSERT INTO {table_name} (
             agent_id, day, t, step, stage_name,
             task_id, task_family, friction_type, strategy_type, outcome_type,
-            support_quality, perceived_uncontrollability,
-            rule_perceived_uncontrollability, uncontrollability_source,
+            support_quality, event_level_uncontrollability,
+            rule_event_level_uncontrollability, uncontrollability_source,
             uncontrollability_llm_confidence,
             helplessness_before, helplessness_after, helplessness_delta,
             strategy_weights_json, payload_json
         ) VALUES (
             :agent_id, :day, :t, :step, :stage_name,
             :task_id, :task_family, :friction_type, :strategy_type, :outcome_type,
-            :support_quality, :perceived_uncontrollability,
-            :rule_perceived_uncontrollability, :uncontrollability_source,
+            :support_quality, :event_level_uncontrollability,
+            :rule_event_level_uncontrollability, :uncontrollability_source,
             :uncontrollability_llm_confidence,
             :helplessness_before, :helplessness_after, :helplessness_delta,
             :strategy_weights_json, :payload_json

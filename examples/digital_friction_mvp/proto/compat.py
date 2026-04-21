@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 
+AVOID_COMPAT_DELTAS = {
+    "helpless_avoid": (-2.0, 4.0),
+    "risk_avoid": (-0.5, 2.5),
+    "low_value_avoid": (0.0, 1.0),
+}
+
 
 def clamp_score(value: float) -> float:
     return max(0.0, min(100.0, float(value)))
@@ -29,13 +35,16 @@ def apply_compatibility_updates(
     avoidance_now: float,
     outcome_type: str,
     help_used: bool,
+    avoid_reason: str = "not_applicable",
 ) -> CompatibilityUpdate:
     if outcome_type in {"success_self", "success_with_help"}:
         trust_delta = 5.0
         avoidance_delta = -3.0
     elif outcome_type == "avoid_without_attempt":
-        trust_delta = -2.0
-        avoidance_delta = 4.0
+        trust_delta, avoidance_delta = AVOID_COMPAT_DELTAS.get(
+            str(avoid_reason),
+            (-1.0, 2.0),
+        )
     elif outcome_type == "abandon_midway":
         trust_delta = -5.0
         avoidance_delta = 4.0

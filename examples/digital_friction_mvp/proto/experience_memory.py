@@ -43,6 +43,13 @@ _AVOID_SELF_EFFICACY_DELTAS = {
     "low_value_avoid": 0.0,
 }
 _CONTROLLABLE_SUCCESS_DECAY_PER_DAY = 0.985
+_ATTRIBUTION_EMA_KEEP = 0.7
+_TASK_FAMILY_NEIGHBORS = {
+    "login_verification": ("payment_checkout",),
+    "payment_checkout": ("login_verification",),
+    "appointment_registration": ("health_info_lookup",),
+    "health_info_lookup": ("appointment_registration",),
+}
 
 
 def _clamp(value: float, lower: float = 0.0, upper: float = 100.0) -> float:
@@ -59,6 +66,123 @@ def _copy_dict(payload: dict[str, Any]) -> dict[str, Any]:
 
 def _blank_help_bucket() -> dict[str, Any]:
     return HelpEffectState().to_dict()
+
+
+def _dominant_stability_label(ratio: float) -> str:
+    if ratio >= 0.6:
+        return "stable"
+    if ratio < 0.3:
+        return "transient"
+    return "mixed"
+
+
+def _dominant_scope_label(ratio: float) -> str:
+    if ratio >= 0.6:
+        return "family_generalizing"
+    if ratio < 0.3:
+        return "task_specific"
+    return "mixed"
+
+
+def _attribution_summary_text(stability: str, scope: str) -> str:
+    return f"recent attribution tends toward {stability}/{scope}"
+
+
+def _stable_recovery_multiplier(ratio: float) -> float:
+    return _clamp(1.0 - 0.45 * float(ratio), 0.55, 1.0)
+
+
+def _refresh_attribution_summary(state: TaskDomainState) -> None:
+    state.dominant_attribution_stability = _dominant_stability_label(
+        state.recent_stable_attribution_ratio
+    )
+    state.dominant_attribution_scope = _dominant_scope_label(
+        state.recent_generalizing_attribution_ratio
+    )
+    state.attribution_summary = _attribution_summary_text(
+        state.dominant_attribution_stability,
+        state.dominant_attribution_scope,
+    )
+
+
+def _update_attribution_summary(state: TaskDomainState, outcome: AttemptOutcome) -> None:
+    if outcome.outcome_type not in _FAILURE_OUTCOMES:
+        return
+
+    if str(getattr(outcome, "event_attribution_status", "")) != "ok":
+        return
+
+    stability = str(getattr(outcome, "event_attribution_stability", "not_applicable"))
+    scope = str(getattr(outcome, "event_attribution_scope", "not_applicable"))
+    if stability == "not_applicable" or scope == "not_applicable":
+        return
+
+    stable_target = 1.0 if stability == "stable" else 0.5 if stability == "mixed" else 0.0
+    generalizing_target = (
+        1.0 if scope == "family_generalizing" else 0.5 if scope == "mixed" else 0.0
+    )
+    state.recent_stable_attribution_ratio = _clamp_unit(
+        _ATTRIBUTION_EMA_KEEP * state.recent_stable_attribution_ratio
+        + (1.0 - _ATTRIBUTION_EMA_KEEP) * stable_target
+    )
+    state.recent_generalizing_attribution_ratio = _clamp_unit(
+        _ATTRIBUTION_EMA_KEEP * state.recent_generalizing_attribution_ratio
+        + (1.0 - _ATTRIBUTION_EMA_KEEP) * generalizing_target
+    )
+    _refresh_attribution_summary(state)
+
+
+def _rewrite_attribution_after_mastery(
+    state: TaskDomainState,
+    *,
+    outcome: AttemptOutcome,
+    mastery_gain: float,
+) -> None:
+    if mastery_gain <= 0.0:
+        return
+
+    if outcome.outcome_type == "success_self":
+        rewrite_strength = _clamp_unit(0.18 + 2.4 * mastery_gain)
+    elif str(getattr(outcome, "support_mode", "")) == "enabling_support":
+        rewrite_strength = _clamp_unit(0.06 + 2.0 * mastery_gain)
+    else:
+        return
+
+    state.recent_stable_attribution_ratio = _clamp_unit(
+        state.recent_stable_attribution_ratio * (1.0 - rewrite_strength)
+    )
+    state.recent_generalizing_attribution_ratio = _clamp_unit(
+        state.recent_generalizing_attribution_ratio * (1.0 - rewrite_strength)
+    )
+    _refresh_attribution_summary(state)
+
+
+def _apply_task_family_generalization(
+    normalized: dict[str, dict[str, Any]],
+    *,
+    source_task_family: str,
+    outcome: AttemptOutcome,
+) -> None:
+    if outcome.outcome_type not in _FAILURE_OUTCOMES:
+        return
+
+    scope = str(getattr(outcome, "event_attribution_scope", "not_applicable"))
+    if scope == "family_generalizing":
+        penalty = 1.2
+    elif scope == "mixed":
+        penalty = 0.5
+    else:
+        return
+
+    for neighbor_family in _TASK_FAMILY_NEIGHBORS.get(str(source_task_family), ()):
+        payload = normalized.get(neighbor_family)
+        if not isinstance(payload, dict):
+            continue
+        neighbor_state = TaskDomainState.from_dict(payload)
+        neighbor_state.task_self_efficacy = _clamp(
+            neighbor_state.task_self_efficacy - penalty
+        )
+        normalized[neighbor_family] = neighbor_state.to_dict()
 
 
 def _task_self_efficacy_delta(outcome: AttemptOutcome) -> float:
@@ -93,28 +217,28 @@ def _controllable_success_gain(
         task_appraisal_result if isinstance(task_appraisal_result, dict) else None
     )
     felt_control = float(appraisal.felt_control)
-    uncontrollability = int(outcome.perceived_uncontrollability)
+    uncontrollability = int(outcome.event_level_uncontrollability)
     difficulty_weight = _clamp(0.85 + (float(task.difficulty) - 0.5) * 0.8, 0.75, 1.15)
 
-    gain = 0.0
     if outcome.outcome_type == "success_self":
-        if felt_control >= 45.0 and uncontrollability <= 1:
-            gain = 0.07
-            if felt_control >= 60.0 and uncontrollability == 0:
-                gain += 0.05
-            if previous_failure_streak >= 2:
-                gain += 0.03
-    elif outcome.outcome_type == "success_with_help":
-        if (
-            str(getattr(outcome, "support_mode", "")) == "enabling_support"
-            and int(outcome.support_quality) >= 1
-            and felt_control >= 50.0
-            and uncontrollability <= 1
-        ):
-            gain = 0.025
-            if int(outcome.support_quality) >= 2 and felt_control >= 60.0:
-                gain += 0.015
+        if felt_control < 55.0 or uncontrollability > 1:
+            return 0.0
+        gain = 0.12 if uncontrollability == 0 else 0.08
+        if previous_failure_streak >= 1:
+            gain += 0.03
+        return gain * difficulty_weight
 
+    if outcome.outcome_type != "success_with_help":
+        return 0.0
+
+    if str(getattr(outcome, "support_mode", "")) != "enabling_support":
+        return 0.0
+    if felt_control < 55.0 or uncontrollability > 1:
+        return 0.0
+
+    gain = 0.045 if uncontrollability == 0 else 0.03
+    if previous_failure_streak >= 2:
+        gain += 0.01
     return gain * difficulty_weight
 
 
@@ -278,7 +402,12 @@ def _summarize_recent_episode_buffer(
         1 for episode in episodes if episode.negative_feedback
     ) / float(total)
     recent_avoid_ratio = sum(
-        1 for episode in episodes if episode.outcome_type == "avoid_without_attempt"
+        1
+        for episode in episodes
+        if (
+            episode.outcome_type == "avoid_without_attempt"
+            and str(episode.avoid_reason) == "helpless_avoid"
+        )
     ) / float(total)
     recent_help_seek_ratio = sum(
         1 for episode in episodes if episode.strategy_type == "seek_help_then_attempt"
@@ -349,18 +478,9 @@ def extract_memory_features(
     difficulty_shift = (
         float(task_appraisal.perceived_task_difficulty) - 50.0
     ) * 0.03
-    # risk/value remain available for avoidance interpretation, but stay out of the helplessness channel
-    risk_shift = 0.0
-    control_shift = (50.0 - float(task_appraisal.felt_control)) * 0.04
-    help_shift = (
-        50.0 - float(task_appraisal.expected_help_effectiveness)
-    ) * 0.02
-    value_shift = 0.0
-    task_appraisal_shift = _clamp(
-        difficulty_shift + risk_shift + control_shift + help_shift + value_shift,
-        -3.0,
-        4.0,
-    )
+    # Appraisal signals remain available for audit/strategy interpretation, but no longer
+    # get merged back into effective helplessness as if they were the same construct.
+    task_appraisal_shift = _clamp(difficulty_shift, -1.5, 2.0)
     if str(psychology_mode).strip().lower() == "hybrid":
         emotion_state = normalize_digital_emotion_state(digital_emotion_state)
         emotion_pressure = _clamp(
@@ -376,18 +496,6 @@ def extract_memory_features(
         0.0,
         100.0,
     )
-    if task_appraisal_shift != 0.0:
-        effective_helplessness = _clamp(
-            effective_helplessness + task_appraisal_shift,
-            0.0,
-            100.0,
-        )
-    if emotion_pressure != 0.0:
-        effective_helplessness = _clamp(
-            effective_helplessness + emotion_pressure,
-            0.0,
-            100.0,
-        )
     return MemoryFeatures(
         effective_helplessness=effective_helplessness,
         task_self_efficacy=task_state.task_self_efficacy,
@@ -434,6 +542,9 @@ def update_task_domain_memory(
     mastery_gain = 0.0
     if outcome.success:
         state.success_count += 1
+        delta *= _stable_recovery_multiplier(
+            state.recent_stable_attribution_ratio
+        )
         mastery_gain = _controllable_success_gain(
             task=task,
             outcome=outcome,
@@ -454,12 +565,23 @@ def update_task_domain_memory(
     state.controllable_success_memory = _clamp_unit(
         state.controllable_success_memory + mastery_gain
     )
+    _update_attribution_summary(state, outcome)
+    _rewrite_attribution_after_mastery(
+        state,
+        outcome=outcome,
+        mastery_gain=mastery_gain,
+    )
     state.recent_negative_feedback_ema = (
         0.7 * state.recent_negative_feedback_ema + 0.3 * current_negative
     )
     state.last_outcome = outcome.outcome_type
     state.last_updated_day = int(day)
     normalized[task.task_family] = state.to_dict()
+    _apply_task_family_generalization(
+        normalized,
+        source_task_family=task.task_family,
+        outcome=outcome,
+    )
     return normalized
 
 
@@ -513,7 +635,7 @@ def update_recent_episode_buffer(
             help_used=outcome.help_used,
             help_source="generic" if outcome.help_used else "none",
             negative_feedback=outcome.negative_feedback,
-            perceived_uncontrollability=outcome.perceived_uncontrollability,
+            event_level_uncontrollability=outcome.event_level_uncontrollability,
             helplessness_delta=float(helplessness_delta),
         ).to_dict()
     )

@@ -1,0 +1,182 @@
+<mxfile host="app.diagrams.net" agent="Codex">
+  <diagram id="helplessness-update" name="Page-1">
+    <mxGraphModel dx="838" dy="574" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=28;fontStyle=1;fontColor=#1f1f1f;" value="Digital Learned Helplessness Update Architecture" vertex="1">
+          <mxGeometry height="40" width="980" x="220" y="24" as="geometry" />
+        </mxCell>
+        <mxCell id="digital_task_result" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=20;fontColor=#1f1f1f;" value="Digital Task&#xa;Result" vertex="1">
+          <mxGeometry height="90" width="170" x="40" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="failure_label" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;fontColor=#1f1f1f;" value="Failure /&#xa;Abandon" vertex="1">
+          <mxGeometry height="44" width="110" x="254" y="273" as="geometry" />
+        </mxCell>
+        <mxCell id="avoid_label" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;fontColor=#1f1f1f;" value="Avoid" vertex="1">
+          <mxGeometry height="34" width="84" x="260" y="426" as="geometry" />
+        </mxCell>
+        <mxCell id="recovery_path" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;fontColor=#1f1f1f;" value="Recovery&#xa;Path" vertex="1">
+          <mxGeometry height="78" width="170" x="380" y="121" as="geometry" />
+        </mxCell>
+        <mxCell id="event_uncontrollability" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cfe2f3;strokeColor=#5b9bd5;fontSize=22;fontStyle=1;fontColor=#1f1f1f;" value="Event-level&#xa;Uncontrollability" vertex="1">
+          <mxGeometry height="110" width="260" x="440" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="kX_61f6yt6uVT_pCN8pB-10" edge="1" parent="1" source="task_self_efficacy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;endArrow=none;endFill=0;strokeColor=light-dark(#6C8EBF,#FFFFFF);strokeWidth=4;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="820" y="160" />
+              <mxPoint x="820" y="160" />
+            </Array>
+            <mxPoint x="900" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="task_self_efficacy" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;fontColor=#1f1f1f;" value="Task&#xa;Self-Efficacy" vertex="1">
+          <mxGeometry height="86" width="140" x="590" y="117" as="geometry" />
+        </mxCell>
+        <mxCell id="success_memory" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;fontColor=#1f1f1f;" value="Controllable&#xa;Success&#xa;Memory" vertex="1">
+          <mxGeometry height="86" width="190" x="1030" y="121" as="geometry" />
+        </mxCell>
+        <mxCell id="helplessness_core" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cfe2f3;strokeColor=#5b9bd5;fontSize=24;fontStyle=1;fontColor=#1f1f1f;" value="Helplessness&#xa;Update Core" vertex="1">
+          <mxGeometry height="120" width="270" x="760" y="235" as="geometry" />
+        </mxCell>
+        <mxCell id="avoid_reason" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;fontColor=#1f1f1f;" value="Avoid&lt;br&gt;Reason" vertex="1">
+          <mxGeometry height="96" width="180" x="805" y="395" as="geometry" />
+        </mxCell>
+        <mxCell id="updated_helplessness" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=20;fontColor=#1f1f1f;" value="Updated&#xa;Helplessness" vertex="1">
+          <mxGeometry height="84" width="190" x="1110" y="253" as="geometry" />
+        </mxCell>
+        <mxCell id="memory_next_round" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=20;fontColor=#1f1f1f;" value="Memory /&#xa;Next Round" vertex="1">
+          <mxGeometry height="84" width="200" x="1370" y="255" as="geometry" />
+        </mxCell>
+        <mxCell id="long_term_effects" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#b3b3b3;dashed=1;fontSize=20;fontColor=#1f1f1f;" value="Long-term Effects" vertex="1">
+          <mxGeometry height="74" width="260" x="1060" y="406" as="geometry" />
+        </mxCell>
+        <mxCell id="attribution" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#b3b3b3;dashed=1;fontSize=20;fontColor=#1f1f1f;" value="Attribution" vertex="1">
+          <mxGeometry height="70" width="180" x="1100" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="support" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#b3b3b3;dashed=1;fontSize=20;fontColor=#1f1f1f;" value="Support" vertex="1">
+          <mxGeometry height="70" width="180" x="1320" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_digital_to_success" edge="1" parent="1" source="digital_task_result" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;" target="success_label">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="220" />
+              <mxPoint x="180" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_digital_to_failure" edge="1" parent="1" source="digital_task_result" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;" target="failure_label">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_digital_to_avoid" edge="1" parent="1" source="digital_task_result" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;" target="avoid_label">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="410" />
+              <mxPoint x="180" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_success_to_recovery" edge="1" parent="1" source="success_label" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;" target="recovery_path">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="156" />
+              <mxPoint x="350" y="156" />
+            </Array>
+            <mxPoint x="244" y="156.00222222222217" as="sourcePoint" />
+            <mxPoint x="370" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_recovery_to_core" edge="1" parent="1" source="recovery_path" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;" target="helplessness_core">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="465" y="210" />
+              <mxPoint x="900" y="210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_failure_to_uncontrollability" edge="1" parent="1" source="failure_label" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6C8EBF;strokeWidth=4;" target="event_uncontrollability">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_uncontrollability_to_core" edge="1" parent="1" source="event_uncontrollability" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6C8EBF;strokeWidth=4;" target="helplessness_core">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="730" y="295" />
+              <mxPoint x="730" y="295" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_avoid_to_reason" edge="1" parent="1" source="avoid_label" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;" target="avoid_reason">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_reason_to_core" edge="1" parent="1" source="avoid_reason" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;" target="helplessness_core">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_memory_to_core" edge="1" parent="1" source="success_memory" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6C8EBF;strokeWidth=4;" target="helplessness_core">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="900" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_memory_to_longterm" edge="1" parent="1" source="memory_next_round" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b3b3b3;strokeWidth=3;" target="long_term_effects">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1470" y="440" />
+              <mxPoint x="1250" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_attribution_to_longterm" edge="1" parent="1" source="attribution" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b3b3b3;strokeWidth=3;dashed=1;" target="long_term_effects">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1070" y="680" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_support_to_efficacy" edge="1" parent="1" source="support" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b3b3b3;strokeWidth=3;dashed=1;" target="task_self_efficacy">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="505" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_support_to_memory" edge="1" parent="1" source="support" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b3b3b3;strokeWidth=3;dashed=1;" target="success_memory">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1410" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_support_to_attribution" edge="1" parent="1" source="support" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b3b3b3;strokeWidth=3;dashed=1;" target="attribution">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="kX_61f6yt6uVT_pCN8pB-12" edge="1" parent="1" source="helplessness_core" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endFill=1;strokeWidth=4;strokeColor=#6C8EBF;" target="updated_helplessness" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1030" y="330" as="sourcePoint" />
+            <mxPoint x="1080" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kX_61f6yt6uVT_pCN8pB-13" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=4;" target="success_label" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+            <mxPoint x="244" y="156.00222222222217" as="sourcePoint" />
+            <mxPoint x="380" y="156" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="success_label" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;fontColor=#1f1f1f;" value="Success" vertex="1">
+          <mxGeometry height="34" width="84" x="260" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="kX_61f6yt6uVT_pCN8pB-15" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;endFill=1;strokeWidth=4;strokeColor=#6C8EBF;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="1340" y="296.74" />
+            </Array>
+            <mxPoint x="1300" y="296.74" as="sourcePoint" />
+            <mxPoint x="1370" y="297" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
