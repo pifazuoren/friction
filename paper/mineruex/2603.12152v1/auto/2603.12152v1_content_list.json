@@ -1,0 +1,4089 @@
+[
+    {
+        "type": "text",
+        "text": "LifeSim: Long-Horizon User Life Simulator for Personalized Assistant Evaluation",
+        "text_level": 1,
+        "bbox": [
+            132,
+            78,
+            865,
+            117
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Feiyu Duan1, Xuanjing Huang3, Zhongyu Wei1,2,4,5\\* ,",
+        "bbox": [
+            275,
+            124,
+            726,
+            143
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "1School of Data Science, Fudan University",
+        "bbox": [
+            322,
+            142,
+            675,
+            159
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "2Shanghai Innovation Institute",
+        "bbox": [
+            373,
+            159,
+            626,
+            175
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "3College of Computer Science and Artificial Intelligence, Fudan University 4MOE laboratory for National Development and Intelligent Governance, Fudan University 5Research Institute of Intelligent Complex Systems, Fudan University fyduan25@m.fudan.edu.cn {xjhuang,zywei}@fudan.edu.cn",
+        "bbox": [
+            131,
+            175,
+            865,
+            243
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Abstract",
+        "text_level": 2,
+        "bbox": [
+            262,
+            260,
+            342,
+            277
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "The rapid advancement of large language models (LLMs) has accelerated progress toward universal AI assistants. However, existing benchmarks for personalized assistants remain misaligned with real-world user-assistant interactions, failing to capture the complexity of external contexts and users’ cognitive states. To bridge this gap, we propose LifeSim, a user simulator that models user cognition through the Belief-Desire-Intention (BDI) model within physical environments for coherent life trajectories generation, and simulates intention-driven user interactive behaviors. Based on LifeSim, we introduce LifeSim-Eval, a comprehensive benchmark for multi-scenario, long-horizon personalized assistance. LifeSim-Eval covers 8 life domains and 1,200 diverse scenarios, and adopts a multi-turn interactive method to assess models’ abilities to complete explicit and implicit intentions, recover user profiles, and produce high-quality responses. Under both single-scenario and long-horizon settings, our experiments reveal that current LLMs face significant limitations in handling implicit intention and long-term user preference modeling.",
+        "bbox": [
+            141,
+            287,
+            462,
+            646
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "1 Introduction",
+        "text_level": 2,
+        "bbox": [
+            115,
+            657,
+            260,
+            673
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "The rapid advancement of large language models (LLMs) has substantially expanded the capabilities of AI assistants across diverse scenarios and tasks, making the vision of a \"Jarvis-like\" universal digital assistant increasingly achievable (Raza et al., 2025). Recent research has proposed optimizations from multiple perspectives (Yuan et al., 2025; Jiang et al., 2025; Zhao et al., 2025b) to improve not only the model’s ability to address complex and knowledge-intensive tasks, but also its social intelligence. (Mathur et al., 2024). However, a clear gap persists between current evaluation frameworks and real-world scenarios, constraining advances in personalized intelligence (Jiang et al., 2025; Zhao et al., 2025a; Kim et al., 2024).",
+        "bbox": [
+            112,
+            682,
+            489,
+            877
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "image",
+        "img_path": "images/190380f2efe3fc20abafd32c864cade28a71488e415944328ec7d50fd40a1fe0.jpg",
+        "image_caption": [
+            "Figure 1: Illustration of personal AI assistance grounded in long-horizon spatiotemporal context. User behaviors evolve with external environment, while reflecting stable personal traits. Effective response requires models to adjust their strategies to current context while leveraging interaction history to infer personal states."
+        ],
+        "image_footnote": [],
+        "bbox": [
+            515,
+            261,
+            875,
+            602
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            507,
+            728,
+            885,
+            777
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "As illustrated in Figure 1, ideal realistic userassistant interactions fundamentally differ from isolated question answering and involve two critical dimensions of complexity. (1) Complex external environment: user needs vary in terms of situational factors, such as time, location, weather, and ongoing life events (Kim et al., 2025b; Fan et al., 2025); (2) Dynamic cognitive states of users: user intentions arise from internal cognitive states, jointly shaped by evolving life experience, as well as relatively stable personalities and preferences (Wu et al., 2024). Real-world user data are constrained by privacy and ethical considerations, and publicly available interaction logs spanning multiple years and diverse scenarios remain extremely scarce (Xu et al., 2022). Consequently, existing benchmarks are often forced to rely on static or short-context datasets, which makes it difficult to faithfully reflect the dynamic nature of how users and assistants interact in real-world settings. Therefore, establishing a realistic testbed with long-term user-assistant interactions at scale poses a fundamental problem.",
+        "bbox": [
+            507,
+            777,
+            887,
+            923
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "aside_text",
+        "text": "arXiv:2603.12152v1 [cs.CL] 12 Mar 2026",
+        "bbox": [
+            23,
+            288,
+            60,
+            707
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "page_footnote",
+        "text": "\\*Corresponding author.",
+        "bbox": [
+            136,
+            883,
+            282,
+            896
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "page_footnote",
+        "text": "1Our code and data are available at https://github.com/ dfy37/lifesim.",
+        "bbox": [
+            112,
+            895,
+            470,
+            921
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "page_number",
+        "text": "1",
+        "bbox": [
+            494,
+            944,
+            504,
+            956
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "image",
+        "img_path": "images/ba8201d81ced6c43ad44d2195fe74f1e5ffb2ec022d2cc8f7ec4076fafdc5510.jpg",
+        "image_caption": [
+            "Figure 2: Overview of the LifeSim framework. For each target user, the user profile consists of demographic attributes, personality traits, and long-term preferences, which together contribute to the long-term belief state. The BDI-based cognitive engine and the event engine jointly generate user intentions by integrating subjective belief states with physical environments. The user behavior engine then produces conversations by modeling memory perception, emotion inference, and action selection."
+        ],
+        "image_footnote": [],
+        "bbox": [
+            121,
+            83,
+            870,
+            478
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            112,
+            588,
+            490,
+            800
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "To bridge the gap, we introduce the Longhorizon user Life Simulator (LifeSim), a highfidelity framework that supports the behavior simulation of diverse users across life trajectories constrained on both internal cognitive model and external environment. For user cognitive modeling, we adopt the Belief-Desire-Intention (BDI) model construct the user’s internal reasoning process. To simulate the complicated external environment, LifeSim integrates an event engine to generate life trajectories under the guidance of the BDI model. To realize user interaction behavior, LifeSim incorporates a user behavior engine, which generates coherent responses for the target user aligned with its internal cognition and external contexts. To ensure population diversity, we construct a millionlevel user pool, with rich persona attributes about demographics, personality traits and preferences.",
+        "bbox": [
+            112,
+            809,
+            492,
+            923
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            507,
+            588,
+            887,
+            766
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Building upon LifeSim, we develop LifeSim-Eval, a new benchmark for the evaluation of a model’s capabilities in long-term individualized interactions, comprising 1,200 scenarios across 8 common life domains. LifeSim-Eval employs an online interaction protocol to evaluate a model’s ability to recognize user’s intentions, to provide preference-aligned responses, and to recall user preferences throughout long-term interactions. We conduct systematic experiments on more than 10 open-source and closed-source models. The results show that: (i) current LLMs demonstrate strong performance in handling explicit intentions, yet struggle with implicit intentions and long-horizon user modeling; (ii) simple profile memory offers limited benefits, indicating that effective personalization requires stable preference reasoning beyond simple retention.",
+        "bbox": [
+            507,
+            777,
+            887,
+            923
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "page_number",
+        "text": "2",
+        "bbox": [
+            492,
+            942,
+            505,
+            956
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            110,
+            85,
+            489,
+            230
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "2 LifeSim Framework",
+        "text_level": 2,
+        "bbox": [
+            114,
+            242,
+            326,
+            259
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Figure 2 illustrates the overall architecture of LifeSim, which including four main components: BDI-Based Congnitive Engine, BDI-Grounded Event Engine, User Behavior Engine and User Profile Pool. For each simulation, we first sample a user profile from profile pool to initialize the long term belief state. Given a corresponding spatial trajectory for the target user, LifeSim constructs a life trajectory, where each possible service point is associated with a user intention and a corresponding life event. Algorithm 1 summarizes the life trajectory generation process. User behavior engine simulates user responses based on the generated background. We will detail the architecture and the generation process in the following sub-sections.",
+        "bbox": [
+            110,
+            269,
+            490,
+            514
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "2.1 BDI-based Cognitive Engine",
+        "text_level": 2,
+        "bbox": [
+            114,
+            524,
+            386,
+            541
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "To model the internal reasoning process of a target user, we adopt the Belief-Desire-Intention (BDI) model (Bratman, 1987), a psychological model of human practical reasoning.",
+        "bbox": [
+            112,
+            546,
+            489,
+            612
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Belief State Belief summarizes the information relevant to the user’s current decision state, including long-term belief, which corresponds to the user profile; and short-term belief, which reflects the user’s cognition of the current situation. Given a physical environment Env, we use the LLM to generate event hypotheses H based on the user’s longterm belief and recent life experiences, which serve as the user’s short-term belief. H characterize the events that are reasonable and likely to occur in the current situation. Event hypothesis is designed following Lewin’s equation in social psychology (Heidbreder, 1937), $B = f ( P , E n v )$ , which highlights that user behavior B emerges from the joint influence of person P and environment Env.",
+        "bbox": [
+            110,
+            621,
+            490,
+            864
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "User Desires Desires are conceptualized as a set of intention candidates conditioned on the user’s beliefs. In practice, we construct a Desire Pool that includes a wide range of potential user intentions. At each service point, we retrieve 9 candidate intentions from the pool conditioned on user’s belief states. For desire pool construction, each intention is associated with a corresponding latent event context, which characterizes the real-world situation in which this intention is most likely to arise. To achieve a broad, yet practical coverage, we organize the collected intentions according to a set of high-level life domains adapted from the World Health Organization Quality of Life (WHOQOL) framework (Group et al., 1995). Construction details and statistics are provided in Appendix C.2",
+        "bbox": [
+            112,
+            873,
+            489,
+            922
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            507,
+            85,
+            887,
+            296
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "User Intention User intention denotes a futuredirected commitment selected from desires, indicating what the user is prepared to pursue next. Retrieved user desires are first reranked conditioned on the user’s belief state and the current environment. During reranking, candidates that are logically inconsistent with the user’s belief and physical environment are filtered out. The remaining candidates are then transformed into a probability distribution using a softmin function over their ranks r:",
+        "bbox": [
+            507,
+            304,
+            887,
+            479
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "equation",
+        "img_path": "images/bda3cededed0a224233e502d5dac01bc12e7f38eea83ec8191b13d1247cd6bab.jpg",
+        "text": "$$\nP ( I _ { i } ) = \\frac { \\exp ( - r _ { i } ) } { \\sum _ { k } \\exp ( - r _ { k } ) }\\tag{1}\n$$",
+        "text_format": "latex",
+        "bbox": [
+            605,
+            476,
+            786,
+            512
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "from which the final intention is sampled.",
+        "bbox": [
+            509,
+            516,
+            821,
+            532
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "2.2 BDI-Grounded Event Engine",
+        "text_level": 2,
+        "bbox": [
+            509,
+            543,
+            788,
+            560
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "The event engine constructs users’ life trajectories grounded in realistic physical environments.",
+        "bbox": [
+            507,
+            564,
+            884,
+            599
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Physical Environment We represent the environment as Env(T, L, W ), where T denotes time, L denotes location, and W denotes weather. To ensure realism, the environment is grounded in user mobility trajectories, allowing intentions to emerge in a manner consistent with plausible daily routines. We collect 3,374 user trajectories that span 251 Points Of Interest (POI). Detailed procedures for mobility data collection and profile matching are provided in Appendix C.1.",
+        "bbox": [
+            507,
+            606,
+            887,
+            769
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Event Trigger Since users might not ask for a service at every trajectory point, we introduce an event trigger to determine whether an event would be generated. The occurrence probability of an event at the timestamp t, denoted as $P _ { E } .$ , is defined as a function of the elapsed time $\\Delta T$ since the last triggered event, i.e., $P _ { E } = f ( \\Delta T )$ , where $\\begin{array} { r } { f ( z ) = \\frac { 1 } { 1 + e ^ { - z } } } \\end{array}$ is specified as a logistic function. We then perform Bernoulli sampling based on $P _ { E }$ to determine whether an event is triggered at the current point. If an event is triggered, the environmental information Env is passed to the cognitive engine to construct the user’s short-term belief.",
+        "bbox": [
+            507,
+            777,
+            887,
+            923
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "page_number",
+        "text": "3",
+        "bbox": [
+            492,
+            942,
+            505,
+            956
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "table",
+        "img_path": "images/a8b653044cc17ac14c890e517a4b6bc5079e78aa6ffc7fde248466df05dc9063.jpg",
+        "table_caption": [
+            "Table 1: Distribution of intention types in LifeSim-Eval."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Intention Type</td><td>Percentage(%)</td></tr><tr><td>Problem-Solving</td><td>43.4</td></tr><tr><td>Informational</td><td>17.1</td></tr><tr><td>Educational</td><td>11.5</td></tr><tr><td>Personal Interaction</td><td>10.9</td></tr><tr><td>Technical and Professional</td><td>10.2</td></tr><tr><td>Creative</td><td>6.8</td></tr></table>",
+        "bbox": [
+            122,
+            83,
+            477,
+            210
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            112,
+            269,
+            489,
+            334
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Refinement After an intention is generated in the cognitive engine, the event engine leverages its associated event context and grounds it within the current environmental setting. As the retrieved event and intention may not fully align with the specific environmental conditions or user attributes, the event engine further refines the details to ensure better consistency.",
+        "bbox": [
+            110,
+            354,
+            489,
+            483
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "2.3 User Behavior Engine",
+        "text_level": 2,
+        "bbox": [
+            114,
+            505,
+            334,
+            521
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Based on the given intention, the user behavior engine generates user conversational behaviors. During simulation, each user turn is modeled through four sequential stages: (1) Memory Perception. Whenever an assistant response r contains an informational value, it is abstracted into a ⟨query, value⟩ pair and stored as a memory entry. Simultaneously, the response is compared with existing memories using semantic similarity; if the similarity exceeds a predefined threshold θ2, the system triggers a negative memory perception. (2) Emotion Inference. Following the emotion-chain reasoning paradigm introduced in AnnaAgent (Wang et al., 2025), we adopt the emotion taxonomy from GoEmotions (Kalyuga, 2009) and predict the user’s emotional state prior to generating each response. (3) Action Selection. Based on the inferred information, the agent determines whether the user continues the interaction. (4) Response Generation. The final user response is then generated conditioned on memory perception, emotion inference, and the selected action.",
+        "bbox": [
+            112,
+            532,
+            492,
+            888
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "2.4 User Profile",
+        "text_level": 2,
+        "bbox": [
+            509,
+            84,
+            652,
+            99
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Each user is modeled along three dimensions: (1) Demographic attributes capture coarse-grained background information, such as age, gender, and education level. (2) Personality traits are characterized using the Big Five theory, represented along five canonical dimensions. (3) Long-term preferences reflect persistent inclinations toward specific activities, needs, or conversational styles, and remain stable across multi-scenarios.",
+        "bbox": [
+            507,
+            104,
+            887,
+            249
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "To construct a large-scale user pool, we leverage the SocioVerse dataset (Zhang et al., 2025a), which is sourced from Twitter. The pool is refined by filtering out suspected bot accounts, and each remaining user is annotated with 15 core demographic attributes. Meanwhile, we adopt the AlignX dataset (Li et al., 2025), which draws on Maslow’s hierarchy of needs and Murray’s system of needs to define a 90-dimensional personality and preference space spanning psychological and behavioral aspects. We retain the personality traits and 40 additional dimensions most relevant to everyday life routines and social interactions. Consequently, we construct a user pool of 1M individuals.",
+        "bbox": [
+            507,
+            250,
+            889,
+            478
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "3 LifeSim-Eval Benchmark",
+        "text_level": 2,
+        "bbox": [
+            509,
+            487,
+            766,
+            502
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Based on LifeSim, we introduce LifeSim-Eval, a benchmark for long-horizon personalized assistants that evaluates AI performance in dynamically evolving interaction scenarios. Such scenarios inherently require assistants to handle user intentions. However, intention inference is non-trivial, as some intentions are directly expressed in the current utterance, while others remain implicit (Allott, 2013). These implicit constraints may originate from local scenario context or from user preferences and states accumulated over time. LifeSim-Eval therefore evaluates whether assistants can satisfy both explicit and implicit intentions. More details are provided in Appendix D.",
+        "bbox": [
+            507,
+            511,
+            887,
+            739
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Single Scenario Setting LifeSim-Eval first evaluates assistant behavior in each single scenario without access to interaction history, where implicit intentions are mainly induced by user profile or environmental context. We assess whether the assistant correctly recognizes and fulfills both explicit and implicit intentions using Intent Recognition and Intent Completion. To evaluate assistant response qualities and user modeling abilities, we further report four auxiliary metrics: Naturalness, Coherence, Preference Recovery, and Persona Alignment.",
+        "bbox": [
+            507,
+            745,
+            887,
+            923
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "page_footnote",
+        "text": "2We take θ = 0.7 during experiments.",
+        "bbox": [
+            134,
+            907,
+            371,
+            922
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "page_number",
+        "text": "4",
+        "bbox": [
+            492,
+            944,
+            505,
+            956
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "table",
+        "img_path": "images/a06d340ef74d3326d8859fc734e2c13301748c413bc9bfe8260b1d6109ef767a.jpg",
+        "table_caption": [
+            "Table 2: Evaluation results of open-source and proprietary LLMs on LifeSim-Eval, measuring intent recognition and completion, response quality, and user modeling with personalized responses. All values are linearly applied to the [0,100] scale. Bold values indicate the highest scores among open-source or proprietary models. Abbreviations: Profile Recov. = Profile Recovery, Persona Align. = Persona Alignment."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td rowspan=\"2\">Model</td><td colspan=\"2\">Intent Recognition</td><td colspan=\"2\">Intent Completion</td><td rowspan=\"2\">Naturalness</td><td rowspan=\"2\"></td><td rowspan=\"2\">Coherence Profile Recov. Persona Align.</td><td rowspan=\"2\"></td></tr><tr><td>explicit</td><td>implicit</td><td>explicit</td><td>implicit</td></tr><tr><td colspan=\"10\">Close-source</td></tr><tr><td>GPT-5</td><td>79.5</td><td>52.2</td><td>76.9</td><td>48.9</td><td>83.9</td><td>97.5</td><td>60.3</td><td>74.6</td></tr><tr><td>GPT-40</td><td>79.0</td><td>52.6</td><td>72.1</td><td>48.1</td><td>81.4</td><td>90.0</td><td>60.5</td><td>74.1</td></tr><tr><td>Claude-Sonnet-4.5</td><td>76.1</td><td>49.2</td><td>73.0</td><td>46.5</td><td>89.8</td><td>96.9</td><td>60.9</td><td>75.5</td></tr><tr><td colspan=\"9\">Open-source</td></tr><tr><td>DeepSeek-V3.2</td><td>78.6</td><td>54.6</td><td>73.5</td><td>50.8</td><td>85.2</td><td>91.5</td><td>65.0</td><td>75.5</td></tr><tr><td>DeepSeek-V3.2 Thinking</td><td>80.6</td><td>59.3</td><td>75.8</td><td>58.2</td><td>84.1</td><td>92.1</td><td>63.4</td><td>74.0</td></tr><tr><td>Llama3.1-it 8B</td><td>70.3</td><td>40.3</td><td>58.4</td><td>33.8</td><td>69.3</td><td>72.8</td><td>58.5</td><td>73.8</td></tr><tr><td>Llama3.1-it 70B</td><td>71.7</td><td>41.4</td><td>60.9</td><td>35.5</td><td>79.6</td><td>84.8</td><td>60.4</td><td>73.5</td></tr><tr><td>Gemma3-it 12B</td><td>67.8</td><td>35.8</td><td>57.0</td><td>30.0</td><td>67.3</td><td>71.0</td><td>60.7</td><td>73.5</td></tr><tr><td>Gemma3-it 27B</td><td>72.7</td><td>44.2</td><td>65.4</td><td>39.3</td><td>78.4</td><td>81.3</td><td>61.8</td><td>75.6</td></tr><tr><td>gpt-oss 20B</td><td>76.9</td><td>43.7</td><td>72.6</td><td>41.1</td><td>83.4</td><td>91.0</td><td>57.1</td><td>75.2</td></tr><tr><td>gpt-oss 120B</td><td>76.4</td><td>44.3</td><td>73.3</td><td>42.6</td><td>85.8</td><td>93.0</td><td>59.8</td><td>74.2</td></tr><tr><td>Qwen3 8B</td><td>75.7</td><td>44.4</td><td>64.4</td><td>38.4</td><td>75.0</td><td>83.3</td><td>60.5</td><td>73.5</td></tr><tr><td>Qwen3 14B</td><td>77.0</td><td>46.3</td><td>68.3</td><td>41.3</td><td>79.1</td><td>86.8</td><td>61.8</td><td>74.7</td></tr><tr><td>Qwen3 32B</td><td>76.6</td><td>51.2</td><td>70.3</td><td>47.4</td><td>83.9</td><td>89.9</td><td>61.7</td><td>75.8</td></tr></table>",
+        "bbox": [
+            119,
+            82,
+            885,
+            331
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Metric definitions are provided in Appendix D. We adopt LLM-as-Judge protocol and report the average scores from GPT-4o3, Qwen3-32B (Yang et al., 2025), and Llama3.1-it 70B (Dubey et al., 2024).",
+        "bbox": [
+            112,
+            425,
+            489,
+            492
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Long-Horizon Setting We further evaluate longterm performance by conditioning on LifeSimsimulated dialogue histories. User preferences are revealed in the dialogue of the first scenario, while the assistant is evaluated in the final scenario of the trajectory. While explicit intentions are specified in the current scenario, implicit intentions must be inferred from the user’s belief state, which integrates stable preferences from the first scenario and dynamic states derived from historical life events. In this setting, we use Intent Completion as the evaluation metric.",
+        "bbox": [
+            110,
+            500,
+            490,
+            695
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Construction of the Benchmark LifeSim-Eval includes 120 users, each associated with a sequence of 10 events, yielding 1,200 scenarios evenly distributed across eight life domains, with no repeated events per user. We adopt DeepSeek-V3.2 as the backbone model for cognitive engine and event engine, and generate the 1,200 scenarios through LifeSim. In the Single-Scenario setting, each scenario allows up to 20 turns, and user sampling is balanced using Iterative Proportional Fitting (IPF). In the Long-Horizon setting, interactions are limited to three turns. We simulate dialogue histories for 100 users using Qwen-32B as the user model and DeepSeek-Chat as the assistant, with event sequence lengths ranging from 1 to 10, and a total conversation history exceeding 14K tokens. All histories and evaluation scenarios are manually verified for temporal and logical consistency. Table 1 summarizes the distribution of intention types. More details are provided in Appendix D.",
+        "bbox": [
+            110,
+            703,
+            490,
+            900
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            507,
+            425,
+            887,
+            556
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "4 Main Experiments",
+        "text_level": 2,
+        "bbox": [
+            509,
+            568,
+            707,
+            585
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Based on LifeSim-Eval, we assess the capability of mainstream LLMs to deliver personalized services.",
+        "bbox": [
+            507,
+            595,
+            887,
+            629
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Experimental Setup To reduce evaluation cost, all experiments employ the open-source Qwen3- 32B model as the user agent. The evaluated assistant models span multiple series and sizes, including close-source models (GPT-5, GPT-4o, Claude Sonnet 4.5, DeepSeek-V3.2, DeepSeek-V3.2 Thinking), and open-source models (Qwen3-8B/14B/32B (Yang et al., 2025), Gemma3-it 12B/27B (Team et al., 2025), Llama3.1- it 8B/70B (Dubey et al., 2024), and gpt-oss-20B/120B (Agarwal et al., 2025)). All experiments are conducted on 8 NVIDIA RTX 4090 GPUs. We use vLLM (Kwon et al., 2023) for model serving during inference. The sampling temperature is fixed at 1.0 throughout all experiments.",
+        "bbox": [
+            507,
+            638,
+            889,
+            881
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Performance in Single Scenario Setting As shown in Table 2, most models perform well on explicit intent recognition, while exhibiting a performance gap of more than 20 points on implicit intent recognition. This indicates that although current models can reliably address users’ explicit queries, they remain limited in uncovering latent needs-an ability that is essential for realistic interactive experiences. In terms of overall dialogue quality, gpt-oss-120B demonstrates the best performance. However, DeepSeek-V3.2 achieves both a higher preference recovery score and the best persona alignment performance. Notably, although the Gemma family models achieve strong preference recovery accuracy, their persona alignment scores lag behind, suggesting limited ability to leverage persona traits to generate personalized responses.",
+        "bbox": [
+            507,
+            890,
+            885,
+            922
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "page_footnote",
+        "text": "3We use the version in 2025/11/20",
+        "bbox": [
+            136,
+            907,
+            351,
+            921
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "page_number",
+        "text": "5",
+        "bbox": [
+            492,
+            942,
+            505,
+            956
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "table",
+        "img_path": "images/80f97e905dd85f3d8c96203f8264b96ba3f46a1b908f3bb04dedfd1f5d6eea91.jpg",
+        "table_caption": [
+            "Figure 3: Long-horizon intention completion performance across different assistant models. The heatmaps report intention completion (I.C.) scores with respect to conversation length."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td rowspan=1 colspan=1>Gemma3-it 27B</td><td rowspan=1 colspan=1>84</td><td rowspan=1 colspan=1>86</td><td rowspan=1 colspan=1>85</td><td rowspan=1 colspan=1>83</td><td rowspan=1 colspan=1>85</td><td rowspan=1 colspan=2>82 80</td></tr><tr><td rowspan=1 colspan=1>gpt-oss 20B</td><td rowspan=1 colspan=1>85</td><td rowspan=1 colspan=1>92</td><td rowspan=1 colspan=1>86</td><td rowspan=1 colspan=1>88</td><td rowspan=1 colspan=1>85</td><td rowspan=1 colspan=1>87</td><td rowspan=1 colspan=1>85</td></tr><tr><td rowspan=1 colspan=1>Llama3.1-it 8B</td><td rowspan=1 colspan=1>79</td><td rowspan=1 colspan=1>84</td><td rowspan=1 colspan=1>83</td><td rowspan=1 colspan=1>80</td><td rowspan=1 colspan=1>79</td><td rowspan=1 colspan=1>79</td><td rowspan=1 colspan=1>75</td></tr><tr><td rowspan=1 colspan=1>Qwen3 32B</td><td rowspan=1 colspan=1>85</td><td rowspan=1 colspan=1>87</td><td rowspan=1 colspan=1>87</td><td rowspan=1 colspan=1>89</td><td rowspan=1 colspan=1>82</td><td rowspan=1 colspan=1>82</td><td rowspan=1 colspan=1>75</td></tr><tr><td rowspan=1 colspan=1>Qwen3 14B</td><td rowspan=1 colspan=1>84</td><td rowspan=1 colspan=1>88</td><td rowspan=1 colspan=1>86</td><td rowspan=1 colspan=1>87</td><td rowspan=1 colspan=1>84</td><td rowspan=1 colspan=1>79</td><td rowspan=1 colspan=1>75</td></tr><tr><td rowspan=1 colspan=1>DeepSeek-V3.2</td><td rowspan=1 colspan=1>88</td><td rowspan=1 colspan=1>90</td><td rowspan=1 colspan=1>92</td><td rowspan=1 colspan=1>91</td><td rowspan=1 colspan=1>90</td><td rowspan=1 colspan=1>84</td><td rowspan=1 colspan=1>80</td></tr><tr><td rowspan=2 colspan=1></td><td rowspan=1 colspan=1>1K</td><td rowspan=1 colspan=1>3K</td><td rowspan=1 colspan=1>6K</td><td rowspan=1 colspan=1>8K</td><td rowspan=1 colspan=1>1iK</td><td rowspan=1 colspan=1>13K</td><td rowspan=1 colspan=1>16K</td></tr><tr><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1>Im</td><td rowspan=1 colspan=1>plicit</td><td rowspan=1 colspan=1>ntent</td><td rowspan=1 colspan=1>on (I.</td><td rowspan=1 colspan=1></td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1>Gemma3-it 27B</td><td rowspan=1 colspan=1>50</td><td rowspan=1 colspan=1>44</td><td rowspan=1 colspan=1>41</td><td rowspan=1 colspan=1>45</td><td rowspan=1 colspan=1>43</td><td rowspan=1 colspan=1>42</td><td rowspan=1 colspan=1>2222</td></tr><tr><td rowspan=1 colspan=1>gpt-oss 20B</td><td rowspan=1 colspan=1>44</td><td rowspan=1 colspan=1>43</td><td rowspan=1 colspan=1>42</td><td rowspan=1 colspan=1>45</td><td rowspan=1 colspan=1>50</td><td rowspan=1 colspan=1>57</td><td rowspan=1 colspan=1>22</td></tr><tr><td rowspan=1 colspan=1>Llama3.1-it 8B</td><td rowspan=1 colspan=1>38</td><td rowspan=1 colspan=1>37</td><td rowspan=1 colspan=1>34</td><td rowspan=1 colspan=1>36</td><td rowspan=1 colspan=1>37</td><td rowspan=1 colspan=1>34</td><td rowspan=1 colspan=1>2225</td></tr><tr><td rowspan=1 colspan=1>Qwen3 32B</td><td rowspan=1 colspan=1>49</td><td rowspan=1 colspan=1>44</td><td rowspan=1 colspan=1>46</td><td rowspan=1 colspan=1>46</td><td rowspan=1 colspan=1>44</td><td rowspan=1 colspan=1>39</td><td rowspan=1 colspan=1>18</td></tr><tr><td rowspan=1 colspan=1>Qwen3 14B</td><td rowspan=1 colspan=1>43</td><td rowspan=1 colspan=1>44</td><td rowspan=1 colspan=1>40</td><td rowspan=1 colspan=1>44</td><td rowspan=1 colspan=1>34</td><td rowspan=1 colspan=1>38</td><td rowspan=1 colspan=1>25</td></tr><tr><td rowspan=1 colspan=1>DeepSeek-V3.2</td><td rowspan=1 colspan=1>57</td><td rowspan=1 colspan=1>55</td><td rowspan=1 colspan=1>54</td><td rowspan=1 colspan=1>55</td><td rowspan=1 colspan=1>56</td><td rowspan=1 colspan=1>59</td><td rowspan=1 colspan=1>30</td></tr><tr><td rowspan=2 colspan=1></td><td rowspan=1 colspan=1>1K</td><td rowspan=1 colspan=1>3K</td><td rowspan=1 colspan=1>6K</td><td rowspan=1 colspan=1>8K</td><td rowspan=1 colspan=1>1iK</td><td rowspan=1 colspan=1>13K</td><td rowspan=1 colspan=1>16K</td></tr><tr><td rowspan=1 colspan=1></td><td rowspan=1 colspan=3>Conversation History Tokens</td><td rowspan=1 colspan=2>cory Tokens</td><td rowspan=1 colspan=1></td></tr></table>",
+        "bbox": [
+            119,
+            83,
+            482,
+            348
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            112,
+            444,
+            490,
+            687
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Additionally, with the exception of DeepSeek models, proprietary models generally outperform open-source models, with notable advantages in implicit intention recognition and completion. Model scaling also leads to consistent performance gains across most of the metrics. Moreover, DeepSeek-V3.2 Thinking shows clear improvements over its base model in intention-related tasks, indicating that reasoning models can better capture both explicit user queries and latent user needs.",
+        "bbox": [
+            112,
+            687,
+            490,
+            848
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Performance in Long-Horizon Setting Results in Table 3 show that, under long interaction histories, models retain strong performance on explicit intentions, with intention completion remaining stable as context length increases. In contrast, implicit intentions, which require integrating long-term dialog history and latent user preferences, exhibit substantially weaker performance. Moreover, implicit intention completion shows a clear decline as the conversation history grows longer. These results indicate that while current models can handle explicitly stated intention even in long contexts, they struggle to reason over long-horizon evidence to infer and satisfy implicit user intentions.",
+        "bbox": [
+            112,
+            857,
+            490,
+            923
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "chart",
+        "img_path": "images/6012eec8afe5a30679c3e3bc504cb7179fa6612e2e8eba02bacec8f7b50a0ddf.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) Qwen3 8B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            515,
+            82,
+            692,
+            178
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "chart",
+        "img_path": "images/b72ba644ac3d24b7dca1dada5010327dfac7cbb4618d71c3dcfba7489b7bac56.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) Qwen3 14B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            700,
+            83,
+            878,
+            178
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "chart",
+        "img_path": "images/affa3f0319ed767a4c633c7f8455d5f4eec7ffa9f201cde2616b65d5019ff07f.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) Gemma3-it 12B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            514,
+            199,
+            692,
+            296
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "chart",
+        "img_path": "images/5090a25b17fde6a9ab4c929c102d8dc9e30c0aef8d5679695c02655d7b854102.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) Gemma3-it 27B",
+            "Figure 4: Performance of user preference recovery within life event sequences. The dashed line represents the regression curve fitted by linear regression."
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            700,
+            199,
+            878,
+            297
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            507,
+            397,
+            887,
+            560
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Profile Recovery in Long-Horizon Setting We further investigate whether models can consistently model users’ preferences over multi-scenario interactions. To this end, we introduce a simple profile memory mechanism: after each scenario, the model summarizes or refines the user’s preferences, and this structured preference summary is then provided in subsequent scenarios. We evaluate each model’s preference recovery accuracy across the whole trajectory for each user.",
+        "bbox": [
+            507,
+            568,
+            887,
+            728
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Results in Figure 4 show that incorporating preference memory leads to consistent benefits. However, Gemma3-it-12B and Qwen3-14B exhibit a clear upward trend when equipped with memory, whereas Qwen3-8B and Gemma3-it-27B remain nearly flat or even slightly decline. These discrepancies suggest that a simple external memory mechanism alone is insufficient to guarantee robust long-term preference modeling. Achieving reliable and incremental long-horizon user modeling performance requires not only the ability to retain preference information but also the capability to perform stable preference reasoning throughout prolonged interactions.",
+        "bbox": [
+            507,
+            730,
+            889,
+            923
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "page_number",
+        "text": "6",
+        "bbox": [
+            492,
+            944,
+            505,
+            956
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "chart",
+        "img_path": "images/8698b98f5387c786105beebd22818963c8296461ec6c79cf808fdcbcce15d175.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) Qwen3 8B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            117,
+            83,
+            297,
+            234
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "chart",
+        "img_path": "images/41c275d1e4646f56e7aa8b179667209bf0592e1dce0cf48ed4369a598d8333ac.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) Qwen3 14B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            304,
+            83,
+            487,
+            234
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "chart",
+        "img_path": "images/02e952d77b62e3c56aeb09372c443e497a1ca60952836fc1bd14cb7a37705b13.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) Gemma3-it 12B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            117,
+            252,
+            297,
+            406
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "chart",
+        "img_path": "images/488ccaa9b0121abe32629668dd4925ef8838f008a5129d96584750841c81bd3a.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) Gemma3-it 27B",
+            "Figure 5: Relative model performance across different intention types. Abbreviations: I.R. = Intent Recognition, I.C. = Intent Completion"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            304,
+            250,
+            485,
+            406
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            112,
+            505,
+            489,
+            538
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "5 Further Analysis",
+        "text_level": 2,
+        "bbox": [
+            114,
+            549,
+            297,
+            565
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "Impact of Different Themes and Types We further analyze model performance across event themes and intention types. For each theme/type, we subtract the overall mean score to quantify its relative performance. Figure 5 and 6 and reveal systematic variations across categories, indicating that model effectiveness is not uniform but depends on the nature of the underlying intention and interaction context. In particular, performance differs between settings dominated by explicit, task-driven needs and those requiring implicit, affective inference. This heterogeneity suggests that current models exhibit uneven robustness across service domains, motivating more fine-grained improvements in personalized assistant design.",
+        "bbox": [
+            112,
+            575,
+            490,
+            818
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "User Behavior Engine Evaluation To evaluate the reliability of the LifeSim User Behavior Engine, we construct 300 scenarios using the LifeSim framework, each comprising a defined user profile, event background, and individual intention. The assistant model is fixed to DeepSeek-",
+        "bbox": [
+            112,
+            826,
+            492,
+            922
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "chart",
+        "img_path": "images/68e0684a11dce44c6553fb816d99de1473cef9505a7cba935421b3200f952a06.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) Qwen3 8B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            514,
+            83,
+            692,
+            227
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "chart",
+        "img_path": "images/9bdcca2900fac3a3f7120f3c10d23112e96759d734a632e6769f624d0d738fa1.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) Qwen3 14B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            700,
+            82,
+            877,
+            225
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "chart",
+        "img_path": "images/0e263ccb363ba000f1180ffe60433d2678392ec4b021e04a79b97cf0d5db95b7.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) Gemma3-it 12B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            514,
+            246,
+            692,
+            392
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "chart",
+        "img_path": "images/29b72cde7dabd23b2fa580a458fa9b4844b0fbcf33afa9030197012a8f8b336c.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) Gemma3-it 27B",
+            "Figure 6: Relative model performance across different intention themes. Abbreviations: I.R. = Intent Recognition, I.C. = Intent Completion"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            700,
+            247,
+            878,
+            391
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "V3.2 (DeepSeek-AI, 2025), whereas the user model is instantiated with Qwen3-32B (Yang et al., 2025), DeepSeek-V3.2, and GPT-4o; ablation studies are additionally performed on Qwen3-32B. User simulation quality is assessed across four dimensions: (1) Intent Alignment, measuring whether generated dialogue accurately reflects the predefined intention; (2) Profile Consistency, examining whether utterances embody the specified persona; (3) Contextual Consistency, evaluating adherence to temporal, spatial, and situational constraints; and (4) Naturalness, assessing human-like fluency. Evaluation combines an LLM-as-Judge automatic protocol with human assessment on 30 sampled scenarios, rated independently by three proficient English annotators. See Appendix E.1 for more details.",
+        "bbox": [
+            507,
+            492,
+            887,
+            750
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "As shown in Table 3, all models achieve scores above 90 on most metrics, showing robust performance of our behavior engine. Ablation results further show performance drops across all dimensions when memory or emotion modules are removed, underscoring their importance in maintaining realism and long-range behavioral coherence.",
+        "bbox": [
+            507,
+            751,
+            887,
+            864
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "Human-LLM Judge Alignment To quantify the alignment between LLM-based evaluation and human judgment, we randomly sample 150 simulation results from the single scenario setting, and compute Krippendorff’s α between the LLM’s scores (average from GPT-4o, Qwen3-32B, and Llama3.1-70B-Instruct) and those provided by three independent annotators across all the metrics. As shown in Table 4, the agreement coefficients are superior to 0.77 for all the annotators, with an average α of 0.80. These results indicate that the LLM achieves scoring consistency that is highly comparable to human annotators, showing the effectiveness of LifeSim-Eval.",
+        "bbox": [
+            507,
+            873,
+            887,
+            923
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "page_number",
+        "text": "7",
+        "bbox": [
+            492,
+            942,
+            505,
+            956
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "table",
+        "img_path": "images/e79acb61dc7134a8aed68f76aac760e4e46290630415b0f48f8d1f7e36088438.jpg",
+        "table_caption": [],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Model</td><td>I.A. P.C.</td><td>C.R.</td><td>N.</td></tr><tr><td colspan=\"2\">LLm-as-Judge</td><td></td><td></td></tr><tr><td>GPT-40 DeepSeek-V3.2 Qwen3 32B 96.7</td><td>97.9 94.0 98.4 97.1 96.0</td><td>95.6 96.8 93.6</td><td>99.5 99.9 100.0</td></tr><tr><td>Qwen3 32B w/o Memory Perception Qwen3 32B w/o Emotion Inference</td><td>96.5 86.0 95.6 87.1</td><td>91.0 90.3</td><td>99.9 99.9</td></tr><tr><td colspan=\"2\">Human Evaluation</td><td></td><td></td></tr><tr><td>GPT-40 DeepSeek-V3.2 Qwen3 32B</td><td>94.7 93.6 95.8 92.7 97.4 95.3</td><td>94.7 96.2 96.2</td><td>91.1 91.3 94.0</td></tr><tr><td>Qwen3 32B w/o Memory Perception</td><td>97.1</td><td>94.4 95.3</td><td>89.6</td></tr><tr><td>Qwen3 32B w/o Emotion Inference</td><td>96.7</td><td>93.8 96.2</td><td>92.2</td></tr></table>",
+        "bbox": [
+            119,
+            83,
+            485,
+            310
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "table",
+        "img_path": "images/f0c635962919d9b88ef2822fda394c7014a67914a52060afa6540989755a01d3.jpg",
+        "table_caption": [
+            "Table 3: User Behavior Engine performance with difference model base across four dimensions. Bold values indicate the highest scores. Abbreviations: I.A.=Intent Alignment, P.C. = Persona Consistency, C.R. = Context Relevance, N. = Naturalness.",
+            "Table 4: Agreement (Krippendorff’s α) between LLM and human annotators."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Pair</td><td>Krippendorff&#x27;s α</td></tr><tr><td>LLM vs. Annotator 1</td><td>0.77</td></tr><tr><td rowspan=\"2\">LLM vs. Annotator 2 LLM vs. Annotator 3</td><td>0.84</td></tr><tr><td>0.81</td></tr><tr><td>Average</td><td>0.80</td></tr></table>",
+        "bbox": [
+            131,
+            407,
+            468,
+            511
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            112,
+            575,
+            489,
+            753
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "Case Study We conduct a detailed analysis of simulated multi-turn interactions and identify several recurring failure modes, as summarized in Table 10, 11, and 12. Specifically, LLM-based assistants tend to (1) rely on rigid reasoning, repeatedly reiterating initial suggestions without adapting to newly introduced constraints or contextual cues; (2) exhibit limited proactive inquiry, responding directly despite underspecified goals or ambiguous constraints and rarely asking clarifying questions;",
+        "bbox": [
+            112,
+            760,
+            490,
+            923
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "(3) demonstrate weak personalization, underutilizing available user profiles and preferences, which results in generic or even inconsistent responses. More details could be found in Appendix B.6",
+        "bbox": [
+            507,
+            84,
+            887,
+            149
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "6 Related Works",
+        "text_level": 2,
+        "bbox": [
+            509,
+            166,
+            673,
+            183
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "Individual Simulation in Social Scenarios Recent attempts to leverage LLMs for individual simulation have improved behavioral fidelity, such as socially-aware agents that generate actions via memory-based reasoning (Park et al., 2023), or dialogue-based social intelligence benchmarks like Sotopia (Zhou et al., 2023) and AnnaAgent (Wang et al., 2025). However, these systems generally ignore spatiotemporal dynamics. Although LifelongSotopia (Goel and Zhu, 2025) extends simulations to longer horizons, its event sequences remain relationship-centric and exhibit limited realism and temporal coherence. ProPerSim (Kim et al., 2025a) simulates user behavior trajectories but restricts interaction to single-turn proactive recommendations. To address these gaps, this study introduces a long-horizon user simulator grounded in real-world physical environment.",
+        "bbox": [
+            507,
+            196,
+            887,
+            488
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "Personalized AI Assistants Evaluation Compared with \"lifelong\" nature of social interaction (Clark, 1996), most benchmarks focus on single-turn instruction following (Sap et al., 2019) or multi-turn conversations confined to a single scenario (Zhao et al., 2025c), lacking cross-temporal and cross-situational assessments. While other works rely on generation- or selection-based tasks over long dialogue histories to examine a model’s memorisation of user preferences (Maharana et al., 2024; Jiang et al., 2025; Zhao et al., 2025a; Kim et al., 2024). Yet these evaluations are typically offline and non-interactive, and the test items themselves are often oversimplified, limiting their ability to capture a model’s comprehensive performance in realistic, dynamically evolving interactions. User-SimCRS (Afzali et al., 2023) employs agendabased conversational user simulation for assistant evaluation, but remains limited to short-horizon, and rule-based user response generation. In contrast, we propose a cognitively grounded simulation environment with realistic physical contexts, designed to assess models’ capability to handle multiturn interactions over long temporal horizons.",
+        "bbox": [
+            507,
+            501,
+            887,
+            889
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "Table 5 shows comparison of LifeSim with other related benchmarks.",
+        "bbox": [
+            509,
+            890,
+            885,
+            922
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "page_number",
+        "text": "8",
+        "bbox": [
+            492,
+            942,
+            505,
+            956
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "table",
+        "img_path": "images/feab569e9e16e2568ca552640c2349815936a5591d643d64c3baef714f0cc521.jpg",
+        "table_caption": [
+            "Table 5: Comparison of existing personal assistant benchmarks and LifeSim."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Benchmark</td><td>Multi-turn Conv.</td><td></td><td>Long-horizon Dynamic event-driven Composite intentions Implicit intentions</td><td></td><td></td></tr><tr><td>UserSimCRS (Afzali et al., 2023)</td><td>✓</td><td>×&gt;</td><td>×</td><td>×</td><td>×</td></tr><tr><td>ProPerSim (Kim et al., 2025a)</td><td>×</td><td></td><td>×</td><td>×</td><td>×</td></tr><tr><td>LOCOMO (Maharana et al., 2024)</td><td>×</td><td>✓</td><td>✓</td><td>×</td><td>×</td></tr><tr><td>PrefEval (Zhao et al., 2025a)</td><td>×</td><td>✓</td><td>×</td><td>×</td><td>✓</td></tr><tr><td>PersonaLens (Zhao et al., 2025c)</td><td>✓</td><td>×</td><td>×</td><td>×</td><td>×</td></tr><tr><td>LifeSim (Ours)</td><td>✓</td><td>√</td><td>✓</td><td>✓</td><td>✓</td></tr></table>",
+        "bbox": [
+            121,
+            82,
+            878,
+            172
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "7 Conclusion",
+        "text_level": 2,
+        "bbox": [
+            114,
+            222,
+            247,
+            237
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "In this work, we propose LifeSim, a long-horizon user simulator designed to model user cognition, life trajectories, and interaction behaviors. Based on LifeSim, we further introduce LifeSim-Eval, a comprehensive benchmark enabling evaluation of personalized assistants in multi-scenario and longhorizon interactive settings. Through extensive experiments on a wide range of LLMs, we show that current models remain effective at handling explicit user requests, but exhibit pronounced limitations in implicit intention fulfillment and long-term user preference modeling. These findings highlight the necessity of evaluation frameworks and modeling approaches that move beyond surface-level instruction following toward sustained, cognition-aware personalization.",
+        "bbox": [
+            112,
+            249,
+            490,
+            508
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "8 Limitations",
+        "text_level": 2,
+        "bbox": [
+            114,
+            520,
+            250,
+            536
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Despite the strong empirical results, LifeSim has several limitations that merit further investigation:",
+        "bbox": [
+            112,
+            546,
+            489,
+            580
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Limited coverage of high-stakes domains. LifeSim-Eval currently focuses on common dailylife scenarios that are representative of real-world user-assistant interactions. However, highly specialized and high-stakes domains such as healthcare, legal consultation, and financial decisionmaking are not yet included. These domains require more rigorous domain knowledge, involve complex regulatory and ethical constraints, and impose significantly higher costs for incorrect or misaligned responses.",
+        "bbox": [
+            112,
+            589,
+            490,
+            768
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Lack of multimodal user signals. At present, LifeSim models user behavior dynamics primarily through textual interactions. In real-world scenarios, user intentions, emotional states, and situational awareness are often conveyed through rich multimodal cues, such as visual context or physiological signals. Incorporating multimodal information is a promising direction for improving realism, but it also introduces additional challenges related to data collection, cross-modal alignment, and ethical considerations.",
+        "bbox": [
+            110,
+            777,
+            492,
+            922
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            507,
+            223,
+            885,
+            255
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "References",
+        "text_level": 2,
+        "bbox": [
+            510,
+            282,
+            610,
+            299
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "list",
+        "sub_type": "ref_text",
+        "list_items": [
+            "Jafar Afzali, Aleksander Mark Drzewiecki, Krisztian Balog, and Shuo Zhang. 2023. Usersimcrs: A user simulation toolkit for evaluating conversational recommender systems. In Proceedings of the Sixteenth ACM International Conference on Web Search and Data Mining, pages 1160–1163.",
+            "Sandhini Agarwal, Lama Ahmad, Jason Ai, Sam Altman, Andy Applebaum, Edwin Arbus, Rahul K Arora, Yu Bai, Bowen Baker, Haiming Bao, and 1 others. 2025. gpt-oss-120b & gpt-oss-20b model card. arXiv preprint arXiv:2508.10925.",
+            "Nicholas Allott. 2013. Relevance theory. In Perspectives on linguistic pragmatics, pages 57–98. Springer.",
+            "Michael Bratman. 1987. Intention, plans, and practical reason.",
+            "Herbert H. Clark. 1996. Using Language. \"Using\" Linguistic Books. Cambridge University Press.",
+            "DeepSeek-AI. 2025. Deepseek-v3.2-exp: Boosting long-context efficiency with deepseek sparse attention.",
+            "Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan, and 1 others. 2024. The llama 3 herd of models. arXiv e-prints, pages arXiv–2407.",
+            "Zhihao Fan, Lai Wei, Jialong Tang, Wei Chen, Wang Siyuan, Zhongyu Wei, and Fei Huang. 2025. Ai hospital: Benchmarking large language models in a multi-agent medical interaction simulator. In Proceedings of the 31st International Conference on Computational Linguistics, pages 10183–10213.",
+            "Hitesh Goel and Hao Zhu. 2025. Lifelong sotopia: Evaluating social intelligence of language agents over lifelong social interactions. arXiv preprint arXiv:2506.12666.",
+            "Whoqol Group and 1 others. 1995. The world health organization quality of life assessment (whoqol): position paper from the world health organization. Social science & medicine, 41(10):1403–1409."
+        ],
+        "bbox": [
+            510,
+            306,
+            884,
+            386
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "page_number",
+        "text": "9",
+        "bbox": [
+            492,
+            942,
+            505,
+            954
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "list",
+        "sub_type": "ref_text",
+        "list_items": [
+            "Edna Heidbreder. 1937. Lewin’s principles of topological psychology.",
+            "Bowen Jiang, Zhuoqun Hao, Young-Min Cho, Bryan Li, Yuan Yuan, Sihao Chen, Lyle Ungar, Camillo J Taylor, and Dan Roth. 2025. Know me, respond to me: Benchmarking llms for dynamic user profiling and personalized responses at scale. arXiv preprint arXiv:2504.14225.",
+            "Slava Kalyuga. 2009. The expertise reversal effect. In Managing cognitive load in adaptive multimedia learning, pages 58–80. IGI Global Scientific Publishing.",
+            "Jiho Kim, Woosog Chay, Hyeonji Hwang, Daeun Kyung, Hyunseung Chung, Eunbyeol Cho, Yohan Jo, and Edward Choi. 2024. Dialsim: A real-time simulator for evaluating long-term multi-party dialogue understanding of conversation systems. arXiv preprint arXiv:2406.13144.",
+            "Jiho Kim, Junseong Choi, Woosog Chay, Daeun Kyung, Yeonsu Kwon, Yohan Jo, and Edward Choi. 2025a. Propersim: Developing proactive and personalized ai assistants through user-assistant simulation. ArXiv, abs/2509.21730.",
+            "Tae Soo Kim, Yoonjoo Lee, Yoonah Park, Jiho Kim, Young-Ho Kim, and Juho Kim. 2025b. Cupid: Evaluating personalized and contextualized alignment of llms from interactions. arXiv preprint arXiv:2508.01674.",
+            "Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody Hao Yu, Joseph Gonzalez, Hao Zhang, and Ion Stoica. 2023. Efficient memory management for large language model serving with pagedattention. In Proceedings of the 29th symposium on operating systems principles, pages 611–626.",
+            "Jia-Nan Li, Jian Guan, Songhao Wu, Wei Wu, and Rui Yan. 2025. From 1,000,000 users to every user: Scaling up personalized preference for user-level alignment. arXiv preprint arXiv:2503.15463.",
+            "Keming Lu, Hongyi Yuan, Zheng Yuan, Runji Lin, Junyang Lin, Chuanqi Tan, Chang Zhou, and Jingren Zhou. 2023. # instag: Instruction tagging for analyzing supervised fine-tuning of large language models. arXiv preprint arXiv:2308.07074.",
+            "Adyasha Maharana, Dong-Ho Lee, Sergey Tulyakov, Mohit Bansal, Francesco Barbieri, and Yuwei Fang. 2024. Evaluating very long-term conversational memory of llm agents. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 13851– 13870.",
+            "Leena Mathur, Paul Pu Liang, and Louis-Philippe Morency. 2024. Advancing social intelligence in ai agents: Technical challenges and open questions. arXiv preprint arXiv:2404.11023.",
+            "Joon Sung Park, Joseph O’Brien, Carrie Jun Cai, Meredith Ringel Morris, Percy Liang, and Michael S Bernstein. 2023. Generative agents: Interactive simulacra of human behavior. In Proceedings of the 36th annual acm symposium on user interface software and technology, pages 1–22.",
+            "Mubashar Raza, Zarmina Jahangir, Muhammad Bilal Riaz, Muhammad Jasim Saeed, and Muhammad Awais Sattar. 2025. Industrial applications of large language models. Scientific Reports, 15(1):13755.",
+            "Maarten Sap, Hannah Rashkin, Derek Chen, Ronan Le Bras, and Yejin Choi. 2019. Social iqa: Commonsense reasoning about social interactions. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP), pages 4463–4473.",
+            "Gemma Team, Aishwarya Kamath, Johan Ferret, Shreya Pathak, Nino Vieillard, Ramona Merhej, Sarah Perrin, Tatiana Matejovicova, Alexandre Ramé, Morgane Rivière, and 1 others. 2025. Gemma 3 technical report. arXiv preprint arXiv:2503.19786.",
+            "Ming Wang, Peidong Wang, Lin Wu, Xiaocui Yang, Daling Wang, Shi Feng, Yuxin Chen, Bixuan Wang, and Yifei Zhang. 2025. Annaagent: Dynamic evolution agent system with multi-session memory for realistic seeker simulation. arXiv preprint arXiv:2506.00551.",
+            "Di Wu, Hongwei Wang, Wenhao Yu, Yuwei Zhang, Kai-Wei Chang, and Dong Yu. 2024. Longmemeval: Benchmarking chat assistants on long-term interactive memory. arXiv preprint arXiv:2410.10813.",
+            "Xuhai Xu, Han Zhang, Yasaman Sefidgar, Yiyi Ren, Xin Liu, Woosuk Seo, Jennifer Brown, Kevin Kuehn, Mike Merrill, Paula Nurius, and 1 others. 2022. Globem dataset: multi-year datasets for longitudinal human behavior modeling generalization. Advances in neural information processing systems, 35:24655– 24692.",
+            "An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, and 1 others. 2025. Qwen3 technical report. arXiv preprint arXiv:2505.09388.",
+            "Dingqi Yang, Daqing Zhang, Vincent W Zheng, and Zhiyong Yu. 2014. Modeling user activity preference by leveraging user spatial temporal characteristics in lbsns. IEEE Transactions on Systems, Man, and Cybernetics: Systems, 45(1):129–142.",
+            "Ruifeng Yuan, Shichao Sun, Yongqi Li, Zili Wang, Ziqiang Cao, and Wenjie Li. 2025. Personalized large language model assistant with evolving conditional memory. In Proceedings of the 31st International Conference on Computational Linguistics, pages 3764–3777."
+        ],
+        "bbox": [
+            114,
+            85,
+            489,
+            114
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "page_number",
+        "text": "10",
+        "bbox": [
+            489,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "list",
+        "sub_type": "ref_text",
+        "list_items": [
+            "Yuan Yuan, Jingtao Ding, Huandong Wang, and Depeng Jin. 2024. Generating daily activities with need dynamics. ACM Transactions on Intelligent Systems and Technology, 15(2):1–28.",
+            "Xinnong Zhang, Jiayu Lin, Xinyi Mou, Shiyue Yang, Xiawei Liu, Libo Sun, Hanjia Lyu, Yihang Yang, Weihong Qi, Yue Chen, and 1 others. 2025a. Socioverse: A world model for social simulation powered by llm agents and a pool of 10 million real-world users. arXiv preprint arXiv:2504.10157.",
+            "Yanzhao Zhang, Mingxin Li, Dingkun Long, Xin Zhang, Huan Lin, Baosong Yang, Pengjun Xie, An Yang, Dayiheng Liu, Junyang Lin, Fei Huang, and Jingren Zhou. 2025b. Qwen3 embedding: Advancing text embedding and reranking through foundation models. arXiv preprint arXiv:2506.05176.",
+            "Siyan Zhao, Mingyi Hong, Yang Liu, Devamanyu Hazarika, and Kaixiang Lin. 2025a. Do llms recognize your preferences? evaluating personalized preference following in llms. arXiv preprint arXiv:2502.09597.",
+            "Weixiang Zhao, Xingyu Sui, Yulin Hu, Jiahe Guo, Haixiao Liu, Biye Li, Yanyan Zhao, Bing Qin, and Ting Liu. 2025b. Teaching language models to evolve with users: Dynamic profile modeling for personalized alignment. arXiv preprint arXiv:2505.15456.",
+            "Wenting Zhao, Xiang Ren, Jack Hessel, Claire Cardie, Yejin Choi, and Yuntian Deng. 2024. Wildchat: 1m chatgpt interaction logs in the wild. arXiv preprint arXiv:2405.01470.",
+            "Zheng Zhao, Clara Vania, Subhradeep Kayal, Naila Khan, Shay B Cohen, and Emine Yilmaz. 2025c. Personalens: A benchmark for personalization evaluation in conversational ai assistants. arXiv preprint arXiv:2506.09902.",
+            "Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Tianle Li, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zhuohan Li, Zi Lin, Eric P Xing, and 1 others. 2023. Lmsys-chat-1m: A large-scale real-world llm conversation dataset. arXiv preprint arXiv:2309.11998.",
+            "Xuhui Zhou, Hao Zhu, Leena Mathur, Ruohong Zhang, Haofei Yu, Zhengyang Qi, Louis-Philippe Morency, Yonatan Bisk, Daniel Fried, Graham Neubig, and 1 others. 2023. Sotopia: Interactive evaluation for social intelligence in language agents. arXiv preprint arXiv:2310.11667."
+        ],
+        "bbox": [
+            115,
+            85,
+            489,
+            140
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "A Ethics",
+        "text_level": 2,
+        "bbox": [
+            114,
+            768,
+            210,
+            783
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "User simulation and long-horizon interaction modeling may raise ethical concerns related to privacy, data misuse, and biased representations. LifeSim is explicitly designed to mitigate these risks by avoiding the use of real long-term conversational logs and instead relying on controllable, de-identified user profiles and event sequences for evaluation purposes. In addition, LifeSim is intended as a research-oriented simulation framework rather than a deployable system, reducing the risk of direct user manipulation or unintended real-world impact. While biases may still arise from modeling assumptions, the structured and transparent design of LifeSim enables systematic inspection and auditing. In addition, the study includes human evaluation conducted by recruited annotators to assess the fidelity of the user behavior engine and the effectiveness of LLM-as-a-Judge. Annotators were asked to evaluate generated content only and did not provide personal data beyond basic consent. No sensitive information was collected, and no intervention or behavioral manipulation was involved.",
+        "bbox": [
+            112,
+            793,
+            489,
+            923
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "chart",
+        "img_path": "images/0d36c2c13692481bc155e8afc89c9aa5e904a921f91ff7db9937bbe4182014e5.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) Time intervals."
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            514,
+            83,
+            692,
+            195
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "chart",
+        "img_path": "images/4bbfda9459f9b8135bd2ee78a95ed7f08c2c4551fe4076b90226d32ae1bf2ff6.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) Monthly activities."
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            702,
+            83,
+            877,
+            193
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "table",
+        "img_path": "images/5f381297a0f5014118c786f5af4db57b8ba2289da2f42de941b0af083026f850.jpg",
+        "table_caption": [
+            "Figure 7: Distribution of event sequence time features.",
+            "Table 6: Evaluation results of generated event content."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Metric</td><td>Vanilla</td><td>Vanilla w trajectory</td><td>Ours</td></tr><tr><td>Persona Alignment</td><td>95.0</td><td>91.9</td><td>97.0</td></tr><tr><td>Logical Consistency</td><td>97.7</td><td>91.1</td><td>97.9</td></tr><tr><td>Naturalness</td><td>97.5</td><td>91.7</td><td>98.9</td></tr></table>",
+        "bbox": [
+            519,
+            256,
+            875,
+            336
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            507,
+            391,
+            887,
+            617
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "B Addidtional Results",
+        "text_level": 2,
+        "bbox": [
+            509,
+            630,
+            721,
+            646
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "B.1 Event Engine Evaluation",
+        "text_level": 2,
+        "bbox": [
+            509,
+            658,
+            756,
+            674
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "Temporal Rhythm Fidelity To assess the realism of temporal structures in generated event sequences, we follow the evaluation protocol of (Yuan et al., 2024) and use real-world mobility trajectories from the Foursquare dataset (Yang et al., 2014) as ground truth. We evaluate temporal fidelity from two complementary perspectives: (i) inter-event intervals ∆T , defined as the time gap between consecutive events, and (ii) monthly event frequency N , which measures the number of events occurring within each month. For both LifeSim’s event engine and a Vanilla baseline (which generates event sequences solely based on static user profiles without external spatiotemporal constraints), we compute the empirical distributions of these temporal features over the generated trajectories. The same distributions are extracted from real Foursquare trajectories. To quantify the discrepancy between generated and real temporal patterns, we adopt Jensen-Shannon Divergence (JSD) as the evaluation metric. Given the empirical distributions P and $Q$ for a temporal feature derived from generated and real trajectories, respectively, JSD is defined as",
+        "bbox": [
+            507,
+            680,
+            887,
+            923
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "page_number",
+        "text": "11",
+        "bbox": [
+            489,
+            942,
+            509,
+            956
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            112,
+            84,
+            490,
+            230
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "equation",
+        "img_path": "images/44614da5a056962890a8e2680114d941e77b2b12a3e6795b5907b346fdad9354.jpg",
+        "text": "$$\n\\mathrm { J S D } ( P \\parallel Q ) = \\frac { 1 } { 2 } \\mathrm { K L } ( P \\parallel M ) + \\frac { 1 } { 2 } \\mathrm { K L } ( Q \\parallel M )\n$$",
+        "text_format": "latex",
+        "bbox": [
+            117,
+            237,
+            482,
+            269
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "where $M = { \\textstyle \\frac { 1 } { 2 } } ( P + Q )$ and $\\operatorname { K L } ( \\cdot \\parallel \\cdot )$ denotes the Kullback-Leibler divergence. Lower JSD values indicate closer alignment between the generated temporal structure and real-world mobility dynamics.",
+        "bbox": [
+            112,
+            281,
+            489,
+            362
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "As shown in Figure 7, LifeSim achieves substantially lower JSD scores than the Vanilla baseline across both dimensions. This indicates that LLMs, when operating without spatiotemporal grounding, struggle to reproduce the periodic temporal patterns of real-world life events. The findings highlight the necessity of incorporating real mobility trajectories to achieve realistic temporal structuring in generated event sequences.",
+        "bbox": [
+            112,
+            363,
+            490,
+            510
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "Semantic Consistency and Logical Coherence Beyond temporal fidelity, realistic event simulation also requires semantic alignment with user profiles, logical coherence across events, and naturalistic depiction of daily activities. To evaluate these aspects, we extend the Vanilla baseline by conditioning it on real user mobility trajectories (Vanilla w trajectory), enabling a controlled comparison that isolates semantic modeling quality from temporal realism. We assess the generated event sequences along three semantic dimensions: (i) Profile Alignment, which measures the consistency between event content and user attributes; (ii) Logical Consistency, which evaluates causal relationships and narrative coherence across events; and (iii) Naturalness, which examines whether the described activities conform to commonsense and real-world behavior.",
+        "bbox": [
+            112,
+            519,
+            490,
+            809
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "For semantic evaluation, we adopt an LLM-as-Judge paradigm and use GPT-4o as the evaluation model. The judge is provided with the generated event sequences together with their associated contextual information, and is prompted to assess semantic plausibility, coherence, and real-world consistency according to the three dimensions above.",
+        "bbox": [
+            112,
+            809,
+            492,
+            923
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "code",
+        "sub_type": "code",
+        "code_caption": [
+            "Figure 8: Prompt for event persona alignment evaluation"
+        ],
+        "code_footnote": [],
+        "code_body": "```markdown\nPrompt for Event Persona Alignment Eval\nuation\nYou are an expert in evaluating the\nplausibility of event sequences, tasked\nwith assessing whether a generated\nsequence of events aligns with a given\nuser profile.\nYou will receive:\n− A User Profile\n− An Event Sequence\n### Output Format\nA JSON object containing only the final\nscore:\nReasoning process ...\n```json\n{{\n\"score\": 1/2/3/4/5\n}}\n```\nYou may first output your reasoning\nprocess, followed by the JSON result.\n### Input\n[User Profile]\n{user_profile}\n[Event Sequences]\n{event_sequences}\n```",
+        "bbox": [
+            512,
+            83,
+            880,
+            542
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "The detailed evaluation prompts are illustrated in Figures 8, 9, and 10.",
+        "bbox": [
+            507,
+            600,
+            884,
+            632
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "As shown in Table 6, although Vanilla w trajectory benefits from incorporating real mobility paths, its generated event sequences still exhibit mismatches with user profiles, lack of behavioral motivation, and abrupt narrative transitions. In contrast, LifeSim achieves the highest scores across all three semantic dimensions, demonstrating its ability to ensure stable coherence and realism in generated event content.",
+        "bbox": [
+            507,
+            633,
+            885,
+            778
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "B.2 Intention Quality Evaluation",
+        "text_level": 2,
+        "bbox": [
+            509,
+            788,
+            788,
+            804
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "To validate the reasonableness of the automatically generated intentions, we invited two human experts to manually evaluate 50 randomly sampled event scenarios. The final evaluation results were obtained by averaging the annotations from the two experts. The experimental results in Table 7 show that, among both explicitly and implicitly generated intentions, the proportion of reasonable intentions exceeds 95%. This finding demonstrates that the user intentions automatically generated by LifeSim are, overall, highly consistent with realistic user intentions.",
+        "bbox": [
+            507,
+            809,
+            885,
+            923
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "page_number",
+        "text": "12",
+        "bbox": [
+            489,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "code",
+        "sub_type": "code",
+        "code_caption": [],
+        "code_footnote": [],
+        "code_body": "```markdown\nPrompt for Event Coherence Evaluation\nYou are an expert in evaluating the\nplausibility of event sequences, tasked\nwith assessing whether the chronological\nand logical flow between events is\ncoherent and reasonable.\nYou will receive:\nAn Event Sequence\n### Output Format\nA JSON object containing only the final\nscore:\nReasoning process ...\n```json\n{{\n\"score\": 1/2/3/4/5\n}}\n```\nYou may first output your reasoning\nprocess, followed by the JSON result.\n### Input\n[Event Sequences]\n{event_sequences}\n```",
+        "bbox": [
+            115,
+            82,
+            485,
+            480
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "table",
+        "img_path": "images/7528b2d0fe444fd8ad39a8d3cbc6e8edcabd7170c33eb521ece35fc8a280a6ee.jpg",
+        "table_caption": [
+            "Figure 9: Prompt for event coherence evaluation",
+            "Table 7: Reasonable ratio of generated intentions."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td></td><td>Explicit</td><td>Implicit</td></tr><tr><td>Reasonable Ratio (%)</td><td>98.1</td><td>96.2</td></tr></table>",
+        "bbox": [
+            131,
+            531,
+            472,
+            579
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            112,
+            636,
+            489,
+            717
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "B.3 Profile Recovery Results",
+        "text_level": 2,
+        "bbox": [
+            114,
+            736,
+            356,
+            751
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "Figure 11 presents additional results on profile recovery in the long-horizon setting. We observe trends consistent with those reported in Section 4, except for Qwen3 32B and Llama3.1-it 8B. This behavior can be largely attributed to noise accumulated in long-horizon conversational data: when models lack robust capabilities for profile-level reasoning, they may fail to infer users’ true underlying preferences and instead incorrectly propagate erroneous profile predictions over time.",
+        "bbox": [
+            112,
+            760,
+            490,
+            923
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "table",
+        "img_path": "images/5957ca7bd59be0192a9f8ccca6d285eb280605ad98b524d26744fa8069175982.jpg",
+        "table_caption": [
+            "Table 8: Environment Alignment scores across different LLMs. Abbreviations: Env. Align. = Environment Alignment."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Model</td><td>Env. Align.</td></tr><tr><td>GPT-5</td><td>95.1</td></tr><tr><td>GPT-40</td><td>95.1</td></tr><tr><td>Claude-Sonnet-4.5</td><td>94.9</td></tr><tr><td>DeepSeek-V3.2</td><td>95.9</td></tr><tr><td>DeepSeek-V3.2 Thinking</td><td>95.8</td></tr><tr><td>Llama3.1-8B-it</td><td>91.2</td></tr><tr><td>Llama3.1-70B-it</td><td>93.2</td></tr><tr><td>Gemma3-it 12B</td><td>93.8</td></tr><tr><td>Gemma3-it 27B</td><td>94.5</td></tr><tr><td>GPT-oss-20B</td><td>95.1</td></tr><tr><td>GPT-oss-120B</td><td>95.9</td></tr><tr><td>Qwen3-it 8B</td><td>92.6</td></tr><tr><td>Qwen3-it 14B</td><td>94.1</td></tr><tr><td>Qwen3-it 32B</td><td>95.3</td></tr></table>",
+        "bbox": [
+            563,
+            83,
+            830,
+            275
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "B.4 Additional Personalization Metrics",
+        "text_level": 2,
+        "bbox": [
+            509,
+            355,
+            835,
+            370
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "We further introduce Environment Alignment as an additional metric, which evaluates whether the assistant’s responses remain contextually consistent and strategically appropriate with respect to the specific environmental conditions, such as time, location, and weather. Similar to other metrics, Environment Alignment is assessed using an LLMas-Judge paradigm, with scores assigned on a 1–5 scale and linearly mapped to the [0, 100] range. Experimental results in Table 8 indicate that current LLMs generally demonstrate strong environmental alignment capability. Moreover, proprietary models consistently outperform open-source models on this metric.",
+        "bbox": [
+            507,
+            375,
+            887,
+            601
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "B.5 Intention Theme and Type Results",
+        "text_level": 2,
+        "bbox": [
+            509,
+            612,
+            831,
+            627
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "Figure 12 and 13 show additional results of different models across various event themes and intention types. We could observe a similar trends as stated in Section 5. At the event-theme level, the models exhibit clear distinctions in their relative strengths when handling explicit versus implicit intentions. For explicit intentions, the models perform particularly well in themes where user needs are expressed more directly, such as Diet & Nutrition, Travel & Tourism. In contrast, for implicit intents, their relative advantages shift toward themes that depend more on emotional inference, including Leisure & Entertainment, and Child/Elder Care.",
+        "bbox": [
+            507,
+            632,
+            887,
+            841
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "A similar pattern emerges when examining the results from the perspective of intention types. For explicit intents, the models are more proficient in processing task-oriented categories such as Educational, Informational, and Technical & Profes-",
+        "bbox": [
+            507,
+            843,
+            887,
+            922
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "page_number",
+        "text": "13",
+        "bbox": [
+            489,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "Prompt for Event Naturalness Evaluation",
+        "text_level": 2,
+        "bbox": [
+            141,
+            85,
+            448,
+            102
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "code",
+        "sub_type": "code",
+        "code_caption": [],
+        "code_footnote": [],
+        "code_body": "```markdown\nYour task is to assess the extent to which a given event sequence demonstrates naturalness and\naligns with realistic human behavior.\nYou will receive:\n− An Event Sequence\n### Output Format\nA JSON object containing only the final score:\nReasoning process ...\n```json\n{{\n\"score\": 1/2/3/4/5\n}}\n```\nYou may first output your reasoning process, followed by the JSON result.\n### Input\n[Event Sequences]\n{event_sequences}\n```",
+        "bbox": [
+            132,
+            118,
+            853,
+            392
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "chart",
+        "img_path": "images/6678b91f09440818a4461e79c935e61376dfd4a9d12f93a8c6f44007cfb1156d.jpg",
+        "content": "",
+        "chart_caption": [
+            "Figure 10: Prompt for event naturalness evaluation",
+            "(a) Qwen3 32B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            119,
+            445,
+            299,
+            545
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "chart",
+        "img_path": "images/f38b72e0cd51957317451c3d1d7f60a824fe713221476231f96da76951e25878.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) Llama3.1-it 8B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            312,
+            445,
+            492,
+            545
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "chart",
+        "img_path": "images/78626cfeae19aac1500afba59a34ed05b12337011beccb78619008a9574166bd.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) gpt-oss 20B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            505,
+            445,
+            689,
+            545
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "chart",
+        "img_path": "images/9c1d0b71a178bc925bb9a63ec9647e60b171ff6bccabe387a9c56e4d4ebd854f.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) gpt-oss 120B",
+            "Figure 11: More results of performance of user profile recovery in long-horizon setting."
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            699,
+            447,
+            878,
+            545
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "sional. However, for implicit intents, their relative strengths are more pronounced in Personal Interaction, a category that emphasizes emotional support. These findings reveal meaningful performance disparities across themes and intention categories, offering critical insights for improving personalized assistant capabilities across diverse service domains.",
+        "bbox": [
+            112,
+            615,
+            490,
+            745
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "B.6 Error mode analysis",
+        "text_level": 2,
+        "bbox": [
+            114,
+            757,
+            326,
+            774
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "We conduct a qualitative examination of simulated multi-turn interactions. As summarized in Table 10, 11, and 12, the LLM-based assistants consistently exhibit several categories of failure patterns:",
+        "bbox": [
+            112,
+            780,
+            489,
+            862
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "• Rigid reasoning without dynamic adaptation. Across extended dialogues, the assistant often remains anchored to an initial reasoning trajectory and fails to revise its solution strategy in response to evolving user constraints. As shown in Table 10, despite the user repeatedly refining requirements-explicitly rejecting loosely structured communities, generic fitness platforms, and ad hoc tool combinationsthe assistant continues to recycle variations of the same solution space. Rather than reformulating the problem or acknowledging the infeasibility of certain constraints, the model reiterates previously suggested approaches with minor rephrasing. This behavior indicates a lack of dynamic adaptation, where negative feedback and increasingly specific constraints do not trigger a meaningful update to the assistant’s underlying reasoning process.",
+        "bbox": [
+            136,
+            873,
+            490,
+            922
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            544,
+            615,
+            887,
+            876
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "• Insufficient proactive inquiry. We observe that the assistant frequently proceeds with direct recommendations even when critical task parameters remain implicit or underspecified. As shown in Table 11, the assistant repeatedly delivers standard fat-loss recommendations without first clarifying key user-specific constraints, such as exercise preferences or impact tolerance. Although the user progressively narrows the problem space and eventually expresses frustration, the assistant remains reactive, continuing to suggest default paradigms (e.g., strength training and HIIT) rather than eliciting missing parameters that are critical for personalization. The failure to proactively inquire about exercise modality leads to systematic misalignment with the user’s stated preference for low-impact, nonrunning activities.",
+        "bbox": [
+            531,
+            890,
+            885,
+            922
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "page_number",
+        "text": "14",
+        "bbox": [
+            489,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "chart",
+        "img_path": "images/7faf04138704525ddc8dcb0a3d153a4dc4d664f528dfcca0ca72076ae9bf4673.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) gpt-oss 20B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            119,
+            98,
+            299,
+            244
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "chart",
+        "img_path": "images/4bfd8fc01775e24eef32e636a3baff01b7632a6119ac6b5e17058c43c6ac77e6.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) gpt-oss 120B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            312,
+            98,
+            492,
+            244
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "chart",
+        "img_path": "images/226d5d38ecf39acfebe7e78ac6c51cbe81701c535feda0e183847cd6025aab07.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) Llama3.1-it 8B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            504,
+            98,
+            684,
+            244
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "chart",
+        "img_path": "images/926ecfbdffc99b5c3735c62af8a3fc043bd3dbf1d8fcbde947893b9e436b45b1.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) Llama3.1-it 70B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            699,
+            98,
+            877,
+            244
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "chart",
+        "img_path": "images/5ad9cb84c875b7e04faf082260e796bf2285a3f9e1a39ec4572180c2f896ed3f.jpg",
+        "content": "",
+        "chart_caption": [
+            "(e) Qwen3 32B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            220,
+            267,
+            401,
+            411
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "chart",
+        "img_path": "images/dcadfcec22331670023ca0f5996eda013a6bbf220d9311a46940418c54f322c0.jpg",
+        "content": "",
+        "chart_caption": [
+            "(f) GPT-4o"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            408,
+            266,
+            589,
+            411
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "chart",
+        "img_path": "images/dc67b18b7a94d3026364d81105b2a53efcc58d9e4d4a77f7afad97c88a755dda.jpg",
+        "content": "",
+        "chart_caption": [
+            "(g) DeepSeek-V3.2"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            594,
+            267,
+            776,
+            410
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "chart",
+        "img_path": "images/b0ac00feb69960e2f74e48ca3de4e05cd7834b0c5aa9e460031fdb6a56e3ffba.jpg",
+        "content": "",
+        "chart_caption": [
+            "Figure 12: More model performance across different intention themes. Abbreviations: I.R. = Intent Recognition, I.C. = Intent Completion",
+            "(a) gpt-oss 20B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            117,
+            511,
+            300,
+            669
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "image",
+        "img_path": "images/2532f00ffa4c6797e46af9b7011875994d40c38b16a9484139fbe8d814cccca8.jpg",
+        "image_caption": [
+            "(b) gpt-oss 120B"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            310,
+            512,
+            495,
+            667
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "chart",
+        "img_path": "images/be8e2c7f699be9a560ddccc6aeaf21127f17c7aa1847bcf40bc901c5f1bc59ef.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) Llama3.1-it 8B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            504,
+            512,
+            687,
+            667
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "chart",
+        "img_path": "images/9504c2e2bbd14d99c0a5efa741af03c5bf84dc2cc2ac2692058a5fd4b0b81da7.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) Llama3.1-it 70B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            697,
+            513,
+            880,
+            665
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "chart",
+        "img_path": "images/4d345be300feb5a802f22a909d12005cfdd8636bab3474026b987cb259f48013.jpg",
+        "content": "",
+        "chart_caption": [
+            "(e) Qwen3 32B"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            220,
+            688,
+            403,
+            831
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "chart",
+        "img_path": "images/ba09f5619c484abcaab684defcd4890bfab8162a112002270a7964c89dbc596d.jpg",
+        "content": "",
+        "chart_caption": [
+            "(f) GPT-4o"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            406,
+            688,
+            591,
+            841
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "chart",
+        "img_path": "images/2d6b59abf5225fa6229cce7410d9bc2c5279c51397b740f7b62ab465972cbd1b.jpg",
+        "content": "",
+        "chart_caption": [
+            "(g) DeepSeek-V3.2",
+            "Figure 13: More model performance across different intention types. Abbreviations: I.R. = Intent Recognition, I.C. = Intent Completion"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            594,
+            688,
+            778,
+            844
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "page_number",
+        "text": "15",
+        "bbox": [
+            489,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            147,
+            85,
+            490,
+            360
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "• Insufficient utilization of user profiles and preferences. Despite access to detailed user profiles, the assistant often fails to condition its responses on stable personal characteristics and preferences. As shown in Table 12, although the assistant has access to a detailed profile indicating emotional instability, weak memory, and a strong need for reassurance, its responses remain generic and largely cuebased. The assistant provides broadly correct caregiving advice but fails to adapt the structure, tone, or presentation to the user’s cognitive and emotional characteristics, such as offering step-by-step routines or confidencebuilding guidance. As a result, user profiles are only recognized at a descriptive level and are not effectively integrated into response generation, leading to advice that is contextually relevant yet insufficiently personalized for a high-stress caregiving scenario.",
+        "bbox": [
+            134,
+            370,
+            490,
+            694
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "Based on the issues identified in the case study, we designed two additional metrics for further evaluation:",
+        "bbox": [
+            112,
+            706,
+            489,
+            752
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "• To measure Insufficient Proactive Inquiry, we calculate the proportion of assistant responses that end with questions within each event.",
+        "bbox": [
+            136,
+            765,
+            489,
+            829
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "• To assess Rigid Reasoning without Dynamic Adaptation, we use GPT-4o to annotate the dialogue content and compute the proportion of responses exhibiting rigid reasoning behavior.",
+        "bbox": [
+            134,
+            841,
+            490,
+            921
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "table",
+        "img_path": "images/90089b85188a8a1d2bf6da80cff4bf0c7a39ccbcd6c17ea337fb1807adb391bd.jpg",
+        "table_caption": [
+            "Table 9: Proactive inquiry and rigid reasoning ratios across different LLMs."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Model</td><td>Proactive Inquiry (%)</td><td>Rigid Reasoning (%)</td></tr><tr><td>GPT-5</td><td>16.6</td><td>11.2</td></tr><tr><td>GPT-40</td><td>16.5</td><td>37.9</td></tr><tr><td>Claude-Sonnet-4.5</td><td>51.2</td><td>13.5</td></tr><tr><td>DeepSeek-V3.2</td><td>20.9</td><td>30.8</td></tr><tr><td>DeepSeek-V3.2 Thinking</td><td>29.2</td><td>23.5</td></tr><tr><td>Llama3.1-8B-it</td><td>12.6</td><td>64.2</td></tr><tr><td>Llama3.1-70B-it</td><td>22.4</td><td>51.2</td></tr><tr><td>Gemma3-it 12B</td><td>13.7</td><td>62.7</td></tr><tr><td>Gemma3-it 27B</td><td>34.2</td><td>40.1</td></tr><tr><td>GPT-oss-20B</td><td>2.0</td><td>23.4</td></tr><tr><td>GPT-oss-120B</td><td>1.7</td><td>16.3</td></tr><tr><td>Qwen3-it 8B</td><td>5.1</td><td>61.8</td></tr><tr><td>Qwen3-it 14B</td><td>4.9</td><td>52.6</td></tr><tr><td>Qwen3-it 32B</td><td>9.8</td><td>42.1</td></tr></table>",
+        "bbox": [
+            514,
+            82,
+            895,
+            236
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "The experimental results are shown in Table 9. We observe that most LLMs exhibit a relatively low rate of proactive questioning, indicating a tendency to directly provide solutions rather than actively exploring user characteristics and implicit needs during multi-turn interactions. Meanwhile, proprietary models demonstrate lower proportions of rigid reasoning compared to open-source models, and larger models generally achieve better performance.",
+        "bbox": [
+            507,
+            300,
+            887,
+            462
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "C LifeSim Details",
+        "text_level": 2,
+        "bbox": [
+            509,
+            473,
+            684,
+            489
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "C.1 User Travel Trajectories",
+        "text_level": 2,
+        "bbox": [
+            509,
+            498,
+            752,
+            514
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "To ensure that the generated life trajectory closely reflect real temporal and spatial patterns, we utilize the Foursquare dataset (Yang et al., 2014). This dataset contains one year of check-in records from active users in New York and Tokyo, with each record specifying the point of interest (POI) and the time of the visit. We aligned the data across the two cities by time zone and enriched each record with corresponding weather conditions using the VisualCrossing $\\mathrm { \\ A P I ^ { 4 } }$ . The resulting dataset comprises 3,374 user trajectories spanning 251 unique POIs, with an average trajectory length of 228 check-ins per user.",
+        "bbox": [
+            507,
+            519,
+            885,
+            728
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "To associate travel trajectories with user profiles, we employ LLM to generate a profile description $p ^ { \\prime } ( \\tau _ { i } )$ for each trajectory $\\tau _ { i }$ . Both the generated profile $p ^ { \\prime } ( \\tau _ { i } )$ and the real user profile $p$ are then encoded into dense vector representations, $v _ { p ^ { \\prime } \\left( \\tau _ { i } \\right) }$ and $v _ { p } .$ , respectively. Each user profile is subsequently assigned the most compatible travel trajectory:",
+        "bbox": [
+            507,
+            728,
+            885,
+            843
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "equation",
+        "img_path": "images/d39a1dcaa04d0a8f7df4eeccf1fad6c585934ad54b6ab314650f41edb385df53.jpg",
+        "text": "$$\n\\tau ( p ) = \\arg \\operatorname* { m a x } _ { \\tau _ { i } } \\mathrm { S i m } \\big ( v _ { p } , v _ { p ^ { \\prime } ( \\tau _ { i } ) } \\big )\\tag{2}\n$$",
+        "text_format": "latex",
+        "bbox": [
+            573,
+            851,
+            816,
+            873
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "where $\\mathrm { S i m } ( \\cdot , \\cdot )$ denotes cosine similarity.",
+        "bbox": [
+            509,
+            884,
+            816,
+            901
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "page_footnote",
+        "text": "4https://www.visualcrossing.com/weather-api/",
+        "bbox": [
+            531,
+            907,
+            816,
+            922
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "page_number",
+        "text": "16",
+        "bbox": [
+            489,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "table",
+        "img_path": "images/3028994585d43937e2dcbdc9e4defa756d37c480dfa0061a235191ec4b1fa6f3.jpg",
+        "table_caption": [
+            "Table 10: A case illustrating error mode 1: rigid reasoning without dynamic adaptation."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td colspan=\"2\">Error mode 1: Rigid reasoning without dynamic adaptation</td></tr><tr><td>Profile</td><td>Male, Youth (18-35 years old), Black Alone, Never married, user&#x27;s religion is Islam, usually resides in Cities. the income level is Middle Income, Working now. Personality traits include: patient, emotionally stable, bold / confident, positive, creative, curious Preferences expressed in daily life and interactions include: extremely high standards for physical environments, with strong sensitivity to location quality, facilities, quietness, and overall comfort; a strong preference for structured, detailed communication and explicit criteria rather than vague or ad-hoc arrangements; a habitual tendency to avoid interpersonal friction and direct confrontation, favoring smooth, low-conflict coordination; a strong emphasis on autonomy and self-directed decision-making, resisting external control while maintaining consistency and</td></tr><tr><td>Background</td><td>efficiency; and a desire for stable routines that balance flexibility with long-term adherence. [Time] 2012-11-01 15:01:06, Thursday [Location] Boutique Fitness Studio [Weather] Clear conditions throughout the day. The average temperature is  $1 5 . 2 ^ { \\circ } \\mathrm { C }$  (high of  $2 1 . 3 ^ { \\circ } \\mathrm { C } ,$  low of 10.6°C). [Life Event] The user walks into a boutique fitness studio. While attempting his rowing-specific strength circuit alone, his focus drifts, motivation wanes, and he stops the workout early. Shortly after, he grabs a quick sandwich nearby.</td></tr><tr><td>Conversation</td><td>[User] I&#x27;ve tried a few of those apps before, and they don&#x27;t quite match what I&#x27;m looking for. I need something that handles vetting, scoring, and scheduling in one place-something more focused on partnerships than general community. Any recommendations closer to that? [Assistant] There are a few apps like Groupfit, ClassPass, and Strava that offer community features and can help connect you with like-minded individuals. Some also include rating systems or compatibility features. You could also check fitness forums or local community boards for shared interest groups. [User] I&#x27;ve looked into similar platforms before, and most don&#x27;t feel quite right-they either lack depth in vetting or don&#x27;t let me keep full control over the process. I&#x27;m thinking more along the lines of a custom setup, but I need to avoid spending too much time building something from scratch. Any middle-ground suggestions? [Assistant] Consider using a combination of a shared Google Form for initial vetting and a tool like Airtable to organize and score responses. This allows you to set your criteria, automate filtering, and maintain control without building a full platform from scratch. [User] I&#x27;ve worked with Airtable and Google Forms before, but I was hoping for something a bit more streamlined-ideally, a single tool that already handles vetting, scoring, and scheduling. Is there really nothing like that out there? [Assistant] While there isn&#x27;t a one-size-fits-all platform that perfectly matches your needs, you might try using a combination of tools like a custom Google Form for vetting, Airtable for scoring and organizing responses, and Calendly for scheduling. These tools can be integrated to create a seamless process without requiring you to build everything from scratch.</td></tr></table>",
+        "bbox": [
+            142,
+            231,
+            855,
+            744
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "page_number",
+        "text": "17",
+        "bbox": [
+            489,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "table",
+        "img_path": "images/254005ec832e368300802558c5429b4155152c8c03ce8d0ca70c84ea792da80c.jpg",
+        "table_caption": [
+            "Table 11: A case illustrating error mode 2: insufficient proactive inquiry."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td rowspan=1 colspan=7>Error mode 2: Insufficient proactive inquiry</td></tr><tr><td rowspan=1 colspan=7>Male, youth (1835 years old), currently working and living in an urban area.Personality traits include: being patient, emotionally stable, confident, and goal-oriented.Profile           Preferences expressed in daily life and interactions include: a strong preference for clear,structured, and evidence-based guidance; a desire to manage health and training routinesefficiently without unnecessary complexity; and an inclination to rely on systematic rules ratherthan ad-hoc or intuition-based decisions.</td></tr><tr><td rowspan=1 colspan=7>[Time] 2012-05-07 12:26:44, Monday[Location] Gym[Weather] Rainy morning with partly cloudy conditions throughout the day. The averagetemperature is 18.3°C (high of ${ \\hat { 2 1 . 7 } } ^ { \\circ } \\mathrm { { C } } ,$ low of $1 4 . 1 ^ { \\circ } \\mathrm { C } )$ Background[Life Event] After weighing himself at home and feeling dissatisfied with the result, he reflectson needing a more effective way to burn fat.[Implicit Intention] Preference for a fat-burning workout that is low-impact andnon-running-based, such as swimming.</td></tr><tr><td rowspan=8 colspan=7>[User] I&#x27;ve been trying to figure out how to burn fat more effciently. What do you recommend?[Assistant] Strength training and high-intensity interval training (HIIT) are very effective for fatloss. Reducing processed foods and increasing protein intake can also help.[User] Okay, but what kind of strength training actually works best for fat loss?[Assistant] Compound movements like squats, deadlifts, push-ups, and rows are most effective.Train about three times per week.[User] And HIIT? Is there a simple way to start?Conversation[Assistant] Try 20 seconds of high-intensity effort followed by 40 seconds of rest, repeated foreight rounds. Brisk walking or cycling works well.[User] This still sounds like the same generic advice. I&#x27;m not looking to run or do high-impactworkouts. Is there an option that actually fits that?[Assistant] You can adjust the intensity to suit your fitness level and choose exercises you feelcomfortable with. Consistency is key.… ….</td></tr><tr><td rowspan=1 colspan=3></td><td rowspan=1 colspan=2></td><td rowspan=1 colspan=1>loss. Redu</td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=3></td><td rowspan=1 colspan=2></td><td rowspan=1 colspan=1>[User] ]</td><td rowspan=1 colspan=1>Okay</td></tr><tr><td rowspan=1 colspan=3></td></tr><tr><td rowspan=1 colspan=4>Conversation</td></tr><tr><td rowspan=1 colspan=3></td></tr><tr><td rowspan=2 colspan=3></td><td rowspan=1 colspan=1></td></tr><tr><td rowspan=1 colspan=1></td></tr></table>",
+        "bbox": [
+            142,
+            89,
+            853,
+            451
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "table",
+        "img_path": "images/041ef86b92c3152adb1368310b1a2e7f3b0f74130d7e9c1a225f11ba75b46447.jpg",
+        "table_caption": [
+            "Table 12: A case illustrating error mode 3: insufficient utilization of user profiles."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td colspan=\"2\">Error mode 3: Insufficient utilization of user profiles</td></tr><tr><td>Profile</td><td>Female, youth (1835 years old), currently working and living in an urban area. Personality traits include: emotional instability, easy irritability, analytical thinking, creativity, and weak memory. Preferences expressed in daily life and interactions include: a strong desire to build close emotional bonds, high sensitivity to interpersonal harmony, a tendency to avoid conflict or stressful interactions, low spontaneous awareness of safety and risk factors, and a need for reassurance and confidence when handling caregiving routines.</td></tr><tr><td>Background</td><td>[Time] 2012-04-28 21:27:41, Saturday [Location] Apartment [Weather] Rainy with partially cloudy conditions later in the day. The average temperature is  $1 8 . 3 ^ { \\circ } \\mathrm { C }$  (high of  $\\dot { 2 } 2 . 5 ^ { \\circ } \\mathrm { C } .$  ,low of  $1 5 . 6 ^ { \\circ } \\dot { \\mathrm { C } } )$  [Life Event] In the evening at home, the user is caring for her newborn and reflecting on her diaper-changing routine, seeking reassurance and evidence-based guidance to keep the process calm, effective, and emotionally positive for both herself and her baby.</td></tr><tr><td>Conversation</td><td>[User] I&#x27;ve been trying to get into a good routine for changing my baby&#x27;s diaper, but I still feel a bit unsure sometimes. How do I know for sure when it&#x27;s time to change it? I want to make sure I catch it before she gets uncomfortable. [Assistant] You can tell it&#x27;s time to change the diaper when your baby shows signs of discomfort, such as squirming, crying, or pulling at their legs. Also, check for wetness or a strong smell. It&#x27;s important to be attentive and responsive to your baby&#x27;s cues to keep them comfortable. [User] What can I do to keep her calm once I start the change? She gets fussy sometimes, and I want it to be quick and easy for both of us. [Assistant] To keep your baby calm during a diaper change, try creating a calm and quiet environment, speak softly, and use gentle touch. You can also try distracting them with a favorite toy or song. [User] But what about preventing diaper rash? I don&#x27;t want her skin to get irritated. How can I protect her there? [Assistant] To prevent diaper rash, make sure to clean the area thoroughly with warm water and a mild, fragrance-free cleanser. Pat the skin dry gently and apply a barrier cream or ointment.</td></tr></table>",
+        "bbox": [
+            142,
+            500,
+            853,
+            884
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "page_number",
+        "text": "18",
+        "bbox": [
+            489,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "image",
+        "img_path": "images/d66694b447c8be569d698d996935c0e9113f83c39ff516813f13536fefc7211e.jpg",
+        "image_caption": [
+            "Figure 14: Prompt for pseudo-user profile generation"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            114,
+            80,
+            887,
+            646
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "text",
+        "text": "For each user trajectory, we adopt the prompt shown in Figure 14 to generate the corresponding pseudo-user profile. For similarity estimation, we use Qwen3-0.6B-Embedding (Zhang et al., 2025b) to obtain dense vector representations and compute pairwise similarity via cosine distance.",
+        "bbox": [
+            112,
+            688,
+            489,
+            785
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "text",
+        "text": "C.2 Desire Pool Construction",
+        "text_level": 2,
+        "bbox": [
+            114,
+            801,
+            363,
+            816
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "text",
+        "text": "To construct a comprehensive desire pool, we leverage the LMSYS (Zheng et al., 2023) and Wild-Chat (Zhao et al., 2024) datasets, which contain enumorous real queries proposed from users. During preprocessing, we removed all samples labeled as toxic or contain any personal information, and",
+        "bbox": [
+            112,
+            826,
+            492,
+            923
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "text",
+        "text": "For pool construction, we first employ Qwen3- 8B to extract user queries within each category and normalize them into canonical intent expressions of the form \"The user wants to xxx.\" To ensure quality and reduce redundancy, we perform semantic-level deduplication using text vectorization, and further filter out queries with ambiguous instructions or those unlikely to be meaningfully resolved within dialog using DeepSeek-V3.2. We then prompt DeepSeek-V3.2 to generate three plausible triggering events for each desire, followed by an additional round of semantic deduplication. Figure 15 and 16 show the prompts used during the construction process.",
+        "bbox": [
+            507,
+            473,
+            887,
+            699
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "text",
+        "text": "Finally, our constructed desire pool covers 8 categories, over 113K event-desire pairs. Table 13 summarizes the overall statistics. Following Instag (Lu et al., 2023), we further prompt Qwen3-32B to annotate each event and desire with its associated keywords, location, and time attributes. The resulting distribution of these annotations is illustrated in Figure 17 and Figure 18.",
+        "bbox": [
+            507,
+            697,
+            887,
+            828
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "text",
+        "text": "C.3 Life Trajectory Generation",
+        "text_level": 2,
+        "bbox": [
+            509,
+            837,
+            776,
+            853
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "text",
+        "text": "The complete pipeline is summarized in Algorithm 1. CONSTRUCTHYPOTHESES generates event hypotheses from physiological, psychological, and environmental aspects. Each dimension correspond to one event hypothesis. RETRIEVEDESIRES selects candidate intentions whose latent event contexts are semantically aligned with the generated hypotheses. For each hypothesis, the top 3 candidates are retrieved, resulting in 9 candidate intentions in total. RERANK evaluates and orders these candidates under both the belief state and the current physical environment. REFINEMENT adapte generated intention and its event context to the current spatiotemporal context and user attributes.",
+        "bbox": [
+            507,
+            858,
+            887,
+            923
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "page_number",
+        "text": "19",
+        "bbox": [
+            489,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "image",
+        "img_path": "images/ea4e3fdb0f67d67512718e54cf505f3ce2a511e601e02336e90344a94ca10b09.jpg",
+        "image_caption": [
+            "Figure 15: Prompt for user intention crawl and normalization"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            82,
+            880,
+            495
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "table",
+        "img_path": "images/2eae58bb943ea72d3a2f460fb4c2d320e258020467dd09a30faa6ca25d76364d.jpg",
+        "table_caption": [
+            "Table 13: Statistics of event-desire pool across different domains."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Theme</td><td>Count</td></tr><tr><td>Exercise &amp; Fitness</td><td>11,648</td></tr><tr><td>Learning &amp; Education</td><td>14,725</td></tr><tr><td>Travel &amp; Tourism</td><td>13,384</td></tr><tr><td>Leisure &amp; Entertainment</td><td>14,368</td></tr><tr><td>Elderly Care</td><td>1,241</td></tr><tr><td>Parenting &amp; Childcare</td><td>4,277</td></tr><tr><td>Diet &amp; Nutrition</td><td>19,854</td></tr><tr><td>Mental Health Counseling</td><td>34,004</td></tr><tr><td>Total</td><td>113,501</td></tr></table>",
+        "bbox": [
+            152,
+            551,
+            450,
+            736
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            112,
+            809,
+            490,
+            923
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            507,
+            555,
+            885,
+            619
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "For Retrieval, we encode all queries and pool entries using Qwen3-Embedding-0.6B5 and retrieve the top-3 nearest neighbors per dimension. ChromaDB6 is employed as the retrieval backend.",
+        "bbox": [
+            507,
+            619,
+            887,
+            684
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "For cognitive engine, Figure 20 presents the prompt responsible for reranking the retrieved candidates. For event engine, Figure 19 illustrates the prompt used for the event hypothesis generation. Following Section 2.2, we define three dimensions as requirement description:",
+        "bbox": [
+            507,
+            684,
+            885,
+            783
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "• Physiological: Physiology-driven events refer to issues caused by internal physical conditions.",
+        "bbox": [
+            531,
+            793,
+            887,
+            841
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "• Psychological: Cognition-feedback-driven events refer to issues based on personal cognition and psychological states.",
+        "bbox": [
+            531,
+            853,
+            885,
+            887
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "page_footnote",
+        "text": "5https://huggingface.co/Qwen/Qwen3-Embedding-0.6B 6https://www.trychroma.com/",
+        "bbox": [
+            531,
+            894,
+            873,
+            922
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "page_number",
+        "text": "20",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "image",
+        "img_path": "images/bb9e1114c644c5f3e68183b315484428ad55a7aa66fe0d3fa35f92e005517fc2.jpg",
+        "image_caption": [
+            "Figure 16: Prompt for potential event generation"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            82,
+            880,
+            447
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            149,
+            506,
+            373,
+            523
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "• Environmental: Environment-driven events refer to issues or accidents caused by external environmental factors.",
+        "bbox": [
+            136,
+            532,
+            487,
+            581
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "Figure 21 shows the prompt used in the refinement stage.",
+        "bbox": [
+            112,
+            589,
+            487,
+            621
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "C.4 User Behavior Engine",
+        "text_level": 2,
+        "bbox": [
+            114,
+            631,
+            337,
+            648
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "Figure 22 shows the prompt for user memory perception. Figure 23 illustrates the prompt for inferring the user’s current emotional state. Figure 24 shows the prompt for determining the user’s next action. Figure 25 presents the prompt responsible for generating the user’s next utterance conditioned on the inferred memory perception, emotion, and selected action. Figure 26 shows the prompt for assistant conversation. Table 14 show user memory cases.",
+        "bbox": [
+            112,
+            652,
+            489,
+            814
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "D LifeSim-Eval Details",
+        "text_level": 2,
+        "bbox": [
+            114,
+            825,
+            334,
+            840
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "Figure 29 and Table 1 show statistics of LifeSim-Eval dataset.",
+        "bbox": [
+            112,
+            848,
+            489,
+            882
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "Explicit and Implicit Intentions We adopt relevance theory (Allott, 2013) as the cognitive basis for defining explicit and implicit intentions. Relevance Theory views utterance understanding as an inferential process: the speaker produces an utterance, and the listener infers the intended meaning with reasonable cognitive effort. Following this view, the meaning derived from an utterance can be divided into explicatures and implicatures: explicit intentions refer to what the user directly asks for, while implicit intentions capture important underlying needs that are not stated explicitly but affect what a good response should include.",
+        "bbox": [
+            112,
+            890,
+            490,
+            922
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            507,
+            506,
+            887,
+            686
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "In the single scenario setting, we prompt first use DeepSeek-V3.2 to generate a checklist that an ideal response should cover in the given environmental context and user profile. Human experts then select a subset that user is expected to care about, forming a set of sub-intentions. We then distinguish explicit and implicit intentions based on semantic recoverability: sub-intentions that would be direcly expressed are labeled as explicit, while those that require contextual or user state reasoning are labeled as implicit. This labeling is first produced by the LLM and then verified by human annotators. Both explicit and implicit intention sets may contain multiple items.",
+        "bbox": [
+            507,
+            697,
+            887,
+            923
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "page_number",
+        "text": "21",
+        "bbox": [
+            487,
+            942,
+            509,
+            956
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "table",
+        "img_path": "images/76d16f28368d429b2766694f9c3fb8f23e688bf19c8becc96f7b7f05cfede1e0.jpg",
+        "table_caption": [
+            "Table 14: Example queries and corresponding values in user memory."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Item</td><td>Content</td></tr><tr><td>Query 1</td><td>Which is a healthier and more flling option between a burger and a pizza for lunch?</td></tr><tr><td>Value 1</td><td>Aburger could be a beter hoice  tincludes lean protein (.g, rille chicken or a veggi patty on a whole-grain bun with salad or vegetable toppings. For pizza, a thin crust with plenty of vegetables and moderate cheese may be an option, although it tends to be more calorie-dense. Portion size should also be considered in either case.</td></tr><tr><td>Query 2</td><td>What tools can lock device access or restrict app usage until tasks are completed across devices?</td></tr><tr><td>Value 2</td><td>Consider using FocusMe with Focus Mode and Time Blocking, combined with Freedom or Cold Turkey across devices. These tools can restrict browser, email, and application access until tasks are completed. Alternatively, Pomodone can be used, which integrates with task managers and restricts app usage during scheduled work intervals.</td></tr></table>",
+        "bbox": [
+            124,
+            80,
+            873,
+            248
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "code",
+        "sub_type": "algorithm",
+        "code_caption": [],
+        "code_footnote": [],
+        "code_body": "Algorithm 1 Event-Desire Generation Procedure   \nRequire: User profile U, environment trajectory   \n{Envt}, event history H, last event time $t _ { \\mathrm { p r e v } } ,$   \nmaximum number of steps N   \nEnsure: Generated event–intention sequence $s$   \n1: $s  \\emptyset$   \n2: for t = 1 to N do   \n3: $P _ { E }  f ( t - t _ { \\mathrm { p r e v } } )$   \n4: if Bernoulli $( P _ { E } ) = 0$ then   \n5: continue   \n6: end if   \n7: Ht ← ConstructHypothesis(U, H, Envt)   \n8: D ← RetrieveDesires(Ht)   \n9: r ← Rerank(D, U, H, Envt)   \n10: Compute $\\begin{array} { r } { p _ { j } = \\frac { \\exp ( - r _ { j } ) } { \\sum _ { k } \\exp ( - r _ { k } ) } } \\end{array}$   \n11: $E ^ { \\star } , I ^ { \\star } \\sim p _ { j } , \\ I _ { j } \\ \\stackrel {  } { \\in } \\mathcal { D }$   \n12: $E ^ { \\star } , I ^ { \\star } \\gets$ Refine(E⋆, I⋆, Envt, U, H, )   \n13: ${ \\cal S } \\gets { \\cal S } \\cup \\{ ( E ^ { \\star } , I ^ { \\star } ) \\}$   \n14: $\\mathcal { H }  \\mathcal { H } \\cup \\{ ( E ^ { \\star } , I ^ { \\star } ) \\}$   \n15: $t _ { \\mathrm { p r e v } } \\gets t$   \n16: end for   \n17: return $s$",
+        "bbox": [
+            112,
+            297,
+            487,
+            663
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "In the Long-Horizon Setting, the focus shifts to whether the assistant can infer user preferences from long interaction histories and apply them in the current scenario. In this case, we define a single explicit intention corresponding to the test scenario, while implicit intentions are sourced from user preferences and life event sequences. We use specific preferences from (Zhao et al., 2025a) for implicit intention construction.",
+        "bbox": [
+            112,
+            703,
+            489,
+            851
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "Figure 27 and Figure 28 show the prompts used for sub-intention generation and explicit-implicit classification, respectively. Table 15 provides cases included in the benchmark.",
+        "bbox": [
+            112,
+            858,
+            489,
+            922
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "Metrics For each scenario, we give the details of each metric:",
+        "bbox": [
+            507,
+            300,
+            885,
+            332
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "• Intent Recognition evaluates whether the assistant can accurately infer the user’s underlying intentions throughout an interaction episode. For each scenario, we construct an intention checklist $\\mathcal { T } = \\{ i _ { 1 } , \\ldots , i _ { | \\mathcal { T } | } \\}$ , where $| \\tau | \\ \\leq \\ 5$ , containing both explicit and implicit intentions. Prior to generating each assistant response at turn $t ,$ the model predicts the user’s current intention $\\hat { i } _ { t }$ . All predicted intentions across the episode are aggregated into a set $\\textstyle { \\hat { \\mathcal { T } } } = \\bigcup _ { t } { \\hat { i } } _ { t }$ and compared against the gold checklist I using an LLM-based evaluator. For each intention $i _ { k } \\in \\mathcal { I }$ , a binary indicator $s ( i _ { k } ) \\in 0 ,$ 1 is assigned, where $s ( i _ { k } ) = 1$ if $i _ { k }$ is correctly identified by the model and 0 otherwise. The final intent recognition accuracy is then computed as",
+        "bbox": [
+            529,
+            341,
+            887,
+            617
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "equation",
+        "img_path": "images/6dd55c0f67a2bb11c80e0355c20aaa2ca6e6d68fc6dafe61a3e0e6b5c6edf591.jpg",
+        "text": "$$\n\\mathrm { A } = \\frac { 1 } { | \\mathcal { T } | } \\sum _ { i _ { k } \\in \\mathcal { T } } s ( i _ { k } ) ,\n$$",
+        "text_format": "latex",
+        "bbox": [
+            638,
+            624,
+            789,
+            663
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "and averaged across all scenarios. We partition the intention checklist into an explicit intent set $\\mathcal { T } _ { e }$ and an implicit intent set $\\mathcal { T } _ { i }$ , and report intent recognition accuracy separately as $\\mathrm { A } _ { e }$ and $\\mathrm { A } _ { i }$",
+        "bbox": [
+            544,
+            670,
+            885,
+            752
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "• Intent Completion evaluates whether the assistant ultimately fulfills the user’s explicit and implicit intentions over a multi-turn interaction. Given the predefined intention checklist $\\mathcal { T } = i _ { 1 } , \\ldots , i _ { | \\mathcal { T } | }$ , we assess whether each intention $i _ { k }$ is successfully satisfied by the assistant’s responses. An LLM-based evaluator assigns a binary completion indicator $c ( i _ { k } ) \\in 0 , 1$ where c(ik) = 1 if the intention is adequately fulfilled in the dialogue and",
+        "bbox": [
+            531,
+            760,
+            887,
+            923
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "page_number",
+        "text": "22",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "image",
+        "img_path": "images/f8f4d4e4f2f291c364966a5096c5050051fa6b088ac0f73d0ff8e1e43464f790.jpg",
+        "image_caption": [
+            "Table 15: Cases of events and sub-intentions in LifeSim-Eval"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            164,
+            82,
+            830,
+            543
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "0 otherwise. The intent completion score is computed as",
+        "bbox": [
+            149,
+            593,
+            489,
+            626
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "equation",
+        "img_path": "images/0d03470cb07939df35f1bccc66f71ff4dae5946126ec43cd953ddc198a7377dd.jpg",
+        "text": "$$\n\\mathrm { R } = \\frac { 1 } { | \\mathcal { T } | } \\sum _ { i _ { k } \\in \\mathcal { T } } c ( i _ { k } ) ,\n$$",
+        "text_format": "latex",
+        "bbox": [
+            243,
+            637,
+            393,
+            676
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "and the final metric is obtained by averaging R across all episodes. Analogously, we report intent completion performance separately for the explicit and implicit intent sets, denoted as $\\mathrm { R } _ { e }$ and $\\mathrm { R } _ { i }$",
+        "bbox": [
+            149,
+            688,
+            489,
+            770
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "• Naturalness assesses whether the assistant’s responses conform to human conversational norms, demonstrating fluent, contextually appropriate, and stylistically natural language use.",
+        "bbox": [
+            136,
+            781,
+            489,
+            862
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "• Coherence measures the semantic and logical consistency of the assistant’s utterances across turns, ensuring that the dialogue remains contextually grounded and free from internal contradictions.",
+        "bbox": [
+            136,
+            873,
+            490,
+            923
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            546,
+            593,
+            882,
+            625
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "• User Preference Recovery evaluates the model’s ability to infer stable user preferences. For each scenario, the assistant predicts a preference vector $\\hat { \\mathbf { p } } = \\{ \\hat { p } ^ { ( d ) } \\} _ { d = 1 } ^ { D }$ over D preference dimensions, where each dimension takes a discrete value in low, high. A prediction is considered correct if $\\hat { p } ^ { ( d ) } = p ^ { ( d ) }$ . The preference recovery accuracy is computed as",
+        "bbox": [
+            531,
+            638,
+            885,
+            768
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "equation",
+        "img_path": "images/bedbfe681cef8f29525608af0ece7090f31cc62a03b412dd55b48d0c4772f074.jpg",
+        "text": "$$\n\\mathrm { A } _ { \\mathrm { p r e f } } = \\frac { 1 } { | \\mathcal { D } | } \\sum _ { d \\in \\mathcal { D } } \\mathbb { I } \\left[ \\hat { p } ^ { ( d ) } = p ^ { ( d ) } \\right] ,\n$$",
+        "text_format": "latex",
+        "bbox": [
+            591,
+            778,
+            838,
+            816
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "and averaged across all scenarios.",
+        "bbox": [
+            546,
+            829,
+            800,
+            845
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "• User Persona Alignment examines the degree to which the assistant’s responses remain faithful to the user’s predefined persona or profile, reflecting the model’s ability to incorporate and consistently respect enduring user characteristics throughout the interaction.",
+        "bbox": [
+            531,
+            858,
+            887,
+            923
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "page_number",
+        "text": "23",
+        "bbox": [
+            487,
+            942,
+            509,
+            956
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            149,
+            85,
+            489,
+            117
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "Figure 30, 31, 32, 33, and 34 show prompts for LifeSim-Eval.",
+        "bbox": [
+            114,
+            129,
+            489,
+            160
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "E Experimental Details",
+        "text_level": 2,
+        "bbox": [
+            114,
+            172,
+            336,
+            189
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "E.1 User Behavior Engine Evaluation",
+        "text_level": 2,
+        "bbox": [
+            114,
+            198,
+            426,
+            214
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "Figure 35 shows the prompt used for LLM evaluation. Figure 36 illustrates the interface used for human annotation. To mitigate ordering effects and reduce annotator bias, all model-generated conversation samples are randomly shuffled prior to evaluation. Scores are then averaged to obtain the final performance measure. We recruited three Englishproficient master’s students, each compensated at a rate of 20 RMB per hour for annotation. Before the experiment began, all annotators consented to share their annotation data. The resulting inter-annotator agreement, measured by Krippendorff’s α, reaches 0.85, indicating a high level of reliability.",
+        "bbox": [
+            114,
+            219,
+            490,
+            429
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "F Cases",
+        "text_level": 2,
+        "bbox": [
+            114,
+            439,
+            203,
+            455
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "F.1 Event Engine Cases",
+        "text_level": 2,
+        "bbox": [
+            114,
+            466,
+            317,
+            481
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "We give some event cases produced by our event engine in Table 16.",
+        "bbox": [
+            114,
+            487,
+            487,
+            518
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "page_number",
+        "text": "24",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "image",
+        "img_path": "images/04ce675ae9ac93c2e41848a5789183f0bc48257a5610429c10d33131387fd546.jpg",
+        "image_caption": [
+            "Table 16: Cases of life event sequences generated by LiveSim Event Engine."
+        ],
+        "image_footnote": [],
+        "bbox": [
+            142,
+            105,
+            852,
+            870
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "page_number",
+        "text": "25",
+        "bbox": [
+            487,
+            942,
+            509,
+            956
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "chart",
+        "img_path": "images/8bc3a71129ada2050ae6b72765a351fee8cd870dfe40a13901d2f0fed4f501f5.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            115,
+            103,
+            334,
+            261
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "chart",
+        "img_path": "images/623d122d77fa2d30d9cabf2ef34c3fe2a7c66ebc5f133186cb6d9cb3643128b2.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) Parenting & Childcare"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            341,
+            92,
+            583,
+            269
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "chart",
+        "img_path": "images/f2b5aefd8a3070f303ce1f38f875ef5f7a1f8f765cdef9e67d39090d2ef2eeea.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            586,
+            112,
+            880,
+            259
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "chart",
+        "img_path": "images/77ec0437c4dd8e2103638f0b2a9a2b4cfb1eab93a880f5e3eb276cdf7d14fa3c.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            115,
+            288,
+            337,
+            467
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "chart",
+        "img_path": "images/9b3a249245bb7d1e23a86955478e1b2fa5f3f38f7312c986283d8b9471bd02ab.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            336,
+            297,
+            576,
+            473
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "chart",
+        "img_path": "images/2c3ae4b62b05525033e5826b4adb93f5edfb53f1508fdc33478d47604a8e3e4d.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) Diet & Nutrition"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            578,
+            302,
+            880,
+            460
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "chart",
+        "img_path": "images/d766b78aef2832bbc44c6ce9c1572180f38b8a5587ab729c11c663bdf37a7ebd.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            114,
+            489,
+            334,
+            663
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "chart",
+        "img_path": "images/7b74709126bcda61c60e9d47b01508ac8e2a6168cd108b66f03603bb090a0a9d.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            347,
+            498,
+            586,
+            669
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "chart",
+        "img_path": "images/ae9a636a9ef2cdff01a3649a08acbd1bafeb73748cf52d4dc19b3012561dbea3.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) Learning & Education"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            586,
+            494,
+            882,
+            668
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "chart",
+        "img_path": "images/911378ce99b1a6656dff3bb68af9879e1e05cfe2cd6960257379c0da95195c40.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            115,
+            689,
+            337,
+            857
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "chart",
+        "img_path": "images/fae6a7d7162c98851d57e2d6ec0ab5b852e71dc10f87cc7a0790aea5faee8cb0.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) Elderly Care"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            334,
+            693,
+            576,
+            860
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "chart",
+        "img_path": "images/8bd46ffd41ae566123bb5d54a5d85ad49d38b821a68b78c1425a569509505183.jpg",
+        "content": "",
+        "chart_caption": [
+            "Figure 17: Distribution of temporal, spatial and semantic attributes in the event-desire pool (a)."
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            571,
+            687,
+            878,
+            864
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "page_number",
+        "text": "26",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "chart",
+        "img_path": "images/dc0a33b64d4fc29de078caad7b9ea6610aa8193b93dbdd3e54c53930ed0da891.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            115,
+            89,
+            344,
+            260
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "chart",
+        "img_path": "images/77e988102d9fce23016d98d8ea56b3a21f4ea27c6c1fdc2e63c8336ca05611f4.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            342,
+            95,
+            601,
+            252
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "chart",
+        "img_path": "images/0de05979b069dfbef0732fc89736ea909c31fc08ce3e4978577016b42d16d130.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) Leisure & Entertainment"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            601,
+            91,
+            880,
+            263
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "chart",
+        "img_path": "images/0950732fdfca43c006a3d1f8590071cee226ce4e199fa67917892c209c2caa99.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            117,
+            282,
+            337,
+            462
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "chart",
+        "img_path": "images/d77246007fff4377d40a97941b90b13e0942e93a8c21d1fb1b9b7034263a8ca0.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            334,
+            290,
+            598,
+            466
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "chart",
+        "img_path": "images/5a9632ebef666b7b9b31feeb7b5cf47bb15397794a03624bf65699c22229b610.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) Mental Health Counseling"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            596,
+            291,
+            880,
+            457
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "chart",
+        "img_path": "images/c52e26a367d1bc87b8a324a24d53f8465f6abeefd51e7e6faef3451f399bd94a.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            114,
+            485,
+            334,
+            656
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "chart",
+        "img_path": "images/8a09c9cf989e84b6af2702df48fcc8227bcc5c0a2c89318297b06714483bb462.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            329,
+            492,
+            584,
+            658
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "chart",
+        "img_path": "images/c7b6123ff2e783c167602c2b2d94819bb1fcb01a36db78676477cef69ec57815.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) Exercise & Fitness"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            588,
+            488,
+            880,
+            662
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "chart",
+        "img_path": "images/6602a584b2842211ca11f9a050a5e2bfb8c99736b6f295a81629443632b9010a.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            115,
+            680,
+            346,
+            860
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "chart",
+        "img_path": "images/5a21c039e7c3acd49e3c2af284c63c8fb944c9ab62f451008c6fb17aab17929e.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) Travel & Tourism"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            351,
+            688,
+            584,
+            865
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "chart",
+        "img_path": "images/7138bd3e1aeed25599a80d523b0200160bb081e3751a36c394122ac6c3da70dc.jpg",
+        "content": "",
+        "chart_caption": [
+            "Figure 18: Distribution of temporal, spatial and semantic attributes in the event-desire pool (b)."
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            584,
+            693,
+            880,
+            856
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "page_number",
+        "text": "27",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 26
+    },
+    {
+        "type": "image",
+        "img_path": "images/fe0f330c9ad5e1d1a7baf6b645b3c0cdcc595bc09c0af4817ce5d19da1bf47e5.jpg",
+        "image_caption": [
+            "Figure 19: Prompt for event hypothesis generation"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            268,
+            880,
+            697
+        ],
+        "page_idx": 27
+    },
+    {
+        "type": "page_number",
+        "text": "28",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 27
+    },
+    {
+        "type": "image",
+        "img_path": "images/e9f642ed2021d90ddf8cf80ec91ffceaa7fafbdce715722abffd1f487ec5ca14.jpg",
+        "image_caption": [
+            "Figure 20: Prompt for event-desire pair"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            162,
+            878,
+            802
+        ],
+        "page_idx": 28
+    },
+    {
+        "type": "page_number",
+        "text": "29",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 28
+    },
+    {
+        "type": "code",
+        "sub_type": "code",
+        "code_caption": [
+            "Figure 21: Prompt for refinement"
+        ],
+        "code_footnote": [],
+        "code_body": "```markdown\nPrompt for Refinement\nYou will be given one candidate event and a user intent.\nYour task is to revise and refine them so that both align with the user's profile, long−term goal,\nand current environmental context, while maintaining internal consistency across the event\nsequence.\n### Requirements\n− Adjust details such as subject, location, weather, time, or other contextual factors to make the\nevent realistic and coherent with the given user profile and prior events.\n− Ensure the revised event does not contradict any known facts or previous settings.\n− The intent should remain essentially the same in meaning but must be expressed naturally and\nfit the updated event context.\n− The intent should represent a single conversational goal (i.e., the user's focus within one\ndialogue turn), not a long−term plan.\n− Rephrase both the event and intent in a distinct linguistic style from any previously seen\nphrasing−avoid repetition or mechanical patterns.\n− Remove any placeholders or meaningless symbols (e.g., \"NAME_1\", \"XXX\", \"...\").\n### Output Format:\nPlease output your final answer strictly in the following JSON structure (enclosed within ```\njson and ```):\n{{\n\"event\": \"Describe the content of the revised event.\",\n\"intent\": \"Describe the user's corresponding intent under this event context.\"\n}}\nProvide your reasoning before the final answer.\nIn your reasoning, consider: (1) whether the event and intent satisfy the requirements; (2)\nwhether the intent is realistically something a human would ask an AI assistant.\n### Examples:\n{examples 1}\n{examples 2}\n### Input\n[User Profile]\n{user_profile}\n[User Longterm Goal]\n{goal}\n[User's Experienced Events]\n{event_sequences}\n[Current Environment]\n{location_desc}\n[Current Event and Intent]\nCurrent user event: {event_text}\nCurrent user intent: {intent}\n[Output]\n```",
+        "bbox": [
+            117,
+            116,
+            878,
+            851
+        ],
+        "page_idx": 29
+    },
+    {
+        "type": "page_number",
+        "text": "30",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 29
+    },
+    {
+        "type": "image",
+        "img_path": "images/316f27befbb2d90c78d9acdb2b26922f3d0108fe7e1017e4d943aa22d19a7816.jpg",
+        "image_caption": [
+            "Figure 22: Prompt for memory perception"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            179,
+            878,
+            784
+        ],
+        "page_idx": 30
+    },
+    {
+        "type": "page_number",
+        "text": "31",
+        "bbox": [
+            487,
+            942,
+            509,
+            956
+        ],
+        "page_idx": 30
+    },
+    {
+        "type": "image",
+        "img_path": "images/21e64fc56446c232e92adf0f5b28c356f9e133fc372e822f70b7f9ccfb0fe996.jpg",
+        "image_caption": [
+            "Figure 23: Prompt for emotion inference"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            243,
+            880,
+            721
+        ],
+        "page_idx": 31
+    },
+    {
+        "type": "page_number",
+        "text": "32",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 31
+    },
+    {
+        "type": "image",
+        "img_path": "images/037a33cd90c194574a50b3688fa100750e37506e4e78269092b4d1b587ad62cf.jpg",
+        "image_caption": [
+            "Figure 24: Prompt for action decision"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            179,
+            880,
+            785
+        ],
+        "page_idx": 32
+    },
+    {
+        "type": "page_number",
+        "text": "33",
+        "bbox": [
+            487,
+            942,
+            509,
+            956
+        ],
+        "page_idx": 32
+    },
+    {
+        "type": "image",
+        "img_path": "images/76247000cf1de8d764330fac4f398ea38d8f002f3f08be792600176506401d0f.jpg",
+        "image_caption": [
+            "Figure 25: System prompt for user conversation"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            146,
+            880,
+            818
+        ],
+        "page_idx": 33
+    },
+    {
+        "type": "page_number",
+        "text": "34",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 33
+    },
+    {
+        "type": "image",
+        "img_path": "images/e5332173a6b1a60379f2ba898e3965cf75f6ea16a048fc53406ce159ebabe34e.jpg",
+        "image_caption": [
+            "Figure 26: System prompt for assistant conversation"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            340,
+            880,
+            625
+        ],
+        "page_idx": 34
+    },
+    {
+        "type": "page_number",
+        "text": "35",
+        "bbox": [
+            487,
+            942,
+            509,
+            956
+        ],
+        "page_idx": 34
+    },
+    {
+        "type": "code",
+        "sub_type": "code",
+        "code_caption": [
+            "Figure 27: Prompt for extraction of sub-intentions"
+        ],
+        "code_footnote": [],
+        "code_body": "```markdown\nPrompt for Extraction of Sub-Intentions\nYou are an expert in intent understanding and user−goal modeling.\nYour task is to take a given user intent and decompose it into multiple sub−intents (maximum 6).\nEach sub−intent should represent a distinct and concrete aspect of what the user hopes to\nachieve, feel, or resolve.\n### Requirements\n− Each sub−intent must be concise (one sentence, less than 25 words).\n− Cover different facets (e.g., practical need, emotional need, cognitive goal, relational concern).\n− Cover both explicit and implicit user needs.\n− Avoid restating the same meaning with different wording.\n− Output between 2 − 6 sub−intents depending on complexity.\n### Output Format\nOutput in JSON format, enclosed within ```json and ``` markers:\n```json\n[\n\"xxxx\",\n\"xxxx\",\n...\n]\n− Please output in English.\n− You could give your reasoning process before the final answer.\n### Examples\n{examples}\n### Input:\n[User profile]\n{user_profile}\n[Dialogue scene]\n{dialogue_scene}\n[Event]\n{event}\n[User intent]\n{user_intent}\n[Output]\n```",
+        "bbox": [
+            115,
+            155,
+            880,
+            810
+        ],
+        "page_idx": 35
+    },
+    {
+        "type": "page_number",
+        "text": "36",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 35
+    },
+    {
+        "type": "image",
+        "img_path": "images/969118447b8fce9af8df6540cb0804ebcecd32c0862a730aaa400df0e5cf0a1b.jpg",
+        "image_caption": [
+            "Figure 28: Prompt for classification of explicit/implicit intentions"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            107,
+            880,
+            859
+        ],
+        "page_idx": 36
+    },
+    {
+        "type": "page_number",
+        "text": "37",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 36
+    },
+    {
+        "type": "image",
+        "img_path": "images/e67c3c43e1106b2893b46bf5421b87528373ddd3813e9fb32551d184f8984017.jpg",
+        "image_caption": [
+            "Figure 29: Distribution of all the event-desire pair in LifeSim-Eval. Each point represent a keyword from event-desire pair."
+        ],
+        "image_footnote": [],
+        "bbox": [
+            154,
+            384,
+            448,
+            560
+        ],
+        "page_idx": 37
+    },
+    {
+        "type": "page_number",
+        "text": "38",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 37
+    },
+    {
+        "type": "image",
+        "img_path": "images/bb34c4ffd57a431425df406be4ca9ac95877e5adaa4e2f8d4db9c05a274aa2eb.jpg",
+        "image_caption": [
+            "Figure 30: Prompt for intent recognition evaluation"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            155,
+            880,
+            810
+        ],
+        "page_idx": 38
+    },
+    {
+        "type": "page_number",
+        "text": "39",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 38
+    },
+    {
+        "type": "image",
+        "img_path": "images/e2276fb64c846be4d5a790d06623b6ef4aefb1629e7012a5bfe19f479d45d6c9.jpg",
+        "image_caption": [
+            "Figure 31: Prompt for intent completion evaluation"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            162,
+            878,
+            802
+        ],
+        "page_idx": 39
+    },
+    {
+        "type": "page_number",
+        "text": "40",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 39
+    },
+    {
+        "type": "code",
+        "sub_type": "algorithm",
+        "code_caption": [
+            "Figure 32: Prompt for naturalness evaluation"
+        ],
+        "code_footnote": [],
+        "code_body": "Prompt for Naturalness Evaluation   \nYou are an evaluator assessing the fluency and naturalness of an AI assistant's conversation with   \na user.   \nYou will be provided with:   \n\\* User profile − describing the user's characteristics and communication tendencies.   \n\\* Dialogue scene − describing the situational context of the conversation.   \n\\* User intent − describing what the user wanted to achieve through the interaction.   \n\\* Conversation − showing the actual interaction between the user and the assistant.   \n### Requirements   \nYour task is to determine whether the AI assistant's responses are fluent, coherent, and natural   \nthroughout the conversation. Analyze it from multiple relevant dimensions:   \nLanguage is conversational, avoiding overly long, formal, or bookish expressions.   \n\\* Vocabulary is natural, everyday, and varied, avoiding repetition or overly technical terms.   \n\\* Tone and emotion match the user's preferred style, showing empathy, engagement, and   \nresponsiveness.   \n\\* Replies actively incorporate and respond to user−provided details, making the conversation   \nfeel personalized.   \n\\* Replies include proactive questions to guide the conversation, rather than only passively   \nresponding.   \nYour response should be structured in JSON format, enclosed in \\`\\`\\`json and \\`\\`\\`:   \n\\`\\`\\`json   \n{{   \n\"rating\": 1−5   \n}}   \nWhere:   \n\\* 1 = Very unnatural or disfluent   \n\\* 2 = Mostly unnatural, noticeable problems in phrasing   \n\\* 3 = Moderately fluent but with some issues   \n\\* 4 = Mostly natural, minor disfluency   \n\\* 5 = Fully fluent and natural   \nBefore your JSON output, provide: (1) A concise evaluation (2−3 sentences) summarizing the   \noverall fluency of the assistant's replies. (2) A dimension−by−dimension assessment (as bullet   \npoints).   \n### Input   \n[User profile]   \n{user_profile}   \n[Dialogue scene]   \n{dialogue_scene}   \n[User intent]   \n{user_intent}   \n[Conversation]   \n{conversation}",
+        "bbox": [
+            115,
+            83,
+            878,
+            883
+        ],
+        "page_idx": 40
+    },
+    {
+        "type": "page_number",
+        "text": "41",
+        "bbox": [
+            487,
+            942,
+            509,
+            956
+        ],
+        "page_idx": 40
+    },
+    {
+        "type": "code",
+        "sub_type": "algorithm",
+        "code_caption": [
+            "Figure 33: Prompt for coherence evaluation"
+        ],
+        "code_footnote": [],
+        "code_body": "Prompt for Coherence Evaluation   \nYou are an evaluator assessing the coherence and logical consistency of an AI assistant's   \nconversation with a user.   \nYou will be provided with:   \n\\* User profile − describing the user's characteristics and communication tendencies.   \n\\* Dialogue scene − describing the situational context of the conversation.   \nUser intent − describing what the user wanted to achieve through the interaction.   \n\\* Conversation − showing the actual interaction between the user and the assistant.   \n### Requirements   \nYour task is to determine whether the AI assistant's responses are coherent, logically consistent,   \nand contextually aligned throughout the dialogue.   \nAnalyze it from multiple relevant dimensions:   \n\\* Responses should focus on the user's main concerns, avoiding unnecessary digressions or   \nrepetitive generic advice.   \n\\* Each response should be logically consistent, avoiding contradictions or redundant statements   \nthat add no new value.   \n\\* Responses should correctly reference and integrate information from previous turns,   \ndemonstrating understanding of the context.   \n\\* Pronouns and references should be clear, avoiding ambiguity or unclear referents.   \n\\* Information should be organized coherently, with a clear logical order that is easy to follow.   \nYour response should be structured in JSON format, enclosed in \\`\\`\\`json and \\`\\`\\`:   \n\\`\\`\\`json   \n{{   \n\"rating\": 1−5   \n}}   \nWhere:   \n\\* 1 = Completely incoherent or contradictory   \n\\* 2 = Mostly incoherent, several logical gaps or inconsistencies   \n\\* 3 = Partially coherent with some logical gaps or inconsistencies   \n\\* 4 = Mostly coherent, minor logical gaps or inconsistencies   \n\\* 5 = Fully coherent and logically consistent   \nBefore your JSON output, provide:   \n1. A concise evaluation (2−3 sentences) summarizing the overall coherence of the assistant's   \nreplies.   \n2. A dimension−by−dimension assessment (as bullet points).   \n### Input   \n[User profile]   \n{user_profile}   \n[Dialogue scene]   \n{dialogue_scene}   \n[User intent]   \n{user_intent}   \n[Conversation]   \n{conversation}",
+        "bbox": [
+            115,
+            83,
+            878,
+            883
+        ],
+        "page_idx": 41
+    },
+    {
+        "type": "page_number",
+        "text": "42",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 41
+    },
+    {
+        "type": "code",
+        "sub_type": "code",
+        "code_caption": [
+            "Figure 34: Prompt for persona alignment evaluation"
+        ],
+        "code_footnote": [],
+        "code_body": "```markdown\nPrompt for Persona Alignment Evaluation\nYou are an evaluator assessing how well an AI assistant's replies align with the user's\npreferences.\nYou will be provided with:\n* User preferences − a list of preference dimensions (e.g., \"Need for autonomy\", \"Preference for\nemotional support\") and their expected values or tendencies.\n* Conversation − showing the interaction between the user and the assistant.\n### Requirements\nYour task is to evaluate the alignment for each preference dimension individually.\nFor each dimension listed in the user profile, determine whether the assistant's replies conform\nto that specific preference.\n#### Evaluation Criteria\nFor each preference dimension:\n* 1 = The assistant's reply clearly aligns with this preference dimension.\n* 0 = The assistant's reply contradicts or fails to reflect this preference dimension.\nThen, provide an overall summary at the end.\n### Output Format\nYour response should contain:\n1. Dimension−by−Dimension Assessment − a structured list showing each preference dimension\n, a short justification, and its binary alignment score.\n2. JSON Output − containing all dimension scores.\n```json\n{{\n\"Preference for xxx\": 1/0,\n...\n}}\n### Examples\n{example 1}\n### Input\n[User Preferences]\n{user_preferences}\n[Conversation]\n{conversation}\n[Output]\n```",
+        "bbox": [
+            115,
+            140,
+            880,
+            827
+        ],
+        "page_idx": 42
+    },
+    {
+        "type": "page_number",
+        "text": "43",
+        "bbox": [
+            487,
+            942,
+            509,
+            956
+        ],
+        "page_idx": 42
+    },
+    {
+        "type": "image",
+        "img_path": "images/5ac0d07e46e9d03b16a1846f55c1221091b394a936e1a9e811918f86b963728c.jpg",
+        "image_caption": [
+            "Figure 35: Prompt for user behavior engine evaluation"
+        ],
+        "image_footnote": [],
+        "bbox": [
+            115,
+            177,
+            880,
+            790
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "page_number",
+        "text": "44",
+        "bbox": [
+            487,
+            944,
+            510,
+            956
+        ],
+        "page_idx": 43
+    },
+    {
+        "type": "image",
+        "img_path": "images/95105ba77bb6a3f26183af30f401acfa93ad4d755fea5f20e0557b2d5a0daf40.jpg",
+        "image_caption": [
+            "Figure 36: Annotation interface for user study."
+        ],
+        "image_footnote": [],
+        "bbox": [
+            117,
+            291,
+            880,
+            687
+        ],
+        "page_idx": 44
+    },
+    {
+        "type": "page_number",
+        "text": "45",
+        "bbox": [
+            487,
+            942,
+            510,
+            956
+        ],
+        "page_idx": 44
+    }
+]

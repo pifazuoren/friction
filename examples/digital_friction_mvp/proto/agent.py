@@ -155,6 +155,7 @@ def _summarize_event_log_for_interview(event_log: list[dict[str, Any]]) -> dict[
         "success_count": 0,
         "avoid_count": 0,
         "help_used_count": 0,
+        "mean_scope_amplitude": 0.0,
         "top_task_family": "",
         "top_outcome_type": "",
         "dominant_attribution_locus": "not_applicable",
@@ -168,6 +169,7 @@ def _summarize_event_log_for_interview(event_log: list[dict[str, Any]]) -> dict[
     attribution_locus_counts: dict[str, int] = {}
     attribution_stability_counts: dict[str, int] = {}
     attribution_scope_counts: dict[str, int] = {}
+    scope_amplitude_values: list[float] = []
     for item in event_log:
         summary["event_count"] += 1
         decision = item.get("decision", {}) if isinstance(item, dict) else {}
@@ -199,6 +201,11 @@ def _summarize_event_log_for_interview(event_log: list[dict[str, Any]]) -> dict[
             if isinstance(decision, dict)
             else ""
         ).strip()
+        scope_amplitude = _safe_float(
+            decision.get("event_attribution_scope_amplitude", 0.0)
+            if isinstance(decision, dict)
+            else 0.0
+        )
         if locus and locus != "not_applicable":
             attribution_locus_counts[locus] = attribution_locus_counts.get(locus, 0) + 1
         if stability and stability != "not_applicable":
@@ -207,6 +214,8 @@ def _summarize_event_log_for_interview(event_log: list[dict[str, Any]]) -> dict[
             )
         if scope and scope != "not_applicable":
             attribution_scope_counts[scope] = attribution_scope_counts.get(scope, 0) + 1
+        if scope_amplitude > 0.0:
+            scope_amplitude_values.append(scope_amplitude)
         if outcome_type in {"success_self", "success_with_help"}:
             summary["success_count"] += 1
         if outcome_type == "avoid_without_attempt":
@@ -239,6 +248,11 @@ def _summarize_event_log_for_interview(event_log: list[dict[str, Any]]) -> dict[
         summary["dominant_attribution_scope"] = max(
             attribution_scope_counts.items(), key=lambda item: (item[1], item[0])
         )[0]
+    if scope_amplitude_values:
+        summary["mean_scope_amplitude"] = round(
+            sum(scope_amplitude_values) / float(len(scope_amplitude_values)),
+            4,
+        )
     return summary
 
 
@@ -473,9 +487,9 @@ def _build_task_relevant_memory_packet(
             _safe_float(task_state.get("recent_stable_attribution_ratio", 0.0)),
             4,
         ),
-        "same_task_recent_generalizing_attribution_ratio": round(
+        "same_task_recent_scope_amplitude_ema": round(
             _safe_float(
-                task_state.get("recent_generalizing_attribution_ratio", 0.0)
+                task_state.get("recent_scope_amplitude_ema", 0.0)
             ),
             4,
         ),
@@ -709,6 +723,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             f"locus={event_attribution.event_attribution_locus}; "
             f"stability={event_attribution.event_attribution_stability}; "
             f"scope={event_attribution.event_attribution_scope}; "
+            f"scope_amplitude={float(event_attribution.event_attribution_scope_amplitude):.2f}; "
             f"{str(event_attribution.event_attribution_explanation).strip()[:180]}"
         ).strip()
         try:
@@ -1101,6 +1116,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
             event_attribution.event_attribution_stability
         )
         outcome.event_attribution_scope = event_attribution.event_attribution_scope
+        outcome.event_attribution_scope_amplitude = (
+            event_attribution.event_attribution_scope_amplitude
+        )
         outcome.event_attribution_explanation = (
             event_attribution.event_attribution_explanation
         )
@@ -1230,8 +1248,13 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "event_attribution_locus": outcome.event_attribution_locus,
             "event_attribution_stability": outcome.event_attribution_stability,
             "event_attribution_scope": outcome.event_attribution_scope,
+            "event_attribution_scope_amplitude": float(
+                outcome.event_attribution_scope_amplitude
+            ),
             "event_attribution_confidence": outcome.event_attribution_confidence,
             "event_attribution_source": outcome.event_attribution_source,
+            "scope_spillover_total": float(outcome.scope_spillover_total),
+            "scope_spillover_targets_json": str(outcome.scope_spillover_targets_json),
             "event_appraisal_source": event_appraisal.source,
             "event_appraisal_confidence": event_appraisal.confidence,
             "pre_event_felt_control": float(task_appraisal.felt_control),
@@ -1300,6 +1323,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "uncontrollability_llm_confidence": float(
                 outcome.uncontrollability_llm_confidence
             ),
+            "event_attribution_scope_amplitude": float(
+                outcome.event_attribution_scope_amplitude
+            ),
+            "scope_spillover_total": float(outcome.scope_spillover_total),
+            "scope_spillover_targets_json": str(outcome.scope_spillover_targets_json),
             "helplessness_before": float(update_result.helplessness_before),
             "helplessness_after": float(update_result.helplessness_after),
             "helplessness_delta": float(update_result.delta),

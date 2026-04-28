@@ -44,6 +44,9 @@ class RuntimeConfig:
     proto_llm_uncontrollability_timeout: int
     proto_llm_uncontrollability_retries: int
     proto_llm_uncontrollability_cache_enabled: bool
+    proto_scope_spillover_beta: float
+    proto_scope_spillover_threshold: float
+    proto_scope_spillover_sigma: float
 
 
 def load_runtime_config() -> RuntimeConfig:
@@ -155,6 +158,21 @@ def load_runtime_config() -> RuntimeConfig:
         "PROTO_LLM_UNCONTROLLABILITY_CACHE_ENABLED",
         True,
     )
+    proto_scope_spillover_beta = max(
+        0.0,
+        float(os.getenv("PROTO_SCOPE_SPILLOVER_BETA", "1.2")),
+    )
+    proto_scope_spillover_threshold = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_SCOPE_SPILLOVER_THRESHOLD", "0.15")),
+        ),
+    )
+    proto_scope_spillover_sigma = max(
+        0.01,
+        float(os.getenv("PROTO_SCOPE_SPILLOVER_SIGMA", "0.45")),
+    )
 
     return RuntimeConfig(
         experiment_mode=experiment_mode,
@@ -177,4 +195,7 @@ def load_runtime_config() -> RuntimeConfig:
         proto_llm_uncontrollability_timeout=proto_llm_uncontrollability_timeout,
         proto_llm_uncontrollability_retries=proto_llm_uncontrollability_retries,
         proto_llm_uncontrollability_cache_enabled=proto_llm_uncontrollability_cache_enabled,
+        proto_scope_spillover_beta=proto_scope_spillover_beta,
+        proto_scope_spillover_threshold=proto_scope_spillover_threshold,
+        proto_scope_spillover_sigma=proto_scope_spillover_sigma,
     )

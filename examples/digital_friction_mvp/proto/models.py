@@ -122,11 +122,14 @@ class AttemptOutcome:
     event_attribution_locus: EventAttributionLocus = "not_applicable"
     event_attribution_stability: EventAttributionStability = "not_applicable"
     event_attribution_scope: EventAttributionScope = "not_applicable"
+    event_attribution_scope_amplitude: float = 0.0
     event_attribution_explanation: str = ""
     event_attribution_confidence: float = 0.0
     event_attribution_source: str = "not_applicable"
     event_attribution_status: str = "not_called"
     event_attribution_cache_hit: bool = False
+    scope_spillover_total: float = 0.0
+    scope_spillover_targets_json: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -175,6 +178,7 @@ class EventAttributionResult:
     event_attribution_locus: EventAttributionLocus
     event_attribution_stability: EventAttributionStability
     event_attribution_scope: EventAttributionScope
+    event_attribution_scope_amplitude: float
     event_attribution_explanation: str
     judge_confidence: float
     cache_hit: bool = False
@@ -190,7 +194,7 @@ class TaskDomainState:
     dominant_attribution_stability: str = "mixed"
     dominant_attribution_scope: str = "task_specific"
     recent_stable_attribution_ratio: float = 0.0
-    recent_generalizing_attribution_ratio: float = 0.0
+    recent_scope_amplitude_ema: float = 0.0
     attribution_summary: str = ""
     attempt_count: int = 0
     success_count: int = 0
@@ -221,8 +225,11 @@ class TaskDomainState:
             recent_stable_attribution_ratio=float(
                 payload.get("recent_stable_attribution_ratio", 0.0)
             ),
-            recent_generalizing_attribution_ratio=float(
-                payload.get("recent_generalizing_attribution_ratio", 0.0)
+            recent_scope_amplitude_ema=float(
+                payload.get(
+                    "recent_scope_amplitude_ema",
+                    payload.get("recent_generalizing_attribution_ratio", 0.0),
+                )
             ),
             attribution_summary=str(payload.get("attribution_summary", "")),
             attempt_count=int(payload.get("attempt_count", 0)),

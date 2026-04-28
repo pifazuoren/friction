@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import copy
+import json
+import math
 from typing import Any
+
+from config_runtime import load_runtime_config
 
 from .models import (
     AttemptOutcome,
@@ -44,11 +48,31 @@ _AVOID_SELF_EFFICACY_DELTAS = {
 }
 _CONTROLLABLE_SUCCESS_DECAY_PER_DAY = 0.985
 _ATTRIBUTION_EMA_KEEP = 0.7
-_TASK_FAMILY_NEIGHBORS = {
-    "login_verification": ("payment_checkout",),
-    "payment_checkout": ("login_verification",),
-    "appointment_registration": ("health_info_lookup",),
-    "health_info_lookup": ("appointment_registration",),
+_TASK_FAMILY_SIMILARITY = {
+    "login_verification": {
+        "login_verification": 1.0,
+        "appointment_registration": 0.3,
+        "payment_checkout": 0.8,
+        "health_info_lookup": 0.2,
+    },
+    "appointment_registration": {
+        "login_verification": 0.3,
+        "appointment_registration": 1.0,
+        "payment_checkout": 0.2,
+        "health_info_lookup": 0.7,
+    },
+    "payment_checkout": {
+        "login_verification": 0.8,
+        "appointment_registration": 0.2,
+        "payment_checkout": 1.0,
+        "health_info_lookup": 0.2,
+    },
+    "health_info_lookup": {
+        "login_verification": 0.2,
+        "appointment_registration": 0.7,
+        "payment_checkout": 0.2,
+        "health_info_lookup": 1.0,
+    },
 }
 
 
@@ -79,7 +103,7 @@ def _dominant_stability_label(ratio: float) -> str:
 def _dominant_scope_label(ratio: float) -> str:
     if ratio >= 0.6:
         return "family_generalizing"
-    if ratio < 0.3:
+    if ratio < 0.2:
         return "task_specific"
     return "mixed"
 
@@ -97,7 +121,7 @@ def _refresh_attribution_summary(state: TaskDomainState) -> None:
         state.recent_stable_attribution_ratio
     )
     state.dominant_attribution_scope = _dominant_scope_label(
-        state.recent_generalizing_attribution_ratio
+        state.recent_scope_amplitude_ema
     )
     state.attribution_summary = _attribution_summary_text(
         state.dominant_attribution_stability,
@@ -113,21 +137,20 @@ def _update_attribution_summary(state: TaskDomainState, outcome: AttemptOutcome)
         return
 
     stability = str(getattr(outcome, "event_attribution_stability", "not_applicable"))
-    scope = str(getattr(outcome, "event_attribution_scope", "not_applicable"))
-    if stability == "not_applicable" or scope == "not_applicable":
+    amplitude = _clamp_unit(
+        float(getattr(outcome, "event_attribution_scope_amplitude", 0.0))
+    )
+    if stability == "not_applicable":
         return
 
     stable_target = 1.0 if stability == "stable" else 0.5 if stability == "mixed" else 0.0
-    generalizing_target = (
-        1.0 if scope == "family_generalizing" else 0.5 if scope == "mixed" else 0.0
-    )
     state.recent_stable_attribution_ratio = _clamp_unit(
         _ATTRIBUTION_EMA_KEEP * state.recent_stable_attribution_ratio
         + (1.0 - _ATTRIBUTION_EMA_KEEP) * stable_target
     )
-    state.recent_generalizing_attribution_ratio = _clamp_unit(
-        _ATTRIBUTION_EMA_KEEP * state.recent_generalizing_attribution_ratio
-        + (1.0 - _ATTRIBUTION_EMA_KEEP) * generalizing_target
+    state.recent_scope_amplitude_ema = _clamp_unit(
+        _ATTRIBUTION_EMA_KEEP * state.recent_scope_amplitude_ema
+        + (1.0 - _ATTRIBUTION_EMA_KEEP) * amplitude
     )
     _refresh_attribution_summary(state)
 
@@ -151,13 +174,45 @@ def _rewrite_attribution_after_mastery(
     state.recent_stable_attribution_ratio = _clamp_unit(
         state.recent_stable_attribution_ratio * (1.0 - rewrite_strength)
     )
-    state.recent_generalizing_attribution_ratio = _clamp_unit(
-        state.recent_generalizing_attribution_ratio * (1.0 - rewrite_strength)
+    state.recent_scope_amplitude_ema = _clamp_unit(
+        state.recent_scope_amplitude_ema * (1.0 - rewrite_strength)
     )
     _refresh_attribution_summary(state)
 
 
-def _apply_task_family_generalization(
+def _normalize_uncontrollability(value: int) -> float:
+    level = int(value)
+    if level <= 0:
+        return 0.0
+    if level == 1:
+        return 0.5
+    return 1.0
+
+
+def _gaussian_weights(
+    *,
+    source_task_family: str,
+    sigma: float,
+) -> dict[str, float]:
+    raw_weights: dict[str, float] = {}
+    similarity_row = _TASK_FAMILY_SIMILARITY.get(str(source_task_family), {})
+    for target_family in TASK_FAMILIES:
+        if target_family == source_task_family:
+            continue
+        similarity = float(similarity_row.get(target_family, 0.0))
+        distance = max(0.0, 1.0 - similarity)
+        raw_weights[target_family] = math.exp(-(distance * distance) / (2.0 * sigma * sigma))
+
+    total = sum(raw_weights.values())
+    if total <= 0.0:
+        return {}
+    return {
+        target_family: float(weight / total)
+        for target_family, weight in raw_weights.items()
+    }
+
+
+def _apply_scope_spillover(
     normalized: dict[str, dict[str, Any]],
     *,
     source_task_family: str,
@@ -166,23 +221,51 @@ def _apply_task_family_generalization(
     if outcome.outcome_type not in _FAILURE_OUTCOMES:
         return
 
-    scope = str(getattr(outcome, "event_attribution_scope", "not_applicable"))
-    if scope == "family_generalizing":
-        penalty = 1.2
-    elif scope == "mixed":
-        penalty = 0.5
-    else:
+    if str(getattr(outcome, "event_attribution_status", "")) != "ok":
         return
 
-    for neighbor_family in _TASK_FAMILY_NEIGHBORS.get(str(source_task_family), ()):
+    config = load_runtime_config()
+    scope_amplitude = _clamp_unit(
+        float(getattr(outcome, "event_attribution_scope_amplitude", 0.0))
+    )
+    if scope_amplitude < float(config.proto_scope_spillover_threshold):
+        outcome.scope_spillover_total = 0.0
+        outcome.scope_spillover_targets_json = json.dumps({}, ensure_ascii=False, sort_keys=True)
+        return
+
+    total_penalty = (
+        float(config.proto_scope_spillover_beta)
+        * _normalize_uncontrollability(int(outcome.event_level_uncontrollability))
+        * scope_amplitude
+    )
+    if total_penalty <= 0.0:
+        outcome.scope_spillover_total = 0.0
+        outcome.scope_spillover_targets_json = json.dumps({}, ensure_ascii=False, sort_keys=True)
+        return
+
+    weights = _gaussian_weights(
+        source_task_family=str(source_task_family),
+        sigma=float(config.proto_scope_spillover_sigma),
+    )
+    spillover_targets: dict[str, float] = {}
+    for neighbor_family, weight in weights.items():
         payload = normalized.get(neighbor_family)
         if not isinstance(payload, dict):
             continue
         neighbor_state = TaskDomainState.from_dict(payload)
+        delta = float(total_penalty * weight)
         neighbor_state.task_self_efficacy = _clamp(
-            neighbor_state.task_self_efficacy - penalty
+            neighbor_state.task_self_efficacy - delta
         )
         normalized[neighbor_family] = neighbor_state.to_dict()
+        spillover_targets[neighbor_family] = round(delta, 6)
+
+    outcome.scope_spillover_total = float(total_penalty)
+    outcome.scope_spillover_targets_json = json.dumps(
+        spillover_targets,
+        ensure_ascii=False,
+        sort_keys=True,
+    )
 
 
 def _task_self_efficacy_delta(outcome: AttemptOutcome) -> float:
@@ -577,7 +660,7 @@ def update_task_domain_memory(
     state.last_outcome = outcome.outcome_type
     state.last_updated_day = int(day)
     normalized[task.task_family] = state.to_dict()
-    _apply_task_family_generalization(
+    _apply_scope_spillover(
         normalized,
         source_task_family=task.task_family,
         outcome=outcome,

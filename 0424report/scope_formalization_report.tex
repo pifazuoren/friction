@@ -20,8 +20,7 @@
 
 \newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
 
-\title[Scope 形式化表达]{Scope 形式化表达}
-\subtitle{面向当前 digital friction 实验的初步 formulation}
+\title[Helplessness 机制的初步形式化]{Digital Friction 中 Helplessness 机制的初步形式化}
 \date{2026-04-20}
 
 \begin{document}
@@ -90,6 +89,10 @@
 \scriptsize
 \justifying
 \[
+A_t=\beta\, U_t\, a_t
+\]
+
+\[
 d(i,j)=1-S_{ij}
 \]
 
@@ -104,12 +107,12 @@ w_{ij}=\exp\!\left(-\frac{d(i,j)^2}{2\sigma(g_t)^2}\right), \qquad j\neq i
 \[
 \Delta SE^{\text{spill}}_{j,t}
 =
--\beta\, U_t\, P(g_t)\, \hat w_{ij}
+-A_t\, \hat w_{ij}
 \]
 
 \vspace{0.1cm}
 \raggedright
-\textbf{标注：}Gaussian 不是 scope 本身，而是 scope 发生扩散时的强度写法。
+\textbf{标注：}当前代码里，\(a_t\) 是 LLM 输出的 \texttt{scope amplitude}；\(\sigma\) 先固定；\(\hat w_{ij}\) 是归一化后的 Gaussian 权重。
 \end{frame}
 
 \section{实验接入}
@@ -117,50 +120,65 @@ w_{ij}=\exp\!\left(-\frac{d(i,j)^2}{2\sigma(g_t)^2}\right), \qquad j\neq i
 \begin{frame}[t]{在当前实验中如何加入}
 \scriptsize
 \begin{columns}[T]
-\begin{column}{0.53\textwidth}
-\textbf{当前最稳妥的接法}
-\begin{enumerate}
-    \item 保持 \texttt{attribution\_inference.py} 继续输出离散 scope 标签
-    \item 先不让 scope 直接进入 helplessness 的主更新
-    \item 为 4 个 task family 定义一个 similarity matrix \(S_{ij}\)
-    \item 只有在 scope 指向跨任务泛化时，才触发 task-family 层面的 spillover
-    \item spillover 先更新其他 family 的 \texttt{task\_self\_efficacy}
-    \item 再由 self-efficacy 间接影响后续 decision / attempt / outcome
-\end{enumerate}
-
-\vspace{0.06cm}
-\textbf{最重要的机制约束}
-\[
-\text{scope} \rightarrow \text{generalization}
-\]
-\[
-\text{not} \quad \text{scope} \rightarrow \Delta \text{helplessness directly}
-\]
-
-\vspace{0.04cm}
-\textbf{一句话：}scope label $\rightarrow$ spillover $\rightarrow$ self-efficacy $\rightarrow$ later behavior
-\end{column}
-
-\begin{column}{0.43\textwidth}
-\textbf{当前建议的起点}
-
-\vspace{0.02cm}
-\raggedright
-先用：
-
-\[
-\textbf{离散 scope 标签 + similarity matrix spillover}
-\]
-
-\vspace{0.02cm}
-如果后续想把扩散强度写得更平滑，再升级为 Gaussian kernel。
+\begin{column}{0.54\textwidth}
+\textbf{当前实验里的流程}
 
 \vspace{0.05cm}
-\textbf{建议的初始 similarity matrix}
+\[
+\text{数字任务失败事件}
+\]
+\[
+\downarrow
+\]
+\[
+\text{LLM 输出 scope amplitude } a_t
+\]
+\[
+\downarrow
+\]
+\[
+\text{若 attribution 有效且过阈值，计算 } A_t=\beta U_t a_t
+\]
+\[
+\downarrow
+\]
+\[
+\text{结合相似度矩阵 } S_{ij} \text{ 与 Gaussian 权重分配}
+\]
+\[
+\downarrow
+\]
+\[
+\text{扩散到其他 task family 的 self-efficacy}
+\]
+\[
+\downarrow
+\]
+\[
+\text{进一步影响后续 decision / attempt / outcome}
+\]
+\end{column}
 
-\vspace{0.08cm}
+\begin{column}{0.40\textwidth}
+\textbf{当前实现的版本}
+
+\[
+\textbf{单参数 Gaussian spillover}
+\]
+
+\begin{itemize}
+    \setlength{\itemsep}{0.1em}
+    \item LLM 只输出 scope amplitude
+    \item \(\sigma\) 先固定，不让 LLM 参与；后续再决定是否加入可变 \(\sigma\)
+    \item Gaussian 权重会做归一化
+\end{itemize}
+
+\vspace{0.02cm}
+\textbf{当前代码使用的 fixed similarity matrix}
+
 \centering
-\begin{tabular}{lcccc}
+\renewcommand{\arraystretch}{0.92}
+\begin{tabular}{@{}lcccc@{}}
 \toprule
  & L & A & P & H \\
 \midrule
@@ -171,19 +189,84 @@ H & 0.2 & 0.7 & 0.2 & 1.0 \\
 \bottomrule
 \end{tabular}
 
-\vspace{0.1cm}
+\vspace{0.03cm}
 \raggedright
 {\tiny
-L = login\_verification, A = appointment\_registration\\
-P = payment\_checkout, H = health\_info\_lookup
+L = 登录验证, A = 挂号预约\\
+P = 支付结算, H = 健康信息查询
 }
 
-\vspace{0.05cm}
+\vspace{0.02cm}
 {\tiny
 直觉上，L--P 更近，A--H 更近，跨组传播更弱。
 }
 \end{column}
 \end{columns}
+\end{frame}
+
+\section{主线补充}
+
+\begin{frame}[t]{A Bayesian formulation of behavioral control}
+\small
+\begin{itemize}
+    \item \textbf{第一层：outcome entropy}。看一个动作会不会稳定导向少数结果，如果越稳定，控制就越高（更偏向于单个动作的稳定性）
+    \item \textbf{第二层：controllably achievable outcomes}。看不同动作是不是能稳定带来不同结果，而不是多个动作的情况下，最后结果差不多（但这一层还不涉及这些结果是否真正有价值）
+    \item \textbf{第三层：controllably achievable reinforcement}。最关键的是那些对个体有价值的结果里，有多少是可以通过行为可靠控制的
+\end{itemize}
+
+\vspace{0.08cm}
+\textbf{论文最后更看重的是第三层，因为它更接近 helplessness 的心理实质：}
+
+\[
+\text{我在乎的结果，到底是不是受我行为控制？}
+\]
+\end{frame}
+
+\begin{frame}[c]{A Bayesian formulation of behavioral control}
+\small
+\centering
+\begin{minipage}{0.86\textwidth}
+\begin{itemize}
+    \item 论文形式化的是个体对环境可控性的先验信念，即 \textbf{controllability prior}
+    \item 一旦这种先验变得悲观，它就会进入后续任务，影响 action-outcome 预测、动作价值差异和探索意愿
+    \item 被动、少尝试和更容易放弃，更接近于低 controllability prior 在新任务中的行为后果
+\end{itemize}
+\end{minipage}
+
+\vspace{0.18cm}
+\centering
+\[
+\text{过去经验}
+\rightarrow
+\text{可控性先验}
+\rightarrow
+\text{当前任务中的结果预测与动作价值判断}
+\rightarrow
+\text{更被动的行为}
+\]
+\end{frame}
+
+\begin{frame}[c]{核心预测分布}
+\scriptsize
+\centering
+\[
+P(r\mid N_t,a,\alpha)
+=
+\frac{\alpha}{\alpha+N_t(a)}B(r)
++
+\frac{1}{\alpha+N_t(a)}N_t(r,a)
+\]
+
+\vspace{0.1cm}
+\begin{minipage}{0.84\textwidth}
+\begin{itemize}
+    \item 这个式子表示：\textbf{如果现在再做一次动作 \(a\)，结果 \(r\) 的预测概率是多少}
+    \item 预测不是只由眼前经验决定，也不是只由原有先验决定，而是由两者共同决定
+    \item \(B(r)\)：还没什么经验时，对结果 \(r\) 的默认预期
+    \item \(N_t(r,a)\) 和 \(N_t(a)\)：到目前为止，动作 \(a\) 一共试了多少次，其中结果 \(r\) 出现了多少次
+    \item \(\alpha\)：先验权重；\(\alpha\) 越大，少量新经验越难立刻推翻原来的判断
+\end{itemize}
+\end{minipage}
 \end{frame}
 
 \end{document}

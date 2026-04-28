@@ -16,7 +16,7 @@ ATTRIBUTABLE_OUTCOMES = {
 _EXPECTED_KEYS = {
     "event_attribution_locus",
     "event_attribution_stability",
-    "event_attribution_scope",
+    "event_attribution_scope_amplitude",
     "event_attribution_explanation",
     "judge_confidence",
 }
@@ -24,7 +24,7 @@ _LOCUS_LABELS = {"self", "mixed", "situation"}
 _STABILITY_LABELS = {"transient", "mixed", "stable"}
 _SCOPE_LABELS = {"task_specific", "mixed", "family_generalizing"}
 _ATTRIBUTION_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
-_PROMPT_VERSION = "v2_self_explained_event_attribution_20260415"
+_PROMPT_VERSION = "v3_scope_amplitude_event_attribution_20260422"
 
 
 def clear_event_attribution_cache() -> None:
@@ -135,6 +135,7 @@ def _fallback_result(
         event_attribution_locus="not_applicable",
         event_attribution_stability="not_applicable",
         event_attribution_scope="not_applicable",
+        event_attribution_scope_amplitude=0.0,
         event_attribution_explanation="",
         judge_confidence=0.0,
         cache_hit=cache_hit,
@@ -149,10 +150,20 @@ def _not_applicable_result(mode: str) -> EventAttributionResult:
         event_attribution_locus="not_applicable",
         event_attribution_stability="not_applicable",
         event_attribution_scope="not_applicable",
+        event_attribution_scope_amplitude=0.0,
         event_attribution_explanation="",
         judge_confidence=0.0,
         cache_hit=False,
     )
+
+
+def _scope_label_from_amplitude(value: float) -> str:
+    amplitude = _clamp(value, 0.0, 1.0)
+    if amplitude < 0.20:
+        return "task_specific"
+    if amplitude < 0.60:
+        return "mixed"
+    return "family_generalizing"
 
 
 def _sanitize_payload(payload: Any) -> dict[str, Any] | None:
@@ -161,15 +172,16 @@ def _sanitize_payload(payload: Any) -> dict[str, Any] | None:
 
     locus = str(payload.get("event_attribution_locus", "")).strip()
     stability = str(payload.get("event_attribution_stability", "")).strip()
-    scope = str(payload.get("event_attribution_scope", "")).strip()
     explanation = payload.get("event_attribution_explanation")
+    amplitude = payload.get("event_attribution_scope_amplitude")
     confidence = payload.get("judge_confidence")
 
     if locus not in _LOCUS_LABELS or stability not in _STABILITY_LABELS:
         return None
-    if scope not in _SCOPE_LABELS or not isinstance(explanation, str):
+    if not isinstance(explanation, str):
         return None
     try:
+        amplitude_value = _clamp(float(amplitude), 0.0, 1.0)
         confidence_value = _clamp(float(confidence), 0.0, 1.0)
     except (TypeError, ValueError):
         return None
@@ -177,7 +189,7 @@ def _sanitize_payload(payload: Any) -> dict[str, Any] | None:
     return {
         "event_attribution_locus": locus,
         "event_attribution_stability": stability,
-        "event_attribution_scope": scope,
+        "event_attribution_scope_amplitude": amplitude_value,
         "event_attribution_explanation": explanation.strip()[:160],
         "judge_confidence": confidence_value,
     }
@@ -198,8 +210,8 @@ def _apply_enabling_support_guard(
     if str(adjusted.get("event_attribution_stability")) == "stable":
         adjusted["event_attribution_stability"] = "mixed"
         changed = True
-    if str(adjusted.get("event_attribution_scope")) == "family_generalizing":
-        adjusted["event_attribution_scope"] = "mixed"
+    if float(adjusted.get("event_attribution_scope_amplitude", 0.0)) >= 0.60:
+        adjusted["event_attribution_scope_amplitude"] = 0.50
         changed = True
     if not changed:
         return payload, False
@@ -279,7 +291,7 @@ def _build_user_payload(
         "goal": (
             "Estimate how the agent would explain this setback to themself on "
             "three dimensions: who caused it, whether it will continue, and "
-            "whether it will spread to similar digital tasks."
+            "how strongly it may spread to similar digital tasks."
         ),
         "dimension_definitions": {
             "event_attribution_locus": {
@@ -318,24 +330,15 @@ def _build_user_payload(
                     ),
                 },
             },
-            "event_attribution_scope": {
+            "event_attribution_scope_amplitude": {
                 "question": (
-                    "Does the agent think this problem is limited to this task, "
-                    "or likely to spread to similar digital tasks?"
+                    "How strongly does the agent think this problem may spread "
+                    "from this task to similar digital tasks?"
                 ),
-                "labels": {
-                    "task_specific": (
-                        "The setback is understood as limited to this task or "
-                        "situation."
-                    ),
-                    "mixed": (
-                        "The agent shows partial spillover, but not clear "
-                        "generalization yet."
-                    ),
-                    "family_generalizing": (
-                        "The agent extends the problem to similar digital tasks "
-                        "or a broader class of digital actions."
-                    ),
+                "scale": {
+                    "0.0": "No spillover beyond the current task or situation.",
+                    "0.5": "Some spillover to similar digital tasks, but not broad generalization.",
+                    "1.0": "Clear expectation that similar digital tasks may also go wrong.",
                 },
             },
         },
@@ -363,31 +366,30 @@ def _build_user_payload(
                 "failure again."
             ),
             (
-                "Use family_generalizing only when there is evidence that the agent "
-                "is extending this belief beyond the current task to similar digital tasks."
+                "Set event_attribution_scope_amplitude near 0 only when the problem "
+                "looks limited to this task or situation."
             ),
-            "A single failure should not automatically become stable or family_generalizing.",
             (
-                "Recent controllable success should make transient or task_specific "
-                "more likely unless strong contrary evidence exists."
+                "Set event_attribution_scope_amplitude near 1 only when there is "
+                "clear evidence that the agent is extending this belief to similar digital tasks."
+            ),
+            "A single failure should not automatically imply high scope amplitude.",
+            (
+                "Recent controllable success should keep scope amplitude lower unless strong contrary evidence exists."
             ),
             (
                 "Failure even with support can increase stability, but enabling support "
                 "can still preserve some sense of agency."
             ),
             (
-                "If support was enabling rather than substituting, avoid stable or "
-                "family_generalizing unless repeated evidence still strongly supports them."
+                "If support was enabling rather than substituting, avoid very high scope amplitude unless repeated evidence still strongly supports it."
             ),
             (
                 "Low felt control and low task self-efficacy can strengthen stable "
                 "interpretations, but they do not force self blame."
             ),
-            (
-                "When cross-task evidence is absent, prefer task_specific over "
-                "family_generalizing."
-            ),
-            "When one label is clearly better supported, do not hedge with mixed.",
+            "When cross-task evidence is absent, keep scope amplitude low.",
+            "Return a single best amplitude based on the evidence; do not hedge with text outside the JSON.",
         ],
         "context_blocks": {
             "agent_profile": _normalize_block(profile_summary, max_chars=320),
@@ -450,7 +452,7 @@ def _build_user_payload(
                 "preferred_labels": {
                     "event_attribution_locus": "situation",
                     "event_attribution_stability": "transient",
-                    "event_attribution_scope": "task_specific",
+                    "event_attribution_scope_amplitude": 0.10,
                 },
             },
             {
@@ -465,7 +467,7 @@ def _build_user_payload(
                 "preferred_labels": {
                     "event_attribution_locus": "self",
                     "event_attribution_stability": "stable",
-                    "event_attribution_scope": "family_generalizing",
+                    "event_attribution_scope_amplitude": 0.85,
                 },
             },
             {
@@ -479,7 +481,7 @@ def _build_user_payload(
                 "preferred_labels": {
                     "event_attribution_locus": "mixed",
                     "event_attribution_stability": "mixed",
-                    "event_attribution_scope": "task_specific",
+                    "event_attribution_scope_amplitude": 0.25,
                 },
             },
         ],
@@ -497,7 +499,7 @@ def _build_user_payload(
         "json_schema_template": {
             "event_attribution_locus": "<self|mixed|situation>",
             "event_attribution_stability": "<transient|mixed|stable>",
-            "event_attribution_scope": "<task_specific|mixed|family_generalizing>",
+            "event_attribution_scope_amplitude": 0.0,
             "event_attribution_explanation": "<short concrete explanation>",
             "judge_confidence": 0.0,
         },
@@ -529,7 +531,7 @@ async def _query_llm_payload(
                 "- Do not invent missing experiences or hidden causes.\n"
                 "- Do not default to mixed when one side is clearly stronger.\n"
                 "- A single setback should not automatically become stable or "
-                "family_generalizing.\n"
+                "high-scope.\n"
                 "- Empty or missing blocks mean there is no reliable evidence from "
                 "that source.\n"
                 "- Return exactly one JSON object and nothing else."
@@ -675,7 +677,12 @@ async def infer_event_attribution(
         ),
         event_attribution_locus=str(payload["event_attribution_locus"]),
         event_attribution_stability=str(payload["event_attribution_stability"]),
-        event_attribution_scope=str(payload["event_attribution_scope"]),
+        event_attribution_scope=_scope_label_from_amplitude(
+            float(payload["event_attribution_scope_amplitude"])
+        ),
+        event_attribution_scope_amplitude=float(
+            payload["event_attribution_scope_amplitude"]
+        ),
         event_attribution_explanation=str(
             payload["event_attribution_explanation"]
         ).strip()[:160],

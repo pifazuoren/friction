@@ -36,6 +36,9 @@ def ensure_attempt_rows_table(db_path: Path, table_name: str) -> None:
             rule_event_level_uncontrollability INTEGER,
             uncontrollability_source TEXT,
             uncontrollability_llm_confidence REAL,
+            event_attribution_scope_amplitude REAL,
+            scope_spillover_total REAL,
+            scope_spillover_targets_json TEXT,
             helplessness_before REAL,
             helplessness_after REAL,
             helplessness_delta REAL,
@@ -56,6 +59,9 @@ def ensure_attempt_rows_table(db_path: Path, table_name: str) -> None:
         ("rule_event_level_uncontrollability", "INTEGER"),
         ("uncontrollability_source", "TEXT"),
         ("uncontrollability_llm_confidence", "REAL"),
+        ("event_attribution_scope_amplitude", "REAL"),
+        ("scope_spillover_total", "REAL"),
+        ("scope_spillover_targets_json", "TEXT"),
     ):
         if column_name not in existing_columns:
             cur.execute(
@@ -112,7 +118,8 @@ def write_attempt_rows(
             task_id, task_family, friction_type, strategy_type, outcome_type,
             support_quality, event_level_uncontrollability,
             rule_event_level_uncontrollability, uncontrollability_source,
-            uncontrollability_llm_confidence,
+            uncontrollability_llm_confidence, event_attribution_scope_amplitude,
+            scope_spillover_total, scope_spillover_targets_json,
             helplessness_before, helplessness_after, helplessness_delta,
             strategy_weights_json, payload_json
         ) VALUES (
@@ -120,7 +127,8 @@ def write_attempt_rows(
             :task_id, :task_family, :friction_type, :strategy_type, :outcome_type,
             :support_quality, :event_level_uncontrollability,
             :rule_event_level_uncontrollability, :uncontrollability_source,
-            :uncontrollability_llm_confidence,
+            :uncontrollability_llm_confidence, :event_attribution_scope_amplitude,
+            :scope_spillover_total, :scope_spillover_targets_json,
             :helplessness_before, :helplessness_after, :helplessness_delta,
             :strategy_weights_json, :payload_json
         )
