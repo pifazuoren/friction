@@ -1430,3 +1430,73 @@
 - 备注：
   - 这一轮只重构了 prompt 和上下文输入面，没有新增 attribution 输出字段
   - support guard、低置信度回退、memory 接口等既有机制保持不变
+
+## 2026-04-29
+
+### 6 类泛数字 Task Family 与 embedding similarity matrix 落地
+- 目的：
+  - 将当前 digital friction 实验的任务空间从旧的 4 类医院/健康场景任务，切换为 6 类泛数字 task family
+  - 让 scope spillover 继续复用已有 Gaussian 权重与归一化机制，但把相似度输入替换为基于标准化任务描述 embedding 得到的 6x6 similarity matrix
+  - 保持实现克制：不实时调用 embedding API、不改 helplessness 主公式、不改 uncontrollability calibrator、不新增 metrics schema
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/task_assignment.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/llm_psychology.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/attribution_inference.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_attribution_inference.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - `task_assignment.py`
+    - 将 `TASK_LIBRARY` 从旧 4 类改为 6 类泛数字任务：
+      - `navigation_service_location`
+      - `account_login_verification`
+      - `information_search_judgment`
+      - `profile_form_upload`
+      - `service_application_submission`
+      - `payment_risk_confirmation`
+    - 保留原有字段结构 `task_family / friction_type / need_type / difficulty / support_sensitivity`
+    - 继续复用现有 `verification / form_complexity / payment_risk_popup / information_overload` friction 计算口径，没有新增 friction 接口
+  - `models.py`
+    - 更新 `TaskFamily` Literal 为 6 类新 task family
+    - 将 `DigitalTask.from_dict(...)` 与 `RecentEpisode.from_dict(...)` 的默认 task family 改为 `navigation_service_location`
+  - `experience_memory.py`
+    - 保留现有 Gaussian spillover 公式与归一化逻辑：
+      - `d = 1 - similarity`
+      - `w = exp(-d^2 / (2 * sigma^2))`
+      - 排除 source task family 后归一化
+      - 只更新其他 task family 的 `task_self_efficacy`
+    - 将 `_TASK_FAMILY_SIMILARITY` 替换为 6x6 embedding similarity matrix
+    - 新矩阵使用“标准化任务描述 embedding”结果作为主版本，不使用只含任务名称的 robustness 版本
+  - `llm_psychology.py`
+    - 更新 `_TASK_FAMILIES` allowlist，避免 LLM reflection / summary 仍限制在旧 4 类任务上
+  - `attribution_inference.py`
+    - prompt version 更新为 `v4_six_family_scope_amplitude_20260429`
+    - 新增 6 类 task family 的简短说明，作为 attribution prompt 中的 `task_family_reference`
+    - 保持 attribution 输出 schema 不变，仍只让 LLM 输出 `event_attribution_scope_amplitude` 等既有字段
+    - 不让 LLM 输出 similarity、target family 或 sigma
+  - 测试更新
+    - 将测试中的旧 task key 全部迁移到新 6 类 task family
+    - 新增 similarity matrix 覆盖、对称性、对角线、Gaussian 权重归一化、source 排除等测试
+    - 新增 scope spillover 顺序测试：
+      - `navigation_service_location` 失败时，`service_application_submission` 受到的 spillover 大于 `payment_risk_confirmation`
+      - `account_login_verification` 失败时，`profile_form_upload` 受到的 spillover 大于 `information_search_judgment`
+    - 新增 runtime rotation 测试，确认 6 类 task family 可通过现有排程机制覆盖
+- 验证：
+  - `.venv` 中未安装 `pytest`，因此使用系统/base Python 中已有 pytest：
+    - `PYTHONPATH=examples/digital_friction_mvp python -m pytest examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_attribution_inference.py examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py`
+  - 结果：`50 passed, 3 warnings`
+  - 额外 smoke：
+    - 构造一次 `navigation_service_location` 的高 scope 失败事件
+    - 确认生成 6 类 memory
+    - 确认 `scope_spillover_targets_json` 写入其他 5 类 task family
+    - 确认最大 spillover target 为 `service_application_submission`
+  - `git diff --check -- examples/digital_friction_mvp/proto examples/digital_friction_mvp/tests` 无 whitespace 错误
+- 备注：
+  - 本轮没有做旧 4 类 task family 的历史数据迁移，旧实验结果如需对照应重新跑
+  - 本轮没有实时接入 OpenAI/Zhipu embedding API，embedding 只作为离线生成 similarity matrix 的依据
+  - `PROTO_SCOPE_SPILLOVER_BETA / THRESHOLD / SIGMA` 继续复用现有 runtime 配置，默认 `sigma=0.45` 未改
+  - 当前改动只触及泛数字任务空间与 scope similarity 输入，不扩大到社区干预策略或老人类型建模

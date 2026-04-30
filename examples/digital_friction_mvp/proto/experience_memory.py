@@ -49,29 +49,53 @@ _AVOID_SELF_EFFICACY_DELTAS = {
 _CONTROLLABLE_SUCCESS_DECAY_PER_DAY = 0.985
 _ATTRIBUTION_EMA_KEEP = 0.7
 _TASK_FAMILY_SIMILARITY = {
-    "login_verification": {
-        "login_verification": 1.0,
-        "appointment_registration": 0.3,
-        "payment_checkout": 0.8,
-        "health_info_lookup": 0.2,
+    "navigation_service_location": {
+        "navigation_service_location": 1.0,
+        "account_login_verification": 0.635,
+        "information_search_judgment": 0.692,
+        "profile_form_upload": 0.620,
+        "service_application_submission": 0.746,
+        "payment_risk_confirmation": 0.603,
     },
-    "appointment_registration": {
-        "login_verification": 0.3,
-        "appointment_registration": 1.0,
-        "payment_checkout": 0.2,
-        "health_info_lookup": 0.7,
+    "account_login_verification": {
+        "navigation_service_location": 0.635,
+        "account_login_verification": 1.0,
+        "information_search_judgment": 0.517,
+        "profile_form_upload": 0.717,
+        "service_application_submission": 0.626,
+        "payment_risk_confirmation": 0.598,
     },
-    "payment_checkout": {
-        "login_verification": 0.8,
-        "appointment_registration": 0.2,
-        "payment_checkout": 1.0,
-        "health_info_lookup": 0.2,
+    "information_search_judgment": {
+        "navigation_service_location": 0.692,
+        "account_login_verification": 0.517,
+        "information_search_judgment": 1.0,
+        "profile_form_upload": 0.621,
+        "service_application_submission": 0.711,
+        "payment_risk_confirmation": 0.693,
     },
-    "health_info_lookup": {
-        "login_verification": 0.2,
-        "appointment_registration": 0.7,
-        "payment_checkout": 0.2,
-        "health_info_lookup": 1.0,
+    "profile_form_upload": {
+        "navigation_service_location": 0.620,
+        "account_login_verification": 0.717,
+        "information_search_judgment": 0.621,
+        "profile_form_upload": 1.0,
+        "service_application_submission": 0.695,
+        "payment_risk_confirmation": 0.615,
+    },
+    "service_application_submission": {
+        "navigation_service_location": 0.746,
+        "account_login_verification": 0.626,
+        "information_search_judgment": 0.711,
+        "profile_form_upload": 0.695,
+        "service_application_submission": 1.0,
+        "payment_risk_confirmation": 0.643,
+    },
+    "payment_risk_confirmation": {
+        "navigation_service_location": 0.603,
+        "account_login_verification": 0.598,
+        "information_search_judgment": 0.693,
+        "profile_form_upload": 0.615,
+        "service_application_submission": 0.643,
+        "payment_risk_confirmation": 1.0,
     },
 }
 

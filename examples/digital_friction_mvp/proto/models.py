@@ -4,10 +4,12 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
 TaskFamily = Literal[
-    "login_verification",
-    "appointment_registration",
-    "payment_checkout",
-    "health_info_lookup",
+    "navigation_service_location",
+    "account_login_verification",
+    "information_search_judgment",
+    "profile_form_upload",
+    "service_application_submission",
+    "payment_risk_confirmation",
 ]
 
 FrictionType = Literal[
@@ -73,7 +75,7 @@ class DigitalTask:
     def from_dict(cls, payload: dict[str, Any]) -> "DigitalTask":
         return cls(
             task_id=str(payload.get("task_id", "")),
-            task_family=str(payload.get("task_family", "login_verification")),  # type: ignore[arg-type]
+            task_family=str(payload.get("task_family", "navigation_service_location")),  # type: ignore[arg-type]
             friction_type=str(payload.get("friction_type", "verification")),  # type: ignore[arg-type]
             difficulty=float(payload.get("difficulty", 0.5)),
             need_type=str(payload.get("need_type", "daily_task")),
@@ -289,7 +291,7 @@ class RecentEpisode:
         payload = payload or {}
         return cls(
             day=int(payload.get("day", 0)),
-            task_family=str(payload.get("task_family", "login_verification")),  # type: ignore[arg-type]
+            task_family=str(payload.get("task_family", "navigation_service_location")),  # type: ignore[arg-type]
             strategy_type=str(payload.get("strategy_type", "avoid")),  # type: ignore[arg-type]
             outcome_type=str(payload.get("outcome_type", "avoid_without_attempt")),  # type: ignore[arg-type]
             avoid_reason=str(payload.get("avoid_reason", "not_applicable")),

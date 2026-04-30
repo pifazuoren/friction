@@ -8,32 +8,46 @@ from .models import DigitalTask
 
 TASK_LIBRARY: tuple[dict[str, Any], ...] = (
     {
-        "task_family": "login_verification",
+        "task_family": "navigation_service_location",
+        "friction_type": "information_overload",
+        "need_type": "service_location",
+        "difficulty": 0.58,
+        "support_sensitivity": 0.70,
+    },
+    {
+        "task_family": "account_login_verification",
         "friction_type": "verification",
-        "need_type": "service_access",
+        "need_type": "secure_access",
         "difficulty": 0.64,
         "support_sensitivity": 0.85,
     },
     {
-        "task_family": "appointment_registration",
-        "friction_type": "form_complexity",
-        "need_type": "healthcare_access",
-        "difficulty": 0.60,
-        "support_sensitivity": 0.70,
+        "task_family": "information_search_judgment",
+        "friction_type": "information_overload",
+        "need_type": "information_access",
+        "difficulty": 0.56,
+        "support_sensitivity": 0.62,
     },
     {
-        "task_family": "payment_checkout",
+        "task_family": "profile_form_upload",
+        "friction_type": "form_complexity",
+        "need_type": "profile_management",
+        "difficulty": 0.61,
+        "support_sensitivity": 0.72,
+    },
+    {
+        "task_family": "service_application_submission",
+        "friction_type": "form_complexity",
+        "need_type": "service_completion",
+        "difficulty": 0.63,
+        "support_sensitivity": 0.74,
+    },
+    {
+        "task_family": "payment_risk_confirmation",
         "friction_type": "payment_risk_popup",
         "need_type": "daily_transaction",
         "difficulty": 0.67,
         "support_sensitivity": 0.78,
-    },
-    {
-        "task_family": "health_info_lookup",
-        "friction_type": "information_overload",
-        "need_type": "health_information",
-        "difficulty": 0.56,
-        "support_sensitivity": 0.62,
     },
 )
 

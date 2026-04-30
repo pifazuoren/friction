@@ -24,7 +24,28 @@ _LOCUS_LABELS = {"self", "mixed", "situation"}
 _STABILITY_LABELS = {"transient", "mixed", "stable"}
 _SCOPE_LABELS = {"task_specific", "mixed", "family_generalizing"}
 _ATTRIBUTION_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
-_PROMPT_VERSION = "v3_scope_amplitude_event_attribution_20260422"
+_PROMPT_VERSION = "v4_six_family_scope_amplitude_20260429"
+_TASK_FAMILY_DESCRIPTIONS = {
+    "navigation_service_location": (
+        "finding the correct service entry point, understanding page structure, "
+        "and avoiding navigation dead ends"
+    ),
+    "account_login_verification": (
+        "account access, password or code entry, identity checks, and security verification"
+    ),
+    "information_search_judgment": (
+        "searching, filtering, reading, and judging whether digital information is trustworthy"
+    ),
+    "profile_form_upload": (
+        "entering personal details, matching required formats, and uploading photos or files"
+    ),
+    "service_application_submission": (
+        "choosing service options and completing a multi-step application, booking, or submission"
+    ),
+    "payment_risk_confirmation": (
+        "checking amount, payee, payment method, and handling money-related risk warnings"
+    ),
+}
 
 
 def clear_event_attribution_cache() -> None:
@@ -411,6 +432,7 @@ def _build_user_payload(
                 ),
                 "support_mode": str(outcome.support_mode),
             },
+            "task_family_reference": _TASK_FAMILY_DESCRIPTIONS,
             "memory_query_1": (
                 "What recent experiences has the agent had with this same task?"
             ),

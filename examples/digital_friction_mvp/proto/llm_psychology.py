@@ -21,10 +21,12 @@ from .models import (
 from .profile_buckets import age_bucket, persona_bucket
 
 _TASK_FAMILIES = {
-    "login_verification",
-    "appointment_registration",
-    "payment_checkout",
-    "health_info_lookup",
+    "navigation_service_location",
+    "account_login_verification",
+    "information_search_judgment",
+    "profile_form_upload",
+    "service_application_submission",
+    "payment_risk_confirmation",
 }
 _REFLECTION_SIGNALS = {"success", "struggle", "avoidance", "mixed"}
 _EVENT_APPRAISAL_KEYS = {
