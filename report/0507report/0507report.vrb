@@ -1,0 +1,35 @@
+\frametitle{Phase 0：写数字任务经历}
+\small
+\begin{columns}[T]
+\begin{column}{0.45\textwidth}
+\textbf{每次任务结束写}
+\begin{itemize}
+    \item \texttt{digital\_task\_episode}
+    \item 标签：family、friction、outcome、strategy、help、negative、uncontrollability
+    \item 描述是第一人称自然语言
+\end{itemize}
+
+\vspace{0.1cm}
+\textbf{有求助才额外写}
+\begin{itemize}
+    \item \texttt{digital\_help\_episode}
+\end{itemize}
+\end{column}
+
+\begin{column}{0.51\textwidth}
+\textbf{关键恢复才额外写}
+\begin{itemize}
+    \item \texttt{digital\_recovery\_episode}
+    \item 自己成功且近期同任务多次失败
+    \item 或 enabling help 让任务恢复成功
+\end{itemize}
+
+\vspace{0.12cm}
+\scriptsize
+\begin{verbatim}
+[digital_task_episode][family=...]
+I tried payment and risk confirmation
+and could not complete it.
+\end{verbatim}
+\end{column}
+\end{columns}

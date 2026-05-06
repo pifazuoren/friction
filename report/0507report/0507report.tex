@@ -1,0 +1,574 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{beaver}
+
+\usepackage[UTF8,fontset=fandol]{ctex}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, shapes.geometric, calc, fit}
+
+\newcommand{\framebottomnote}[1]{%
+    \vfill
+    \par\noindent
+    {\tiny\color{black!65}\parbox{0.96\linewidth}{#1}\par}%
+    \vspace*{-0.75cm}%
+}
+
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+
+\title[0507 机制与 Memory 汇报]{Scope 扩散实现与 Stream Memory 设计对比}
+\subtitle{Digital Friction 实验 --- 0507 进展汇报}
+\date{2026-05-07}
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% ============================================================
+\section{本次汇报目标}
+% ============================================================
+
+\begin{frame}[t]{本次汇报回答两个问题}
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{1. Scope 扩散现在到底怎么落到代码里？}
+\begin{itemize}
+    \item LLM 输出的不是扩散目标，而是 \texttt{scope\_amplitude}
+    \item 代码用固定 task-family 相似度矩阵计算 Gaussian 权重
+    \item 扩散结果扣的是其他任务家族的 \texttt{task\_self\_efficacy}
+    \item 扩散量和不可控感、scope amplitude、全局 beta 有关
+\end{itemize}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{2. 我们的 memory 和原生 AgentSociety memory 有什么区别？}
+\begin{itemize}
+    \item 原生 memory 是通用的 \texttt{status + stream + vector search}
+    \item 我们复用原生 \texttt{stream.add/search} 接口
+    \item 但 topic、prompt 接入点、消融开关都按 digital friction 机制重做
+    \item memory 不替代 helplessness 主公式，而是提供 episodic evidence
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\section{Scope 扩散}
+% ============================================================
+
+\begin{frame}[t]{Scope 在当前系统中的位置}
+\small
+\centering
+\begin{tikzpicture}[
+    node distance=0.7cm,
+    box/.style={rectangle, rounded corners, draw=black!55, fill=black!4, align=center, minimum width=2.7cm, minimum height=0.72cm},
+    arrow/.style={-{Latex[length=2.2mm]}, thick, draw=black!70}
+]
+\node[box] (event) {负面数字事件\\failure / abandon};
+\node[box, right=of event] (attrib) {Event Attribution\\LLM 判断};
+\node[box, right=of attrib] (amp) {\texttt{scope\_amplitude}\\0--1};
+\node[box, below=of amp] (gauss) {Gaussian spillover\\固定相似度矩阵};
+\node[box, left=of gauss] (se) {其他 task family\\self-efficacy 下降};
+\node[box, left=of se] (future) {后续任务决策\\更易回避或失败};
+
+\draw[arrow] (event) -- (attrib);
+\draw[arrow] (attrib) -- (amp);
+\draw[arrow] (amp) -- (gauss);
+\draw[arrow] (gauss) -- (se);
+\draw[arrow] (se) -- (future);
+\end{tikzpicture}
+
+\vspace{0.25cm}
+\begin{minipage}{0.86\textwidth}
+\justifying
+当前实现把 \textbf{scope} 理解成“这次失败会不会被 agent 泛化到相似数字任务”。LLM 负责给一个主观泛化强度，代码负责决定这个强度如何按任务相似度扩散。
+\end{minipage}
+\end{frame}
+
+\begin{frame}[fragile,t]{LLM 只输出 scope amplitude}
+\small
+\begin{columns}[T]
+\begin{column}{0.47\textwidth}
+\textbf{Attribution prompt 的核心问题}
+\begin{itemize}
+    \item 谁导致了这次挫折：\texttt{locus}
+    \item 这种困难是否会持续：\texttt{stability}
+    \item 会不会扩散到相似数字任务：\texttt{scope\_amplitude}
+\end{itemize}
+
+\vspace{0.15cm}
+\textbf{scope amplitude 标尺}
+\[
+0.0 = \text{只限当前任务}
+\]
+\[
+0.5 = \text{扩散到相似任务}
+\]
+\[
+1.0 = \text{明显泛化到类似数字任务}
+\]
+\end{column}
+
+\begin{column}{0.49\textwidth}
+\textbf{重要边界}
+\begin{itemize}
+    \item LLM 不直接修改 self-efficacy
+    \item LLM 不决定扩散到哪些任务
+    \item LLM 不输出 Gaussian 参数
+    \item LLM 的 retrieval 只是证据，不是数值更新器
+\end{itemize}
+
+\vspace{0.2cm}
+\scriptsize
+\begin{verbatim}
+event_attribution_scope_amplitude: 0.0--1.0
+\end{verbatim}
+\end{column}
+\end{columns}
+
+\framebottomnote{代码位置：\texttt{examples/digital\_friction\_mvp/proto/attribution\_inference.py} 中 \texttt{event\_attribution\_scope\_amplitude} 的 prompt 定义与规则。}
+\end{frame}
+
+\begin{frame}[t]{代码里的 Gaussian 扩散公式}
+\scriptsize
+\justifying
+一次负面事件通过三步变成跨任务扣分：
+
+\[
+d(i,j)=1-S_{ij}
+\]
+
+\[
+w_{ij}=\exp\!\left(-\frac{d(i,j)^2}{2\sigma^2}\right), \quad j \neq i
+\]
+
+\[
+\hat{w}_{ij}=\frac{w_{ij}}{\sum_{k\neq i} w_{ik}}
+\]
+
+\[
+A_t=\beta \cdot U_t \cdot a_t
+\]
+
+\[
+\Delta SE_{j,t}^{spill}=-A_t \cdot \hat{w}_{ij}
+\]
+
+\vspace{0.12cm}
+\begin{tabular}{@{}L{0.22\linewidth}L{0.70\linewidth}@{}}
+\toprule
+符号 & 代码含义 \\
+\midrule
+\(S_{ij}\) & 固定 task-family similarity matrix \\
+\(\sigma\) & \texttt{PROTO\_SCOPE\_SPILLOVER\_SIGMA}，默认 0.45 \\
+\(\beta\) & \texttt{PROTO\_SCOPE\_SPILLOVER\_BETA}，默认 1.2 \\
+\(U_t\) & \texttt{event\_level\_uncontrollability} 归一化后的不可控感 \\
+\(a_t\) & LLM 输出的 \texttt{event\_attribution\_scope\_amplitude} \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\begin{frame}[t]{触发条件：不是每次失败都会扩散}
+\small
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\textbf{必须同时满足}
+\begin{enumerate}
+    \item outcome 属于失败类：
+    \item \texttt{failure\_after\_attempt}
+    \item \texttt{failure\_even\_with\_help}
+    \item \texttt{abandon\_midway}
+    \item event attribution 状态为 \texttt{ok}
+    \item \texttt{scope\_amplitude} 不低于阈值
+\end{enumerate}
+\end{column}
+
+\begin{column}{0.47\textwidth}
+\textbf{默认参数}
+\begin{itemize}
+    \item \texttt{PROTO\_SCOPE\_SPILLOVER\_BETA=1.2}
+    \item \texttt{PROTO\_SCOPE\_SPILLOVER\_THRESHOLD=0.15}
+    \item \texttt{PROTO\_SCOPE\_SPILLOVER\_SIGMA=0.45}
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{如果不满足}
+\begin{itemize}
+    \item \texttt{scope\_spillover\_total=0}
+    \item \texttt{scope\_spillover\_targets\_json} 记录为空 JSON
+\end{itemize}
+\end{column}
+\end{columns}
+
+\framebottomnote{代码位置：\texttt{experience\_memory.py} 的 \texttt{\_apply\_scope\_spillover(...)}。}
+\end{frame}
+
+\begin{frame}[t]{固定相似度矩阵：六类数字任务}
+\scriptsize
+\centering
+\renewcommand{\arraystretch}{1.08}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+ & Nav & Login & Search & Form & Service & Payment \\
+\midrule
+Nav & 1.000 & 0.635 & 0.692 & 0.620 & 0.746 & 0.603 \\
+Login & 0.635 & 1.000 & 0.517 & 0.717 & 0.626 & 0.598 \\
+Search & 0.692 & 0.517 & 1.000 & 0.621 & 0.711 & 0.693 \\
+Form & 0.620 & 0.717 & 0.621 & 1.000 & 0.695 & 0.615 \\
+Service & 0.746 & 0.626 & 0.711 & 0.695 & 1.000 & 0.643 \\
+Payment & 0.603 & 0.598 & 0.693 & 0.615 & 0.643 & 1.000 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.22cm}
+\begin{minipage}{0.86\textwidth}
+\small
+\justifying
+矩阵越高，表示两个数字任务越相似。Gaussian 权重会先按 \(1-S_{ij}\) 转成距离，再归一化，所以每次扩散的总量固定为 \(A_t\)，只是分配给不同邻居任务的比例不同。
+\end{minipage}
+
+\vspace{0.08cm}
+{\tiny Nav = navigation service location; Login = account login verification; Search = information search judgment; Form = profile form upload; Service = service application submission; Payment = payment risk confirmation.}
+\end{frame}
+
+\begin{frame}[fragile,t]{实际更新对象：不是 helplessness，而是其他任务的 self-efficacy}
+\small
+\begin{columns}[T]
+\begin{column}{0.50\textwidth}
+\textbf{代码更新的是}
+\[
+SE_j \leftarrow clamp(SE_j - A_t\hat{w}_{ij})
+\]
+
+\begin{itemize}
+    \item 源任务本身先按 outcome 更新
+    \item 其他 task family 再接受 spillover 扣分
+    \item 扣分结果写回 \texttt{task\_domain\_memory}
+    \item 后续通过 memory features 影响策略和 outcome
+\end{itemize}
+\end{column}
+
+\begin{column}{0.46\textwidth}
+\textbf{审计记录}
+\begin{itemize}
+    \item \texttt{event\_attribution\_scope\_amplitude}
+    \item \texttt{scope\_spillover\_total}
+    \item \texttt{scope\_spillover\_targets\_json}
+    \item 这些字段写入 attempt 表和 payload
+\end{itemize}
+
+\vspace{0.12cm}
+\scriptsize
+\begin{verbatim}
+{"payment_risk_confirmation": 0.17,
+ "profile_form_upload": 0.14}
+\end{verbatim}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\section{Memory 设计}
+% ============================================================
+
+\begin{frame}[fragile,t]{原生 AgentSociety memory：通用状态与经历流}
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{原生结构}
+\begin{itemize}
+    \item \texttt{KVMemory}: key-value 状态记忆
+    \item \texttt{StreamMemory}: 时间顺序的经历流
+    \item \texttt{VectorStore}: FastEmbed + Qdrant 语义检索
+    \item \texttt{Memory}: 包装出 \texttt{status} 和 \texttt{stream}
+\end{itemize}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{原生 stream 接口}
+\begin{itemize}
+    \item 写入：\texttt{memory.stream.add(topic, description)}
+    \item 检索：\texttt{memory.stream.search(query, topic, top\_k)}
+    \item 当天检索：\texttt{memory.stream.search\_today(...)}
+    \item 返回格式带 topic、day、time、location
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.16cm}
+\scriptsize
+\begin{verbatim}
+- [topic]: description [day: ..., time: ..., location: ...]
+\end{verbatim}
+
+\framebottomnote{参考 GitHub 原仓库：\texttt{agentsociety/memory/memory.py} 与 \texttt{agentsociety/vectorstore/vectorstore.py}。}
+\end{frame}
+
+\begin{frame}[t]{原生 cognition 如何用 stream memory}
+\small
+\begin{center}
+\begin{tikzpicture}[
+    node distance=0.65cm,
+    box/.style={rectangle, rounded corners, draw=black!55, fill=black!4, align=center, minimum width=3.1cm, minimum height=0.72cm},
+    arrow/.style={-{Latex[length=2.2mm]}, thick, draw=black!70}
+]
+\node[box] (search) {\texttt{stream.search}\\找相关事件};
+\node[box, right=of search] (today) {\texttt{search\_today}\\回顾当天};
+\node[box, right=of today] (llm) {LLM cognition\\生成 thought};
+\node[box, below=of llm] (status) {写入 status\\\texttt{thought}};
+\node[box, left=of status] (stream) {写回 stream\\topic=\texttt{cognition}};
+
+\draw[arrow] (search) -- (today);
+\draw[arrow] (today) -- (llm);
+\draw[arrow] (llm) -- (status);
+\draw[arrow] (llm) -- (stream);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.2cm}
+\justifying
+原生 AgentSociety 的设计更像“通用认知系统”：事件进入 stream，cognition block 从 stream 中检索经历，LLM 形成新的 thought，再把 thought 作为 cognition 写回 stream。
+
+\framebottomnote{参考 GitHub 原仓库：\texttt{cityagent/blocks/cognition\_block.py} 中 \texttt{memory.stream.search}、\texttt{search\_today}、\texttt{stream.add(topic=\"cognition\", ...)}。}
+\end{frame}
+
+\begin{frame}[t]{我们的 stream memory：复用原生接口，但限制业务边界}
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{我们复用的原生部分}
+\begin{itemize}
+    \item 仍用 \texttt{memory.stream.add}
+    \item 仍用 \texttt{memory.stream.search}
+    \item 仍保留原生返回格式
+    \item 不访问私有 \texttt{\_vectorstore}
+    \item 不新建第二套 memory 系统
+\end{itemize}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{我们重做的实验边界}
+\begin{itemize}
+    \item topic 全部围绕 digital friction
+    \item 只在指定 prompt 里读取
+    \item retrieval 有 runtime 开关
+    \item audit packet 写入 payload
+    \item memory 不直接改 helplessness 主公式
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]{Phase 0--3：我们现在的 memory 层}
+\scriptsize
+\renewcommand{\arraystretch}{1.16}
+\begin{tabular}{@{}L{0.16\linewidth}L{0.34\linewidth}L{0.39\linewidth}@{}}
+\toprule
+Phase & 做什么 & topic / 接入点 \\
+\midrule
+Phase 0 & 每次数字任务结束写 episode，但不读取 & \texttt{digital\_task\_episode}, \texttt{digital\_help\_episode}, \texttt{digital\_recovery\_episode} \\
+Phase 1 & task appraisal 前检索过去 episode & prompt 中加入 \texttt{Retrieved Episodic Memory} \\
+Phase 2 & event attribution 前检索相似 episode & prompt 中加入 \texttt{Retrieved Similar Episodes} \\
+Phase 3 & daily reflection 写回 stream，stage summary 参考 episode stream & \texttt{digital\_daily\_reflection}, \texttt{digital\_friction\_stage\_summary} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.25cm}
+\small
+核心原则：\textbf{raw episode 可以作为证据进入 appraisal / attribution；reflection 和 stage summary 只服务 interview 与 qualitative coherence，不回流到 Phase 1/2，避免双重计数。}
+\end{frame}
+
+\begin{frame}[fragile,t]{Phase 0：写数字任务经历}
+\small
+\begin{columns}[T]
+\begin{column}{0.45\textwidth}
+\textbf{每次任务结束写}
+\begin{itemize}
+    \item \texttt{digital\_task\_episode}
+    \item 标签：family、friction、outcome、strategy、help、negative、uncontrollability
+    \item 描述是第一人称自然语言
+\end{itemize}
+
+\vspace{0.1cm}
+\textbf{有求助才额外写}
+\begin{itemize}
+    \item \texttt{digital\_help\_episode}
+\end{itemize}
+\end{column}
+
+\begin{column}{0.51\textwidth}
+\textbf{关键恢复才额外写}
+\begin{itemize}
+    \item \texttt{digital\_recovery\_episode}
+    \item 自己成功且近期同任务多次失败
+    \item 或 enabling help 让任务恢复成功
+\end{itemize}
+
+\vspace{0.12cm}
+\scriptsize
+\begin{verbatim}
+[digital_task_episode][family=...]
+I tried payment and risk confirmation
+and could not complete it.
+\end{verbatim}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]{Phase 1/2：读 raw episode，但读给不同模块}
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Phase 1: task appraisal retrieval}
+\begin{itemize}
+    \item 发生在 \texttt{resolve\_task\_appraisal} 之前
+    \item query: task family + readable label + failure/success/help
+    \item 进入 prompt 的字段：
+    \item \texttt{Retrieved Episodic Memory}
+    \item 影响的是任务前主观判断
+\end{itemize}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{Phase 2: attribution retrieval}
+\begin{itemize}
+    \item 发生在 \texttt{infer\_event\_attribution} 之前
+    \item query: task family + recovery/help/similar setback
+    \item 进入 prompt 的字段：
+    \item \texttt{Retrieved Similar Episodes}
+    \item 影响的是失败后如何解释 scope/stability
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.18cm}
+\centering
+\small
+\textbf{两者都只检索 raw topics：task/help/recovery，不检索 reflection 或 stage summary。}
+\end{frame}
+
+\begin{frame}[t]{Phase 3：reflection 更接近原生 memory，但不改变主机制}
+\small
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\textbf{Daily reflection 写回 stream}
+\begin{itemize}
+    \item topic: \texttt{digital\_daily\_reflection}
+    \item 来源：已有 \texttt{maybe\_generate\_daily\_reflection}
+    \item 格式：稳定标签 + 第一人称 reflection
+    \item 只记录，不进入 appraisal / attribution
+\end{itemize}
+\end{column}
+
+\begin{column}{0.47\textwidth}
+\textbf{Stage summary 参考 raw episodes}
+\begin{itemize}
+    \item 写入 topic 仍是 \texttt{digital\_friction\_stage\_summary}
+    \item 写入前 search raw task/help/recovery episodes
+    \item description 中加入短的 \texttt{episode\_evidence}
+    \item stage interview 读取 stage summary
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]{我们与原生 AgentSociety memory 的主要区别}
+\scriptsize
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{@{}L{0.23\linewidth}L{0.33\linewidth}L{0.36\linewidth}@{}}
+\toprule
+维度 & 原生 AgentSociety & 我们的 digital friction memory \\
+\midrule
+目标 & 通用 cityagent cognition：记录事件、回顾当天、更新 thought & 实验机制层：记录数字摩擦经历，给 appraisal / attribution 提供可审计证据 \\
+状态层 & \texttt{KVMemory} 保存通用 agent 状态 & 另有结构化状态：task domain memory、help effect memory、emotion、helplessness \\
+Stream topic & 开放式 topic，例如 cognition 和日常事件 & 受控 topic：task/help/recovery/reflection/stage summary \\
+检索使用 & cognition block 可开放使用 stream 与 search\_today & Phase 1/2 只读 raw episode topics，Phase 3 只服务 reflection/interview \\
+更新主机制 & 原生 thought 可成为 cognition 状态的一部分 & stream 不直接改 helplessness 公式；scope 扩散仍由结构化 attribution + Gaussian 代码完成 \\
+消融审计 & 原生系统不以实验消融为核心 & 每个阶段有开关、condition、hash、count、payload audit \\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+\begin{frame}[t]{为什么这样设计}
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{向原生 AgentSociety 学习}
+\begin{itemize}
+    \item 用 stream 保存经历流
+    \item 用 topic 做记忆分类
+    \item 用 semantic search 回忆相关经历
+    \item 用 reflection 把经历组织成叙事
+\end{itemize}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{但不照搬原生 cognition}
+\begin{itemize}
+    \item 原生 cityagent 是城市生活认知
+    \item 我们研究的是 digital friction 与 helplessness
+    \item 所以必须保留机制边界和可消融性
+    \item 避免 stream 变成第二套不可控状态更新器
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.2cm}
+\centering
+\Large
+\[
+\text{复用 memory 接口} \neq \text{复制原生业务逻辑}
+\]
+\end{frame}
+
+\begin{frame}[t]{当前实现的可验证信号}
+\small
+\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\textbf{Scope 扩散是否生效}
+\begin{itemize}
+    \item attempt 表中 \texttt{event\_attribution\_scope\_amplitude}
+    \item \texttt{scope\_spillover\_total > 0}
+    \item \texttt{scope\_spillover\_targets\_json} 非空
+    \item 相邻 task family 的 self-efficacy 有下降
+\end{itemize}
+\end{column}
+
+\begin{column}{0.47\textwidth}
+\textbf{Stream memory 是否生效}
+\begin{itemize}
+    \item payload 中有 \texttt{stream\_episode\_recording}
+    \item Phase 1/2 audit 中 status 为 \texttt{ok} 或 \texttt{empty}
+    \item count 大于 0 表示检索到了历史 episode
+    \item stream 中存在 daily reflection / stage summary topic
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[t]{总结}
+\small
+\begin{itemize}
+    \item Scope 扩散现在是“LLM 判断主观泛化强度 + 本地 Gaussian 相似度扩散”的混合实现
+    \item 扩散不是直接加 helplessness，而是扣其他任务家族的 \texttt{task\_self\_efficacy}
+    \item 我们的 memory 复用了 AgentSociety 原生 stream 接口和 semantic search 思路
+    \item 但我们的 topic、retrieval 边界、audit 和消融开关都服务于 digital friction 机制
+    \item Phase 3 让 reflection 更接近原生 memory 的“经历流 + 反思写回”，但仍不进入主公式，避免双重计数
+\end{itemize}
+
+\vspace{0.15cm}
+\centering
+\large
+\[
+\text{机制主线保持结构化，memory 作为可检索的经历证据层}
+\]
+\end{frame}
+
+\end{document}

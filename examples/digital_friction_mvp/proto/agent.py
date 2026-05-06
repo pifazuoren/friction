@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import random
@@ -92,6 +93,73 @@ def _compact_status_note(
     if len(text) > max_chars:
         text = text[:max_chars].rstrip()
     return text or default
+
+
+def _stream_text(value: Any) -> str:
+    return re.sub(r"\s+", " ", str(value or "")).strip()
+
+
+def _stream_bool(value: Any) -> str:
+    return "true" if bool(value) else "false"
+
+
+def _stream_uncontrollability(value: Any) -> str:
+    normalized = max(0.0, min(1.0, _safe_float(value) / 2.0))
+    return f"{normalized:.2f}"
+
+
+def _stream_task_label(task_family: Any) -> str:
+    labels = {
+        "navigation_service_location": "navigation and service location",
+        "account_login_verification": "account login and identity verification",
+        "information_search_judgment": "information search and judgment",
+        "profile_form_upload": "profile forms and material upload",
+        "service_application_submission": "service application and submission",
+        "payment_risk_confirmation": "payment and risk confirmation",
+    }
+    task_family_text = str(task_family or "")
+    return labels.get(task_family_text, task_family_text.replace("_", " "))
+
+
+def _stream_packet_hash(text: str) -> str:
+    return hashlib.sha256(str(text or "").encode("utf-8")).hexdigest()[:16]
+
+
+def _stream_search_count(text: str) -> int:
+    if not text or str(text).strip() == "Nothing":
+        return 0
+    return sum(1 for line in str(text).splitlines() if line.strip().startswith("- ["))
+
+
+def _stream_appraisal_condition(runtime_config: Any) -> str:
+    if bool(
+        getattr(runtime_config, "proto_stream_task_appraisal_retrieval_enabled", False)
+    ):
+        return "stream-appraisal"
+    if bool(getattr(runtime_config, "proto_stream_episode_recording_enabled", True)):
+        return "stream-record-only"
+    return "structured-only"
+
+
+def _stream_attribution_condition(runtime_config: Any) -> str:
+    recording_enabled = bool(
+        getattr(runtime_config, "proto_stream_episode_recording_enabled", True)
+    )
+    appraisal_enabled = bool(
+        getattr(runtime_config, "proto_stream_task_appraisal_retrieval_enabled", False)
+    )
+    attribution_enabled = bool(
+        getattr(runtime_config, "proto_stream_attribution_retrieval_enabled", False)
+    )
+    if attribution_enabled and appraisal_enabled:
+        return "stream-appraisal-attribution"
+    if attribution_enabled:
+        return "stream-attribution-only"
+    if appraisal_enabled:
+        return "stream-appraisal"
+    if recording_enabled:
+        return "stream-record-only"
+    return "structured-only"
 
 
 def _format_status_time_hhmm(value: Any, default: str = "unknown") -> str:
@@ -590,6 +658,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
         previous_stage_key = str(
             await self.memory.status.get("proto_active_stage_key", "")
         ).strip()
+        event_log = _decode_json_list(await self.memory.status.get("event_log", []))
+        task_domain_memory = await self.memory.status.get("task_domain_memory", {})
+        help_effect_memory = await self.memory.status.get("help_effect_memory", {})
         stage_updates, _ = build_stage_transition_updates(
             current_stage_key=current_stage_key,
             previous_stage_key=previous_stage_key,
@@ -597,6 +668,13 @@ class DigitalHelplessnessAgent(SocietyAgent):
         )
         for key, value in stage_updates.items():
             await self.memory.status.update(key, value)
+        await self._generate_and_record_daily_reflection_stream(
+            current_day=normalized_day,
+            digital_emotion_state=digital_emotion_state.to_dict(),
+            event_log=event_log,
+            task_domain_memory=task_domain_memory,
+            help_effect_memory=help_effect_memory,
+        )
         await self.memory.status.update("proto_last_housekeeping_day", normalized_day)
 
     async def _write_idle_step_state(self) -> None:
@@ -734,14 +812,431 @@ class DigitalHelplessnessAgent(SocietyAgent):
         except Exception:
             return
 
+    async def _record_daily_reflection_stream(
+        self,
+        *,
+        runtime_config: Any,
+        generated_reflection: Any,
+    ) -> dict[str, Any]:
+        enabled = bool(getattr(runtime_config, "proto_stream_reflection_enabled", True))
+        if not enabled:
+            return {
+                "enabled": False,
+                "status": "disabled",
+                "topic": "digital_daily_reflection",
+                "memory_id": None,
+                "day": None,
+            }
+        if generated_reflection is None:
+            return {
+                "enabled": True,
+                "status": "skipped_no_reflection",
+                "topic": "digital_daily_reflection",
+                "memory_id": None,
+                "day": None,
+            }
+        reflection = (
+            generated_reflection.to_dict()
+            if hasattr(generated_reflection, "to_dict")
+            else generated_reflection
+        )
+        if not isinstance(reflection, dict):
+            return {
+                "enabled": True,
+                "status": "skipped_invalid_reflection",
+                "topic": "digital_daily_reflection",
+                "memory_id": None,
+                "day": None,
+            }
+        day = _safe_int(reflection.get("day"), 0)
+        text = _compact_status_note(reflection.get("text"), default="", max_chars=160)
+        if not text:
+            return {
+                "enabled": True,
+                "status": "skipped_empty_text",
+                "topic": "digital_daily_reflection",
+                "memory_id": None,
+                "day": day,
+            }
+        description = (
+            f"[digital_daily_reflection]"
+            f"[day={day}]"
+            f"[dominant_family={_stream_text(reflection.get('dominant_task_family', 'unknown'))}]"
+            f"[mastery={_stream_text(reflection.get('mastery_signal', 'mixed'))}]"
+            f"[help_effective={_stream_bool(reflection.get('help_effective', False))}] "
+            f"I reflected on yesterday: {text}"
+        )
+        memory_id = await self.memory.stream.add(
+            topic="digital_daily_reflection",
+            description=description[:600],
+        )
+        return {
+            "enabled": True,
+            "status": "ok",
+            "topic": "digital_daily_reflection",
+            "memory_id": memory_id,
+            "day": day,
+        }
+
+    async def _generate_and_record_daily_reflection_stream(
+        self,
+        *,
+        current_day: int,
+        digital_emotion_state: Any,
+        event_log: Any,
+        task_domain_memory: Any,
+        help_effect_memory: Any,
+    ) -> tuple[dict[str, Any], Any, dict[str, Any]]:
+        reflection_updates, generated_reflection = await maybe_generate_daily_reflection(
+            llm=getattr(self, "llm", None),
+            current_day=int(current_day),
+            last_reflection_day=_safe_int(
+                await self.memory.status.get("proto_last_reflection_day", -1),
+                -1,
+            ),
+            event_log=event_log,
+            digital_emotion_state=digital_emotion_state,
+            task_domain_memory=task_domain_memory,
+            help_effect_memory=help_effect_memory,
+            reflection_history=await self.memory.status.get(
+                "proto_daily_reflection_history", []
+            ),
+        )
+        for key, value in reflection_updates.items():
+            await self.memory.status.update(key, value)
+        if generated_reflection is not None:
+            current_reflection_count = _safe_int(
+                await self.memory.status.get("proto_stage_daily_reflection_count", 0),
+                0,
+            )
+            await self.memory.status.update(
+                "proto_stage_daily_reflection_count",
+                current_reflection_count + 1,
+            )
+        stream_recording = await self._record_daily_reflection_stream(
+            runtime_config=load_runtime_config(),
+            generated_reflection=generated_reflection,
+        )
+        await self.memory.status.update(
+            "proto_stream_daily_reflection_recording",
+            stream_recording,
+        )
+        return reflection_updates, generated_reflection, stream_recording
+
+    async def _record_task_episode_stream(
+        self,
+        *,
+        task: Any,
+        strategy: Any,
+        outcome: Any,
+    ) -> dict[str, Any]:
+        task_label = _stream_task_label(getattr(task, "task_family", ""))
+        if bool(getattr(outcome, "success", False)):
+            result_text = "completed it"
+        elif bool(getattr(outcome, "negative_feedback", False)):
+            result_text = "could not complete it"
+        else:
+            result_text = "did not finish it"
+        control_text = (
+            "The experience made the task feel hard to control."
+            if _safe_int(getattr(outcome, "event_level_uncontrollability", 0)) > 0
+            else "The experience still felt manageable."
+        )
+        description = (
+            f"[digital_task_episode]"
+            f"[family={_stream_text(getattr(task, 'task_family', 'unknown'))}]"
+            f"[friction={_stream_text(getattr(task, 'friction_type', 'unknown'))}]"
+            f"[outcome={_stream_text(getattr(outcome, 'outcome_type', 'unknown'))}]"
+            f"[strategy={_stream_text(getattr(strategy, 'strategy_type', 'unknown'))}]"
+            f"[help={_stream_bool(getattr(outcome, 'help_used', False))}]"
+            f"[negative={_stream_bool(getattr(outcome, 'negative_feedback', False))}]"
+            f"[uncontrollability={_stream_uncontrollability(getattr(outcome, 'event_level_uncontrollability', 0))}] "
+            f"I tried {task_label} and {result_text}. {control_text}"
+        )
+        memory_id = await self.memory.stream.add(
+            topic="digital_task_episode",
+            description=description[:600],
+        )
+        return {"topic": "digital_task_episode", "memory_id": memory_id, "status": "ok"}
+
+    async def _record_help_episode_stream(
+        self,
+        *,
+        task: Any,
+        strategy: Any,
+        outcome: Any,
+    ) -> dict[str, Any] | None:
+        help_attempted = bool(getattr(outcome, "help_used", False)) or (
+            str(getattr(strategy, "strategy_type", "")) == "seek_help_then_attempt"
+        )
+        if not help_attempted:
+            return None
+        task_label = _stream_task_label(getattr(task, "task_family", ""))
+        support_mode = _stream_text(getattr(outcome, "support_mode", "not_applicable"))
+        if str(getattr(outcome, "outcome_type", "")) == "success_with_help":
+            help_text = "the help was useful enough for me to complete the task"
+        elif support_mode == "enabling_support":
+            help_text = "the help gave me some guidance, but the task was still difficult"
+        else:
+            help_text = "the help was limited and did not fully solve the problem"
+        description = (
+            f"[digital_help_episode]"
+            f"[family={_stream_text(getattr(task, 'task_family', 'unknown'))}]"
+            f"[outcome={_stream_text(getattr(outcome, 'outcome_type', 'unknown'))}]"
+            f"[support_quality={_safe_int(getattr(outcome, 'support_quality', 0))}]"
+            f"[support_mode={support_mode}] "
+            f"I sought help for {task_label}, and {help_text}."
+        )
+        memory_id = await self.memory.stream.add(
+            topic="digital_help_episode",
+            description=description[:600],
+        )
+        return {"topic": "digital_help_episode", "memory_id": memory_id, "status": "ok"}
+
+    async def _record_recovery_episode_stream(
+        self,
+        *,
+        task: Any,
+        strategy: Any,
+        outcome: Any,
+        memory_features: Any,
+    ) -> dict[str, Any] | None:
+        recent_failures = _safe_int(
+            getattr(memory_features, "recent_same_task_failure_count", 0)
+        )
+        outcome_type = str(getattr(outcome, "outcome_type", ""))
+        support_mode = str(getattr(outcome, "support_mode", "not_applicable"))
+        self_recovery = outcome_type == "success_self" and recent_failures >= 2
+        help_recovery = (
+            outcome_type == "success_with_help"
+            and support_mode == "enabling_support"
+            and recent_failures >= 1
+        )
+        if not (self_recovery or help_recovery):
+            return None
+        task_label = _stream_task_label(getattr(task, "task_family", ""))
+        recovery_text = (
+            "After earlier failures, I completed it by myself and felt this task could still be learned."
+            if self_recovery
+            else "After earlier failures, useful guidance helped me complete it and regain some confidence."
+        )
+        description = (
+            f"[digital_recovery_episode]"
+            f"[family={_stream_text(getattr(task, 'task_family', 'unknown'))}]"
+            f"[outcome={_stream_text(getattr(outcome, 'outcome_type', 'unknown'))}]"
+            f"[strategy={_stream_text(getattr(strategy, 'strategy_type', 'unknown'))}]"
+            f"[support_mode={_stream_text(getattr(outcome, 'support_mode', 'not_applicable'))}] "
+            f"I recovered in {task_label}. {recovery_text}"
+        )
+        memory_id = await self.memory.stream.add(
+            topic="digital_recovery_episode",
+            description=description[:600],
+        )
+        return {
+            "topic": "digital_recovery_episode",
+            "memory_id": memory_id,
+            "status": "ok",
+        }
+
+    async def _record_phase0_stream_episodes(
+        self,
+        *,
+        runtime_config: Any,
+        task: Any,
+        strategy: Any,
+        outcome: Any,
+        memory_features: Any,
+    ) -> dict[str, Any]:
+        enabled = bool(
+            getattr(runtime_config, "proto_stream_episode_recording_enabled", True)
+        )
+        if not enabled:
+            return {
+                "enabled": False,
+                "condition": "structured-only",
+                "records": [],
+                "error_count": 0,
+            }
+        records = [
+            await self._record_task_episode_stream(
+                task=task,
+                strategy=strategy,
+                outcome=outcome,
+            )
+        ]
+        help_record = await self._record_help_episode_stream(
+            task=task,
+            strategy=strategy,
+            outcome=outcome,
+        )
+        if help_record is not None:
+            records.append(help_record)
+        recovery_record = await self._record_recovery_episode_stream(
+            task=task,
+            strategy=strategy,
+            outcome=outcome,
+            memory_features=memory_features,
+        )
+        if recovery_record is not None:
+            records.append(recovery_record)
+        return {
+            "enabled": True,
+            "condition": "stream-record-only",
+            "records": records,
+            "error_count": 0,
+        }
+
+    async def _retrieve_task_episodic_memory(
+        self,
+        *,
+        runtime_config: Any,
+        task: Any,
+    ) -> dict[str, Any]:
+        topics = [
+            "digital_task_episode",
+            "digital_help_episode",
+            "digital_recovery_episode",
+        ]
+        condition = _stream_appraisal_condition(runtime_config)
+        query = (
+            f"{getattr(task, 'task_family', '')} "
+            f"{_stream_task_label(getattr(task, 'task_family', ''))} "
+            "failure success help"
+        ).strip()
+        if condition != "stream-appraisal":
+            text = "Nothing"
+            return {
+                "text": text,
+                "ids": [],
+                "hash": _stream_packet_hash(text),
+                "count": 0,
+                "query": query,
+                "topics": topics,
+                "condition": condition,
+                "status": "disabled",
+            }
+        topic_limits = {
+            "digital_task_episode": 3,
+            "digital_help_episode": 1,
+            "digital_recovery_episode": 1,
+        }
+        chunks: list[str] = []
+        for topic in topics:
+            try:
+                result = await self.memory.stream.search(
+                    query=query,
+                    topic=topic,
+                    top_k=topic_limits[topic],
+                )
+            except Exception as exc:
+                text = "Nothing"
+                return {
+                    "text": text,
+                    "ids": [],
+                    "hash": _stream_packet_hash(text),
+                    "count": 0,
+                    "query": query,
+                    "topics": topics,
+                    "condition": condition,
+                    "status": "error",
+                    "error": _compact_status_note(exc, max_chars=120),
+                }
+            result_text = str(result or "").strip()
+            if result_text and result_text != "Nothing":
+                chunks.append(result_text)
+        text = "\n".join(chunks).strip() or "Nothing"
+        count = _stream_search_count(text)
+        return {
+            "text": text,
+            "ids": [],
+            "hash": _stream_packet_hash(text),
+            "count": count,
+            "query": query,
+            "topics": topics,
+            "condition": condition,
+            "status": "ok" if count > 0 else "empty",
+        }
+
+    async def _retrieve_attribution_episodic_memory(
+        self,
+        *,
+        runtime_config: Any,
+        task: Any,
+    ) -> dict[str, Any]:
+        topics = [
+            "digital_task_episode",
+            "digital_help_episode",
+            "digital_recovery_episode",
+        ]
+        condition = _stream_attribution_condition(runtime_config)
+        query = (
+            f"{getattr(task, 'task_family', '')} "
+            f"{_stream_task_label(getattr(task, 'task_family', ''))} "
+            "failure recovery help similar setback"
+        ).strip()
+        if condition not in {"stream-appraisal-attribution", "stream-attribution-only"}:
+            text = "Nothing"
+            return {
+                "text": text,
+                "ids": [],
+                "hash": _stream_packet_hash(text),
+                "count": 0,
+                "query": query,
+                "topics": topics,
+                "condition": condition,
+                "status": "disabled",
+            }
+        topic_limits = {
+            "digital_task_episode": 3,
+            "digital_help_episode": 1,
+            "digital_recovery_episode": 1,
+        }
+        chunks: list[str] = []
+        for topic in topics:
+            try:
+                result = await self.memory.stream.search(
+                    query=query,
+                    topic=topic,
+                    top_k=topic_limits[topic],
+                )
+            except Exception as exc:
+                text = "Nothing"
+                return {
+                    "text": text,
+                    "ids": [],
+                    "hash": _stream_packet_hash(text),
+                    "count": 0,
+                    "query": query,
+                    "topics": topics,
+                    "condition": condition,
+                    "status": "error",
+                    "error": _compact_status_note(exc, max_chars=120),
+                }
+            result_text = str(result or "").strip()
+            if result_text and result_text != "Nothing":
+                chunks.append(result_text)
+        text = "\n".join(chunks).strip() or "Nothing"
+        count = _stream_search_count(text)
+        return {
+            "text": text,
+            "ids": [],
+            "hash": _stream_packet_hash(text),
+            "count": count,
+            "query": query,
+            "topics": topics,
+            "condition": condition,
+            "status": "ok" if count > 0 else "empty",
+        }
+
     async def do_interview(self, question: str) -> str:
         stage_match = _STAGE_INTERVIEW_MARKER.match(str(question or "").strip())
         if stage_match:
             stage_name = str(stage_match.group("stage_name") or "").strip()
             stage_index = _safe_int(stage_match.group("stage_index"), 0)
             try:
-                stage_summary_memory = await self.stream.search(
-                    f"[{stage_name}] digital_friction_stage_summary",
+                stage_summary_memory = await self.memory.stream.search(
+                    query=f"[{stage_name}] digital_friction_stage_summary",
+                    topic="digital_friction_stage_summary",
                     top_k=3,
                 )
             except Exception:
@@ -854,29 +1349,6 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 "digital_emotion_state",
                 digital_emotion_state.to_dict(),
             )
-        reflection_updates, generated_reflection = await maybe_generate_daily_reflection(
-            llm=getattr(self, "llm", None),
-            current_day=current_day,
-            last_reflection_day=_safe_int(
-                await self.memory.status.get("proto_last_reflection_day", -1),
-                -1,
-            ),
-            event_log=event_log,
-            digital_emotion_state=digital_emotion_state.to_dict(),
-            task_domain_memory=task_domain_memory,
-            help_effect_memory=help_effect_memory,
-            reflection_history=await self.memory.status.get(
-                "proto_daily_reflection_history", []
-            ),
-        )
-        for key, value in reflection_updates.items():
-            await self.memory.status.update(key, value)
-        await self.memory.status.update("proto_last_housekeeping_day", current_day)
-        current_daily_reflection = (
-            reflection_updates.get("proto_daily_reflection")
-            if reflection_updates.get("proto_daily_reflection") is not None
-            else await self.memory.status.get("proto_daily_reflection", {})
-        )
         current_stage_key = str(
             env.get("digital_stage") or env.get("stage_name") or ""
         ).strip()
@@ -890,17 +1362,25 @@ class DigitalHelplessnessAgent(SocietyAgent):
         )
         for key, value in stage_updates.items():
             await self.memory.status.update(key, value)
+        (
+            reflection_updates,
+            generated_reflection,
+            stream_daily_reflection_recording,
+        ) = await self._generate_and_record_daily_reflection_stream(
+            current_day=current_day,
+            digital_emotion_state=digital_emotion_state.to_dict(),
+            event_log=event_log,
+            task_domain_memory=task_domain_memory,
+            help_effect_memory=help_effect_memory,
+        )
+        await self.memory.status.update("proto_last_housekeeping_day", current_day)
+        current_daily_reflection = (
+            reflection_updates.get("proto_daily_reflection")
+            if reflection_updates.get("proto_daily_reflection") is not None
+            else await self.memory.status.get("proto_daily_reflection", {})
+        )
         if stage_changed:
             event_log = []
-        if generated_reflection is not None:
-            current_reflection_count = _safe_int(
-                await self.memory.status.get("proto_stage_daily_reflection_count", 0),
-                0,
-            )
-            await self.memory.status.update(
-                "proto_stage_daily_reflection_count",
-                current_reflection_count + 1,
-            )
         task = decode_task(existing_task_raw)
         task, task_updates, _ = assign_task_if_missing(
             existing_task=task,
@@ -970,6 +1450,10 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "accessibility_level": _safe_int(env.get("accessibility_level", 0), 0),
             "human_support_level": _safe_int(env.get("human_support_level", 0), 0),
         }
+        task_appraisal_retrieval_packet = await self._retrieve_task_episodic_memory(
+            runtime_config=runtime_config,
+            task=task,
+        )
         task_appraisal = await resolve_task_appraisal(
             llm=getattr(self, "llm", None),
             task=task,
@@ -982,6 +1466,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             help_success_rate_smoothed=baseline_memory_features.help_success_rate_smoothed,
             recent_episode_summary=recent_episode_summary,
             digital_emotion_state=digital_emotion_state.to_dict(),
+            retrieved_episodic_memory=task_appraisal_retrieval_packet,
         )
         memory_features = extract_memory_features(
             task=task,
@@ -1094,6 +1579,10 @@ class DigitalHelplessnessAgent(SocietyAgent):
             )
             outcome.support_mode = str(support_mode_result["label"])
             outcome.support_mode_source = str(support_mode_result["source"])
+        attribution_retrieval_packet = await self._retrieve_attribution_episodic_memory(
+            runtime_config=runtime_config,
+            task=task,
+        )
         event_attribution = await infer_event_attribution(
             llm=getattr(self, "llm", None),
             task=task,
@@ -1110,6 +1599,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             relevant_mastery_summary=relevant_mastery_summary,
             latest_daily_reflection=current_daily_reflection,
             latest_stage_quote=latest_stage_quote,
+            retrieved_similar_episodes=attribution_retrieval_packet,
         )
         outcome.event_attribution_locus = event_attribution.event_attribution_locus
         outcome.event_attribution_stability = (
@@ -1219,6 +1709,13 @@ class DigitalHelplessnessAgent(SocietyAgent):
             rationale_memory=rationale_memory,
             task_appraisal_result=task_appraisal.to_dict(),
         )
+        stream_episode_recording = await self._record_phase0_stream_episodes(
+            runtime_config=runtime_config,
+            task=task,
+            strategy=strategy,
+            outcome=outcome,
+            memory_features=memory_features,
+        )
         stage_name = str(env.get("digital_stage") or env.get("stage_name") or "stage")
         positive_event = outcome.outcome_type in {"success_self", "success_with_help"}
         decision = {
@@ -1281,6 +1778,24 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "strategy_weights": dict(strategy.weights),
             "effective_helplessness": memory_features.effective_helplessness,
             "memory_features": memory_features.to_dict(),
+            "retrieved_episodic_memory_hash": task_appraisal_retrieval_packet["hash"],
+            "retrieved_episodic_memory_count": task_appraisal_retrieval_packet["count"],
+            "retrieved_episodic_memory_status": task_appraisal_retrieval_packet[
+                "status"
+            ],
+            "retrieval_condition": task_appraisal_retrieval_packet["condition"],
+            "retrieved_attribution_episodic_memory_hash": attribution_retrieval_packet[
+                "hash"
+            ],
+            "retrieved_attribution_episodic_memory_count": attribution_retrieval_packet[
+                "count"
+            ],
+            "retrieved_attribution_episodic_memory_status": (
+                attribution_retrieval_packet["status"]
+            ),
+            "attribution_retrieval_condition": attribution_retrieval_packet[
+                "condition"
+            ],
         }
         event_log.append(
             {
@@ -1341,6 +1856,10 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     "outcome": outcome.to_dict(),
                     "profile_summary": profile_summary,
                     "task_relevant_memory": task_relevant_memory_packet,
+                    "retrieved_episodic_memory": task_appraisal_retrieval_packet,
+                    "retrieved_attribution_episodic_memory": (
+                        attribution_retrieval_packet
+                    ),
                     "task_appraisal": task_appraisal.to_dict(),
                     "strategy_deliberation": strategy_deliberation.to_dict(),
                     "uncontrollability_calibration": calibration.to_dict(),
@@ -1486,12 +2005,32 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     "auxiliary_audit": {
                         "daily_reflection_role": "audit_exploratory",
                         "daily_reflection": current_daily_reflection,
+                        "stream_daily_reflection_recording": (
+                            stream_daily_reflection_recording
+                        ),
                         "bounded_hybrid_decision_role": "optional_hybrid",
                         "strategy_deliberation_enabled": bool(
                             runtime_config.proto_llm_strategy_deliberation_enabled
                         ),
                         "strategy_deliberation": strategy_deliberation.to_dict(),
                         "rationale_snapshot": memory_update["rationale_snapshot"],
+                        "stream_episode_recording": stream_episode_recording,
+                        "stream_appraisal_retrieval": {
+                            "condition": task_appraisal_retrieval_packet["condition"],
+                            "status": task_appraisal_retrieval_packet["status"],
+                            "hash": task_appraisal_retrieval_packet["hash"],
+                            "count": task_appraisal_retrieval_packet["count"],
+                            "query": task_appraisal_retrieval_packet["query"],
+                            "topics": task_appraisal_retrieval_packet["topics"],
+                        },
+                        "stream_attribution_retrieval": {
+                            "condition": attribution_retrieval_packet["condition"],
+                            "status": attribution_retrieval_packet["status"],
+                            "hash": attribution_retrieval_packet["hash"],
+                            "count": attribution_retrieval_packet["count"],
+                            "query": attribution_retrieval_packet["query"],
+                            "topics": attribution_retrieval_packet["topics"],
+                        },
                         "digital_emotion_secondary": {
                             "frustration_before": float(
                                 event_appraisal.emotion_before.get(

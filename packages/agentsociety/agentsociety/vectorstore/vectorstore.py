@@ -168,7 +168,16 @@ class VectorStore:
         if result is None:
             result = _call("search_points", kwargs)
         if result is None:
-            result = _call("query_points", kwargs)
+            result = _call(
+                "query_points",
+                {
+                    "collection_name": self._collection_name,
+                    "query": named_vector.vector,
+                    "using": named_vector.name,
+                    "limit": k,
+                    "query_filter": filter_obj,
+                },
+            )
         if result is None:
             # Graceful fallback: return no matches if client API is incompatible
             return []

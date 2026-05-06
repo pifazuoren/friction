@@ -352,9 +352,12 @@ class StreamMemory:
         await self._vectorstore.add_documents(
             documents=[description],
             extra_tags={
+                "type": "stream",
+                "memory_id": current_id,
                 "topic": topic,
                 "day": day,
                 "time": t,
+                "location": location,
             },
         )
 

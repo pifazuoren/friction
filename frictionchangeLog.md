@@ -1500,3 +1500,210 @@
   - 本轮没有实时接入 OpenAI/Zhipu embedding API，embedding 只作为离线生成 similarity matrix 的依据
   - `PROTO_SCOPE_SPILLOVER_BETA / THRESHOLD / SIGMA` 继续复用现有 runtime 配置，默认 `sigma=0.45` 未改
   - 当前改动只触及泛数字任务空间与 scope similarity 输入，不扩大到社区干预策略或老人类型建模
+
+## 2026-04-30
+
+### Stream memory Phase -1 metadata 修复
+- 目的：
+  - 验证并修复 AgentSociety 原生 `StreamMemory.add()` 与 `StreamMemory.search()` 之间的 metadata 不一致问题
+  - 让后续 stream memory 接入 digital friction appraisal / attribution 前，先具备可检索、可审计的 episode 存储基础
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/packages/agentsociety/agentsociety/memory/memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 确认原实现中 `StreamMemory.search()` 默认使用 `{"type": "stream"}` 过滤
+  - 确认原实现中 `StreamMemory.add()` 写入 vectorstore metadata 时没有写入 `type`
+  - 在 `StreamMemory.add()` 的 `extra_tags` 中补充：
+    - `type="stream"`
+    - `memory_id=current_id`
+    - `location=location`
+  - 保留原有 `topic / day / time` metadata，不改变 `search()` / `search_today()` / `get_by_ids()` 的接口形态
+- 验证：
+  - 新增本地隔离验证，确认 `add()` 后的 stream episode 可以被原生 `search()` 与 `search_today()` 检索到
+  - 确认 `topic` 过滤仍能区分 `digital_task_episode` 与 `digital_daily_reflection`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_stream_memory_metadata.py -q`
+  - 结果：`2 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_attribution_inference.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`45 passed`
+- 备注：
+  - 本轮只完成 Phase -1 的原生 stream memory 检索可靠性修复
+  - 没有把 stream retrieval 接入 prompt
+  - 没有改 helplessness 主公式
+  - 没有新增 digital friction 数据库字段
+
+## 2026-05-06
+
+### Stream memory Phase 0 episode 写入落地
+- 目的：
+  - 按 `stream_memory_todo.md` 的 Phase 0，把 digital friction 任务经历写入 AgentSociety 原生 stream memory
+  - 只做 episode 记录，不读取 stream，不接入 task appraisal / attribution prompt，不改变 helplessness 主公式
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_stream_episode_recording.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `PROTO_STREAM_EPISODE_RECORDING_ENABLED`，默认开启；做 `structured-only` baseline 时可显式设为 `0`
+  - 新增 Phase 0 stream episode 写入 helper，复用 `memory.stream.add(topic=..., description=...)`
+  - 每次数字任务结束写入 `digital_task_episode`
+  - 发生求助尝试时额外写入 `digital_help_episode`
+  - 连续失败后的自助成功或 enabling support 成功额外写入 `digital_recovery_episode`
+  - episode 描述采用 AgentSociety-native inspired style：少量稳定标签 + 第一人称英文自然语言经历句
+  - 写入审计信息进入 `payload_json.auxiliary_audit.stream_episode_recording`
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
+  - 结果：`7 passed, 3 warnings`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_attribution_inference.py -q`
+  - 结果：`45 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py -q`
+  - 结果：`5 passed, 3 warnings`
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py`
+  - `git diff --check -- examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py frictionchangeLog.md`
+- 备注：
+  - 本轮没有实现 retrieval packet；那是 Phase 1 的范围
+  - 本轮没有修改 task appraisal prompt、attribution prompt、数据库字段、Gaussian scope spillover 或 helplessness 更新公式
+  - stream 写入失败不做复杂 fallback，优先让测试或 smoke run 暴露问题
+
+### Stream memory Phase 1 task appraisal retrieval 落地
+- 目的：
+  - 在 task appraisal 前检索过去的 stream episodes，把 `Retrieved Episodic Memory` 作为经历证据放进 task appraisal prompt
+  - 模仿 AgentSociety 原生“判断前先回忆相关经历”的 memory 闭环，但不让 stream memory 成为第二套状态更新器
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/llm_psychology.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_stream_appraisal_retrieval.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `PROTO_STREAM_TASK_APPRAISAL_RETRIEVAL_ENABLED`，默认开启；默认实验条件为 `stream-appraisal`，做 `stream-record-only / structured-only` 时需显式设为 `0`
+  - 新增 `_retrieve_task_episodic_memory(...)`，只复用 `self.memory.stream.search(...)`
+  - 第一版只检索原始 episode topics：
+    - `digital_task_episode`
+    - `digital_help_episode`
+    - `digital_recovery_episode`
+  - 不检索 `digital_failure_attribution / digital_daily_reflection / digital_friction_stage_summary`
+  - retrieval packet 包含 `text / ids / hash / count / query / topics / condition / status`
+  - `ids` 第一版保持空列表，因为原生 `StreamMemory.search(...)` 当前只稳定返回格式化文本
+  - `Retrieved Episodic Memory` 进入 task appraisal prompt，且只放 packet 的 `text`
+  - retrieval 的 `condition / status / count / hash` 进入 task appraisal cache key，避免 structured-only、stream-record-only、stream-appraisal 错误共用 LLM cache
+  - `decision`、`payload_json.retrieved_episodic_memory`、`payload_json.auxiliary_audit.stream_appraisal_retrieval` 均写入 retrieval 审计信息
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_stream_appraisal_retrieval.py -q`
+  - 结果：`9 passed, 3 warnings`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
+  - 结果：`7 passed, 3 warnings`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_attribution_inference.py examples/digital_friction_mvp/tests/test_llm_psychology.py -q`
+  - 结果：`58 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py -q`
+  - 结果：`5 passed, 3 warnings`
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/llm_psychology.py`
+  - `git diff --check -- examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/llm_psychology.py frictionchangeLog.md`
+- 备注：
+  - 本轮没有接 attribution，没有修改 event attribution prompt
+  - 本轮没有修改 helplessness update、task outcome model、strategy choice 规则、数据库字段或 Gaussian scope spillover
+  - retrieval 发生在当前任务 outcome 与 Phase 0 当前 episode 写入之前，避免 current-event leakage
+  - stream search 异常只返回 `status=error` 的 audit packet，不做 `get_all()` fallback
+
+### Stream memory Phase 2 attribution retrieval 落地
+- 目的：
+  - 在 event attribution 前检索过去相似的 stream episodes，把 `Retrieved Similar Episodes` 作为经历证据放进 attribution prompt
+  - 尽可能学习和复用 AgentSociety 原生 `StreamMemory`：继续用 topic 分类、语义检索和原生格式化返回文本
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/attribution_inference.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_stream_attribution_retrieval.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `PROTO_STREAM_ATTRIBUTION_RETRIEVAL_ENABLED`，默认开启
+  - 新增 `_retrieve_attribution_episodic_memory(...)`，只复用 `self.memory.stream.search(query=..., topic=..., top_k=...)`
+  - 第一版只检索原始 episode topics：
+    - `digital_task_episode`
+    - `digital_help_episode`
+    - `digital_recovery_episode`
+  - 不检索 `digital_failure_attribution / digital_daily_reflection / digital_friction_stage_summary`
+  - attribution retrieval packet 包含 `text / ids / hash / count / query / topics / condition / status`
+  - `ids` 第一版保持空列表，因为原生 `StreamMemory.search(...)` 当前只稳定返回格式化文本
+  - `Retrieved Similar Episodes` 进入 attribution prompt，且只放 packet 的 `text`
+  - retrieval 的 `condition / status / count / hash` 进入 event attribution cache key，避免不同 stream 条件错误共用 LLM cache
+  - `decision`、`payload_json.retrieved_attribution_episodic_memory`、`payload_json.auxiliary_audit.stream_attribution_retrieval` 均写入 retrieval 审计信息
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_stream_attribution_retrieval.py -q`
+  - 结果：`10 passed, 3 warnings`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_stream_appraisal_retrieval.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
+  - 结果：`16 passed, 3 warnings`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_attribution_inference.py -q`
+  - 结果：`4 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_llm_psychology.py -q`
+  - 结果：`54 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py -q`
+  - 结果：`5 passed, 3 warnings`
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/attribution_inference.py`
+- 备注：
+  - 本轮没有修改 helplessness update、Gaussian scope spillover、attribution 输出 schema、task outcome model、strategy choice 规则或数据库字段
+  - retrieval 发生在当前 Phase 0 episode 写入之前，避免 current-event leakage
+  - stream search 异常只返回 `status=error` 的 audit packet，不做 `get_all()` fallback
+
+### Stream memory Phase 3 reflection 落地
+- 目的：
+  - 让 stream memory 更接近 AgentSociety 原生设计：stream 保存经历流，reflection 把经历组织成可回忆叙事
+  - daily reflection 生成后写回 `digital_daily_reflection` stream；stage summary 写入时参考本阶段 raw episode stream
+  - reflection 只服务 stage summary / interview / qualitative coherence，不进入 task appraisal 或 attribution retrieval
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/main.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_stream_reflection_phase3.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `PROTO_STREAM_REFLECTION_ENABLED`，默认开启
+  - 新增 daily reflection stream 写入 helper，复用 `memory.stream.add(topic="digital_daily_reflection", description=...)`
+  - daily reflection description 使用稳定标签 + 第一人称自然语言：`[digital_daily_reflection][day=...][dominant_family=...][mastery=...][help_effective=...] I reflected on yesterday: ...`
+  - `forward(...)` 和 idle housekeeping 都通过同一 helper 生成并写入上一天 reflection，避免只有任务窗口才写 reflection
+  - `payload_json.auxiliary_audit.stream_daily_reflection_recording` 记录 daily reflection stream 写入审计信息
+  - stage summary 写入前复用 `agent.memory.stream.search(query=..., topic=..., top_k=...)` 检索 raw episode evidence
+  - stage summary 只检索 `digital_task_episode / digital_help_episode / digital_recovery_episode`，不检索 `digital_daily_reflection / digital_failure_attribution / digital_friction_stage_summary`
+  - stage interview 读取 `digital_friction_stage_summary` 时改用 `self.memory.stream.search(...)`，并通过 topic 过滤保持原生 stream memory 分类语义
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_stream_reflection_phase3.py -q`
+  - 结果：`10 passed, 3 warnings`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_stream_appraisal_retrieval.py examples/digital_friction_mvp/tests/test_stream_attribution_retrieval.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
+  - 结果：`26 passed, 3 warnings`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_interview_sync.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`24 passed`
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/main.py`
+  - `git diff --check -- examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/main.py frictionchangeLog.md`
+- 备注：
+  - 本轮没有修改 helplessness 主公式、Gaussian scope spillover、task outcome model、strategy choice 规则、attribution 输出 schema 或数据库字段
+  - Phase 1/2 retrieval 仍只读取 raw episode topics，reflection 和 stage summary 不回流进 appraisal / attribution，避免双重计数
+  - stage summary 检索异常时只跳过 `episode_evidence`，继续保留原有 `digital_friction_stage_summary` 写入
+
+### Stream memory native search 修复与 Phase 3 audit 可见性补强
+- 目的：
+  - 修复 smoke 中 Phase 1/2 retrieval 全部 `empty` 的底层原因
+  - 保持 Phase 1/2/3 机制设计不变，只修复 AgentSociety 原生 vector search 兼容和 daily reflection audit 可观测性
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/packages/agentsociety/agentsociety/vectorstore/vectorstore.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_stream_memory_native_search.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_stream_reflection_phase3.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 定位到当前 `agent_env` 的 `qdrant_client` 没有 `search/search_points`，只有新版 `query_points`
+  - 修复 `VectorStore._search_points(...)` 的新版 `query_points` 兼容：sparse search 改用 `query=named_vector.vector` 与 `using=named_vector.name`
+  - 保留旧版 `search/search_points` 分支，不改变旧环境兼容路径
+  - 新增 `test_stream_memory_native_search.py`，验证写入 `type=stream/topic=digital_task_episode` metadata 后，topic filter 能返回匹配结果，错误 topic 返回空
+  - `_generate_and_record_daily_reflection_stream(...)` 现在会把 daily reflection stream audit 同步写入 status memory 的 `proto_stream_daily_reflection_recording`
+  - 不新增数据库字段；Phase 3 在 idle housekeeping 生成 reflection 时，可以通过 status memory 追踪最后一次 stream 写入状态
+- 验证：
+  - 最小复现 `conda run -n agent_env python /tmp/test_stream_search.py`
+  - 结果：`filter=None / type=stream / type=stream+topic` 均从 `count=0` 变为 `count=1`
+  - `conda run -n agent_env python -m pytest examples/digital_friction_mvp/tests/test_stream_memory_native_search.py -q`
+  - 结果：`1 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_stream_appraisal_retrieval.py examples/digital_friction_mvp/tests/test_stream_attribution_retrieval.py examples/digital_friction_mvp/tests/test_stream_reflection_phase3.py -q`
+  - 结果：`29 passed, 3 warnings`
+  - `python -m py_compile packages/agentsociety/agentsociety/vectorstore/vectorstore.py examples/digital_friction_mvp/proto/agent.py`
+  - `git diff --check -- packages/agentsociety/agentsociety/vectorstore/vectorstore.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/tests/test_stream_memory_native_search.py examples/digital_friction_mvp/tests/test_stream_reflection_phase3.py frictionchangeLog.md`
+- 备注：
+  - 本轮没有修改 task appraisal prompt、attribution prompt、helplessness 主公式、Gaussian scope spillover、task outcome model、strategy choice 规则或数据库 schema
+  - 下一步应重跑 `stream_memory_phase3_smoke_v2`，确认 Phase 1/2 retrieval packet 至少部分从 `empty` 变为 `ok`

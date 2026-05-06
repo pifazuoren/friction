@@ -262,7 +262,13 @@ def _build_cache_key(
     relevant_mastery_summary: Any,
     latest_daily_reflection: Any,
     latest_stage_quote: Any,
+    retrieved_similar_episodes: Any = None,
 ) -> tuple[Any, ...]:
+    retrieved = (
+        retrieved_similar_episodes
+        if isinstance(retrieved_similar_episodes, dict)
+        else {}
+    )
     return (
         _PROMPT_VERSION,
         str(task.task_family),
@@ -283,6 +289,10 @@ def _build_cache_key(
         _stable_json_text(relevant_mastery_summary, 220),
         _stable_json_text(latest_daily_reflection, 220),
         _compact_text(latest_stage_quote, 120),
+        str(retrieved.get("condition", "structured-only")),
+        str(retrieved.get("status", "disabled")),
+        int(retrieved.get("count", 0) or 0),
+        str(retrieved.get("hash", "")),
     )
 
 
@@ -302,7 +312,13 @@ def _build_user_payload(
     relevant_mastery_summary: Any,
     latest_daily_reflection: Any,
     latest_stage_quote: Any,
+    retrieved_similar_episodes: Any = None,
 ) -> dict[str, Any]:
+    retrieved = (
+        retrieved_similar_episodes
+        if isinstance(retrieved_similar_episodes, dict)
+        else {}
+    )
     return {
         "prompt_version": _PROMPT_VERSION,
         "task": (
@@ -410,6 +426,22 @@ def _build_user_payload(
                 "interpretations, but they do not force self blame."
             ),
             "When cross-task evidence is absent, keep scope amplitude low.",
+            (
+                "Repeated similar failures in Retrieved Similar Episodes can increase "
+                "stability and scope amplitude."
+            ),
+            (
+                "Similar recovery or enabling help in Retrieved Similar Episodes can "
+                "reduce stability and scope amplitude."
+            ),
+            (
+                "Empty Retrieved Similar Episodes means there is no extra episodic "
+                "evidence from stream memory."
+            ),
+            (
+                "Retrieved Similar Episodes are evidence for attribution only, not "
+                "direct numeric updates."
+            ),
             "Return a single best amplitude based on the evidence; do not hedge with text outside the JSON.",
         ],
         "context_blocks": {
@@ -460,6 +492,7 @@ def _build_user_payload(
                 max_chars=240,
             ),
             "recent_stage_quote": _compact_text(latest_stage_quote, 160),
+            "Retrieved Similar Episodes": str(retrieved.get("text", "Nothing")),
         },
         "reference_cases": [
             {
@@ -598,6 +631,7 @@ async def infer_event_attribution(
     relevant_mastery_summary: Any = None,
     latest_daily_reflection: Any = None,
     latest_stage_quote: Any = "",
+    retrieved_similar_episodes: Any = None,
 ) -> EventAttributionResult:
     config = load_runtime_config()
     mode = str(config.proto_llm_psychology_mode)
@@ -637,6 +671,7 @@ async def infer_event_attribution(
         relevant_mastery_summary=relevant_mastery_summary,
         latest_daily_reflection=latest_daily_reflection,
         latest_stage_quote=latest_stage_quote,
+        retrieved_similar_episodes=retrieved_similar_episodes,
     )
     if bool(config.proto_llm_psychology_cache_enabled):
         payload = _ATTRIBUTION_CACHE.get(cache_key)
@@ -660,6 +695,7 @@ async def infer_event_attribution(
                 relevant_mastery_summary=relevant_mastery_summary,
                 latest_daily_reflection=latest_daily_reflection,
                 latest_stage_quote=latest_stage_quote,
+                retrieved_similar_episodes=retrieved_similar_episodes,
             ),
             timeout=int(config.proto_llm_psychology_timeout),
             retries=int(config.proto_llm_psychology_retries),

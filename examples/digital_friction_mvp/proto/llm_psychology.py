@@ -928,11 +928,17 @@ def _build_task_appraisal_cache_key(
     recent_episode_summary: Any,
     digital_emotion_state: DigitalEmotionState,
     task_relevant_memory: Any = None,
+    retrieved_episodic_memory: Any = None,
 ) -> tuple[Any, ...]:
     world = world_context if isinstance(world_context, dict) else {}
     profile = profile_summary if isinstance(profile_summary, dict) else {}
     recent = recent_episode_summary if isinstance(recent_episode_summary, dict) else {}
     task_memory = task_relevant_memory if isinstance(task_relevant_memory, dict) else {}
+    retrieved = (
+        retrieved_episodic_memory
+        if isinstance(retrieved_episodic_memory, dict)
+        else {}
+    )
     return (
         _TASK_APPRAISAL_PROMPT_VERSION,
         str(task.task_family),
@@ -969,6 +975,10 @@ def _build_task_appraisal_cache_key(
         ),
         _emotion_bucket(float(digital_emotion_state.anxiety)),
         _emotion_bucket(float(digital_emotion_state.confidence)),
+        str(retrieved.get("condition", "structured-only")),
+        str(retrieved.get("status", "disabled")),
+        int(retrieved.get("count", 0) or 0),
+        str(retrieved.get("hash", "")),
     )
 
 
@@ -1097,6 +1107,7 @@ def _build_task_appraisal_user_payload(
     recent_episode_summary: Any,
     digital_emotion_state: DigitalEmotionState,
     task_relevant_memory: Any = None,
+    retrieved_episodic_memory: Any = None,
 ) -> dict[str, Any]:
     world = copy.deepcopy(world_context) if isinstance(world_context, dict) else {}
     profile = (
@@ -1110,6 +1121,11 @@ def _build_task_appraisal_user_payload(
     task_memory = (
         copy.deepcopy(task_relevant_memory)
         if isinstance(task_relevant_memory, dict)
+        else {}
+    )
+    retrieved = (
+        copy.deepcopy(retrieved_episodic_memory)
+        if isinstance(retrieved_episodic_memory, dict)
         else {}
     )
     return {
@@ -1132,6 +1148,7 @@ def _build_task_appraisal_user_payload(
             ),
         },
         "Recent Experience": recent,
+        "Retrieved Episodic Memory": str(retrieved.get("text", "Nothing")),
         "Digital Emotion State": _emotion_dict(digital_emotion_state),
         "Internal Scoring Order": [
             "First identify the main barrier internally: skill_deficit, situational_uncontrollability, risk_concern, low_value, or mixed.",
@@ -1189,6 +1206,7 @@ async def resolve_task_appraisal(
     recent_episode_summary: Any,
     digital_emotion_state: Any,
     task_relevant_memory: Any = None,
+    retrieved_episodic_memory: Any = None,
 ) -> TaskAppraisalResult:
     config = load_runtime_config()
     mode = str(config.proto_llm_psychology_mode)
@@ -1219,6 +1237,7 @@ async def resolve_task_appraisal(
         recent_episode_summary=recent_episode_summary,
         digital_emotion_state=normalized_emotion,
         task_relevant_memory=task_relevant_memory,
+        retrieved_episodic_memory=retrieved_episodic_memory,
     )
     if bool(config.proto_llm_psychology_cache_enabled):
         payload = _TASK_APPRAISAL_CACHE.get(cache_key)
@@ -1240,6 +1259,7 @@ async def resolve_task_appraisal(
                 recent_episode_summary=recent_episode_summary,
                 digital_emotion_state=normalized_emotion,
                 task_relevant_memory=task_relevant_memory,
+                retrieved_episodic_memory=retrieved_episodic_memory,
             ),
             output_keys=_TASK_APPRAISAL_KEYS,
             repair_schema_text=(

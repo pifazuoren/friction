@@ -47,6 +47,10 @@ class RuntimeConfig:
     proto_scope_spillover_beta: float
     proto_scope_spillover_threshold: float
     proto_scope_spillover_sigma: float
+    proto_stream_episode_recording_enabled: bool
+    proto_stream_task_appraisal_retrieval_enabled: bool
+    proto_stream_attribution_retrieval_enabled: bool
+    proto_stream_reflection_enabled: bool
 
 
 def load_runtime_config() -> RuntimeConfig:
@@ -173,6 +177,22 @@ def load_runtime_config() -> RuntimeConfig:
         0.01,
         float(os.getenv("PROTO_SCOPE_SPILLOVER_SIGMA", "0.45")),
     )
+    proto_stream_episode_recording_enabled = _parse_bool_env(
+        "PROTO_STREAM_EPISODE_RECORDING_ENABLED",
+        True,
+    )
+    proto_stream_task_appraisal_retrieval_enabled = _parse_bool_env(
+        "PROTO_STREAM_TASK_APPRAISAL_RETRIEVAL_ENABLED",
+        True,
+    )
+    proto_stream_attribution_retrieval_enabled = _parse_bool_env(
+        "PROTO_STREAM_ATTRIBUTION_RETRIEVAL_ENABLED",
+        True,
+    )
+    proto_stream_reflection_enabled = _parse_bool_env(
+        "PROTO_STREAM_REFLECTION_ENABLED",
+        True,
+    )
 
     return RuntimeConfig(
         experiment_mode=experiment_mode,
@@ -198,4 +218,8 @@ def load_runtime_config() -> RuntimeConfig:
         proto_scope_spillover_beta=proto_scope_spillover_beta,
         proto_scope_spillover_threshold=proto_scope_spillover_threshold,
         proto_scope_spillover_sigma=proto_scope_spillover_sigma,
+        proto_stream_episode_recording_enabled=proto_stream_episode_recording_enabled,
+        proto_stream_task_appraisal_retrieval_enabled=proto_stream_task_appraisal_retrieval_enabled,
+        proto_stream_attribution_retrieval_enabled=proto_stream_attribution_retrieval_enabled,
+        proto_stream_reflection_enabled=proto_stream_reflection_enabled,
     )
