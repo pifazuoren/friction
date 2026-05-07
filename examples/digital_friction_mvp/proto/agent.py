@@ -658,9 +658,6 @@ class DigitalHelplessnessAgent(SocietyAgent):
         previous_stage_key = str(
             await self.memory.status.get("proto_active_stage_key", "")
         ).strip()
-        event_log = _decode_json_list(await self.memory.status.get("event_log", []))
-        task_domain_memory = await self.memory.status.get("task_domain_memory", {})
-        help_effect_memory = await self.memory.status.get("help_effect_memory", {})
         stage_updates, _ = build_stage_transition_updates(
             current_stage_key=current_stage_key,
             previous_stage_key=previous_stage_key,
@@ -668,13 +665,6 @@ class DigitalHelplessnessAgent(SocietyAgent):
         )
         for key, value in stage_updates.items():
             await self.memory.status.update(key, value)
-        await self._generate_and_record_daily_reflection_stream(
-            current_day=normalized_day,
-            digital_emotion_state=digital_emotion_state.to_dict(),
-            event_log=event_log,
-            task_domain_memory=task_domain_memory,
-            help_effect_memory=help_effect_memory,
-        )
         await self.memory.status.update("proto_last_housekeeping_day", normalized_day)
 
     async def _write_idle_step_state(self) -> None:
@@ -811,117 +801,6 @@ class DigitalHelplessnessAgent(SocietyAgent):
             )
         except Exception:
             return
-
-    async def _record_daily_reflection_stream(
-        self,
-        *,
-        runtime_config: Any,
-        generated_reflection: Any,
-    ) -> dict[str, Any]:
-        enabled = bool(getattr(runtime_config, "proto_stream_reflection_enabled", True))
-        if not enabled:
-            return {
-                "enabled": False,
-                "status": "disabled",
-                "topic": "digital_daily_reflection",
-                "memory_id": None,
-                "day": None,
-            }
-        if generated_reflection is None:
-            return {
-                "enabled": True,
-                "status": "skipped_no_reflection",
-                "topic": "digital_daily_reflection",
-                "memory_id": None,
-                "day": None,
-            }
-        reflection = (
-            generated_reflection.to_dict()
-            if hasattr(generated_reflection, "to_dict")
-            else generated_reflection
-        )
-        if not isinstance(reflection, dict):
-            return {
-                "enabled": True,
-                "status": "skipped_invalid_reflection",
-                "topic": "digital_daily_reflection",
-                "memory_id": None,
-                "day": None,
-            }
-        day = _safe_int(reflection.get("day"), 0)
-        text = _compact_status_note(reflection.get("text"), default="", max_chars=160)
-        if not text:
-            return {
-                "enabled": True,
-                "status": "skipped_empty_text",
-                "topic": "digital_daily_reflection",
-                "memory_id": None,
-                "day": day,
-            }
-        description = (
-            f"[digital_daily_reflection]"
-            f"[day={day}]"
-            f"[dominant_family={_stream_text(reflection.get('dominant_task_family', 'unknown'))}]"
-            f"[mastery={_stream_text(reflection.get('mastery_signal', 'mixed'))}]"
-            f"[help_effective={_stream_bool(reflection.get('help_effective', False))}] "
-            f"I reflected on yesterday: {text}"
-        )
-        memory_id = await self.memory.stream.add(
-            topic="digital_daily_reflection",
-            description=description[:600],
-        )
-        return {
-            "enabled": True,
-            "status": "ok",
-            "topic": "digital_daily_reflection",
-            "memory_id": memory_id,
-            "day": day,
-        }
-
-    async def _generate_and_record_daily_reflection_stream(
-        self,
-        *,
-        current_day: int,
-        digital_emotion_state: Any,
-        event_log: Any,
-        task_domain_memory: Any,
-        help_effect_memory: Any,
-    ) -> tuple[dict[str, Any], Any, dict[str, Any]]:
-        reflection_updates, generated_reflection = await maybe_generate_daily_reflection(
-            llm=getattr(self, "llm", None),
-            current_day=int(current_day),
-            last_reflection_day=_safe_int(
-                await self.memory.status.get("proto_last_reflection_day", -1),
-                -1,
-            ),
-            event_log=event_log,
-            digital_emotion_state=digital_emotion_state,
-            task_domain_memory=task_domain_memory,
-            help_effect_memory=help_effect_memory,
-            reflection_history=await self.memory.status.get(
-                "proto_daily_reflection_history", []
-            ),
-        )
-        for key, value in reflection_updates.items():
-            await self.memory.status.update(key, value)
-        if generated_reflection is not None:
-            current_reflection_count = _safe_int(
-                await self.memory.status.get("proto_stage_daily_reflection_count", 0),
-                0,
-            )
-            await self.memory.status.update(
-                "proto_stage_daily_reflection_count",
-                current_reflection_count + 1,
-            )
-        stream_recording = await self._record_daily_reflection_stream(
-            runtime_config=load_runtime_config(),
-            generated_reflection=generated_reflection,
-        )
-        await self.memory.status.update(
-            "proto_stream_daily_reflection_recording",
-            stream_recording,
-        )
-        return reflection_updates, generated_reflection, stream_recording
 
     async def _record_task_episode_stream(
         self,
@@ -1234,9 +1113,8 @@ class DigitalHelplessnessAgent(SocietyAgent):
             stage_name = str(stage_match.group("stage_name") or "").strip()
             stage_index = _safe_int(stage_match.group("stage_index"), 0)
             try:
-                stage_summary_memory = await self.memory.stream.search(
-                    query=f"[{stage_name}] digital_friction_stage_summary",
-                    topic="digital_friction_stage_summary",
+                stage_summary_memory = await self.stream.search(
+                    f"[{stage_name}] digital_friction_stage_summary",
                     top_k=3,
                 )
             except Exception:
@@ -1362,17 +1240,23 @@ class DigitalHelplessnessAgent(SocietyAgent):
         )
         for key, value in stage_updates.items():
             await self.memory.status.update(key, value)
-        (
-            reflection_updates,
-            generated_reflection,
-            stream_daily_reflection_recording,
-        ) = await self._generate_and_record_daily_reflection_stream(
+        reflection_updates, generated_reflection = await maybe_generate_daily_reflection(
+            llm=getattr(self, "llm", None),
             current_day=current_day,
-            digital_emotion_state=digital_emotion_state.to_dict(),
+            last_reflection_day=_safe_int(
+                await self.memory.status.get("proto_last_reflection_day", -1),
+                -1,
+            ),
             event_log=event_log,
+            digital_emotion_state=digital_emotion_state.to_dict(),
             task_domain_memory=task_domain_memory,
             help_effect_memory=help_effect_memory,
+            reflection_history=await self.memory.status.get(
+                "proto_daily_reflection_history", []
+            ),
         )
+        for key, value in reflection_updates.items():
+            await self.memory.status.update(key, value)
         await self.memory.status.update("proto_last_housekeeping_day", current_day)
         current_daily_reflection = (
             reflection_updates.get("proto_daily_reflection")
@@ -1381,6 +1265,15 @@ class DigitalHelplessnessAgent(SocietyAgent):
         )
         if stage_changed:
             event_log = []
+        if generated_reflection is not None:
+            current_reflection_count = _safe_int(
+                await self.memory.status.get("proto_stage_daily_reflection_count", 0),
+                0,
+            )
+            await self.memory.status.update(
+                "proto_stage_daily_reflection_count",
+                current_reflection_count + 1,
+            )
         task = decode_task(existing_task_raw)
         task, task_updates, _ = assign_task_if_missing(
             existing_task=task,
@@ -2005,9 +1898,6 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     "auxiliary_audit": {
                         "daily_reflection_role": "audit_exploratory",
                         "daily_reflection": current_daily_reflection,
-                        "stream_daily_reflection_recording": (
-                            stream_daily_reflection_recording
-                        ),
                         "bounded_hybrid_decision_role": "optional_hybrid",
                         "strategy_deliberation_enabled": bool(
                             runtime_config.proto_llm_strategy_deliberation_enabled

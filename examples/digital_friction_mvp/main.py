@@ -917,38 +917,10 @@ async def _record_stage_summary_memory(
     description = _clean_intention(summary_text)
     if not description:
         return
-    evidence_text = ""
-    if RUNTIME_CONFIG.proto_stream_reflection_enabled:
-        evidence_parts: list[str] = []
-        query = f"{stage_name} digital task failure success help recovery"
-        try:
-            for topic, top_k in (
-                ("digital_task_episode", 5),
-                ("digital_help_episode", 3),
-                ("digital_recovery_episode", 3),
-            ):
-                result = await agent.memory.stream.search(
-                    query=query,
-                    topic=topic,
-                    top_k=top_k,
-                )
-                compact_result = re.sub(r"\s+", " ", str(result or "")).strip()
-                if compact_result and compact_result != "Nothing":
-                    evidence_parts.append(compact_result[:180])
-        except Exception:
-            evidence_parts = []
-        if evidence_parts:
-            evidence_text = " | ".join(evidence_parts)[:220]
-    stream_description = f"[{stage_name}] {description[:600]}"
-    if evidence_text:
-        stream_description = (
-            f"[{stage_name}] {description[:340]}; "
-            f"episode_evidence={evidence_text}"
-        )
     try:
         await agent.memory.stream.add(
             topic="digital_friction_stage_summary",
-            description=stream_description[:600],
+            description=f"[{stage_name}] {description[:600]}",
         )
     except Exception:
         return

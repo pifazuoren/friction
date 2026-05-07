@@ -1707,3 +1707,37 @@
 - 备注：
   - 本轮没有修改 task appraisal prompt、attribution prompt、helplessness 主公式、Gaussian scope spillover、task outcome model、strategy choice 规则或数据库 schema
   - 下一步应重跑 `stream_memory_phase3_smoke_v2`，确认 Phase 1/2 retrieval packet 至少部分从 `empty` 变为 `ok`
+
+### Stream memory Phase 3 reflection 删除与精简
+- 目的：
+  - 按“高内聚、低耦合、尽量贴近 AgentSociety 原生 stream memory”原则，移除 Phase 3 独立 reflection stream 层
+  - 保留 Phase 0/1/2：原始 episode 写入、task appraisal retrieval、event attribution retrieval
+  - 保留 AgentSociety native search 兼容修复，因为它支撑 Phase 1/2 原生 `StreamMemory.search(...)`
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/main.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_stream_reflection_phase3.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 删除 `PROTO_STREAM_REFLECTION_ENABLED` runtime 开关与 `RuntimeConfig.proto_stream_reflection_enabled`
+  - 删除 `_record_daily_reflection_stream(...)` 与 `_generate_and_record_daily_reflection_stream(...)`
+  - idle housekeeping 不再生成或写入 `digital_daily_reflection` stream
+  - `forward(...)` 恢复为只生成原有 `proto_daily_reflection` 状态，不再写 `digital_daily_reflection` stream
+  - `payload_json.auxiliary_audit` 移除 `stream_daily_reflection_recording`
+  - stage summary 写入恢复为只写 `digital_friction_stage_summary` 本身，不再检索 raw episode stream 拼 `episode_evidence`
+  - stage interview 读取 stage summary 恢复为 Phase 3 前路径，不保留 topic-filtered stage summary retrieval 增强
+  - 删除 `test_stream_reflection_phase3.py`
+- 备注：
+  - 本轮没有删除原本已有的 `maybe_generate_daily_reflection(...)`、`proto_daily_reflection` 状态、stage/final interview 对 latest daily reflection 的读取
+  - 本轮没有修改 helplessness 主公式、Gaussian scope spillover、task outcome model、strategy choice 规则、attribution 输出 schema 或数据库 schema
+  - Phase 1/2 retrieval 仍只读取 `digital_task_episode / digital_help_episode / digital_recovery_episode`
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_stream_appraisal_retrieval.py examples/digital_friction_mvp/tests/test_stream_attribution_retrieval.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
+  - 结果：`26 passed, 3 warnings`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_interview_sync.py -q`
+  - 结果：`24 passed`
+  - `conda run -n agent_env python -m pytest examples/digital_friction_mvp/tests/test_stream_memory_native_search.py -q`
+  - 结果：`1 passed`
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/main.py`
+  - `git diff --check -- examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/main.py frictionchangeLog.md`
