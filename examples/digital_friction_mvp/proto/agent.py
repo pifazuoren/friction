@@ -12,6 +12,7 @@ from config_runtime import load_runtime_config
 
 from .attempt_strategy import choose_attempt_strategy, compute_rule_strategy_weights
 from .attribution_inference import infer_event_attribution
+from .bayesian_control import update_bayesian_control_memory
 from .compat import apply_compatibility_updates
 from .experience_memory import (
     extract_memory_features,
@@ -1602,6 +1603,26 @@ class DigitalHelplessnessAgent(SocietyAgent):
             rationale_memory=rationale_memory,
             task_appraisal_result=task_appraisal.to_dict(),
         )
+        bayesian_control_memory, bayesian_control_audit = (
+            update_bayesian_control_memory(
+                raw_memory=await self.memory.status.get(
+                    "proto_bayesian_control_memory",
+                    {},
+                ),
+                enabled=runtime_config.proto_bayesian_control_audit_enabled,
+                task_family=task.task_family,
+                outcome_type=outcome.outcome_type,
+                support_mode=outcome.support_mode,
+                avoid_reason=outcome.avoid_reason,
+                event_level_uncontrollability=(
+                    outcome.event_level_uncontrollability
+                ),
+                uncontrollability_source=outcome.uncontrollability_source,
+                rho=runtime_config.proto_bayesian_control_rho,
+                weight=runtime_config.proto_bayesian_control_weight,
+                day=int(day),
+            )
+        )
         stream_episode_recording = await self._record_phase0_stream_episodes(
             runtime_config=runtime_config,
             task=task,
@@ -1904,6 +1925,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                         ),
                         "strategy_deliberation": strategy_deliberation.to_dict(),
                         "rationale_snapshot": memory_update["rationale_snapshot"],
+                        "bayesian_control": bayesian_control_audit,
                         "stream_episode_recording": stream_episode_recording,
                         "stream_appraisal_retrieval": {
                             "condition": task_appraisal_retrieval_packet["condition"],
@@ -2023,6 +2045,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
         await self.memory.status.update(
             "rationale_memory", memory_update["rationale_memory"]
         )
+        if bayesian_control_audit.get("status") == "updated":
+            await self.memory.status.update(
+                "proto_bayesian_control_memory",
+                bayesian_control_memory,
+            )
         await self.memory.status.update(
             "proto_stage_attempt_rows_json", json.dumps(attempt_rows, ensure_ascii=False)
         )

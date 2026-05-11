@@ -1741,3 +1741,58 @@
   - 结果：`1 passed`
   - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/main.py`
   - `git diff --check -- examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/main.py frictionchangeLog.md`
+
+### Bayesian controllability Phase B audit-only 落地
+- 目的：
+  - 在 runtime 中记录 Bayesian-inspired controllability belief，作为可审计的长期控制感证据
+  - 只写 status memory 和 `payload_json.auxiliary_audit`，不进入 agent 行为机制
+  - 为后续 AAAI/AISI 论文中的 controllability belief 曲线和 post-hoc 分析提供运行时证据
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/bayesian_control.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_schema.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_bayesian_control_audit.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `PROTO_BAYESIAN_CONTROL_AUDIT_ENABLED`，默认开启
+  - 新增 `PROTO_BAYESIAN_CONTROL_RHO`，默认 `0.98`，范围 clamp 到 `[0.0, 1.0]`
+  - 新增 `PROTO_BAYESIAN_CONTROL_WEIGHT`，默认 `1.0`，范围 clamp 到 `>= 0.0`
+  - 允许 `PROTO_BAYESIAN_CONTROL_WEIGHT=0.0` 作为 freeze 调试模式：记录 audit 和 last evidence，但不更新 `alpha / beta / belief`
+  - 新增 `proto_bayesian_control_memory` status memory，类型为 `dict`
+  - 每个 task family 记录 `alpha / beta / belief / last_evidence_z / last_evidence_reason / last_updated_day / update_count`
+  - 新增 `proto/bayesian_control.py`，集中实现 `beta_v1` evidence mapping、Beta 更新、memory normalization 和 audit packet
+  - `C_hat = alpha / (alpha + beta)` 完全由公式计算，不由 LLM 输出
+  - `payload_json.auxiliary_audit.bayesian_control` 记录 `version="beta_v1"`、原始 evidence 字段、更新前后 `alpha / beta / belief` 和参数
+  - 在 `world_runner.py::FINGERPRINT_ENV_KEYS` 加入 Bayesian audit 三个 env keys，避免配置不同但 fingerprint 相同
+  - stage transition 不清空 `proto_bayesian_control_memory`，因为它是长期 task-family belief，不是 stage-local buffer
+- evidence mapping：
+  - `success_self -> 1.00`
+  - `success_with_help + enabling_support -> 0.75`
+  - `success_with_help + substituting_support -> 0.45`
+  - `failure_after_attempt + event_level_uncontrollability=0 -> 0.45`
+  - `failure_after_attempt + event_level_uncontrollability=1 -> 0.25`
+  - `failure_after_attempt + event_level_uncontrollability=2 -> 0.05`
+  - `failure_even_with_help -> 0.00`
+  - `abandon_midway -> 0.15`
+  - `avoid_without_attempt + helpless_avoid -> 0.10`
+  - `avoid_without_attempt + risk_avoid -> 0.50`
+  - `avoid_without_attempt + low_value_avoid -> 0.55`
+  - `unknown -> 0.50`
+- 备注：
+  - 本轮没有修改 task appraisal、strategy deliberation、event attribution、helplessness 主公式、Gaussian scope spillover、task outcome model 或 DB schema
+  - helper 只接收 outcome/support/avoid/uncontrollability 等原始字段，不接收 `helplessness_after / strategy_weights / task_domain_memory` 等主机制对象
+  - 论文表述应使用 Bayesian-inspired controllability audit，不声称完整 Bayesian RL
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_control_audit.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`21 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_state_schema.py -q`
+  - 结果：`5 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
+  - 结果：`52 passed, 3 warnings`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py examples/digital_friction_mvp/tests/test_interview_sync.py -q`
+  - 结果：`7 passed, 3 warnings`
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/bayesian_control.py examples/digital_friction_mvp/proto/state_schema.py examples/digital_friction_mvp/world_runner.py`
+  - `git diff --check -- examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/bayesian_control.py examples/digital_friction_mvp/proto/state_schema.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/tests/test_bayesian_control_audit.py examples/digital_friction_mvp/tests/test_runtime.py frictionchangeLog.md`

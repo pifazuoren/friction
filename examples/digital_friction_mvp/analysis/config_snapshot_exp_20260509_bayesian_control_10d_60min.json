@@ -1,0 +1,29 @@
+{
+  "group_id": "exp_20260509_bayesian_control_10d_60min",
+  "config_fingerprint": "42165804b5b9d690",
+  "config_payload": {
+    "world_batch": [
+      "baseline_low_friction",
+      "high_friction_low_assist",
+      "high_friction_high_assist",
+      "low_friction_high_assist"
+    ],
+    "AGENT_COUNT": "10",
+    "EVENT_DECISION_INTERVAL_MINUTES": "60",
+    "PROTO_BAYESIAN_CONTROL_AUDIT_ENABLED": "1",
+    "PROTO_BAYESIAN_CONTROL_RHO": "0.98",
+    "PROTO_BAYESIAN_CONTROL_WEIGHT": "1.0",
+    "PROTO_LLM_DAILY_REFLECTION_ENABLED": "1",
+    "PROTO_LLM_EVENT_APPRAISAL_ENABLED": "1",
+    "PROTO_LLM_FINAL_INTERVIEW_ENABLED": "1",
+    "PROTO_LLM_PSYCHOLOGY_MODE": "hybrid",
+    "PROTO_LLM_STAGE_INTERVIEW_ENABLED": "1",
+    "PROTO_LLM_STRATEGY_DELIBERATION_ENABLED": "1",
+    "PROTO_LLM_TASK_APPRAISAL_ENABLED": "1",
+    "PROTO_LLM_UNCONTROLLABILITY_MODE": "hybrid",
+    "PROTO_LOGICAL_CLOCK_ENABLED": "1",
+    "STAGE_DAYS": "10",
+    "STAGE_MODE": "single",
+    "STAGE_SINGLE_NAME": "steady"
+  }
+}

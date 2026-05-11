@@ -21,6 +21,7 @@ from .experience_memory import (
     build_initial_recent_episode_buffer,
     build_initial_task_domain_memory,
 )
+from .bayesian_control import build_initial_bayesian_control_memory
 from .llm_psychology import build_initial_digital_emotion_state
 
 
@@ -359,6 +360,12 @@ def build_proto_status_attributes() -> list[MemoryAttribute]:
             description="latest day when proto daily housekeeping ran",
         ),
         MemoryAttribute(
+            name="proto_bayesian_control_memory",
+            type=dict,
+            default_or_value={},
+            description="Bayesian-inspired controllability audit memory",
+        ),
+        MemoryAttribute(
             name="task_domain_memory",
             type=dict,
             default_or_value={},
@@ -555,6 +562,7 @@ def build_initial_proto_status(
         "proto_active_stage_key": "",
         "proto_stage_daily_reflection_count": 0,
         "proto_last_housekeeping_day": -1,
+        "proto_bayesian_control_memory": build_initial_bayesian_control_memory(),
         "task_domain_memory": build_initial_task_domain_memory(
             digital_experience=float(scores["digital_experience"]),
             vision_limit=float(scores["vision_limit"]),

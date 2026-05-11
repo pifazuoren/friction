@@ -50,6 +50,9 @@ class RuntimeConfig:
     proto_stream_episode_recording_enabled: bool
     proto_stream_task_appraisal_retrieval_enabled: bool
     proto_stream_attribution_retrieval_enabled: bool
+    proto_bayesian_control_audit_enabled: bool
+    proto_bayesian_control_rho: float
+    proto_bayesian_control_weight: float
 
 
 def load_runtime_config() -> RuntimeConfig:
@@ -188,6 +191,21 @@ def load_runtime_config() -> RuntimeConfig:
         "PROTO_STREAM_ATTRIBUTION_RETRIEVAL_ENABLED",
         True,
     )
+    proto_bayesian_control_audit_enabled = _parse_bool_env(
+        "PROTO_BAYESIAN_CONTROL_AUDIT_ENABLED",
+        True,
+    )
+    proto_bayesian_control_rho = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_BAYESIAN_CONTROL_RHO", "0.98")),
+        ),
+    )
+    proto_bayesian_control_weight = max(
+        0.0,
+        float(os.getenv("PROTO_BAYESIAN_CONTROL_WEIGHT", "1.0")),
+    )
 
     return RuntimeConfig(
         experiment_mode=experiment_mode,
@@ -216,4 +234,7 @@ def load_runtime_config() -> RuntimeConfig:
         proto_stream_episode_recording_enabled=proto_stream_episode_recording_enabled,
         proto_stream_task_appraisal_retrieval_enabled=proto_stream_task_appraisal_retrieval_enabled,
         proto_stream_attribution_retrieval_enabled=proto_stream_attribution_retrieval_enabled,
+        proto_bayesian_control_audit_enabled=proto_bayesian_control_audit_enabled,
+        proto_bayesian_control_rho=proto_bayesian_control_rho,
+        proto_bayesian_control_weight=proto_bayesian_control_weight,
     )
