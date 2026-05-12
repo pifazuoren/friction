@@ -2,7 +2,17 @@
 
 ## 1. 一句话定位
 
-`gated-lite2` 是当前实验更适合冲 AAAI / AISI 的主路线：
+`gated-lite2` 是当前实验下一阶段更适合冲 AAAI / AISI 的候选主路线。
+
+重要边界：
+
+```text
+当前代码已经实现的是 Bayesian controllability audit-only；
+gated-lite2 目前是 proposed next mechanism，不是当前实验已经使用的机制；
+当前实验结果不能被写成 gated-lite2 的行为效果证据。
+```
+
+`gated-lite2` 的目标是：
 
 ```text
 LLM social simulation 是主体；
@@ -29,6 +39,25 @@ full Bayesian RL agent
 
 ```text
 hand-crafted rule-based strategy policy
+```
+
+当前与未来 claim 边界：
+
+```text
+当前可声称：
+  LLM/rule-driven digital friction simulation 已经能产生方向合理的 world differences；
+  Bayesian controllability audit 已经能记录 task-family-level C_hat；
+  C_hat 是 audit trace，不是行为生成机制。
+
+当前不可声称：
+  Bayesian posterior 已经驱动 agent strategy；
+  gated-lite2 已经改善行为结果；
+  当前实验验证了 Bayesian action-outcome learning。
+
+未来 gated-lite2 完成后才可检验：
+  action-conditioned posterior 是否能预测下一次 attempt/help/avoid；
+  gated Bayesian shift 是否减少 rule-heavy dependence；
+  gated-lite2 是否在不破坏 LLM coherence 的前提下改善机制解释力。
 ```
 
 ## 2. 相比 gated-lite v1 的核心修改
@@ -280,7 +309,7 @@ pi_semantic = pi_prior
 LLM 可以根据语义轻推策略，但不能无边界覆盖 Bayesian/posterior 机制。
 ```
 
-## 8. 学习对象：P(outcome_subtype | task_family, action)
+## 8. 学习对象：P(observable_outcome_subtype | task_family, action)
 
 不建议只学习粗粒度 outcome：
 
@@ -291,29 +320,64 @@ failure_after_attempt
 avoid_without_attempt
 ```
 
-更建议学习 outcome subtype，因为行动前不知道未来的 support_mode、avoid_reason、uncontrollability，但这些信息会影响 utility。
+更建议学习 observable outcome subtype，但必须避免把 outcome、support process、avoid reason 和 attribution 混在同一个后验空间里。审稿风险在于：如果把 `helpless_avoid`、`risk_avoid`、`low_value_avoid` 直接当作 Dirichlet outcome，就会把“心理解释”误写成“行动结果”，并造成 avoid 自我确认循环。
 
-建议 outcome subtype：
+因此建议拆成四层：
+
+```text
+action:
+  attempt_self
+  seek_help_then_attempt
+  avoid
+
+observable_outcome_subtype:
+  success_self
+  success_with_help
+  failure_after_attempt_low_uncontrollability
+  failure_after_attempt_mid_uncontrollability
+  failure_after_attempt_high_uncontrollability
+  failure_even_with_help
+  abandon_midway
+  no_attempt
+  neutral_unknown
+
+process_modifier:
+  no_help
+  enabling_support
+  substituting_support
+  unavailable_support
+  risk_warning
+
+psychological_interpretation:
+  helpless_avoid
+  risk_avoid
+  low_value_avoid
+  internal_attribution
+  external_attribution
+  stable_attribution
+  global_scope
+```
+
+第一版 Dirichlet posterior 只学习 observable outcome subtype：
 
 ```text
 success_self
-success_with_help_enabling
-success_with_help_substituting
+success_with_help
 failure_after_attempt_low_uncontrollability
 failure_after_attempt_mid_uncontrollability
 failure_after_attempt_high_uncontrollability
 failure_even_with_help
 abandon_midway
-avoid_without_attempt_helpless
-avoid_without_attempt_risk
-avoid_without_attempt_low_value
+no_attempt
 neutral_unknown
 ```
+
+`process_modifier` 和 `psychological_interpretation` 不直接进入 Dirichlet outcome space，而是进入 utility / audit / qualitative analysis。
 
 核心 posterior：
 
 ```text
-P_hat(o | f, a) = alpha[f][a][o] / sum_o alpha[f][a][o]
+P_hat(o_obs | f, a) = alpha[f][a][o_obs] / sum_o alpha[f][a][o_obs]
 ```
 
 其中：
@@ -321,7 +385,15 @@ P_hat(o | f, a) = alpha[f][a][o] / sum_o alpha[f][a][o]
 ```text
 f = task_family
 a = action
-o = outcome_subtype
+o_obs = observable_outcome_subtype
+```
+
+关键限制：
+
+```text
+avoid action 不能强更新 attempt_self 或 seek_help_then_attempt 的 success/failure posterior；
+avoid 只能更新 no_attempt / avoidance-cost / value-belief 相关记录；
+否则会出现“越觉得不可控越回避，越回避 posterior 越不可控”的自证循环。
 ```
 
 ## 9. Memory 结构
@@ -344,20 +416,19 @@ proto_bayesian_policy_memory
       "attempt_self": {
         "alpha": {
           "success_self": 1.0,
-          "success_with_help_enabling": 0.1,
-          "success_with_help_substituting": 0.1,
+          "success_with_help": 0.1,
           "failure_after_attempt_low_uncontrollability": 0.1,
           "failure_after_attempt_mid_uncontrollability": 0.1,
           "failure_after_attempt_high_uncontrollability": 1.0,
           "failure_even_with_help": 0.1,
           "abandon_midway": 0.1,
-          "avoid_without_attempt_helpless": 0.1,
-          "avoid_without_attempt_risk": 0.1,
-          "avoid_without_attempt_low_value": 0.1,
+          "no_attempt": 0.1,
           "neutral_unknown": 0.1
         },
         "update_count": 2,
         "last_outcome_subtype": "failure_after_attempt_high_uncontrollability",
+        "last_process_modifier": "no_help",
+        "last_psychological_interpretation": "external_attribution",
         "last_updated_day": 3
       }
     }
@@ -372,7 +443,7 @@ Bayesian controllability audit memory:
   解释 task_family 的总体可控性。
 
 Bayesian policy memory:
-  学习 task_family + action 下的 outcome subtype 分布。
+  学习 task_family + action 下的 observable outcome subtype 分布。
 ```
 
 ## 10. Utility 设计
@@ -383,18 +454,30 @@ Bayesian 模块必须有 utility，否则只是学概率，不是在选择策略
 
 ```text
 U(success_self) = high positive
-U(success_with_help_enabling) = medium-high positive
-U(success_with_help_substituting) = medium positive
+U(success_with_help + enabling_support) = medium-high positive
+U(success_with_help + substituting_support) = medium positive
 U(failure_after_attempt_low_uncontrollability) = mild negative
 U(failure_after_attempt_mid_uncontrollability) = medium negative
 U(failure_after_attempt_high_uncontrollability) = high negative
 U(failure_even_with_help) = high negative
 U(abandon_midway) = medium negative
-U(avoid_without_attempt_helpless) = high long-term negative
-U(avoid_without_attempt_risk) = neutral or mild negative
-U(avoid_without_attempt_low_value) = near neutral
+U(no_attempt + helpless_avoid) = high long-term negative
+U(no_attempt + risk_avoid) = neutral or mild negative
+U(no_attempt + low_value_avoid) = near neutral
 U(neutral_unknown) = neutral
 ```
+
+更稳妥的写法是把 utility 拆成：
+
+```text
+U_total = task_success_value
+        + autonomy_value_or_loss
+        + risk_cost
+        + effort_cost
+        + long_term_helplessness_cost
+```
+
+这样可以解释为什么同样是 success_with_help，`enabling_support` 比 `substituting_support` 更能保留 agency；也可以解释为什么 `risk_avoid` 不应被强行视为 learned helplessness。
 
 必须在论文中诚实说明：
 
@@ -448,6 +531,17 @@ c = total_updates(task_family) / K
 ```text
 confidence_a = min(1.0, update_count(task_family, action) / K)
 ```
+
+但 update count 只能作为第一版最低标准。更稳健的 gate 应同时记录：
+
+```text
+update_count(task_family, action)
+posterior_entropy(task_family, action)
+credible_interval_width_or_variance(task_family, action)
+shadow_policy_calibration_error
+```
+
+第一版可以只用 update count 做 gate，但 payload 必须保留 posterior uncertainty 字段，方便后续升级。
 
 建议初始参数：
 
@@ -674,11 +768,29 @@ Bayesian 介入了多少？
 
 ## 17. 后验更新
 
-每次 outcome 后，只更新实际采取的 action：
+每次 outcome 后，只更新实际采取的 action 的 observable outcome posterior：
 
 ```text
 alpha[f][a_actual][o_observed] += weight
 update_count[f][a_actual] += 1
+```
+
+其中 `o_observed` 应是 observable outcome subtype，而不是心理解释标签。
+
+关键限制：
+
+```text
+如果 a_actual = avoid:
+  只更新 avoid action 下的 no_attempt / avoidance-cost 相关记录；
+  不更新 attempt_self 或 seek_help_then_attempt 的 success/failure posterior；
+  不把 helpless_avoid 直接当作低 controllability evidence 去压低其他 action。
+```
+
+原因：
+
+```text
+回避本身没有观察到“如果尝试会不会成功”；
+如果用回避反过来证明尝试不可控，会形成 self-confirming helplessness loop。
 ```
 
 第一版建议：
@@ -752,6 +864,9 @@ shadow: Bayesian policy 只计算不影响行为
 gated-lite2: weak prior + LLM semantic adjustment + Bayesian gated shift
 gated-lite2 without LLM adjustment
 gated-lite2 without Bayesian shift
+gated-lite2 without evidence gate
+gated-lite2 without max_delta
+gated-lite2 without avoid-as-evidence
 ```
 
 最好加敏感性分析：
@@ -762,6 +877,8 @@ gate_threshold = 0.33 / 0.50 / 0.67
 lambda_llm = 0.10 / 0.25
 utility mapping sensitivity
 tau sensitivity
+avoid evidence sensitivity
+posterior confidence K sensitivity
 ```
 
 关键指标：
@@ -780,6 +897,9 @@ posterior confidence trajectory
 Bayesian delta magnitude
 LLM semantic delta magnitude
 qualitative coherence
+shadow policy calibration error
+lagged prediction of next action
+Brier score / log loss for posterior predictive outcomes
 ```
 
 核心审稿问题：
@@ -789,6 +909,8 @@ gated-lite2 是否减少了 hand-crafted rule dependence？
 gated-lite2 是否保留 LLM social simulation 的语义一致性？
 gated-lite2 是否让 action-outcome learning 更可解释？
 gated-lite2 是否导致策略过早收敛或过度回避？
+shadow pi_bayes 是否真的预测后续 action/outcome？
+utility mapping 是否只是手调结果？
 ```
 
 ## 20. 风险和保护
@@ -850,18 +972,39 @@ payload 记录 safety_guard_triggered 和 safety_guard_reason
 消融报告 rule guard 触发率
 ```
 
+### 风险 6：avoid 自我确认循环
+
+保护：
+
+```text
+avoid 不更新 attempt_self / seek_help_then_attempt 的 success/failure posterior
+avoid_reason 只进入 utility/audit/qualitative analysis
+增加 with/without avoid evidence sensitivity
+报告 avoid action 的 no_attempt posterior 与 attempt action posterior 分开
+```
+
+### 风险 7：当前实验被误写成 gated-lite2 证据
+
+保护：
+
+```text
+论文和 README 明确区分 current implemented audit-only 与 proposed gated-lite2
+当前 2026-05-09 实验只支持 audit-only logging 和 world manipulation direction
+gated-lite2 必须另跑 shadow/gated 实验后才能作为机制结果
+```
+
 ## 21. 最近一周建议
 
 最推荐的一周目标：
 
 ```text
-1. 实现 proto_bayesian_policy_memory。
-2. 实现 weak prior + LLM bounded semantic adjustment。
-3. 实现 shadow mode，不影响真实行为。
-4. 实现 gated-lite2 mode，但默认不开。
-5. gated-lite2 只在小规模实验中试跑。
-6. payload 完整记录 LLM 语义修正和 Bayesian 影响。
-7. 不做 on mode。
+1. 写 claim_matrix.md，明确 current implemented / current evidence / proposed / future work。
+2. 实现 proto_bayesian_policy_memory 的 shadow-only 版本。
+3. 实现 observable_outcome_subtype taxonomy，避免把 avoid_reason 当作 outcome。
+4. 实现 Q_bayes / pi_bayes / confidence，但不影响真实行为。
+5. payload 完整记录 pi_prior / pi_llm / pi_semantic / q_bayes / pi_bayes / confidence / actual_strategy。
+6. 跑 shadow mode 小实验，检查 pi_bayes 是否能预测后续 action/outcome。
+7. 不做 gated-lite2 行为介入，不做 on mode。
 ```
 
 不建议本周做：
@@ -872,6 +1015,7 @@ payload 记录 safety_guard_triggered 和 safety_guard_reason
 3. 大幅删除 LLM appraisal / attribution / interview。
 4. 把 utility 做得过复杂。
 5. 声称 full Bayesian RL。
+6. 直接把 gated-lite2 放进正式主实验。
 ```
 
 ## 22. 最终审稿口径
@@ -879,21 +1023,22 @@ payload 记录 safety_guard_triggered 和 safety_guard_reason
 推荐写法：
 
 ```text
-We preserve the LLM-based social simulation architecture while introducing a gated Bayesian-inspired posterior predictive module for action-outcome learning. Strategy selection starts from a weak neutral prior, is semantically adjusted by the LLM within a bounded range, and is then lightly shifted by a Bayesian posterior predictive policy only when action-specific evidence is sufficient. Rule-based logic is retained only as a safety guard. This design reduces reliance on hand-crafted strategy weights while retaining LLM-based appraisal, attribution, interview, and qualitative coherence.
+We preserve the LLM-based social simulation architecture while proposing a gated Bayesian-inspired posterior predictive module for action-outcome learning. In the current implementation, Bayesian controllability is audit-only and does not affect behavior. The proposed next-stage mechanism starts strategy selection from a weak neutral prior, applies bounded LLM semantic adjustment, and then lightly shifts the resulting action distribution toward a Bayesian posterior predictive policy only when action-specific evidence is sufficient. Rule-based logic is retained only as a safety guard. This design is intended to reduce reliance on hand-crafted strategy weights while retaining LLM-based appraisal, attribution, interview, and qualitative coherence.
 ```
 
 中文解释：
 
 ```text
 我们没有把系统改成纯 RL agent。
+当前代码里的 Bayesian control 仍是 audit-only，不影响行为。
 我们保留 LLM social simulation 的主体，让 LLM 继续理解任务、解释事件和生成主观叙事。
 策略冷启动来自弱先验，当前语义由 LLM 小幅修正，长期经验由 Bayesian posterior 学习。
-rule 只做安全保护，不再主导策略。
+未来 gated-lite2 中，rule 只做安全保护，不再主导策略。
 ```
 
 ## 23. 总结
 
-gated-lite2 是当前更适合 AAAI / AISI 的路线，因为它同时满足四个目标：
+gated-lite2 是当前更适合 AAAI / AISI 的下一阶段路线，因为它同时满足四个目标：
 
 ```text
 1. 保留 LLM social simulation 的主体和 AgentSociety 优势。

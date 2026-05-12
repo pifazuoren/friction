@@ -1,0 +1,13 @@
+group_id,pair_index,pair_seed,world_order,world_name,exp_id,status,stage_index,stage_name,agent_count,task_count,attempt_rate,success_rate,help_seek_rate,abandon_rate,negative_feedback_rate,helplessness_delta,day,t,step
+exp_20260511_policy_lite_shadow_10d_60min,0,101,0,baseline_low_friction,2876207a-ff55-4ca0-80fa-8574dc46a28b,ok,0,steady,10,387,0.69509,0.354005,0.410853,0.077519,0.341085,31.190933,10,21601.0,1021601
+exp_20260511_policy_lite_shadow_10d_60min,0,101,1,high_friction_low_assist,d31b2615-a3b6-40cc-8548-45f9824d8d99,ok,0,steady,10,475,0.376842,0.048421,0.221053,0.122105,0.328421,60.541193,10,21601.0,1021601
+exp_20260511_policy_lite_shadow_10d_60min,0,101,2,high_friction_high_assist,7a8d78c5-e65a-46e7-ba33-adc24e5a7f79,ok,0,steady,10,431,0.587007,0.185615,0.415313,0.141531,0.401392,53.747543,10,21601.0,1021601
+exp_20260511_policy_lite_shadow_10d_60min,0,101,3,low_friction_high_assist,09a6e3fa-e7fb-4319-8a85-8ce143f5c1b2,ok,0,steady,10,363,0.796143,0.581267,0.454545,0.027548,0.214876,-1.239587,10,21601.0,1021601
+exp_20260511_policy_lite_shadow_10d_60min,1,201,0,baseline_low_friction,eb2ba638-1477-4ff0-87b3-e6b717b99e64,ok,0,steady,10,382,0.719895,0.437173,0.384817,0.073298,0.282723,20.253501,10,21601.0,1021601
+exp_20260511_policy_lite_shadow_10d_60min,1,201,1,high_friction_low_assist,e4059d81-82fd-4e66-8d5d-c3a7ede4f901,ok,0,steady,10,473,0.40592,0.061311,0.232558,0.114165,0.344609,60.269096,10,21601.0,1021601
+exp_20260511_policy_lite_shadow_10d_60min,1,201,2,high_friction_high_assist,93d5c5a5-bf20-474f-878f-83cc818b6143,ok,0,steady,10,404,0.601485,0.227723,0.408416,0.138614,0.373762,42.720193,10,21601.0,1021601
+exp_20260511_policy_lite_shadow_10d_60min,1,201,3,low_friction_high_assist,8fa3a307-b33b-4a83-9b7b-47f2575f8d3c,ok,0,steady,10,337,0.866469,0.667656,0.456973,0.026706,0.198813,-11.451759,10,21601.0,1021601
+exp_20260511_policy_lite_shadow_10d_60min,2,301,0,baseline_low_friction,4e0cf3dc-9167-4cb4-9ba1-132cc6ad80fd,ok,0,steady,10,389,0.694087,0.37018,0.375321,0.100257,0.323907,27.633059,10,21601.0,1021601
+exp_20260511_policy_lite_shadow_10d_60min,2,301,1,high_friction_low_assist,721fb22d-4d06-4703-9d32-918cfc9d7ed1,ok,0,steady,10,492,0.343496,0.042683,0.170732,0.115854,0.300813,60.999189,10,21601.0,1021601
+exp_20260511_policy_lite_shadow_10d_60min,2,301,2,high_friction_high_assist,7089d270-0592-4923-a0b3-74ecbc2974e8,ok,0,steady,10,417,0.594724,0.208633,0.402878,0.160671,0.386091,48.16989,10,21601.0,1021601
+exp_20260511_policy_lite_shadow_10d_60min,2,301,3,low_friction_high_assist,fe3b611e-e4e7-4476-bb24-fdf441df8774,ok,0,steady,10,352,0.795455,0.590909,0.448864,0.039773,0.204545,-0.428734,10,21601.0,1021601

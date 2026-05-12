@@ -13,6 +13,11 @@ from config_runtime import load_runtime_config
 from .attempt_strategy import choose_attempt_strategy, compute_rule_strategy_weights
 from .attribution_inference import infer_event_attribution
 from .bayesian_control import update_bayesian_control_memory
+from .bayesian_policy_lite import (
+    combine_bayesian_policy_audits,
+    compute_bayesian_policy_shadow,
+    update_bayesian_policy_memory,
+)
 from .compat import apply_compatibility_updates
 from .experience_memory import (
     extract_memory_features,
@@ -1395,6 +1400,25 @@ class DigitalHelplessnessAgent(SocietyAgent):
             daily_reflection=current_daily_reflection,
             rule_weights=rule_strategy_weights,
         )
+        bayesian_policy_memory_pre, bayesian_policy_pre_audit = (
+            compute_bayesian_policy_shadow(
+                raw_memory=await self.memory.status.get(
+                    "proto_bayesian_policy_memory",
+                    {},
+                ),
+                mode=runtime_config.proto_bayesian_policy_lite_mode,
+                task_family=task.task_family,
+                strategy_reference=strategy_deliberation.final_weights,
+                task_difficulty=task.difficulty,
+                env=env,
+                task_appraisal=task_appraisal.to_dict(),
+                tau=runtime_config.proto_bayesian_policy_lite_tau,
+                confidence_k=runtime_config.proto_bayesian_policy_lite_confidence_k,
+                rho=runtime_config.proto_bayesian_policy_lite_rho,
+                weight=runtime_config.proto_bayesian_policy_lite_weight,
+                day=int(day),
+            )
+        )
         exp_seed = _safe_int(os.getenv("EXP_SEED", "101"), 101)
         pair_seed = _safe_int(os.getenv("PARALLEL_PAIR_SEED", str(exp_seed)), exp_seed)
         world_name = str(os.getenv("WORLD_NAME", "baseline_low_friction"))
@@ -1622,6 +1646,31 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 weight=runtime_config.proto_bayesian_control_weight,
                 day=int(day),
             )
+        )
+        bayesian_policy_memory, bayesian_policy_update_audit = (
+            update_bayesian_policy_memory(
+                raw_memory=bayesian_policy_memory_pre,
+                mode=runtime_config.proto_bayesian_policy_lite_mode,
+                task_family=task.task_family,
+                actual_strategy=strategy.strategy_type,
+                outcome_type=outcome.outcome_type,
+                event_level_uncontrollability=(
+                    outcome.event_level_uncontrollability
+                ),
+                support_mode=outcome.support_mode,
+                avoid_reason=outcome.avoid_reason,
+                event_attribution_locus=outcome.event_attribution_locus,
+                event_attribution_stability=outcome.event_attribution_stability,
+                event_attribution_scope=outcome.event_attribution_scope,
+                rho=runtime_config.proto_bayesian_policy_lite_rho,
+                weight=runtime_config.proto_bayesian_policy_lite_weight,
+                day=int(day),
+            )
+        )
+        bayesian_policy_audit = combine_bayesian_policy_audits(
+            pre_audit=bayesian_policy_pre_audit,
+            update_audit=bayesian_policy_update_audit,
+            actual_strategy=strategy.strategy_type,
         )
         stream_episode_recording = await self._record_phase0_stream_episodes(
             runtime_config=runtime_config,
@@ -1926,6 +1975,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                         "strategy_deliberation": strategy_deliberation.to_dict(),
                         "rationale_snapshot": memory_update["rationale_snapshot"],
                         "bayesian_control": bayesian_control_audit,
+                        "bayesian_policy_lite": bayesian_policy_audit,
                         "stream_episode_recording": stream_episode_recording,
                         "stream_appraisal_retrieval": {
                             "condition": task_appraisal_retrieval_packet["condition"],
@@ -2049,6 +2099,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
             await self.memory.status.update(
                 "proto_bayesian_control_memory",
                 bayesian_control_memory,
+            )
+        if bayesian_policy_audit.get("status") == "updated":
+            await self.memory.status.update(
+                "proto_bayesian_policy_memory",
+                bayesian_policy_memory,
             )
         await self.memory.status.update(
             "proto_stage_attempt_rows_json", json.dumps(attempt_rows, ensure_ascii=False)

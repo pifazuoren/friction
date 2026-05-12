@@ -1796,3 +1796,51 @@
   - 结果：`7 passed, 3 warnings`
   - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/bayesian_control.py examples/digital_friction_mvp/proto/state_schema.py examples/digital_friction_mvp/world_runner.py`
   - `git diff --check -- examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/bayesian_control.py examples/digital_friction_mvp/proto/state_schema.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/tests/test_bayesian_control_audit.py examples/digital_friction_mvp/tests/test_runtime.py frictionchangeLog.md`
+
+### Bayesian gated-lite2 前置 shadow 验证落地
+- 目的：
+  - 实现 `Bayesian Policy-Lite Shadow Validation for Gated-Lite2`
+  - 只计算和审计 Bayesian posterior predictive policy，不改变真实策略选择
+  - 为后续 gated-lite2 行为介入前的 shadow calibration、lagged prediction 和审稿风险控制提供运行时证据
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/bayesian_policy_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_schema.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_state_schema.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_MODE`，默认 `off`，本轮只支持 `off / shadow`
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_TAU`，默认 `1.0`，范围 clamp 到 `> 0`
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_CONFIDENCE_K`，默认 `4`，范围 clamp 到 `>= 1`
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_RHO`，默认 `1.0`，范围 clamp 到 `[0.0, 1.0]`
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_WEIGHT`，默认 `1.0`，范围 clamp 到 `>= 0.0`
+  - 新增 `proto_bayesian_policy_memory` status memory，类型为 `dict`
+  - `proto_bayesian_policy_memory` 与 `proto_bayesian_control_memory` 分离：前者学习 `task_family + action -> policy_outcome_subtype`，后者保留总体 `C_hat` audit
+  - 新增 `policy_lite_shadow_v1`，维护 action-specific Dirichlet alpha、`update_count`、last subtype、process modifier、psychological interpretation 和 last updated day
+  - 新增 action-specific Dirichlet prior：plausible outcome alpha 为 `1.0`，unlikely outcome alpha 为 `0.05`，structurally impossible outcome alpha 为 `0.01`
+  - 新增 `policy_outcome_subtype`，包括 success、help success、不同 uncontrollability 的 failure、help failure、abandon、no attempt 和 neutral unknown
+  - 新增 `Q_bayes / pi_bayes_shadow / confidence_by_action / posterior_entropy_by_action / alpha_total_by_action` audit
+  - `pre-outcome` shadow policy 不接收也不使用 `support_mode / avoid_reason / event_attribution / actual outcome / post-outcome uncontrollability calibration`
+  - `payload_json.auxiliary_audit.bayesian_policy_lite` 记录 `uses_post_outcome_information_for_policy=false` 和 `strategy_unchanged=true`
+  - `avoid` 只更新 `avoid -> no_attempt`，不反向更新 `attempt_self` 或 `seek_help_then_attempt` 的 success/failure posterior
+  - `weight=0.0` 作为 freeze 模式，不改变 alpha 或 update count
+  - `rho=0.0` 表示丢弃历史，只保留当前 evidence，不称为 freeze
+  - 在 `world_runner.py::FINGERPRINT_ENV_KEYS` 加入 policy-lite 五个 env keys，避免 shadow 配置不同但 fingerprint 相同
+  - stage transition 不清空 `proto_bayesian_policy_memory`，因为它是长期 action-outcome posterior memory
+- 备注：
+  - 本轮没有实现 `gated_lite` 或 `on` 行为介入模式
+  - 本轮没有删除或替换当前 rule/LLM strategy chain
+  - 本轮没有修改 task appraisal、strategy deliberation、event attribution、helplessness 主公式、Gaussian scope spillover、task outcome model、stream memory retrieval 或 DB schema
+  - 论文表述应使用 shadow Bayesian posterior predictive audit / Bayesian policy-lite shadow validation，不能声称 Bayesian policy 已经改善真实行为
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`26 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_state_schema.py -q`
+  - 结果：`31 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_control_audit.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
+  - 结果：`61 passed, 3 warnings`
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/bayesian_policy_lite.py examples/digital_friction_mvp/proto/state_schema.py examples/digital_friction_mvp/world_runner.py`

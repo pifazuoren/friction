@@ -12,6 +12,7 @@ DEFAULT_WORLD_BATCH = (
     "high_friction_high_assist",
     "low_friction_high_assist",
 )
+VALID_BAYESIAN_POLICY_LITE_MODES = {"off", "shadow"}
 
 
 def _parse_bool_env(name: str, default: bool = False) -> bool:
@@ -53,6 +54,11 @@ class RuntimeConfig:
     proto_bayesian_control_audit_enabled: bool
     proto_bayesian_control_rho: float
     proto_bayesian_control_weight: float
+    proto_bayesian_policy_lite_mode: str
+    proto_bayesian_policy_lite_tau: float
+    proto_bayesian_policy_lite_confidence_k: int
+    proto_bayesian_policy_lite_rho: float
+    proto_bayesian_policy_lite_weight: float
 
 
 def load_runtime_config() -> RuntimeConfig:
@@ -206,6 +212,32 @@ def load_runtime_config() -> RuntimeConfig:
         0.0,
         float(os.getenv("PROTO_BAYESIAN_CONTROL_WEIGHT", "1.0")),
     )
+    proto_bayesian_policy_lite_mode = (
+        os.getenv("PROTO_BAYESIAN_POLICY_LITE_MODE", "off").strip().lower()
+    )
+    if proto_bayesian_policy_lite_mode not in VALID_BAYESIAN_POLICY_LITE_MODES:
+        raise ValueError(
+            "PROTO_BAYESIAN_POLICY_LITE_MODE must be one of: off, shadow"
+        )
+    proto_bayesian_policy_lite_tau = max(
+        0.000001,
+        float(os.getenv("PROTO_BAYESIAN_POLICY_LITE_TAU", "1.0")),
+    )
+    proto_bayesian_policy_lite_confidence_k = max(
+        1,
+        int(float(os.getenv("PROTO_BAYESIAN_POLICY_LITE_CONFIDENCE_K", "4"))),
+    )
+    proto_bayesian_policy_lite_rho = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_BAYESIAN_POLICY_LITE_RHO", "1.0")),
+        ),
+    )
+    proto_bayesian_policy_lite_weight = max(
+        0.0,
+        float(os.getenv("PROTO_BAYESIAN_POLICY_LITE_WEIGHT", "1.0")),
+    )
 
     return RuntimeConfig(
         experiment_mode=experiment_mode,
@@ -237,4 +269,9 @@ def load_runtime_config() -> RuntimeConfig:
         proto_bayesian_control_audit_enabled=proto_bayesian_control_audit_enabled,
         proto_bayesian_control_rho=proto_bayesian_control_rho,
         proto_bayesian_control_weight=proto_bayesian_control_weight,
+        proto_bayesian_policy_lite_mode=proto_bayesian_policy_lite_mode,
+        proto_bayesian_policy_lite_tau=proto_bayesian_policy_lite_tau,
+        proto_bayesian_policy_lite_confidence_k=proto_bayesian_policy_lite_confidence_k,
+        proto_bayesian_policy_lite_rho=proto_bayesian_policy_lite_rho,
+        proto_bayesian_policy_lite_weight=proto_bayesian_policy_lite_weight,
     )

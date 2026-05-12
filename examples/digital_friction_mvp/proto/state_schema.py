@@ -22,6 +22,7 @@ from .experience_memory import (
     build_initial_task_domain_memory,
 )
 from .bayesian_control import build_initial_bayesian_control_memory
+from .bayesian_policy_lite import build_initial_bayesian_policy_memory
 from .llm_psychology import build_initial_digital_emotion_state
 
 
@@ -366,6 +367,12 @@ def build_proto_status_attributes() -> list[MemoryAttribute]:
             description="Bayesian-inspired controllability audit memory",
         ),
         MemoryAttribute(
+            name="proto_bayesian_policy_memory",
+            type=dict,
+            default_or_value={},
+            description="Bayesian policy-lite shadow posterior memory",
+        ),
+        MemoryAttribute(
             name="task_domain_memory",
             type=dict,
             default_or_value={},
@@ -563,6 +570,7 @@ def build_initial_proto_status(
         "proto_stage_daily_reflection_count": 0,
         "proto_last_housekeeping_day": -1,
         "proto_bayesian_control_memory": build_initial_bayesian_control_memory(),
+        "proto_bayesian_policy_memory": build_initial_bayesian_policy_memory(),
         "task_domain_memory": build_initial_task_domain_memory(
             digital_experience=float(scores["digital_experience"]),
             vision_limit=float(scores["vision_limit"]),
