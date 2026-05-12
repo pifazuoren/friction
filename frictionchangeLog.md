@@ -1914,3 +1914,105 @@
   - 结果：生成上述 5 个 fixed shadow analysis CSV
   - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_control_audit.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
   - 结果：`61 passed, 3 warnings`
+
+### Phase 3 conservative gated-lite pilot 修改计划
+- 目的：
+  - 把 `Bayesianlite2Phase.md` 中 Phase 3 从概念性描述扩展为可执行的 conservative gated-lite pilot 实施计划
+  - 明确 Phase 3 不是直接进入主实验，而是第一次让 Bayesian posterior predictive policy 在 evidence gate 与 max_delta 约束下小幅影响真实行动概率
+  - 遵循“复用现有接口，不瞎猜接口”：以 `StrategyDeliberationResult.final_weights` 作为第一版 `pi_semantic`，以 `choose_attempt_strategy(..., precomputed_final_weights=pi_final)` 作为 gated-lite 接入口
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/Bayesianlite2Phase.md`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 已查询并确认的现有接口：
+  - `config_runtime.py` 当前只支持 `PROTO_BAYESIAN_POLICY_LITE_MODE=off/shadow`
+  - `bayesian_policy_lite.py` 当前已有 shadow helper、posterior predictive、`Q_bayes`、`pi_bayes_shadow`、confidence、entropy 与 utility profile
+  - `agent.py` 当前已在 action 前计算 Bayesian policy-lite shadow audit，真实策略仍由 `choose_attempt_strategy(...)` 抽样
+  - `attempt_strategy.py` 当前已有 `precomputed_final_weights` 参数，可直接复用为 gated-lite 的最终概率入口
+  - `llm_psychology.py` 当前已有 `StrategyDeliberationResult.final_weights`，可作为 `pi_semantic`，不需要新造 LLM policy 接口
+  - `world_runner.py` 当前已 fingerprint policy-lite mode、tau、confidence_k、rho、weight、utility_profile，Phase 3 需要追加 gate keys
+- Phase 3 计划核心：
+  - 新增 runtime mode：`PROTO_BAYESIAN_POLICY_LITE_MODE=gated_lite`
+  - 新增配置：`PROTO_BAYESIAN_POLICY_LITE_GATE_THRESHOLD`、`PROTO_BAYESIAN_POLICY_LITE_MAX_DELTA`、`PROTO_BAYESIAN_POLICY_LITE_PROB_FLOOR`
+  - 第一轮 pilot 使用 `utility_profile=theory_v2`、`gate_threshold=0.50`、`max_delta=0.05`、`prob_floor=0.05`
+  - `max_delta=0.10` 暂不作为默认 pilot，只作为后续 sensitivity / stress test
+  - `max_delta=0` 必须作为 no-intervention 回归测试，确认接入不破坏主链
+  - `pi_semantic = normalize(strategy_deliberation.final_weights)`
+  - `pi_bayes = softmax(Q_bayes, tau)`
+  - 只有 `confidence_by_action[action] >= gate_threshold` 时，该 action 才允许应用 Bayesian delta
+  - `delta_applied[action] = clip((pi_bayes[action] - pi_semantic[action]) * confidence, -max_delta, +max_delta)`
+  - `pi_after_bayesian_shift` 经过 renormalization 与 probability floor 后得到 `pi_final`
+  - `pi_final` 仅在 `gated_lite` 模式下传入 `choose_attempt_strategy(..., precomputed_final_weights=pi_final)`
+  - outcome 后仍只更新 observed action 的 Bayesian posterior，`avoid` 仍只更新 `avoid -> no_attempt`
+- payload 计划：
+  - 继续记录 `pi_prior`、`pi_strategy_reference`、`q_bayes`、`pi_bayes_shadow`、confidence、entropy、alpha totals、posterior update counts
+  - 新增 `pi_semantic`、`pi_bayes`、`gate_by_action`、`delta_before_clamp`、`delta_applied`、`pi_after_bayesian_shift`、`pi_final`
+  - 新增 `gate_threshold`、`max_delta_per_action`、`prob_floor`、`safety_guard_status`、`intervention_applied`、`total_variation_distance`
+  - 保持 `uses_post_outcome_information_for_policy=false`
+- safety guard 边界：
+  - 只处理 NaN、负数、全零、缺 action、概率和不为 1、低于 floor、posterior invalid 等数学/可行性问题
+  - 不在 safety guard 里重新加入“helplessness 高就 avoid”“support 差就 avoid”等 rule-heavy 行为规则
+- 测试计划：
+  - runtime：默认仍为 `off`，env 可切 `gated_lite`，新增 gate configs clamp 正确，fingerprint 包含新增 gate keys
+  - helper：shadow 行为不变，低 confidence 不介入，高 confidence 小幅移动，max_delta 生效，max_delta=0 等价 no intervention，probability floor 与 renormalization 合法，invalid posterior fallback 到 `pi_semantic`
+  - integration：off/shadow 同 seed 下不改变 sampled action/outcome/helplessness；gated_lite 时 `choose_attempt_strategy` 收到 `precomputed_final_weights`；payload 可复盘每次 Bayesian 是否介入和介入多少
+- 实验计划：
+  - Phase 3A：1 paired seed、4 worlds、10 days，先做 smoke
+  - Phase 3B：3 paired seeds、4 worlds、10 days，保持 20260512 theory_v2 shadow-only 的其他设置不变，只把 mode 改为 `gated_lite`
+  - Phase 3C：仅在 3B 稳定后做 sensitivity，比较 `max_delta in {0.00, 0.05, 0.10}` 与 `gate_threshold in {0.33, 0.50, 0.67}`
+- 备注：
+  - 本次只更新 Phase 3 修改计划与日志，没有实现 `gated_lite` 运行代码
+  - Phase 3 仍保留 LLM social simulation 主链，不替换 task appraisal、event appraisal、attribution、scope spillover、helplessness update、experience memory、stream memory 或 interview
+  - 论文表述应称为 conservative gated Bayesian posterior-predictive shift，不应称为完整 Bayesian RL agent 或已经完成主因果验证
+
+### Bayesian policy-lite Phase 3 gated-lite infrastructure 与 smoke validation
+- 目的：
+  - 落地 `Phase 3 Gated-Lite Infrastructure + Smoke Validation`
+  - 新增 `gated_lite` 行为介入基础设施，但仍保持 Bayesian 只做有界、证据门控的小幅概率修正
+  - 本阶段只支持 dry-run / smoke validation，不把 3-seed pilot、`max_delta=0.10` 或 gate/entropy sensitivity 提前到 Phase 3
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/bayesian_policy_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/Bayesianlite2Phase.md`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - `PROTO_BAYESIAN_POLICY_LITE_MODE` 支持 `off / shadow / gated_lite`
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_GATE_THRESHOLD`，默认 `0.50`，clamp 到 `[0, 1]`
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_ENTROPY_THRESHOLD`，默认 `0.85`，clamp 到 `[0, 1]`
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_MAX_DELTA`，默认 `0.05`，clamp 到 `>= 0`
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_PROB_FLOOR`，默认 `0.05`，clamp 到 `< 1 / action_count`
+  - `prob_floor=0.05` 与 `attempt_strategy.py` 现有 sampler floor 对齐，第一版不做自由 floor 实验
+  - `bayesian_policy_lite.py` 复用现有 shadow posterior、`Q_bayes`、softmax、confidence、entropy，不新增平行模块
+  - 新增 `pi_ref = normalize(strategy_deliberation.final_weights)`，替代容易误导的 `pi_semantic` 命名
+  - `gate_by_action` 同时要求 `confidence_by_action >= gate_threshold` 且 `posterior_entropy_by_action <= entropy_threshold`
+  - `delta_applied = clip((pi_bayes - pi_ref) * confidence, -max_delta, +max_delta)`
+  - `pi_after_bayesian_shift` 经 probability floor 与 renormalization 后得到 `pi_final`
+  - `agent.py` 只在 `mode=gated_lite` 时把 `pi_final` 传入 `choose_attempt_strategy(..., precomputed_final_weights=pi_final)`
+  - `off / shadow` 不传入 `precomputed_final_weights`，保持旧 action selection 主链
+  - `update_bayesian_policy_memory(...)` 对 `shadow` 与 `gated_lite` 都执行 observed-action posterior update；`off` 仍 disabled
+  - `avoid` 仍只更新 `avoid -> no_attempt`，不反向更新 attempt/help posterior
+  - `world_runner.py::FINGERPRINT_ENV_KEYS` 增加 gate、entropy、max_delta、prob_floor keys
+- payload audit：
+  - `gated_lite` payload 新增 `pi_ref / pi_bayes / gate_by_action / entropy_threshold / delta_before_clamp / delta_applied / pi_after_bayesian_shift / pi_final`
+  - 新增 `final_delta_after_floor = pi_final - pi_ref`
+  - 新增 `max_abs_final_delta` 与 `total_variation_distance`
+  - `intervention_applied` 表示 Bayesian delta 是否实际非零，不把 floor 自身导致的变化误记为 Bayesian intervention
+  - 保持 `uses_post_outcome_information_for_policy=false`
+  - `strategy_unchanged=false` 表示 `gated_lite` 接管了传入 sampler 的最终概率入口，不表示 sampled action 一定不同
+- safety guard：
+  - 只处理 NaN、负数、全零、缺 action、概率和异常、floor 后异常、invalid posterior 等数学/可行性问题
+  - 没有新增“helplessness 高就 avoid”“support 差就 avoid”等 rule-heavy 行为规则
+- 备注：
+  - 本轮没有修改 task appraisal、event appraisal、attribution、scope spillover、helplessness update、experience memory、stream memory、outcome model 或 DB schema
+  - 本轮没有运行正式 world smoke 实验；下一步应先跑 `max_delta=0` dry-run，再跑 `max_delta=0.05` 1-seed smoke
+  - 论文表述应称为 gated-lite infrastructure and smoke validation，不应声称 Phase 4 主实验或完整 Bayesian RL 已完成
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`37 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_control_audit.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
+  - 结果：`61 passed, 3 warnings`
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/bayesian_policy_lite.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/attempt_strategy.py examples/digital_friction_mvp/world_runner.py`
+  - 结果：通过，无输出

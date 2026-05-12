@@ -8,6 +8,8 @@ from .experience_memory import TASK_FAMILIES
 
 
 BAYESIAN_POLICY_LITE_VERSION = "policy_lite_shadow_v1"
+ACTIVE_BAYESIAN_POLICY_LITE_MODES = {"shadow", "gated_lite"}
+DEFAULT_POLICY_LITE_PROB_FLOOR = 0.05
 POLICY_LITE_ACTIONS = (
     "attempt_self",
     "seek_help_then_attempt",
@@ -176,6 +178,28 @@ def clamp_weight(value: Any) -> float:
     return max(0.0, _safe_float(value, 1.0))
 
 
+def clamp_gate_threshold(value: Any) -> float:
+    return max(0.0, min(1.0, _safe_float(value, 0.50)))
+
+
+def clamp_entropy_threshold(value: Any) -> float:
+    return max(0.0, min(1.0, _safe_float(value, 0.85)))
+
+
+def clamp_max_delta(value: Any) -> float:
+    return max(0.0, _safe_float(value, 0.05))
+
+
+def clamp_prob_floor(value: Any) -> float:
+    return max(
+        0.0,
+        min(
+            (1.0 / len(POLICY_LITE_ACTIONS)) - 0.000001,
+            _safe_float(value, DEFAULT_POLICY_LITE_PROB_FLOOR),
+        ),
+    )
+
+
 def _prior_alpha_for(action: str, outcome_subtype: str) -> float:
     if outcome_subtype in _PLAUSIBLE_OUTCOMES_BY_ACTION.get(action, set()):
         return 1.0
@@ -282,6 +306,138 @@ def _normalize_distribution(weights: Any) -> dict[str, float]:
     if total <= 0.0:
         return {action: 1.0 / len(POLICY_LITE_ACTIONS) for action in POLICY_LITE_ACTIONS}
     return {action: clipped[action] / total for action in POLICY_LITE_ACTIONS}
+
+
+def _has_invalid_probability(distribution: Any) -> bool:
+    if not isinstance(distribution, dict):
+        return True
+    for action in POLICY_LITE_ACTIONS:
+        value = distribution.get(action)
+        if not isinstance(value, (int, float)):
+            return True
+        if not math.isfinite(float(value)):
+            return True
+        if float(value) < 0.0:
+            return True
+    return sum(float(distribution[action]) for action in POLICY_LITE_ACTIONS) <= 0.0
+
+
+def _normalize_with_floor(
+    weights: Any,
+    *,
+    floor: Any = DEFAULT_POLICY_LITE_PROB_FLOOR,
+) -> dict[str, float]:
+    bounded_floor = clamp_prob_floor(floor)
+    source = _normalize_distribution(weights)
+    clipped = {
+        action: max(bounded_floor, _safe_float(source.get(action), 0.0))
+        for action in POLICY_LITE_ACTIONS
+    }
+    total = sum(clipped.values())
+    if total <= 0.0 or not math.isfinite(total):
+        return {action: 1.0 / len(POLICY_LITE_ACTIONS) for action in POLICY_LITE_ACTIONS}
+    return {action: clipped[action] / total for action in POLICY_LITE_ACTIONS}
+
+
+def _distribution_delta(
+    left: dict[str, float],
+    right: dict[str, float],
+) -> dict[str, float]:
+    return {
+        action: _safe_float(left.get(action), 0.0) - _safe_float(right.get(action), 0.0)
+        for action in POLICY_LITE_ACTIONS
+    }
+
+
+def _total_variation_distance(
+    left: dict[str, float],
+    right: dict[str, float],
+) -> float:
+    return 0.5 * sum(abs(value) for value in _distribution_delta(left, right).values())
+
+
+def _apply_gated_shift(
+    *,
+    pi_ref: dict[str, float],
+    pi_bayes: dict[str, float],
+    confidence_by_action: dict[str, float],
+    posterior_entropy_by_action: dict[str, float],
+    gate_threshold: Any,
+    entropy_threshold: Any,
+    max_delta: Any,
+    prob_floor: Any,
+) -> dict[str, Any]:
+    bounded_gate = clamp_gate_threshold(gate_threshold)
+    bounded_entropy = clamp_entropy_threshold(entropy_threshold)
+    bounded_max_delta = clamp_max_delta(max_delta)
+    bounded_floor = clamp_prob_floor(prob_floor)
+    normalized_ref = _normalize_distribution(pi_ref)
+    normalized_bayes = _normalize_distribution(pi_bayes)
+    gate_by_action = {
+        action: (
+            _safe_float(confidence_by_action.get(action), 0.0) >= bounded_gate
+            and _safe_float(posterior_entropy_by_action.get(action), 1.0)
+            <= bounded_entropy
+        )
+        for action in POLICY_LITE_ACTIONS
+    }
+    delta_before_clamp = _distribution_delta(normalized_bayes, normalized_ref)
+    delta_applied: dict[str, float] = {}
+    for action in POLICY_LITE_ACTIONS:
+        if not gate_by_action[action] or bounded_max_delta <= 0.0:
+            delta_applied[action] = 0.0
+            continue
+        confidence = max(0.0, min(1.0, _safe_float(confidence_by_action[action], 0.0)))
+        raw_delta = delta_before_clamp[action] * confidence
+        delta_applied[action] = max(
+            -bounded_max_delta,
+            min(bounded_max_delta, raw_delta),
+        )
+
+    shifted_raw = {
+        action: max(0.0, normalized_ref[action] + delta_applied[action])
+        for action in POLICY_LITE_ACTIONS
+    }
+    pi_after_bayesian_shift = _normalize_distribution(shifted_raw)
+    safety_guard_status = "ok"
+    if _has_invalid_probability(pi_after_bayesian_shift):
+        pi_after_bayesian_shift = normalized_ref
+        safety_guard_status = "fallback_to_ref_after_shift"
+
+    pi_final = _normalize_with_floor(
+        pi_after_bayesian_shift,
+        floor=bounded_floor,
+    )
+    if _has_invalid_probability(pi_final):
+        pi_final = normalized_ref
+        safety_guard_status = "fallback_to_ref_after_floor"
+
+    final_delta_after_floor = _distribution_delta(pi_final, normalized_ref)
+    max_abs_final_delta = max(
+        abs(value) for value in final_delta_after_floor.values()
+    )
+    total_variation_distance = _total_variation_distance(pi_final, normalized_ref)
+    bayesian_delta_applied = any(
+        abs(value) > 1e-12 for value in delta_applied.values()
+    )
+    return {
+        "pi_ref": normalized_ref,
+        "pi_bayes": normalized_bayes,
+        "gate_by_action": gate_by_action,
+        "gate_threshold": bounded_gate,
+        "entropy_threshold": bounded_entropy,
+        "delta_before_clamp": delta_before_clamp,
+        "delta_applied": delta_applied,
+        "pi_after_bayesian_shift": pi_after_bayesian_shift,
+        "pi_final": pi_final,
+        "final_delta_after_floor": final_delta_after_floor,
+        "max_abs_final_delta": max_abs_final_delta,
+        "total_variation_distance": total_variation_distance,
+        "prob_floor": bounded_floor,
+        "max_delta_per_action": bounded_max_delta,
+        "safety_guard_status": safety_guard_status,
+        "intervention_applied": bayesian_delta_applied,
+    }
 
 
 def _posterior_predictive(
@@ -506,11 +662,15 @@ def compute_bayesian_policy_shadow(
     rho: Any = 1.0,
     weight: Any = 1.0,
     utility_profile: Any = DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE,
+    gate_threshold: Any = 0.50,
+    entropy_threshold: Any = 0.85,
+    max_delta: Any = 0.05,
+    prob_floor: Any = DEFAULT_POLICY_LITE_PROB_FLOOR,
     day: Any = -1,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     profile = normalize_utility_profile(utility_profile)
     normalized_mode = str(mode or "off").strip().lower()
-    if normalized_mode != "shadow":
+    if normalized_mode not in ACTIVE_BAYESIAN_POLICY_LITE_MODES:
         return copy.deepcopy(raw_memory if isinstance(raw_memory, dict) else {}), {
             "version": BAYESIAN_POLICY_LITE_VERSION,
             "mode": normalized_mode,
@@ -526,7 +686,7 @@ def compute_bayesian_policy_shadow(
     if not family:
         return memory, {
             "version": BAYESIAN_POLICY_LITE_VERSION,
-            "mode": "shadow",
+            "mode": normalized_mode,
             "enabled": True,
             "status": "missing_task_family",
             "utility_profile": profile,
@@ -558,7 +718,7 @@ def compute_bayesian_policy_shadow(
     }
     audit = {
         "version": BAYESIAN_POLICY_LITE_VERSION,
-        "mode": "shadow",
+        "mode": normalized_mode,
         "enabled": True,
         "status": "computed",
         "utility_profile": profile,
@@ -576,7 +736,9 @@ def compute_bayesian_policy_shadow(
             for action in POLICY_LITE_ACTIONS
         },
         "pi_strategy_reference": _normalize_distribution(strategy_reference),
+        "pi_ref": _normalize_distribution(strategy_reference),
         "q_bayes": q_bayes,
+        "pi_bayes": pi_bayes_shadow,
         "pi_bayes_shadow": pi_bayes_shadow,
         "confidence_by_action": {
             action: update_counts[action] / (update_counts[action] + bounded_k)
@@ -594,12 +756,31 @@ def compute_bayesian_policy_shadow(
         "process_modifier": "",
         "psychological_interpretation": "",
         "strategy_unchanged": True,
+        "intervention_applied": False,
+        "safety_guard_status": "not_applicable",
         "tau": clamp_tau(tau),
         "rho": clamp_rho(rho),
         "weight": clamp_weight(weight),
         "confidence_k": bounded_k,
+        "gate_threshold": clamp_gate_threshold(gate_threshold),
+        "entropy_threshold": clamp_entropy_threshold(entropy_threshold),
+        "max_delta_per_action": clamp_max_delta(max_delta),
+        "prob_floor": clamp_prob_floor(prob_floor),
         "day": _safe_int(day, -1),
     }
+    if normalized_mode == "gated_lite":
+        gated = _apply_gated_shift(
+            pi_ref=audit["pi_ref"],
+            pi_bayes=pi_bayes_shadow,
+            confidence_by_action=audit["confidence_by_action"],
+            posterior_entropy_by_action=audit["posterior_entropy_by_action"],
+            gate_threshold=gate_threshold,
+            entropy_threshold=entropy_threshold,
+            max_delta=max_delta,
+            prob_floor=prob_floor,
+        )
+        audit.update(gated)
+        audit["strategy_unchanged"] = False
     return memory, audit
 
 
@@ -621,7 +802,7 @@ def update_bayesian_policy_memory(
     day: Any = -1,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     normalized_mode = str(mode or "off").strip().lower()
-    if normalized_mode != "shadow":
+    if normalized_mode not in ACTIVE_BAYESIAN_POLICY_LITE_MODES:
         return copy.deepcopy(raw_memory if isinstance(raw_memory, dict) else {}), {
             "version": BAYESIAN_POLICY_LITE_VERSION,
             "mode": normalized_mode,
@@ -635,14 +816,14 @@ def update_bayesian_policy_memory(
     if not family:
         return memory, {
             "version": BAYESIAN_POLICY_LITE_VERSION,
-            "mode": "shadow",
+            "mode": normalized_mode,
             "enabled": True,
             "status": "missing_task_family",
         }
     if action not in POLICY_LITE_ACTIONS:
         return memory, {
             "version": BAYESIAN_POLICY_LITE_VERSION,
-            "mode": "shadow",
+            "mode": normalized_mode,
             "enabled": True,
             "status": "unsupported_action",
             "posterior_update_action": action,
@@ -697,7 +878,7 @@ def update_bayesian_policy_memory(
     memory["families"][family] = family_state
     return memory, {
         "version": BAYESIAN_POLICY_LITE_VERSION,
-        "mode": "shadow",
+        "mode": normalized_mode,
         "enabled": True,
         "status": "updated",
         "task_family": family,
@@ -730,7 +911,7 @@ def combine_bayesian_policy_audits(
             "status": str(update.get("status", "missing_pre_audit")),
         }
     combined["actual_strategy"] = str(actual_strategy or "")
-    combined["strategy_unchanged"] = True
+    combined["strategy_unchanged"] = combined.get("mode") != "gated_lite"
     combined["uses_post_outcome_information_for_policy"] = False
     combined["posterior_update_status"] = str(update.get("status", "not_called"))
     for key in (

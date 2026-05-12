@@ -12,7 +12,7 @@ DEFAULT_WORLD_BATCH = (
     "high_friction_high_assist",
     "low_friction_high_assist",
 )
-VALID_BAYESIAN_POLICY_LITE_MODES = {"off", "shadow"}
+VALID_BAYESIAN_POLICY_LITE_MODES = {"off", "shadow", "gated_lite"}
 VALID_BAYESIAN_POLICY_LITE_UTILITY_PROFILES = {"shadow_v1", "theory_v2"}
 DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE = "shadow_v1"
 
@@ -74,6 +74,10 @@ class RuntimeConfig:
     proto_bayesian_policy_lite_rho: float
     proto_bayesian_policy_lite_weight: float
     proto_bayesian_policy_lite_utility_profile: str
+    proto_bayesian_policy_lite_gate_threshold: float
+    proto_bayesian_policy_lite_entropy_threshold: float
+    proto_bayesian_policy_lite_max_delta: float
+    proto_bayesian_policy_lite_prob_floor: float
 
 
 def load_runtime_config() -> RuntimeConfig:
@@ -232,7 +236,8 @@ def load_runtime_config() -> RuntimeConfig:
     )
     if proto_bayesian_policy_lite_mode not in VALID_BAYESIAN_POLICY_LITE_MODES:
         raise ValueError(
-            "PROTO_BAYESIAN_POLICY_LITE_MODE must be one of: off, shadow"
+            "PROTO_BAYESIAN_POLICY_LITE_MODE must be one of: "
+            + ", ".join(sorted(VALID_BAYESIAN_POLICY_LITE_MODES))
         )
     proto_bayesian_policy_lite_tau = max(
         0.000001,
@@ -260,6 +265,31 @@ def load_runtime_config() -> RuntimeConfig:
                 DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE,
             )
         )
+    )
+    proto_bayesian_policy_lite_gate_threshold = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_BAYESIAN_POLICY_LITE_GATE_THRESHOLD", "0.50")),
+        ),
+    )
+    proto_bayesian_policy_lite_entropy_threshold = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_BAYESIAN_POLICY_LITE_ENTROPY_THRESHOLD", "0.85")),
+        ),
+    )
+    proto_bayesian_policy_lite_max_delta = max(
+        0.0,
+        float(os.getenv("PROTO_BAYESIAN_POLICY_LITE_MAX_DELTA", "0.05")),
+    )
+    proto_bayesian_policy_lite_prob_floor = max(
+        0.0,
+        min(
+            0.32,
+            float(os.getenv("PROTO_BAYESIAN_POLICY_LITE_PROB_FLOOR", "0.05")),
+        ),
     )
 
     return RuntimeConfig(
@@ -300,4 +330,12 @@ def load_runtime_config() -> RuntimeConfig:
         proto_bayesian_policy_lite_utility_profile=(
             proto_bayesian_policy_lite_utility_profile
         ),
+        proto_bayesian_policy_lite_gate_threshold=(
+            proto_bayesian_policy_lite_gate_threshold
+        ),
+        proto_bayesian_policy_lite_entropy_threshold=(
+            proto_bayesian_policy_lite_entropy_threshold
+        ),
+        proto_bayesian_policy_lite_max_delta=proto_bayesian_policy_lite_max_delta,
+        proto_bayesian_policy_lite_prob_floor=proto_bayesian_policy_lite_prob_floor,
     )

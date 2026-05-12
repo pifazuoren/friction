@@ -72,6 +72,7 @@ def test_policy_shadow_returns_valid_distributions_confidence_and_entropy() -> N
     )
 
     assert audit["uses_post_outcome_information_for_policy"] is False
+    assert audit["utility_profile"] == "shadow_v1"
     assert audit["pre_update"] is True
     assert audit["strategy_unchanged"] is True
     assert sum(audit["pi_bayes_shadow"].values()) == pytest.approx(1.0)
@@ -82,6 +83,275 @@ def test_policy_shadow_returns_valid_distributions_confidence_and_entropy() -> N
     assert all(
         0.0 <= value <= 1.0 for value in audit["posterior_entropy_by_action"].values()
     )
+    assert "pi_final" not in audit
+    assert audit["pi_ref"] == audit["pi_strategy_reference"]
+
+
+def test_shadow_v1_default_matches_explicit_profile() -> None:
+    kwargs = {
+        "raw_memory": {},
+        "mode": "shadow",
+        "task_family": TASK_FAMILY,
+        "strategy_reference": {
+            "attempt_self": 0.2,
+            "seek_help_then_attempt": 0.5,
+            "avoid": 0.3,
+        },
+        "task_difficulty": 0.8,
+        "env": {
+            "risk_level": 2,
+            "assist_level": 1,
+            "accessibility_level": 1,
+            "human_support_level": 1,
+        },
+        "task_appraisal": {
+            "expected_help_effectiveness": 75.0,
+            "task_value": 80.0,
+        },
+        "tau": 0.7,
+    }
+
+    _, default_audit = compute_bayesian_policy_shadow(**kwargs)
+    _, explicit_audit = compute_bayesian_policy_shadow(
+        **kwargs,
+        utility_profile="shadow_v1",
+    )
+
+    assert default_audit["utility_profile"] == "shadow_v1"
+    assert default_audit["q_bayes"] == explicit_audit["q_bayes"]
+    assert default_audit["pi_bayes_shadow"] == explicit_audit["pi_bayes_shadow"]
+
+
+def test_theory_v2_penalizes_high_value_no_attempt() -> None:
+    base = {
+        "raw_memory": {},
+        "mode": "shadow",
+        "task_family": TASK_FAMILY,
+        "strategy_reference": {},
+        "task_difficulty": 0.5,
+        "env": {"risk_level": 1},
+        "utility_profile": "theory_v2",
+    }
+
+    _, low_value_audit = compute_bayesian_policy_shadow(
+        **base,
+        task_appraisal={
+            "task_value": 20.0,
+            "perceived_task_risk": 50.0,
+            "felt_control": 50.0,
+        },
+    )
+    _, high_value_audit = compute_bayesian_policy_shadow(
+        **base,
+        task_appraisal={
+            "task_value": 90.0,
+            "perceived_task_risk": 50.0,
+            "felt_control": 50.0,
+        },
+    )
+
+    assert high_value_audit["q_bayes"]["avoid"] < low_value_audit["q_bayes"]["avoid"]
+    assert high_value_audit["utility_profile_note"]
+
+
+def test_theory_v2_rewards_expected_effective_help() -> None:
+    base = {
+        "raw_memory": {},
+        "mode": "shadow",
+        "task_family": TASK_FAMILY,
+        "strategy_reference": {},
+        "task_difficulty": 0.5,
+        "env": {
+            "assist_level": 1,
+            "accessibility_level": 1,
+            "human_support_level": 1,
+        },
+        "utility_profile": "theory_v2",
+    }
+
+    _, low_help_audit = compute_bayesian_policy_shadow(
+        **base,
+        task_appraisal={"expected_help_effectiveness": 20.0},
+    )
+    _, high_help_audit = compute_bayesian_policy_shadow(
+        **base,
+        task_appraisal={"expected_help_effectiveness": 90.0},
+    )
+
+    assert (
+        high_help_audit["q_bayes"]["seek_help_then_attempt"]
+        > low_help_audit["q_bayes"]["seek_help_then_attempt"]
+    )
+
+
+def test_shadow_policy_ignores_post_outcome_fields_in_context_dicts() -> None:
+    base = {
+        "raw_memory": {},
+        "mode": "shadow",
+        "task_family": TASK_FAMILY,
+        "strategy_reference": {"attempt_self": 0.3, "avoid": 0.7},
+        "task_difficulty": 0.5,
+        "env": {"risk_level": 2},
+        "task_appraisal": {
+            "expected_help_effectiveness": 70.0,
+            "task_value": 80.0,
+            "perceived_task_risk": 60.0,
+            "felt_control": 40.0,
+        },
+        "utility_profile": "theory_v2",
+    }
+    leaked = copy.deepcopy(base)
+    leaked["env"] = {
+        **base["env"],
+        "support_mode": "enabling_support",
+        "outcome_type": "success_with_help",
+    }
+    leaked["task_appraisal"] = {
+        **base["task_appraisal"],
+        "avoid_reason": "helpless_avoid",
+        "event_attribution_locus": "internal",
+        "event_attribution_stability": "stable",
+        "event_attribution_scope": "global",
+        "event_level_uncontrollability": 2,
+    }
+
+    _, base_audit = compute_bayesian_policy_shadow(**base)
+    _, leaked_audit = compute_bayesian_policy_shadow(**leaked)
+
+    assert base_audit["q_bayes"] == leaked_audit["q_bayes"]
+    assert base_audit["pi_bayes_shadow"] == leaked_audit["pi_bayes_shadow"]
+    assert leaked_audit["uses_post_outcome_information_for_policy"] is False
+    assert set(leaked_audit["post_outcome_fields_ignored_for_policy"]) == {
+        "avoid_reason",
+        "event_attribution_locus",
+        "event_attribution_scope",
+        "event_attribution_stability",
+        "event_level_uncontrollability",
+        "outcome_type",
+        "support_mode",
+    }
+
+
+def test_gated_lite_returns_final_policy_when_gate_opens() -> None:
+    raw_memory = build_initial_bayesian_policy_memory()
+    family = raw_memory["families"][TASK_FAMILY]
+    family["attempt_self"]["update_count"] = 10
+    family["seek_help_then_attempt"]["update_count"] = 10
+    family["avoid"]["update_count"] = 10
+    family["attempt_self"]["alpha"] = {
+        outcome: 0.01 for outcome in family["attempt_self"]["alpha"]
+    }
+    family["attempt_self"]["alpha"]["success_self"] = 20.0
+    family["seek_help_then_attempt"]["alpha"] = {
+        outcome: 0.01 for outcome in family["seek_help_then_attempt"]["alpha"]
+    }
+    family["seek_help_then_attempt"]["alpha"]["failure_even_with_help"] = 20.0
+    family["avoid"]["alpha"] = {
+        outcome: 0.01 for outcome in family["avoid"]["alpha"]
+    }
+    family["avoid"]["alpha"]["no_attempt"] = 20.0
+
+    _, audit = compute_bayesian_policy_shadow(
+        raw_memory=raw_memory,
+        mode="gated_lite",
+        task_family=TASK_FAMILY,
+        strategy_reference={
+            "attempt_self": 0.2,
+            "seek_help_then_attempt": 0.4,
+            "avoid": 0.4,
+        },
+        utility_profile="theory_v2",
+        gate_threshold=0.5,
+        entropy_threshold=0.85,
+        max_delta=0.05,
+        prob_floor=0.05,
+    )
+
+    assert audit["mode"] == "gated_lite"
+    assert audit["status"] == "computed"
+    assert audit["strategy_unchanged"] is False
+    assert audit["intervention_applied"] is True
+    assert set(audit["pi_final"]) == set(POLICY_LITE_ACTIONS)
+    assert sum(audit["pi_final"].values()) == pytest.approx(1.0)
+    assert min(audit["pi_final"].values()) >= 0.05 - 1e-12
+    assert audit["gate_by_action"]["attempt_self"] is True
+    assert audit["delta_applied"]["attempt_self"] <= 0.05
+    assert audit["delta_applied"]["attempt_self"] > 0.0
+    assert audit["final_delta_after_floor"]["attempt_self"] == pytest.approx(
+        audit["pi_final"]["attempt_self"] - audit["pi_ref"]["attempt_self"]
+    )
+    assert audit["max_abs_final_delta"] == pytest.approx(
+        max(abs(value) for value in audit["final_delta_after_floor"].values())
+    )
+
+
+def test_gated_lite_does_not_intervene_when_confidence_is_low() -> None:
+    _, audit = compute_bayesian_policy_shadow(
+        raw_memory={},
+        mode="gated_lite",
+        task_family=TASK_FAMILY,
+        strategy_reference={
+            "attempt_self": 0.2,
+            "seek_help_then_attempt": 0.4,
+            "avoid": 0.4,
+        },
+        gate_threshold=0.5,
+        entropy_threshold=0.85,
+        max_delta=0.05,
+    )
+
+    assert audit["intervention_applied"] is False
+    assert all(value == 0.0 for value in audit["delta_applied"].values())
+
+
+def test_gated_lite_does_not_intervene_when_entropy_is_high() -> None:
+    raw_memory = build_initial_bayesian_policy_memory()
+    family = raw_memory["families"][TASK_FAMILY]
+    for action in POLICY_LITE_ACTIONS:
+        family[action]["update_count"] = 20
+
+    _, audit = compute_bayesian_policy_shadow(
+        raw_memory=raw_memory,
+        mode="gated_lite",
+        task_family=TASK_FAMILY,
+        strategy_reference={
+            "attempt_self": 0.2,
+            "seek_help_then_attempt": 0.4,
+            "avoid": 0.4,
+        },
+        gate_threshold=0.5,
+        entropy_threshold=0.01,
+        max_delta=0.05,
+    )
+
+    assert audit["intervention_applied"] is False
+    assert all(value is False for value in audit["gate_by_action"].values())
+    assert all(value == 0.0 for value in audit["delta_applied"].values())
+
+
+def test_gated_lite_max_delta_zero_is_no_bayesian_intervention() -> None:
+    raw_memory = build_initial_bayesian_policy_memory()
+    family = raw_memory["families"][TASK_FAMILY]
+    for action in POLICY_LITE_ACTIONS:
+        family[action]["update_count"] = 20
+
+    _, audit = compute_bayesian_policy_shadow(
+        raw_memory=raw_memory,
+        mode="gated_lite",
+        task_family=TASK_FAMILY,
+        strategy_reference={
+            "attempt_self": 0.2,
+            "seek_help_then_attempt": 0.4,
+            "avoid": 0.4,
+        },
+        gate_threshold=0.1,
+        entropy_threshold=1.0,
+        max_delta=0.0,
+    )
+
+    assert audit["intervention_applied"] is False
+    assert all(value == 0.0 for value in audit["delta_applied"].values())
+    assert audit["pi_after_bayesian_shift"] == pytest.approx(audit["pi_ref"])
 
 
 def test_posterior_predictive_probabilities_sum_to_one() -> None:
@@ -141,6 +411,24 @@ def test_update_only_observed_action() -> None:
     assert family_after["attempt_self"] == before["families"][TASK_FAMILY]["attempt_self"]
     assert family_after["avoid"] == before["families"][TASK_FAMILY]["avoid"]
     assert raw_memory == before
+
+
+def test_gated_lite_updates_observed_action_like_shadow() -> None:
+    raw_memory = build_initial_bayesian_policy_memory()
+
+    memory_after, audit = update_bayesian_policy_memory(
+        raw_memory=raw_memory,
+        mode="gated_lite",
+        task_family=TASK_FAMILY,
+        actual_strategy="attempt_self",
+        outcome_type="success_self",
+        day=6,
+    )
+
+    assert audit["mode"] == "gated_lite"
+    assert audit["status"] == "updated"
+    assert audit["posterior_update_action"] == "attempt_self"
+    assert memory_after["families"][TASK_FAMILY]["attempt_self"]["update_count"] == 1
 
 
 def test_avoid_updates_only_no_attempt_for_avoid_action() -> None:
@@ -257,4 +545,32 @@ def test_combine_audits_marks_strategy_unchanged_and_merges_update_fields() -> N
     assert combined["actual_strategy"] == "attempt_self"
     assert combined["strategy_unchanged"] is True
     assert combined["uses_post_outcome_information_for_policy"] is False
+    assert combined["posterior_update_action"] == "attempt_self"
+
+
+def test_combine_audits_marks_gated_lite_strategy_changed() -> None:
+    _, pre_audit = compute_bayesian_policy_shadow(
+        raw_memory={},
+        mode="gated_lite",
+        task_family=TASK_FAMILY,
+        strategy_reference={"attempt_self": 1.0},
+        max_delta=0.0,
+    )
+    _, update_audit = update_bayesian_policy_memory(
+        raw_memory={},
+        mode="gated_lite",
+        task_family=TASK_FAMILY,
+        actual_strategy="attempt_self",
+        outcome_type="success_self",
+    )
+
+    combined = combine_bayesian_policy_audits(
+        pre_audit=pre_audit,
+        update_audit=update_audit,
+        actual_strategy="attempt_self",
+    )
+
+    assert combined["mode"] == "gated_lite"
+    assert combined["status"] == "updated"
+    assert combined["strategy_unchanged"] is False
     assert combined["posterior_update_action"] == "attempt_self"

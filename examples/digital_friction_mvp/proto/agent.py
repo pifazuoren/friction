@@ -1419,6 +1419,14 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 utility_profile=(
                     runtime_config.proto_bayesian_policy_lite_utility_profile
                 ),
+                gate_threshold=(
+                    runtime_config.proto_bayesian_policy_lite_gate_threshold
+                ),
+                entropy_threshold=(
+                    runtime_config.proto_bayesian_policy_lite_entropy_threshold
+                ),
+                max_delta=runtime_config.proto_bayesian_policy_lite_max_delta,
+                prob_floor=runtime_config.proto_bayesian_policy_lite_prob_floor,
                 day=int(day),
             )
         )
@@ -1435,6 +1443,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
             + 31 * sum(ord(ch) for ch in world_name)
         )
         strategy_rng = random.Random(base_rng_seed + 17)
+        gated_lite_final_weights = None
+        if runtime_config.proto_bayesian_policy_lite_mode == "gated_lite":
+            candidate_weights = bayesian_policy_pre_audit.get("pi_final")
+            if isinstance(candidate_weights, dict):
+                gated_lite_final_weights = candidate_weights
         strategy = choose_attempt_strategy(
             effective_helplessness=memory_features.effective_helplessness,
             support_quality=support_quality,
@@ -1445,6 +1458,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             recent_negative_feedback_ratio=memory_features.recent_negative_feedback_ratio,
             recent_same_task_failure_count=memory_features.recent_same_task_failure_count,
             strategy_deliberation_result=strategy_deliberation,
+            precomputed_final_weights=gated_lite_final_weights,
             rng=strategy_rng,
         )
         outcome = resolve_attempt_outcome(
