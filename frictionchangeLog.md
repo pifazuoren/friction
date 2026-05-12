@@ -1844,3 +1844,73 @@
   - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_control_audit.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
   - 结果：`61 passed, 3 warnings`
   - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/bayesian_policy_lite.py examples/digital_friction_mvp/proto/state_schema.py examples/digital_friction_mvp/world_runner.py`
+
+### Bayesian policy-lite Phase 2 shadow analysis 与 theory utility profile
+- 目的：
+  - 固化 Bayesian policy-lite shadow-only 分析脚本，避免继续依赖临时 SQLite/payload 脚本
+  - 新增 theory-informed utility profile，用于诊断和修正 `shadow_v1` 过度偏向 avoid 的问题
+  - 本阶段仍是 gated-lite2 的前置 shadow 验证，不做 `gated_lite / on` 行为介入
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis_bayesian_policy_shadow.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/bayesian_policy_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_bayesian_policy_shadow_analysis.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `examples/digital_friction_mvp/analysis_bayesian_policy_shadow.py`
+  - 分析脚本读取 parallel-world manifest 与 SQLite `proto_attempt_rows`，解析 `payload_json.auxiliary_audit.bayesian_policy_lite` 与 `bayesian_control`
+  - 固定输出：
+    - `bayesian_policy_shadow_summary_<group_id>.csv`
+    - `bayesian_policy_shadow_by_world_<group_id>.csv`
+    - `bayesian_policy_shadow_by_world_day_<group_id>.csv`
+    - `bayesian_policy_shadow_by_task_family_<group_id>.csv`
+    - `bayesian_policy_shadow_qc_<group_id>.csv`
+  - 主相关指标改用选择前 `C_hat_before = bayesian_control.belief_before`
+  - `C_hat_after = bayesian_control.belief_after` 仅作为 post-update audit，避免把 outcome 后变量当作 pre-decision 解释变量
+  - 分析脚本输出 `group_id / config_fingerprint / utility_profile / world / pair_seed / exp_id / payload coverage / leakage QC`
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_UTILITY_PROFILE`，默认 `shadow_v1`
+  - 支持 `shadow_v1` 与 `theory_v2`
+  - `shadow_v1` 保持当前 utility 行为不变，作为历史 baseline
+  - `theory_v2` 是 theory-informed candidate profile，不声称 human-calibrated
+  - `theory_v2` 提高 `success_self / success_with_help` 基础效用，降低 `failure_after_attempt_low_uncontrollability` 惩罚，并把 `no_attempt` 从 `-0.15` 调整为 `-0.45`
+  - `theory_v2` 的 pre-outcome utility 只使用 task difficulty、env risk/support availability、expected help effectiveness、task value、perceived task risk、felt control
+  - pre-outcome policy 不使用 `support_mode / avoid_reason / actual outcome / event attribution / post-outcome uncontrollability`
+  - audit payload 新增 `utility_profile` 与 `utility_profile_note`
+  - audit payload 保持 `uses_post_outcome_information_for_policy=false`
+  - 新增 leakage invariance test：即使 `env/task_appraisal` dict 被塞入 post-outcome 字段，`q_bayes / pi_bayes_shadow` 也保持不变
+  - `world_runner.py::FINGERPRINT_ENV_KEYS` 新增 `PROTO_BAYESIAN_POLICY_LITE_UTILITY_PROFILE`
+  - `agent.py` 只把 utility profile 传入 shadow helper，不把 `pi_bayes_shadow` 接入真实 action selection
+- 20260511 shadow_v1 diagnosis 输出：
+  - `examples/digital_friction_mvp/analysis/bayesian_policy_shadow_summary_exp_20260511_policy_lite_shadow_10d_60min.csv`
+  - `examples/digital_friction_mvp/analysis/bayesian_policy_shadow_by_world_exp_20260511_policy_lite_shadow_10d_60min.csv`
+  - `examples/digital_friction_mvp/analysis/bayesian_policy_shadow_by_world_day_exp_20260511_policy_lite_shadow_10d_60min.csv`
+  - `examples/digital_friction_mvp/analysis/bayesian_policy_shadow_by_task_family_exp_20260511_policy_lite_shadow_10d_60min.csv`
+  - `examples/digital_friction_mvp/analysis/bayesian_policy_shadow_qc_exp_20260511_policy_lite_shadow_10d_60min.csv`
+- 20260511 shadow_v1 diagnosis 摘要：
+  - payload coverage: `policy_payload_coverage=1.0`, `control_payload_coverage=1.0`
+  - leakage QC: `uses_post_outcome_information_true_count=0`, `strategy_changed_count=0`
+  - overall mean policy: `pi_attempt=0.2930`, `pi_help=0.3291`, `pi_avoid=0.3778`
+  - `C_hat_before vs pi_avoid corr = -0.7440`
+  - `C_hat_after vs pi_avoid corr = -0.7244`，仅作为 post-update audit
+  - shadow top-action avoid share overall: `0.7324`
+  - high-friction-low-assist shadow top-action avoid share: `0.9431`
+  - 结论：`shadow_v1` 有理论方向一致性，但明显偏向 avoid；后续应用 `theory_v2` shadow-only 新实验检查修正方向，不能用 20260511 同一批数据作为最终 validation
+- 备注：
+  - 本轮没有修改真实 strategy sampling、outcome model、helplessness update、event attribution、scope spillover、stream memory 或 DB schema
+  - 本轮没有实现 gated-lite 行为介入
+  - 论文表述应称为 shadow Bayesian posterior predictive audit / theory-informed utility profile，不应称为 human-calibrated Bayesian RL policy
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`31 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_policy_shadow_analysis.py -q`
+  - 结果：`1 passed`
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/bayesian_policy_lite.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/analysis_bayesian_policy_shadow.py`
+  - 结果：通过，无输出
+  - `python examples/digital_friction_mvp/analysis_bayesian_policy_shadow.py --manifest-json examples/digital_friction_mvp/analysis/exp_group_manifest_exp_20260511_policy_lite_shadow_10d_60min.json --db-path agentsociety_data/sqlite.db --out-dir examples/digital_friction_mvp/analysis`
+  - 结果：生成上述 5 个 fixed shadow analysis CSV
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_control_audit.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
+  - 结果：`61 passed, 3 warnings`

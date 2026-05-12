@@ -13,6 +13,8 @@ DEFAULT_WORLD_BATCH = (
     "low_friction_high_assist",
 )
 VALID_BAYESIAN_POLICY_LITE_MODES = {"off", "shadow"}
+VALID_BAYESIAN_POLICY_LITE_UTILITY_PROFILES = {"shadow_v1", "theory_v2"}
+DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE = "shadow_v1"
 
 
 def _parse_bool_env(name: str, default: bool = False) -> bool:
@@ -21,6 +23,18 @@ def _parse_bool_env(name: str, default: bool = False) -> bool:
         return default
     lowered = value.strip().lower()
     return lowered not in {"0", "false", "no", "off"}
+
+
+def _normalize_bayesian_policy_lite_utility_profile(value: str | None) -> str:
+    profile = str(
+        value or DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE
+    ).strip().lower()
+    if profile not in VALID_BAYESIAN_POLICY_LITE_UTILITY_PROFILES:
+        raise ValueError(
+            "PROTO_BAYESIAN_POLICY_LITE_UTILITY_PROFILE must be one of: "
+            + ", ".join(sorted(VALID_BAYESIAN_POLICY_LITE_UTILITY_PROFILES))
+        )
+    return profile
 
 
 @dataclass(frozen=True)
@@ -59,6 +73,7 @@ class RuntimeConfig:
     proto_bayesian_policy_lite_confidence_k: int
     proto_bayesian_policy_lite_rho: float
     proto_bayesian_policy_lite_weight: float
+    proto_bayesian_policy_lite_utility_profile: str
 
 
 def load_runtime_config() -> RuntimeConfig:
@@ -238,6 +253,14 @@ def load_runtime_config() -> RuntimeConfig:
         0.0,
         float(os.getenv("PROTO_BAYESIAN_POLICY_LITE_WEIGHT", "1.0")),
     )
+    proto_bayesian_policy_lite_utility_profile = (
+        _normalize_bayesian_policy_lite_utility_profile(
+            os.getenv(
+                "PROTO_BAYESIAN_POLICY_LITE_UTILITY_PROFILE",
+                DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE,
+            )
+        )
+    )
 
     return RuntimeConfig(
         experiment_mode=experiment_mode,
@@ -274,4 +297,7 @@ def load_runtime_config() -> RuntimeConfig:
         proto_bayesian_policy_lite_confidence_k=proto_bayesian_policy_lite_confidence_k,
         proto_bayesian_policy_lite_rho=proto_bayesian_policy_lite_rho,
         proto_bayesian_policy_lite_weight=proto_bayesian_policy_lite_weight,
+        proto_bayesian_policy_lite_utility_profile=(
+            proto_bayesian_policy_lite_utility_profile
+        ),
     )

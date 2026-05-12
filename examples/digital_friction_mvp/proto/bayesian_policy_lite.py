@@ -43,17 +43,103 @@ _PLAUSIBLE_OUTCOMES_BY_ACTION = {
     },
 }
 _UNLIKELY_OUTCOMES = {"neutral_unknown"}
-_BASE_OUTCOME_UTILITY = {
-    "success_self": 1.0,
-    "success_with_help": 0.75,
-    "failure_after_attempt_low_uncontrollability": -0.25,
-    "failure_after_attempt_mid_uncontrollability": -0.60,
-    "failure_after_attempt_high_uncontrollability": -1.0,
-    "failure_even_with_help": -0.90,
-    "abandon_midway": -0.70,
-    "no_attempt": -0.15,
-    "neutral_unknown": 0.0,
+VALID_BAYESIAN_POLICY_LITE_UTILITY_PROFILES = {
+    "shadow_v1",
+    "theory_v2",
 }
+DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE = "shadow_v1"
+_OUTCOME_UTILITY_PROFILES = {
+    "shadow_v1": {
+        "success_self": 1.0,
+        "success_with_help": 0.75,
+        "failure_after_attempt_low_uncontrollability": -0.25,
+        "failure_after_attempt_mid_uncontrollability": -0.60,
+        "failure_after_attempt_high_uncontrollability": -1.0,
+        "failure_even_with_help": -0.90,
+        "abandon_midway": -0.70,
+        "no_attempt": -0.15,
+        "neutral_unknown": 0.0,
+    },
+    "theory_v2": {
+        "success_self": 1.15,
+        "success_with_help": 0.90,
+        "failure_after_attempt_low_uncontrollability": -0.15,
+        "failure_after_attempt_mid_uncontrollability": -0.55,
+        "failure_after_attempt_high_uncontrollability": -1.0,
+        "failure_even_with_help": -0.90,
+        "abandon_midway": -0.75,
+        "no_attempt": -0.45,
+        "neutral_unknown": 0.0,
+    },
+}
+THEORY_V2_NOTE = (
+    "theory-informed candidate profile; not human-calibrated"
+)
+_POST_OUTCOME_FIELD_NAMES = {
+    "support_mode",
+    "avoid_reason",
+    "outcome_type",
+    "actual_outcome",
+    "event_attribution_locus",
+    "event_attribution_stability",
+    "event_attribution_scope",
+    "event_attribution_scope_amplitude",
+    "post_outcome_uncontrollability",
+    "event_level_uncontrollability",
+}
+
+
+def normalize_utility_profile(value: Any) -> str:
+    profile = str(
+        value or DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE
+    ).strip().lower()
+    if profile not in VALID_BAYESIAN_POLICY_LITE_UTILITY_PROFILES:
+        raise ValueError(
+            "PROTO_BAYESIAN_POLICY_LITE_UTILITY_PROFILE must be one of: "
+            + ", ".join(sorted(VALID_BAYESIAN_POLICY_LITE_UTILITY_PROFILES))
+        )
+    return profile
+
+
+def outcome_utility_profile(profile: Any) -> dict[str, float]:
+    normalized = normalize_utility_profile(profile)
+    return dict(_OUTCOME_UTILITY_PROFILES[normalized])
+
+
+def _base_utility_for(*, outcome_subtype: str, utility_profile: Any) -> float:
+    profile = normalize_utility_profile(utility_profile)
+    return float(_OUTCOME_UTILITY_PROFILES[profile].get(outcome_subtype, 0.0))
+
+
+def _clamp_0_100(value: Any, default: float = 50.0) -> float:
+    return max(0.0, min(100.0, _safe_float(value, default)))
+
+
+def _centered_0_100(value: Any, default: float = 50.0) -> float:
+    return (_clamp_0_100(value, default) - 50.0) / 50.0
+
+
+def _high_0_100(value: Any, default: float = 50.0) -> float:
+    return max(0.0, _centered_0_100(value, default))
+
+
+def _low_0_100(value: Any, default: float = 50.0) -> float:
+    return max(0.0, -_centered_0_100(value, default))
+
+
+def _post_outcome_fields_present(
+    *,
+    env: Any = None,
+    task_appraisal: Any = None,
+) -> list[str]:
+    fields: list[str] = []
+    for payload in (env, task_appraisal):
+        if not isinstance(payload, dict):
+            continue
+        for key in _POST_OUTCOME_FIELD_NAMES:
+            if key in payload:
+                fields.append(key)
+    return sorted(set(fields))
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -307,8 +393,13 @@ def _pre_outcome_utility(
     task_difficulty: Any = 0.5,
     env: Any = None,
     task_appraisal: Any = None,
+    utility_profile: Any = DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE,
 ) -> float:
-    utility = float(_BASE_OUTCOME_UTILITY.get(outcome_subtype, 0.0))
+    profile = normalize_utility_profile(utility_profile)
+    utility = _base_utility_for(
+        outcome_subtype=outcome_subtype,
+        utility_profile=profile,
+    )
     difficulty = max(0.0, min(1.0, _safe_float(task_difficulty, 0.5)))
     env_source = env if isinstance(env, dict) else {}
     risk_level = max(0.0, _safe_float(env_source.get("risk_level"), 0.0))
@@ -324,14 +415,36 @@ def _pre_outcome_utility(
             _context_value(task_appraisal, "expected_help_effectiveness", 50.0),
         ),
     )
+    task_value = _clamp_0_100(_context_value(task_appraisal, "task_value", 50.0))
+    perceived_risk = _clamp_0_100(
+        _context_value(task_appraisal, "perceived_task_risk", 50.0)
+    )
+    felt_control = _clamp_0_100(_context_value(task_appraisal, "felt_control", 50.0))
+
+    if profile == "shadow_v1":
+        if outcome_subtype.startswith("failure_after_attempt"):
+            utility -= 0.10 * difficulty
+        if outcome_subtype == "success_with_help":
+            utility += 0.12 * ((expected_help_effectiveness - 50.0) / 50.0)
+            utility += 0.03 * min(3.0, support_available)
+        if action == "avoid" and outcome_subtype == "no_attempt":
+            utility += 0.04 * min(3.0, risk_level)
+        return utility
 
     if outcome_subtype.startswith("failure_after_attempt"):
-        utility -= 0.10 * difficulty
+        utility -= 0.08 * difficulty
+    if outcome_subtype == "success_self":
+        utility += 0.05 * _high_0_100(task_value)
     if outcome_subtype == "success_with_help":
-        utility += 0.12 * ((expected_help_effectiveness - 50.0) / 50.0)
-        utility += 0.03 * min(3.0, support_available)
+        utility += 0.16 * _centered_0_100(expected_help_effectiveness)
+        utility += 0.04 * min(3.0, support_available)
+        utility += 0.03 * _high_0_100(task_value)
     if action == "avoid" and outcome_subtype == "no_attempt":
+        low_value_risk_relief = 0.5 + 0.5 * _low_0_100(task_value)
+        utility -= 0.20 * _high_0_100(task_value)
+        utility += 0.10 * _high_0_100(perceived_risk) * low_value_risk_relief
         utility += 0.04 * min(3.0, risk_level)
+        utility += 0.05 * _low_0_100(felt_control)
     return utility
 
 
@@ -341,7 +454,9 @@ def compute_q_bayes(
     task_difficulty: Any = 0.5,
     env: Any = None,
     task_appraisal: Any = None,
+    utility_profile: Any = DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE,
 ) -> dict[str, float]:
+    profile = normalize_utility_profile(utility_profile)
     q_values: dict[str, float] = {}
     for action in POLICY_LITE_ACTIONS:
         predictive = _posterior_predictive(family_state[action], action=action)
@@ -353,6 +468,7 @@ def compute_q_bayes(
                 task_difficulty=task_difficulty,
                 env=env,
                 task_appraisal=task_appraisal,
+                utility_profile=profile,
             )
             for outcome_subtype, probability in predictive.items()
         )
@@ -389,8 +505,10 @@ def compute_bayesian_policy_shadow(
     confidence_k: Any = 4,
     rho: Any = 1.0,
     weight: Any = 1.0,
+    utility_profile: Any = DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE,
     day: Any = -1,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
+    profile = normalize_utility_profile(utility_profile)
     normalized_mode = str(mode or "off").strip().lower()
     if normalized_mode != "shadow":
         return copy.deepcopy(raw_memory if isinstance(raw_memory, dict) else {}), {
@@ -398,6 +516,7 @@ def compute_bayesian_policy_shadow(
             "mode": normalized_mode,
             "enabled": False,
             "status": "disabled",
+            "utility_profile": profile,
             "uses_post_outcome_information_for_policy": False,
             "strategy_unchanged": True,
         }
@@ -410,6 +529,7 @@ def compute_bayesian_policy_shadow(
             "mode": "shadow",
             "enabled": True,
             "status": "missing_task_family",
+            "utility_profile": profile,
             "uses_post_outcome_information_for_policy": False,
             "strategy_unchanged": True,
         }
@@ -424,6 +544,7 @@ def compute_bayesian_policy_shadow(
         task_difficulty=task_difficulty,
         env=env,
         task_appraisal=task_appraisal,
+        utility_profile=profile,
     )
     pi_bayes_shadow = softmax_policy(q_bayes, tau=tau)
     bounded_k = clamp_confidence_k(confidence_k)
@@ -440,10 +561,16 @@ def compute_bayesian_policy_shadow(
         "mode": "shadow",
         "enabled": True,
         "status": "computed",
+        "utility_profile": profile,
+        "utility_profile_note": THEORY_V2_NOTE if profile == "theory_v2" else "",
         "task_family": family,
         "actual_strategy": "",
         "pre_update": True,
         "uses_post_outcome_information_for_policy": False,
+        "post_outcome_fields_ignored_for_policy": _post_outcome_fields_present(
+            env=env,
+            task_appraisal=task_appraisal,
+        ),
         "pi_prior": {
             action: 1.0 / len(POLICY_LITE_ACTIONS)
             for action in POLICY_LITE_ACTIONS

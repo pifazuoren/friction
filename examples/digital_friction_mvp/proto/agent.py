@@ -1416,6 +1416,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 confidence_k=runtime_config.proto_bayesian_policy_lite_confidence_k,
                 rho=runtime_config.proto_bayesian_policy_lite_rho,
                 weight=runtime_config.proto_bayesian_policy_lite_weight,
+                utility_profile=(
+                    runtime_config.proto_bayesian_policy_lite_utility_profile
+                ),
                 day=int(day),
             )
         )
