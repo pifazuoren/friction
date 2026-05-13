@@ -15,6 +15,8 @@ DEFAULT_WORLD_BATCH = (
 VALID_BAYESIAN_POLICY_LITE_MODES = {"off", "shadow", "gated_lite"}
 VALID_BAYESIAN_POLICY_LITE_UTILITY_PROFILES = {"shadow_v1", "theory_v2"}
 DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE = "shadow_v1"
+VALID_BAYESIAN_POLICY_LITE_REFERENCE_MODES = {"hybrid_ref", "semantic_v2"}
+DEFAULT_BAYESIAN_POLICY_LITE_REFERENCE_MODE = "hybrid_ref"
 
 
 def _parse_bool_env(name: str, default: bool = False) -> bool:
@@ -35,6 +37,18 @@ def _normalize_bayesian_policy_lite_utility_profile(value: str | None) -> str:
             + ", ".join(sorted(VALID_BAYESIAN_POLICY_LITE_UTILITY_PROFILES))
         )
     return profile
+
+
+def _normalize_bayesian_policy_lite_reference_mode(value: str | None) -> str:
+    mode = str(
+        value or DEFAULT_BAYESIAN_POLICY_LITE_REFERENCE_MODE
+    ).strip().lower()
+    if mode not in VALID_BAYESIAN_POLICY_LITE_REFERENCE_MODES:
+        raise ValueError(
+            "PROTO_BAYESIAN_POLICY_LITE_REFERENCE_MODE must be one of: "
+            + ", ".join(sorted(VALID_BAYESIAN_POLICY_LITE_REFERENCE_MODES))
+        )
+    return mode
 
 
 @dataclass(frozen=True)
@@ -78,6 +92,9 @@ class RuntimeConfig:
     proto_bayesian_policy_lite_entropy_threshold: float
     proto_bayesian_policy_lite_max_delta: float
     proto_bayesian_policy_lite_prob_floor: float
+    proto_bayesian_policy_lite_reference_mode: str
+    proto_bayesian_policy_lite_lambda_llm: float
+    proto_bayesian_policy_lite_min_llm_confidence: float
 
 
 def load_runtime_config() -> RuntimeConfig:
@@ -291,6 +308,33 @@ def load_runtime_config() -> RuntimeConfig:
             float(os.getenv("PROTO_BAYESIAN_POLICY_LITE_PROB_FLOOR", "0.05")),
         ),
     )
+    proto_bayesian_policy_lite_reference_mode = (
+        _normalize_bayesian_policy_lite_reference_mode(
+            os.getenv(
+                "PROTO_BAYESIAN_POLICY_LITE_REFERENCE_MODE",
+                DEFAULT_BAYESIAN_POLICY_LITE_REFERENCE_MODE,
+            )
+        )
+    )
+    proto_bayesian_policy_lite_lambda_llm = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_BAYESIAN_POLICY_LITE_LAMBDA_LLM", "0.25")),
+        ),
+    )
+    proto_bayesian_policy_lite_min_llm_confidence = max(
+        0.0,
+        min(
+            1.0,
+            float(
+                os.getenv(
+                    "PROTO_BAYESIAN_POLICY_LITE_MIN_LLM_CONFIDENCE",
+                    "0.50",
+                )
+            ),
+        ),
+    )
 
     return RuntimeConfig(
         experiment_mode=experiment_mode,
@@ -338,4 +382,11 @@ def load_runtime_config() -> RuntimeConfig:
         ),
         proto_bayesian_policy_lite_max_delta=proto_bayesian_policy_lite_max_delta,
         proto_bayesian_policy_lite_prob_floor=proto_bayesian_policy_lite_prob_floor,
+        proto_bayesian_policy_lite_reference_mode=(
+            proto_bayesian_policy_lite_reference_mode
+        ),
+        proto_bayesian_policy_lite_lambda_llm=proto_bayesian_policy_lite_lambda_llm,
+        proto_bayesian_policy_lite_min_llm_confidence=(
+            proto_bayesian_policy_lite_min_llm_confidence
+        ),
     )

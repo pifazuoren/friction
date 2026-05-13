@@ -114,6 +114,17 @@ def _top_probability(pi: dict[str, Any]) -> float | None:
     return max(valid) if valid else None
 
 
+def _as_dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _action_suffix(action: str) -> str:
+    return "help" if action == "seek_help_then_attempt" else action.replace(
+        "attempt_self",
+        "attempt",
+    )
+
+
 def _mean(values: list[float | None]) -> float | None:
     valid = [value for value in values if value is not None]
     return sum(valid) / len(valid) if valid else None
@@ -146,6 +157,8 @@ def _csv_value(value: Any) -> Any:
     if value is None:
         return ""
     if isinstance(value, float):
+        if math.isnan(value):
+            return ""
         return round(value, 10)
     return value
 
@@ -191,11 +204,23 @@ def _extract_attempt_records(
             control = auxiliary.get("bayesian_control")
             control = control if isinstance(control, dict) else {}
             pi = policy.get("pi_bayes_shadow")
-            pi = pi if isinstance(pi, dict) else {}
+            pi = _as_dict(pi)
+            pi_prior = _as_dict(policy.get("pi_prior"))
+            pi_llm = _as_dict(policy.get("pi_llm"))
+            pi_semantic = _as_dict(policy.get("pi_semantic"))
+            pi_ref = _as_dict(policy.get("pi_ref"))
+            pi_bayes = _as_dict(policy.get("pi_bayes"))
+            pi_final = _as_dict(policy.get("pi_final"))
+            semantic_delta = _as_dict(policy.get("semantic_delta_from_prior"))
+            delta_applied = _as_dict(policy.get("delta_applied"))
+            bayesian_shift_before_floor = _as_dict(
+                policy.get("bayesian_shift_before_floor")
+            )
+            final_delta_after_floor = _as_dict(policy.get("final_delta_after_floor"))
             confidence = policy.get("confidence_by_action")
-            confidence = confidence if isinstance(confidence, dict) else {}
+            confidence = _as_dict(confidence)
             entropy = policy.get("posterior_entropy_by_action")
-            entropy = entropy if isinstance(entropy, dict) else {}
+            entropy = _as_dict(entropy)
             top_action = _top_action(pi)
             utility_profile = str(
                 policy.get("utility_profile")
@@ -207,6 +232,24 @@ def _extract_attempt_records(
                     manifest_row.get("config_fingerprint", "")
                 ).strip(),
                 "utility_profile": utility_profile,
+                "reference_mode": str(policy.get("reference_mode", "")).strip(),
+                "lambda_llm": _safe_float(policy.get("lambda_llm"), None),
+                "min_llm_confidence": _safe_float(
+                    policy.get("min_llm_confidence"),
+                    None,
+                ),
+                "semantic_fallback_used": policy.get("semantic_fallback_used"),
+                "semantic_fallback_reason": str(
+                    policy.get("semantic_fallback_reason", "")
+                ),
+                "rule_fallback_used": policy.get("rule_fallback_used"),
+                "rule_fallback_reason": str(policy.get("rule_fallback_reason", "")),
+                "safety_guard_status": str(policy.get("safety_guard_status", "")),
+                "intervention_applied": policy.get("intervention_applied"),
+                "total_variation_distance": _safe_float(
+                    policy.get("total_variation_distance"),
+                    None,
+                ),
                 "pair_index": _safe_int(manifest_row.get("pair_index"), 0),
                 "pair_seed": _safe_int(
                     manifest_row.get("pair_seed"),
@@ -251,7 +294,35 @@ def _extract_attempt_records(
                 "c_hat_after": _safe_float(control.get("belief_after"), None),
             }
             for action in POLICY_ACTIONS:
-                suffix = "help" if action == "seek_help_then_attempt" else action.replace("attempt_self", "attempt")
+                suffix = _action_suffix(action)
+                record[f"pi_prior_{suffix}"] = _safe_float(
+                    pi_prior.get(action),
+                    None,
+                )
+                record[f"pi_llm_{suffix}"] = _safe_float(pi_llm.get(action), None)
+                record[f"pi_semantic_{suffix}"] = _safe_float(
+                    pi_semantic.get(action),
+                    None,
+                )
+                record[f"pi_ref_{suffix}"] = _safe_float(pi_ref.get(action), None)
+                record[f"pi_bayes_{suffix}"] = _safe_float(pi_bayes.get(action), None)
+                record[f"pi_final_{suffix}"] = _safe_float(pi_final.get(action), None)
+                record[f"semantic_delta_{suffix}"] = _safe_float(
+                    semantic_delta.get(action),
+                    None,
+                )
+                record[f"delta_applied_{suffix}"] = _safe_float(
+                    delta_applied.get(action),
+                    None,
+                )
+                record[f"bayesian_shift_before_floor_{suffix}"] = _safe_float(
+                    bayesian_shift_before_floor.get(action),
+                    None,
+                )
+                record[f"final_delta_after_floor_{suffix}"] = _safe_float(
+                    final_delta_after_floor.get(action),
+                    None,
+                )
                 record[f"confidence_{suffix}"] = _safe_float(
                     confidence.get(action),
                     None,
@@ -309,6 +380,29 @@ def _aggregate_records(
         for record in records
         if record.get("has_policy_payload") and record.get("strategy_unchanged") is not True
     )
+    semantic_fallback_count = sum(
+        1
+        for record in records
+        if record.get("has_policy_payload")
+        and record.get("semantic_fallback_used") is True
+    )
+    rule_fallback_count = sum(
+        1
+        for record in records
+        if record.get("has_policy_payload") and record.get("rule_fallback_used") is True
+    )
+    safety_guard_fallback_count = sum(
+        1
+        for record in records
+        if record.get("has_policy_payload")
+        and str(record.get("safety_guard_status", "")).startswith("fallback")
+    )
+    intervention_count = sum(
+        1
+        for record in records
+        if record.get("has_policy_payload")
+        and record.get("intervention_applied") is True
+    )
     aggregate = {
         "row_count": total,
         "policy_payload_count": policy_count,
@@ -321,6 +415,28 @@ def _aggregate_records(
         ),
         "strategy_changed_count": strategy_changed_count,
         "all_strategy_unchanged": int(policy_count > 0 and strategy_changed_count == 0),
+        "semantic_fallback_count": semantic_fallback_count,
+        "semantic_fallback_rate": _ratio(semantic_fallback_count, policy_count),
+        "rule_fallback_count": rule_fallback_count,
+        "rule_fallback_rate": _ratio(rule_fallback_count, policy_count),
+        "safety_guard_fallback_count": safety_guard_fallback_count,
+        "safety_guard_fallback_rate": _ratio(
+            safety_guard_fallback_count,
+            policy_count,
+        ),
+        "intervention_applied_count": intervention_count,
+        "intervention_applied_rate": _ratio(intervention_count, policy_count),
+        "mean_total_variation_distance": _mean(
+            [record.get("total_variation_distance") for record in records]
+        ),
+        "max_total_variation_distance": max(
+            [
+                float(record.get("total_variation_distance"))
+                for record in records
+                if record.get("total_variation_distance") is not None
+            ],
+            default=None,
+        ),
         "ignored_post_outcome_fields_seen_count": sum(
             1 for record in records if record.get("post_outcome_fields_ignored_for_policy")
         ),
@@ -351,7 +467,7 @@ def _aggregate_records(
         ),
     }
     for action in POLICY_ACTIONS:
-        label = "help" if action == "seek_help_then_attempt" else action.replace("attempt_self", "attempt")
+        label = _action_suffix(action)
         aggregate[f"actual_{label}_share"] = _ratio(
             sum(1 for record in records if record.get("actual_strategy") == action),
             total,
@@ -366,6 +482,21 @@ def _aggregate_records(
         aggregate[f"mean_entropy_{label}"] = _mean(
             [record.get(f"entropy_{label}") for record in records]
         )
+        for prefix in (
+            "pi_prior",
+            "pi_llm",
+            "pi_semantic",
+            "pi_ref",
+            "pi_bayes",
+            "pi_final",
+            "semantic_delta",
+            "delta_applied",
+            "bayesian_shift_before_floor",
+            "final_delta_after_floor",
+        ):
+            aggregate[f"mean_{prefix}_{label}"] = _mean(
+                [record.get(f"{prefix}_{label}") for record in records]
+            )
     if extra_fields:
         return {**extra_fields, **aggregate}
     return aggregate

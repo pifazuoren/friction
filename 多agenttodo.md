@@ -152,23 +152,236 @@ v1: P(outcome | task_family, action)
 v2: P(outcome | task_family, action, support_style)
 ```
 
-## AgentSociety 可参考例子
+## 当前实验和 AgentSociety 原生多 agent 的差异
 
-本仓库中比较值得参考的原生例子：
+当前 `digital_friction_mvp` 已经有多个 agent，但更像“多个 older adult agent 并行做同一套任务”。这些 agent 共享 world condition，但彼此之间基本没有真实互动。
+
+当前机制大致是：
+
+```text
+多个 older adult agents
+-> 各自遇到 digital task
+-> 各自根据 LLM/rule/Bayesian 模块选择 action
+-> outcome_model 根据 env scalar 生成结果
+-> 各自更新 helplessness / memory / posterior
+```
+
+其中 support 主要来自：
+
+```text
+assist_level + human_support_level + accessibility_level
+-> support_quality 0/1/2
+```
+
+这套结构适合做机制 sanity check，但如果要做更像社会模拟的多 agent，需要把 support 从 world scalar 变成“其他 agent 如何回应”的过程。
+
+AgentSociety 原生例子值得学习的是：
+
+```text
+agent 有 friends / relationships
+agent 可以 send_message_to_agent
+agent 可以 do_chat 回应
+workflow 可以做 MESSAGE_INTERVENE / ENVIRONMENT_INTERVENE / SAVE_CONTEXT / SURVEY
+social network 可以初始化关系结构
+```
+
+## AgentSociety 原生多 agent 能力和出处
+
+这些能力不是集中在一个例子里，而是分散在几个原生 examples 和 core agent 代码中。
+
+| 能力 | 主要出处 | 原生实验怎么用 | 我们可以怎么借 |
+|---|---|---|---|
+| `friends` 状态 | `examples/polarization/message_agent.py` | `AgreeAgent` / `DisagreeAgent` 有 `friends` 列表，定时向朋友发送观点消息 | older adult 可以有 family helper / peer / customer service 联系对象 |
+| `send_message_to_agent` | `examples/polarization/message_agent.py` | agent 遍历 friends，把 LLM 生成的消息发给每个 friend | older adult 求助时发送 `support_request` |
+| `do_chat(message)` | `examples/polarization/message_agent.py`; `packages/agentsociety/agentsociety/cityagent/societyagent.py` | 收到消息后解析内容，用 LLM 生成回复，再发回 sender | helper 收到求助后返回 `support_response` |
+| `relationships` / `relation_types` | `examples/rumor_spreader/utils.py` | 初始化 family / colleague / friend 等关系类型和关系强度 | 区分 family / peer / volunteer / customer service，不同关系影响回应概率和支持风格 |
+| `chat_histories` / `interactions` | `examples/rumor_spreader/utils.py`; `SocietyAgent` 默认状态 | 为每对关系初始化聊天历史和互动记录 | 记录老人求助、家人回应、同伴故事、客服回应 |
+| 多类 agent 共存 | `examples/polarization/echo_chamber.py` | 100 个普通 citizen + 1 个 AgreeAgent + 1 个 DisagreeAgent | older adult agents + FamilyHelperAgent + PeerOlderAdultAgent + CustomerServiceAgent |
+| `SAVE_CONTEXT` | `examples/polarization/echo_chamber.py`; `examples/UBI/main.py` | 保存 attitude、chat histories、ubi_opinion 等状态 | 保存 support_response、support_style、peer_norm、Bayesian audit |
+| `MESSAGE_INTERVENE` | `examples/prospect_theory/step_three.py` | 按 profile 给不同 agent 发中奖/未中奖消息，然后再测 survey | 给不同 older adult 注入同伴成功/失败故事或平台提示 |
+| `ENVIRONMENT_INTERVENE` | `examples/hurricane_impact/hurricane.py` | RUN 几天后改变 weather，再继续 RUN | 阶段性改变 friction、platform_feedback_clarity、support availability |
+| `SURVEY` | `examples/prospect_theory/step_three.py`; 当前 `digital_friction_mvp/main.py` | 干预前后测 happiness 等指标 | 干预前后测 self-efficacy、helplessness、trust、avoidance |
+
+## 原生例子具体怎么用
+
+### 1. Polarization: 消息互动
+
+参考文件：
 
 - `examples/polarization/message_agent.py`
-  - 定义 `AgreeAgent` / `DisagreeAgent`
-  - 使用 `send_message_to_agent(friend, message)`
-  - 使用 `do_chat(message)` 处理收到的信息并回复
 - `examples/polarization/echo_chamber.py`
-  - 多类 agent 共存
-  - 运行后保存 attitude 和 chat histories
+
+核心模式：
+
+```text
+Agent 有 friends
+-> forward() 到时间触发
+-> LLM 生成一条消息
+-> send_message_to_agent(friend, message)
+-> 对方 do_chat(message)
+-> 对方解析消息并回复
+```
+
+对我们的启发：
+
+```text
+OlderAdultAgent 遇到 digital friction
+-> 如果选择 seek_help，向 FamilyHelperAgent / CustomerServiceAgent 发 support_request
+-> helper do_chat 收到后返回 support_response
+-> OlderAdultAgent 根据 support_response 调整 perceived control / expected_help_effectiveness / proxy reliance
+```
+
+注意：原生 polarization 里消息是观点传播；我们不要照搬自由聊天，而要用结构化任务消息。
+
+### 2. Rumor spreader: 关系网络初始化
+
+参考文件：
+
+- `examples/rumor_spreader/network_generator.py`
 - `examples/rumor_spreader/utils.py`
-  - 初始化 social network
-  - 设置 `friends`、`public_friends`、`relationships`、`relation_types`、`chat_histories`、`interactions`
-- `examples/inflammatory_message/edge_intercept.py`
-  - 对 chat histories 做 intervention
-  - 适合参考消息干预流程
+
+核心模式：
+
+```text
+生成 public_network / private_network
+-> simulation.filter(types=(SocietyAgent,)) 获取 agent ids
+-> 给每个 agent update friends / public_friends
+-> 写入 relationships / relation_types
+-> 初始化 chat_histories / interactions
+```
+
+对我们的启发：
+
+```text
+为 older adult 初始化支持生态：
+family helper: 高关系强度
+peer older adult: 中等关系强度
+community volunteer: 中等支持可得性
+customer service: 低关系亲密度但有平台职责
+```
+
+实现时要小心：network node index 不一定等于 AgentSociety 的真实 agent id，必须显式映射。
+
+### 3. Hurricane impact: 环境阶段干预
+
+参考文件：
+
+- `examples/hurricane_impact/hurricane.py`
+
+核心模式：
+
+```text
+RUN 3 days
+-> ENVIRONMENT_INTERVENE weather = hurricane
+-> RUN 3 days
+-> ENVIRONMENT_INTERVENE weather = normal
+-> RUN 3 days
+```
+
+对我们的启发：
+
+```text
+Stage 1: 普通数字任务
+Stage 2: 高摩擦 / 低清晰度平台反馈
+Stage 3: 引入 enabling support 或社区数字导师
+Stage 4: transfer / scope spillover 测试
+```
+
+也就是说，AgentSociety 原生已经支持“跑几天、改环境、再跑几天”的实验节奏。
+
+### 4. Prospect theory: 消息干预 + survey
+
+参考文件：
+
+- `examples/prospect_theory/step_three.py`
+
+核心模式：
+
+```text
+先 SURVEY
+-> MESSAGE_INTERVENE 给不同 profile 的 agent 发不同消息
+-> 再 SURVEY
+```
+
+对我们的启发：
+
+```text
+先测 self-efficacy / helplessness
+-> 给部分 agent 注入 peer success story
+-> 给部分 agent 注入 peer failure / avoidance story
+-> 再测 self-efficacy / avoidance / trust
+```
+
+这适合实现 `peer_norm = success / failure / neutral`，不用一开始就创建复杂 peer agent。
+
+### 5. Echo chamber / UBI: 保存上下文
+
+参考文件：
+
+- `examples/polarization/echo_chamber.py`
+- `examples/UBI/main.py`
+
+核心模式：
+
+```text
+SAVE_CONTEXT key="attitude"
+SAVE_CONTEXT key="chat_histories"
+SAVE_CONTEXT key="ubi_opinion"
+```
+
+对我们的启发：
+
+每次任务后都应该能保存和复盘：
+
+```text
+support_request
+support_response
+support_style
+instruction_quality
+emotional_tone
+autonomy_preservation
+proxy_completion
+older adult actual action
+outcome
+helplessness_delta
+Bayesian posterior update
+```
+
+## 哪些可以直接学，哪些暂时不要学
+
+优先学习：
+
+- `polarization/message_agent.py` 的 `send_message_to_agent` / `do_chat` 模式。
+- `rumor_spreader/utils.py` 的关系初始化模式。
+- `hurricane_impact/hurricane.py` 的阶段性环境干预。
+- `prospect_theory/step_three.py` 的 message intervention + survey 前后测。
+- `echo_chamber.py` / `UBI/main.py` 的 `SAVE_CONTEXT` 保存关键状态。
+
+暂时不要学：
+
+- 不要追求 10k agents 或 city-scale。
+- 不要做无边界自由聊天。
+- 不要让 helper LLM 决定真实 outcome。
+- 不要让 SocialBlock 自由接管你的 digital friction 实验逻辑。
+- 不要把 support_style 同时硬写进 action、outcome、helplessness，避免新的自我强化循环。
+
+## 对我们最现实的接法
+
+第一步不一定要马上新建很多 agent，可以按两级路线走：
+
+```text
+Level 1: workflow message intervention
+-> 用 MESSAGE_INTERVENE 注入 peer success/failure story
+-> 观察 appraisal / action / survey / Bayesian posterior 是否变化
+
+Level 2: task-triggered helper agent
+-> 老人 seek_help 时发送 support_request
+-> helper do_chat 返回 support_response
+-> outcome_model 仍控制真实结果
+-> audit 记录互动全过程
+```
+
+这比直接做完整 multi-agent society 更稳。
 
 ## Phase C-lite 实施建议
 
@@ -264,4 +477,3 @@ v2: P(outcome | task_family, action, support_style)
 3. 把场景和术语统一为“老年人日常数字服务摩擦”。
 4. 轻量拆分 support/world 参数。
 5. 等 shadow audit 稳定后，再做 Phase C-lite helper agent。
-

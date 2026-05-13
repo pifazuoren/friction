@@ -1915,6 +1915,71 @@
   - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_control_audit.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
   - 结果：`61 passed, 3 warnings`
 
+### Bayesian policy-lite Phase 4 semantic gated-lite2 reference policy
+- 目的：
+  - 落地 Phase 4 semantic gated-lite2 reference policy
+  - 把 `gated_lite` 的 reference policy 从 Phase 3 的 `strategy_deliberation.final_weights` 扩展为可切换模式
+  - 默认保持 `hybrid_ref` 兼容；显式设置 `semantic_v2` 时使用 `weak prior + bounded LLM semantic adjustment`
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/bayesian_policy_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis_bayesian_policy_shadow.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_bayesian_policy_shadow_analysis.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_REFERENCE_MODE=hybrid_ref|semantic_v2`
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_LAMBDA_LLM`，默认 `0.25`，clamp 到 `[0, 1]`
+  - 新增 `PROTO_BAYESIAN_POLICY_LITE_MIN_LLM_CONFIDENCE`，默认 `0.50`，clamp 到 `[0, 1]`
+  - `world_runner.py::FINGERPRINT_ENV_KEYS` 增加上述 3 个 Phase 4 env keys
+  - 新增 `build_semantic_reference_policy(...)`
+  - `hybrid_ref` 下 `pi_ref = normalize(strategy_deliberation.final_weights)`，保持 Phase 3 兼容
+  - `semantic_v2` 下使用固定 weak prior：`attempt_self=0.34`、`seek_help_then_attempt=0.33`、`avoid=0.33`
+  - `semantic_v2` 若 `llm_weights` 合法且 `llm_confidence >= min_llm_confidence`，则 `pi_semantic = (1 - lambda_llm) * pi_prior + lambda_llm * pi_llm`
+  - `semantic_v2` 若 LLM weights invalid 或 confidence 过低，则 fallback 到 `pi_prior`
+  - `rule_weights` 在 `semantic_v2` 中记录为 `rule_weights_audit_only`，不参与常规 `pi_ref` 混合
+  - `rule_fallback_used` 第一版保持 false；常规 fallback 是 `pi_prior` 或 `pi_ref`，不是 rule weights
+  - `agent.py` 在 action 前构造 reference audit，并将 `reference_audit["pi_ref"]` 传入现有 `compute_bayesian_policy_shadow(...)`
+  - `gated_lite` 仍只通过 `choose_attempt_strategy(..., precomputed_final_weights=pi_final)` 进入真实行动概率入口
+  - 未修改 `attempt_strategy.py`，未新增 sampler 接口
+  - 未修改 `llm_psychology.py` prompt；因此当前只能声称 `semantic_v2 removes direct rule mixing`，不能声称完全 rule-free
+- payload audit：
+  - 新增 `reference_mode`
+  - 新增 `pi_prior / pi_llm / pi_semantic`
+  - 新增 `llm_confidence / llm_reason / llm_status / llm_source`
+  - 新增 `lambda_llm / min_llm_confidence`
+  - 新增 `semantic_delta_from_prior`
+  - 新增 `semantic_fallback_used / semantic_fallback_reason`
+  - 新增 `rule_weights_audit_only / rule_fallback_used / rule_fallback_reason`
+  - 新增 `bayesian_shift_before_floor = pi_after_bayesian_shift - pi_ref`
+  - 保留 Phase 3 的 confidence gate、entropy gate、max_delta、prob_floor、`delta_applied`、`final_delta_after_floor`、`total_variation_distance`
+- analysis script：
+  - `analysis_bayesian_policy_shadow.py` 扩展输出 Phase 4 semantic chain 字段
+  - 新增输出 `pi_prior_* / pi_llm_* / pi_semantic_* / pi_ref_* / pi_bayes_* / pi_final_*`
+  - 新增输出 `semantic_delta_* / delta_applied_* / bayesian_shift_before_floor_* / final_delta_after_floor_*`
+  - 新增聚合 `semantic_fallback_rate / rule_fallback_rate / safety_guard_fallback_rate / intervention_applied_rate`
+  - 新增聚合 `mean_total_variation_distance / max_total_variation_distance`
+  - 分析中可区分 Bayesian shift 与 probability floor 的影响，避免把 floor 变化误说成 Bayesian posterior effect
+- 未改变：
+  - 未修改 outcome model
+  - 未修改 helplessness update
+  - 未修改 event appraisal / event attribution
+  - 未修改 scope spillover
+  - 未修改 experience memory / stream memory / interview
+  - 未修改 DB schema
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`43 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_policy_shadow_analysis.py -q`
+  - 结果：`2 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_control_audit.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
+  - 结果：`61 passed, 3 warnings`
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/bayesian_policy_lite.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/attempt_strategy.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/analysis_bayesian_policy_shadow.py`
+  - 结果：通过，无输出
+
 ### Phase 3 conservative gated-lite pilot 修改计划
 - 目的：
   - 把 `Bayesianlite2Phase.md` 中 Phase 3 从概念性描述扩展为可执行的 conservative gated-lite pilot 实施计划

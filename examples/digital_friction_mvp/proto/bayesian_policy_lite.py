@@ -10,6 +10,15 @@ from .experience_memory import TASK_FAMILIES
 BAYESIAN_POLICY_LITE_VERSION = "policy_lite_shadow_v1"
 ACTIVE_BAYESIAN_POLICY_LITE_MODES = {"shadow", "gated_lite"}
 DEFAULT_POLICY_LITE_PROB_FLOOR = 0.05
+VALID_BAYESIAN_POLICY_LITE_REFERENCE_MODES = {"hybrid_ref", "semantic_v2"}
+DEFAULT_BAYESIAN_POLICY_LITE_REFERENCE_MODE = "hybrid_ref"
+DEFAULT_BAYESIAN_POLICY_LITE_LAMBDA_LLM = 0.25
+DEFAULT_BAYESIAN_POLICY_LITE_MIN_LLM_CONFIDENCE = 0.50
+WEAK_NEUTRAL_POLICY_PRIOR = {
+    "attempt_self": 0.34,
+    "seek_help_then_attempt": 0.33,
+    "avoid": 0.33,
+}
 POLICY_LITE_ACTIONS = (
     "attempt_self",
     "seek_help_then_attempt",
@@ -200,6 +209,27 @@ def clamp_prob_floor(value: Any) -> float:
     )
 
 
+def clamp_lambda_llm(value: Any) -> float:
+    return max(0.0, min(1.0, _safe_float(value, DEFAULT_BAYESIAN_POLICY_LITE_LAMBDA_LLM)))
+
+
+def clamp_min_llm_confidence(value: Any) -> float:
+    return max(
+        0.0,
+        min(1.0, _safe_float(value, DEFAULT_BAYESIAN_POLICY_LITE_MIN_LLM_CONFIDENCE)),
+    )
+
+
+def normalize_reference_mode(value: Any) -> str:
+    mode = str(value or DEFAULT_BAYESIAN_POLICY_LITE_REFERENCE_MODE).strip().lower()
+    if mode not in VALID_BAYESIAN_POLICY_LITE_REFERENCE_MODES:
+        raise ValueError(
+            "PROTO_BAYESIAN_POLICY_LITE_REFERENCE_MODE must be one of: "
+            + ", ".join(sorted(VALID_BAYESIAN_POLICY_LITE_REFERENCE_MODES))
+        )
+    return mode
+
+
 def _prior_alpha_for(action: str, outcome_subtype: str) -> float:
     if outcome_subtype in _PLAUSIBLE_OUTCOMES_BY_ACTION.get(action, set()):
         return 1.0
@@ -308,6 +338,94 @@ def _normalize_distribution(weights: Any) -> dict[str, float]:
     return {action: clipped[action] / total for action in POLICY_LITE_ACTIONS}
 
 
+def _valid_distribution(weights: Any) -> bool:
+    if not isinstance(weights, dict):
+        return False
+    total = 0.0
+    for action in POLICY_LITE_ACTIONS:
+        value = weights.get(action)
+        if not isinstance(value, (int, float)):
+            return False
+        if not math.isfinite(float(value)):
+            return False
+        if float(value) < 0.0:
+            return False
+        total += float(value)
+    return total > 0.0
+
+
+def build_semantic_reference_policy(
+    *,
+    reference_mode: Any = DEFAULT_BAYESIAN_POLICY_LITE_REFERENCE_MODE,
+    hybrid_reference: Any = None,
+    llm_weights: Any = None,
+    llm_confidence: Any = None,
+    llm_reason: Any = "",
+    llm_status: Any = "",
+    llm_source: Any = "",
+    rule_weights: Any = None,
+    lambda_llm: Any = DEFAULT_BAYESIAN_POLICY_LITE_LAMBDA_LLM,
+    min_llm_confidence: Any = DEFAULT_BAYESIAN_POLICY_LITE_MIN_LLM_CONFIDENCE,
+) -> dict[str, Any]:
+    mode = normalize_reference_mode(reference_mode)
+    bounded_lambda = clamp_lambda_llm(lambda_llm)
+    bounded_min_confidence = clamp_min_llm_confidence(min_llm_confidence)
+    pi_prior = _normalize_distribution(WEAK_NEUTRAL_POLICY_PRIOR)
+    normalized_rule_weights = _normalize_distribution(rule_weights)
+    normalized_hybrid = _normalize_distribution(hybrid_reference)
+    raw_llm_confidence = _safe_float(llm_confidence, 0.0)
+    bounded_llm_confidence = max(0.0, min(1.0, raw_llm_confidence))
+    llm_is_valid = _valid_distribution(llm_weights)
+    normalized_llm = _normalize_distribution(llm_weights)
+
+    audit = {
+        "reference_mode": mode,
+        "pi_prior": copy.deepcopy(pi_prior),
+        "pi_llm": normalized_llm,
+        "llm_confidence": bounded_llm_confidence,
+        "llm_reason": str(llm_reason or ""),
+        "llm_status": str(llm_status or ""),
+        "llm_source": str(llm_source or ""),
+        "lambda_llm": bounded_lambda,
+        "min_llm_confidence": bounded_min_confidence,
+        "pi_semantic": {},
+        "semantic_delta_from_prior": {},
+        "semantic_fallback_used": False,
+        "semantic_fallback_reason": "",
+        "rule_weights_audit_only": normalized_rule_weights,
+        "rule_fallback_used": False,
+        "rule_fallback_reason": "",
+        "pi_ref": normalized_hybrid,
+    }
+
+    if mode == "hybrid_ref":
+        return audit
+
+    semantic_fallback_reason = ""
+    if not llm_is_valid:
+        semantic_fallback_reason = "invalid_llm_weights"
+    elif bounded_llm_confidence < bounded_min_confidence:
+        semantic_fallback_reason = "low_llm_confidence"
+
+    if semantic_fallback_reason:
+        pi_semantic = copy.deepcopy(pi_prior)
+        audit["semantic_fallback_used"] = True
+        audit["semantic_fallback_reason"] = semantic_fallback_reason
+    else:
+        pi_semantic = _normalize_distribution(
+            {
+                action: (1.0 - bounded_lambda) * pi_prior[action]
+                + bounded_lambda * normalized_llm[action]
+                for action in POLICY_LITE_ACTIONS
+            }
+        )
+
+    audit["pi_semantic"] = pi_semantic
+    audit["semantic_delta_from_prior"] = _distribution_delta(pi_semantic, pi_prior)
+    audit["pi_ref"] = pi_semantic
+    return audit
+
+
 def _has_invalid_probability(distribution: Any) -> bool:
     if not isinstance(distribution, dict):
         return True
@@ -404,6 +522,10 @@ def _apply_gated_shift(
         pi_after_bayesian_shift = normalized_ref
         safety_guard_status = "fallback_to_ref_after_shift"
 
+    bayesian_shift_before_floor = _distribution_delta(
+        pi_after_bayesian_shift,
+        normalized_ref,
+    )
     pi_final = _normalize_with_floor(
         pi_after_bayesian_shift,
         floor=bounded_floor,
@@ -429,6 +551,7 @@ def _apply_gated_shift(
         "delta_before_clamp": delta_before_clamp,
         "delta_applied": delta_applied,
         "pi_after_bayesian_shift": pi_after_bayesian_shift,
+        "bayesian_shift_before_floor": bayesian_shift_before_floor,
         "pi_final": pi_final,
         "final_delta_after_floor": final_delta_after_floor,
         "max_abs_final_delta": max_abs_final_delta,

@@ -14,6 +14,7 @@ from .attempt_strategy import choose_attempt_strategy, compute_rule_strategy_wei
 from .attribution_inference import infer_event_attribution
 from .bayesian_control import update_bayesian_control_memory
 from .bayesian_policy_lite import (
+    build_semantic_reference_policy,
     combine_bayesian_policy_audits,
     compute_bayesian_policy_shadow,
     update_bayesian_policy_memory,
@@ -1400,6 +1401,20 @@ class DigitalHelplessnessAgent(SocietyAgent):
             daily_reflection=current_daily_reflection,
             rule_weights=rule_strategy_weights,
         )
+        bayesian_policy_reference_audit = build_semantic_reference_policy(
+            reference_mode=runtime_config.proto_bayesian_policy_lite_reference_mode,
+            hybrid_reference=strategy_deliberation.final_weights,
+            llm_weights=strategy_deliberation.llm_weights,
+            llm_confidence=strategy_deliberation.confidence,
+            llm_reason=strategy_deliberation.reason,
+            llm_status=strategy_deliberation.status,
+            llm_source=strategy_deliberation.source,
+            rule_weights=rule_strategy_weights,
+            lambda_llm=runtime_config.proto_bayesian_policy_lite_lambda_llm,
+            min_llm_confidence=(
+                runtime_config.proto_bayesian_policy_lite_min_llm_confidence
+            ),
+        )
         bayesian_policy_memory_pre, bayesian_policy_pre_audit = (
             compute_bayesian_policy_shadow(
                 raw_memory=await self.memory.status.get(
@@ -1408,7 +1423,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 ),
                 mode=runtime_config.proto_bayesian_policy_lite_mode,
                 task_family=task.task_family,
-                strategy_reference=strategy_deliberation.final_weights,
+                strategy_reference=bayesian_policy_reference_audit.get("pi_ref"),
                 task_difficulty=task.difficulty,
                 env=env,
                 task_appraisal=task_appraisal.to_dict(),
@@ -1430,6 +1445,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 day=int(day),
             )
         )
+        bayesian_policy_pre_audit.update(bayesian_policy_reference_audit)
         exp_seed = _safe_int(os.getenv("EXP_SEED", "101"), 101)
         pair_seed = _safe_int(os.getenv("PARALLEL_PAIR_SEED", str(exp_seed)), exp_seed)
         world_name = str(os.getenv("WORLD_NAME", "baseline_low_friction"))

@@ -8,6 +8,8 @@ import pytest
 from proto.bayesian_policy_lite import (
     BAYESIAN_POLICY_LITE_VERSION,
     POLICY_LITE_ACTIONS,
+    WEAK_NEUTRAL_POLICY_PRIOR,
+    build_semantic_reference_policy,
     build_initial_bayesian_policy_memory,
     classify_policy_outcome_subtype,
     combine_bayesian_policy_audits,
@@ -18,6 +20,124 @@ from proto.bayesian_policy_lite import (
 
 
 TASK_FAMILY = "payment_risk_confirmation"
+
+
+def test_semantic_reference_hybrid_ref_preserves_phase3_reference() -> None:
+    hybrid_reference = {
+        "attempt_self": 0.2,
+        "seek_help_then_attempt": 0.5,
+        "avoid": 0.3,
+    }
+
+    audit = build_semantic_reference_policy(
+        reference_mode="hybrid_ref",
+        hybrid_reference=hybrid_reference,
+        llm_weights={"attempt_self": 0.9, "seek_help_then_attempt": 0.05, "avoid": 0.05},
+        llm_confidence=1.0,
+        rule_weights={"attempt_self": 0.1, "seek_help_then_attempt": 0.1, "avoid": 0.8},
+    )
+
+    assert audit["reference_mode"] == "hybrid_ref"
+    assert audit["pi_ref"] == pytest.approx(hybrid_reference)
+    assert audit["pi_semantic"] == {}
+    assert audit["rule_fallback_used"] is False
+
+
+def test_semantic_reference_v2_blends_prior_and_valid_llm_weights() -> None:
+    llm_weights = {
+        "attempt_self": 0.8,
+        "seek_help_then_attempt": 0.1,
+        "avoid": 0.1,
+    }
+
+    audit = build_semantic_reference_policy(
+        reference_mode="semantic_v2",
+        hybrid_reference={"attempt_self": 0.05, "seek_help_then_attempt": 0.05, "avoid": 0.9},
+        llm_weights=llm_weights,
+        llm_confidence=0.9,
+        rule_weights={"attempt_self": 0.0, "seek_help_then_attempt": 0.0, "avoid": 1.0},
+        lambda_llm=0.25,
+        min_llm_confidence=0.5,
+    )
+
+    expected = {
+        action: 0.75 * WEAK_NEUTRAL_POLICY_PRIOR[action] + 0.25 * llm_weights[action]
+        for action in POLICY_LITE_ACTIONS
+    }
+    assert audit["reference_mode"] == "semantic_v2"
+    assert audit["semantic_fallback_used"] is False
+    assert audit["pi_semantic"] == pytest.approx(expected)
+    assert audit["pi_ref"] == pytest.approx(expected)
+    assert audit["rule_weights_audit_only"]["avoid"] == pytest.approx(1.0)
+    assert audit["rule_fallback_used"] is False
+
+
+def test_semantic_reference_lambda_extremes_are_respected() -> None:
+    llm_weights = {
+        "attempt_self": 0.1,
+        "seek_help_then_attempt": 0.8,
+        "avoid": 0.1,
+    }
+
+    prior_audit = build_semantic_reference_policy(
+        reference_mode="semantic_v2",
+        llm_weights=llm_weights,
+        llm_confidence=0.9,
+        lambda_llm=0.0,
+    )
+    llm_audit = build_semantic_reference_policy(
+        reference_mode="semantic_v2",
+        llm_weights=llm_weights,
+        llm_confidence=0.9,
+        lambda_llm=1.0,
+    )
+
+    assert prior_audit["pi_semantic"] == pytest.approx(WEAK_NEUTRAL_POLICY_PRIOR)
+    assert llm_audit["pi_semantic"] == pytest.approx(llm_weights)
+
+
+def test_semantic_reference_invalid_or_low_confidence_llm_falls_back_to_prior() -> None:
+    invalid_audit = build_semantic_reference_policy(
+        reference_mode="semantic_v2",
+        llm_weights={"attempt_self": float("nan"), "seek_help_then_attempt": 0.5, "avoid": 0.5},
+        llm_confidence=0.9,
+    )
+    low_confidence_audit = build_semantic_reference_policy(
+        reference_mode="semantic_v2",
+        llm_weights={"attempt_self": 0.1, "seek_help_then_attempt": 0.8, "avoid": 0.1},
+        llm_confidence=0.1,
+        min_llm_confidence=0.5,
+    )
+
+    assert invalid_audit["semantic_fallback_used"] is True
+    assert invalid_audit["semantic_fallback_reason"] == "invalid_llm_weights"
+    assert invalid_audit["pi_ref"] == pytest.approx(WEAK_NEUTRAL_POLICY_PRIOR)
+    assert low_confidence_audit["semantic_fallback_used"] is True
+    assert low_confidence_audit["semantic_fallback_reason"] == "low_llm_confidence"
+    assert low_confidence_audit["pi_ref"] == pytest.approx(WEAK_NEUTRAL_POLICY_PRIOR)
+
+
+def test_semantic_reference_helper_does_not_mutate_inputs() -> None:
+    hybrid_reference = {"attempt_self": 0.2, "seek_help_then_attempt": 0.3, "avoid": 0.5}
+    llm_weights = {"attempt_self": 0.7, "seek_help_then_attempt": 0.2, "avoid": 0.1}
+    rule_weights = {"attempt_self": 0.1, "seek_help_then_attempt": 0.1, "avoid": 0.8}
+    before = (
+        copy.deepcopy(hybrid_reference),
+        copy.deepcopy(llm_weights),
+        copy.deepcopy(rule_weights),
+    )
+
+    build_semantic_reference_policy(
+        reference_mode="semantic_v2",
+        hybrid_reference=hybrid_reference,
+        llm_weights=llm_weights,
+        llm_confidence=0.8,
+        rule_weights=rule_weights,
+    )
+
+    assert hybrid_reference == before[0]
+    assert llm_weights == before[1]
+    assert rule_weights == before[2]
 
 
 def test_initial_memory_uses_action_specific_priors() -> None:
@@ -279,6 +399,10 @@ def test_gated_lite_returns_final_policy_when_gate_opens() -> None:
     assert audit["delta_applied"]["attempt_self"] > 0.0
     assert audit["final_delta_after_floor"]["attempt_self"] == pytest.approx(
         audit["pi_final"]["attempt_self"] - audit["pi_ref"]["attempt_self"]
+    )
+    assert audit["bayesian_shift_before_floor"]["attempt_self"] == pytest.approx(
+        audit["pi_after_bayesian_shift"]["attempt_self"]
+        - audit["pi_ref"]["attempt_self"]
     )
     assert audit["max_abs_final_delta"] == pytest.approx(
         max(abs(value) for value in audit["final_delta_after_floor"].values())
