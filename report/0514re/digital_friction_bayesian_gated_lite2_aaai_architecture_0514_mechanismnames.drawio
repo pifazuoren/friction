@@ -1,0 +1,167 @@
+<mxfile host="Electron" agent="Codex">
+  <diagram id="digital-friction-0514-mechanism-names" name="0514 Mechanism Names">
+    <mxGraphModel dx="957" dy="764" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;fontSize=28;fontStyle=1;fontColor=#111827;align=center;verticalAlign=middle;fontFamily=Helvetica;" value="Digital Friction Mechanism Flow" vertex="1">
+          <mxGeometry height="46" width="1300" x="250" y="28" as="geometry" />
+        </mxCell>
+        <mxCell id="layer1_event" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#D1D5DB;strokeWidth=1.5;fontSize=17;fontStyle=1;fontColor=#374151;align=left;verticalAlign=top;spacingLeft=16;spacingTop=10;fontFamily=Helvetica;" value="Task Appraisal" vertex="1">
+          <mxGeometry height="145" width="300" x="70" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="layer2_policy" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7FAFF;strokeColor=#D1D5DB;strokeWidth=1.5;fontSize=17;fontStyle=1;fontColor=#374151;align=left;verticalAlign=top;spacingLeft=16;spacingTop=10;fontFamily=Helvetica;" value="Action Policy" vertex="1">
+          <mxGeometry height="240" width="700" x="410" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="layer3_control" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7FAFF;strokeColor=#D1D5DB;strokeWidth=1.5;fontSize=17;fontStyle=1;fontColor=#374151;align=left;verticalAlign=top;spacingLeft=16;spacingTop=10;fontFamily=Helvetica;" value="Controllability" vertex="1">
+          <mxGeometry height="160" width="700" x="410" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="layer4_update" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#D1D5DB;strokeWidth=1.5;fontSize=17;fontStyle=1;fontColor=#374151;align=left;verticalAlign=top;spacingLeft=16;spacingTop=10;fontFamily=Helvetica;" value="Outcome Learning" vertex="1">
+          <mxGeometry height="445" width="590" x="1140" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="event_task" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=1.8;fontSize=15;fontStyle=1;fontColor=#374151;fontFamily=Helvetica;" value="Task Event" vertex="1">
+          <mxGeometry height="58" width="115" x="100" y="219" as="geometry" />
+        </mxCell>
+        <mxCell id="event_appraisal" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=1.8;fontSize=15;fontStyle=1;fontColor=#374151;fontFamily=Helvetica;" value="LLM Appraisal" vertex="1">
+          <mxGeometry height="58" width="105" x="250" y="219" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_semantic" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="LLM Reference Policy" vertex="1">
+          <mxGeometry height="72" width="135" x="445" y="212" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_posterior" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Posterior Memory" vertex="1">
+          <mxGeometry height="58" width="165" x="445" y="304" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_qbayes" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Bayesian Value" vertex="1">
+          <mxGeometry height="58" width="130" x="640" y="304" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_gate" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Evidence Gate" vertex="1">
+          <mxGeometry height="148" width="70" x="800" y="212" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_final" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Final Policy" vertex="1">
+          <mxGeometry height="150" width="45" x="895" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_sample" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Action Sampling" vertex="1">
+          <mxGeometry height="44" width="105" x="990" y="263" as="geometry" />
+        </mxCell>
+        <mxCell id="control_components" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=1.8;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Controllability Metrics" vertex="1">
+          <mxGeometry height="58" width="180" x="475" y="487" as="geometry" />
+        </mxCell>
+        <mxCell id="control_score" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Controllability Belief" vertex="1">
+          <mxGeometry height="58" width="150" x="700" y="487" as="geometry" />
+        </mxCell>
+        <mxCell id="control_mode" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Controllability Gate" vertex="1">
+          <mxGeometry height="58" width="160" x="895" y="487" as="geometry" />
+        </mxCell>
+        <mxCell id="update_outcome" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D6B48D;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#6B4A2D;fontFamily=Helvetica;" value="Task Outcome" vertex="1">
+          <mxGeometry height="58" width="120" x="1180" y="257" as="geometry" />
+        </mxCell>
+        <mxCell id="update_uncontrol" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D6B48D;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#6B4A2D;fontFamily=Helvetica;" value="Uncontrollability Appraisal" vertex="1">
+          <mxGeometry height="58" width="145" x="1330" y="256" as="geometry" />
+        </mxCell>
+        <mxCell id="update_attr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D6B48D;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#6B4A2D;fontFamily=Helvetica;" value="Attribution Update" vertex="1">
+          <mxGeometry height="58" width="175" x="1515" y="256" as="geometry" />
+        </mxCell>
+        <mxCell id="update_psych" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D6B48D;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#6B4A2D;fontFamily=Helvetica;" value="Psychological Update" vertex="1">
+          <mxGeometry height="58" width="175" x="1515" y="362" as="geometry" />
+        </mxCell>
+        <mxCell id="update_memory" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D6B48D;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#6B4A2D;fontFamily=Helvetica;" value="Memory Update" vertex="1">
+          <mxGeometry height="58" width="175" x="1515" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="e_event_appraisal" edge="1" parent="1" source="event_task" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#9CA3AF;strokeWidth=2;" target="event_appraisal" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_appraisal_semantic" edge="1" parent="1" source="event_appraisal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.4;" target="policy_semantic" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_semantic_gate" edge="1" parent="1" source="policy_semantic" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.4;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" target="policy_gate" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="250" />
+              <mxPoint x="640" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_posterior_q" edge="1" parent="1" source="policy_posterior" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.2;" target="policy_qbayes" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_q_gate" edge="1" parent="1" source="policy_qbayes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.2;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="780" y="330" />
+              <mxPoint x="780" y="330" />
+            </Array>
+            <mxPoint x="800" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_gate_final" edge="1" parent="1" source="policy_gate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.4;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" target="policy_final" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_final_sample" edge="1" parent="1" source="policy_final" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.4;" target="policy_sample" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_update1" edge="1" parent="1" source="update_outcome" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D6B48D;strokeWidth=2.4;" target="update_uncontrol" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_update2" edge="1" parent="1" source="update_uncontrol" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D6B48D;strokeWidth=2.4;" target="update_attr" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_update3" edge="1" parent="1" source="update_attr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D6B48D;strokeWidth=2.4;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="update_psych" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1603" y="310" />
+              <mxPoint x="1603" y="310" />
+              <mxPoint x="1603" y="351" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_update4" edge="1" parent="1" source="update_psych" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D6B48D;strokeWidth=2.4;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="update_memory" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1600" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_posterior_control" edge="1" parent="1" source="policy_posterior" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.2;dashPattern=6 4;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" target="control_components" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="565" y="390" />
+              <mxPoint x="565" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_control1" edge="1" parent="1" source="control_components" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2;" target="control_score" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_control2" edge="1" parent="1" source="control_score" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2;" target="control_mode" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_control_to_policy" edge="1" parent="1" source="control_mode" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2;dashPattern=6 4;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" target="policy_final" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="917" y="450" />
+              <mxPoint x="917" y="450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_memory_posterior" edge="1" parent="1" source="update_memory" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.2;dashed=1;dashPattern=6 4;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" target="policy_posterior" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1603" y="630" />
+              <mxPoint x="360" y="630" />
+              <mxPoint x="360" y="333" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SZs9gUj_3wsx_bM8lXVA-1" edge="1" parent="1" source="policy_sample" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D6B48D;strokeWidth=2.4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="update_outcome" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1095" y="286" />
+            </Array>
+            <mxPoint x="1150" y="281" as="sourcePoint" />
+            <mxPoint x="1180" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

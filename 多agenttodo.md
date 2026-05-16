@@ -356,6 +356,9 @@ Bayesian posterior update
 - `hurricane_impact/hurricane.py` 的阶段性环境干预。
 - `prospect_theory/step_three.py` 的 message intervention + survey 前后测。
 - `echo_chamber.py` / `UBI/main.py` 的 `SAVE_CONTEXT` 保存关键状态。
+- `packages/agentsociety/agentsociety/agent/block.py` 的 `Block` / `BlockParams` / `BlockOutput` 模式。
+- `packages/agentsociety/agentsociety/agent/dispatcher.py` 的 `BlockDispatcher` 模式。
+- `packages/agentsociety/agentsociety/cityagent/blocks/social_block.py` 的 block 内部再调度子 block 模式。
 
 暂时不要学：
 
@@ -364,6 +367,238 @@ Bayesian posterior update
 - 不要让 helper LLM 决定真实 outcome。
 - 不要让 SocialBlock 自由接管你的 digital friction 实验逻辑。
 - 不要把 support_style 同时硬写进 action、outcome、helplessness，避免新的自我强化循环。
+
+## AgentSociety 原生 block 到底是什么
+
+AgentSociety 原生 `Block` 不是简单的函数拆分，而是 agent 的可插拔行为能力模块。
+
+核心出处：
+
+```text
+packages/agentsociety/agentsociety/agent/block.py
+packages/agentsociety/agentsociety/agent/dispatcher.py
+packages/agentsociety/agentsociety/cityagent/societyagent.py
+packages/agentsociety/agentsociety/cityagent/blocks/social_block.py
+```
+
+原生 block 的基本结构：
+
+```text
+BlockParams:
+  block 的配置参数
+
+BlockOutput:
+  block 的结构化输出
+
+Block:
+  有 toolbox / memory / environment / llm / context
+  通过 async forward(context) 执行
+```
+
+原生 CityAgent 的流程大致是：
+
+```text
+needs_block.forward()
+-> plan_block.forward()
+-> step_execution()
+-> dispatcher 根据 current_intention 选择 block
+-> selected_block.forward(context)
+-> result 写回 current_step.evaluation
+-> cognition_block.forward()
+```
+
+常见 block：
+
+```text
+NeedsBlock
+PlanBlock
+CognitionBlock
+MobilityBlock
+SocialBlock
+EconomyBlock
+OtherBlock
+```
+
+`SocialBlock` 里还会继续拆子 block：
+
+```text
+SocialBlock
+-> FindPersonBlock
+-> MessageBlock
+-> SocialNoneBlock
+```
+
+也就是说，原生 block 的特点是：
+
+```text
+有明确职责
+有参数
+有上下文
+有结构化输出
+能访问 LLM / memory / environment
+可以由 dispatcher 根据 intention 选择
+```
+
+对当前 digital friction 实验的提醒：
+
+```text
+不是所有机制都适合交给 dispatcher 自由选择。
+```
+
+因为我们的实验链条有严格顺序：
+
+```text
+appraisal
+-> policy
+-> support interaction
+-> outcome
+-> attribution
+-> state update
+-> memory / audit
+```
+
+这些步骤不能让 LLM dispatcher 随意换顺序，否则会破坏 no-leakage 和因果边界。
+
+因此，短期更适合：
+
+```text
+固定实验 pipeline + AgentSociety-style blocks
+```
+
+而不是：
+
+```text
+让 BlockDispatcher 接管整个 digital friction 主链
+```
+
+## HelperAgent 优先用原生 block/message 的设计
+
+后续如果要更像原生 AgentSociety，优先不要从 Bayesian policy 或 helplessness update 开始 block 化，而应从 HelperAgent 开始。
+
+原因：
+
+```text
+HelperAgent 本来就是一个独立 agent；
+求助本来就是 agent-agent message；
+support response 本来就适合做结构化 BlockOutput；
+这比把整个 agent.py 重构成原生 block 风险小。
+```
+
+推荐设计：
+
+```text
+OlderAdultAgent
+  seek_help action selected
+  -> send_message_to_agent(helper_id, support_request)
+
+FamilyHelperAgent
+  do_chat(message)
+  -> SupportResponseBlock.forward(context)
+  -> return structured support_response
+
+OlderAdultAgent
+  receives support_response
+  -> outcome_model consumes support_response
+  -> state_update / Bayesian audit records support process
+```
+
+`support_request` 继续保持结构化：
+
+```json
+{
+  "type": "support_request",
+  "task_family": "payment_confirmation",
+  "friction_type": "verification_failure",
+  "requested_help": "teach_me",
+  "current_appraisal": {
+    "difficulty": 0.72,
+    "perceived_control": 0.38,
+    "risk": 0.64
+  },
+  "day": 3
+}
+```
+
+`SupportResponseBlock` 输出结构化 `BlockOutput`：
+
+```json
+{
+  "success": true,
+  "evaluation": "provided enabling support",
+  "consumed_time": 8,
+  "node_id": null,
+  "support_response": {
+    "type": "support_response",
+    "source": "family",
+    "support_style": "enabling",
+    "instruction_quality": 0.8,
+    "emotional_tone": "patient",
+    "autonomy_preservation": 0.9,
+    "proxy_completion": false,
+    "response_text": "我一步一步教你，你先自己点这里。"
+  }
+}
+```
+
+第一版 HelperAgent block 只需要一个主 block：
+
+```text
+SupportResponseBlock
+```
+
+后续再拆子 block：
+
+```text
+SupportUnderstandingBlock
+SupportStyleSelectionBlock
+SupportResponseGenerationBlock
+```
+
+第一版不要让 HelperAgent 自由决定任务成功与否。HelperAgent 只决定：
+
+```text
+怎么帮
+语气如何
+是否保留自主性
+是否代办
+解释质量如何
+```
+
+真实 outcome 仍由：
+
+```text
+outcome_model
+```
+
+在读取 `support_response` 后受控生成。
+
+### 为什么不优先把 Bayesian/helplessness 改成原生 block
+
+`bayesian_policy_lite`、`Huys-Dayan-lite controllability`、`state_update` 都是严格时序机制：
+
+```text
+必须在 outcome 前或 outcome 后的固定位置执行
+必须保证不读取未来信息
+必须保持 off / shadow / gated 行为可复现
+```
+
+它们可以先做成 logical block：
+
+```text
+BayesianPolicyBlock
+ControllabilityAuditBlock
+PsychologicalUpdateBlock
+```
+
+但短期不建议交给 AgentSociety `BlockDispatcher` 选择执行。
+
+更稳的写法：
+
+```text
+当前实现采用 AgentSociety-style modular pipeline；
+HelperAgent 的支持互动优先采用原生 message / block 模式；
+核心实验因果链仍保持固定 orchestrated pipeline。
+```
 
 ## 对我们最现实的接法
 
@@ -411,6 +646,8 @@ Level 2: task-triggered helper agent
 引入一个 FamilyHelperAgent，只有在 older adult 求助时触发。
 
 - [ ] 新增 helper agent class。
+- [ ] HelperAgent 优先采用 AgentSociety 原生 message 模式：`send_message_to_agent` + `do_chat`。
+- [ ] HelperAgent 内部优先实现 `SupportResponseBlock`，返回结构化 `support_response`。
 - [ ] 支持结构化 `support_request`。
 - [ ] 返回结构化 `support_response`。
 - [ ] older adult 根据 `support_response` 调整 expected help effectiveness / perceived control / proxy reliance。
@@ -477,3 +714,4 @@ Level 2: task-triggered helper agent
 3. 把场景和术语统一为“老年人日常数字服务摩擦”。
 4. 轻量拆分 support/world 参数。
 5. 等 shadow audit 稳定后，再做 Phase C-lite helper agent。
+6. 如果做 helper agent，优先采用原生 message/block 方式实现 `SupportResponseBlock`，不要先大规模重构整个 `agent.py`。

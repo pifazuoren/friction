@@ -17,6 +17,11 @@ VALID_BAYESIAN_POLICY_LITE_UTILITY_PROFILES = {"shadow_v1", "theory_v2"}
 DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE = "shadow_v1"
 VALID_BAYESIAN_POLICY_LITE_REFERENCE_MODES = {"hybrid_ref", "semantic_v2"}
 DEFAULT_BAYESIAN_POLICY_LITE_REFERENCE_MODE = "hybrid_ref"
+VALID_HUYS_DAYAN_LITE_CONTROLLABILITY_MODES = {
+    "off",
+    "shadow",
+    "gated_modulate",
+}
 
 
 def _parse_bool_env(name: str, default: bool = False) -> bool:
@@ -95,6 +100,19 @@ class RuntimeConfig:
     proto_bayesian_policy_lite_reference_mode: str
     proto_bayesian_policy_lite_lambda_llm: float
     proto_bayesian_policy_lite_min_llm_confidence: float
+    proto_huys_dayan_lite_controllability_mode: str
+    proto_huys_dayan_lite_confidence_k: int
+    proto_huys_dayan_lite_min_action_updates: int
+    proto_huys_dayan_lite_global_update_weight: float
+    proto_huys_dayan_lite_rho: float
+    proto_huys_dayan_lite_use_avoid_in_main_score: bool
+    proto_huys_dayan_lite_weight_entropy: float
+    proto_huys_dayan_lite_weight_contrast: float
+    proto_huys_dayan_lite_weight_chi: float
+    proto_huys_dayan_lite_modulation_gate_threshold: float
+    proto_huys_dayan_lite_modulation_max_delta: float
+    proto_huys_dayan_lite_low_c_threshold: float
+    proto_huys_dayan_lite_high_c_threshold: float
 
 
 def load_runtime_config() -> RuntimeConfig:
@@ -335,6 +353,90 @@ def load_runtime_config() -> RuntimeConfig:
             ),
         ),
     )
+    proto_huys_dayan_lite_controllability_mode = (
+        os.getenv("PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE", "off")
+        .strip()
+        .lower()
+    )
+    if (
+        proto_huys_dayan_lite_controllability_mode
+        not in VALID_HUYS_DAYAN_LITE_CONTROLLABILITY_MODES
+    ):
+        raise ValueError(
+            "PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE must be one of: "
+            + ", ".join(sorted(VALID_HUYS_DAYAN_LITE_CONTROLLABILITY_MODES))
+        )
+    proto_huys_dayan_lite_confidence_k = max(
+        1,
+        int(float(os.getenv("PROTO_HUYS_DAYAN_LITE_CONFIDENCE_K", "6"))),
+    )
+    proto_huys_dayan_lite_min_action_updates = max(
+        0,
+        int(float(os.getenv("PROTO_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES", "2"))),
+    )
+    proto_huys_dayan_lite_global_update_weight = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_HUYS_DAYAN_LITE_GLOBAL_UPDATE_WEIGHT", "0.05")),
+        ),
+    )
+    proto_huys_dayan_lite_rho = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_HUYS_DAYAN_LITE_RHO", "1.0")),
+        ),
+    )
+    proto_huys_dayan_lite_use_avoid_in_main_score = _parse_bool_env(
+        "PROTO_HUYS_DAYAN_LITE_USE_AVOID_IN_MAIN_SCORE",
+        False,
+    )
+    proto_huys_dayan_lite_weight_entropy = max(
+        0.0,
+        float(os.getenv("PROTO_HUYS_DAYAN_LITE_WEIGHT_ENTROPY", "0.25")),
+    )
+    proto_huys_dayan_lite_weight_contrast = max(
+        0.0,
+        float(os.getenv("PROTO_HUYS_DAYAN_LITE_WEIGHT_CONTRAST", "0.25")),
+    )
+    proto_huys_dayan_lite_weight_chi = max(
+        0.0,
+        float(os.getenv("PROTO_HUYS_DAYAN_LITE_WEIGHT_CHI", "0.50")),
+    )
+    proto_huys_dayan_lite_modulation_gate_threshold = max(
+        0.0,
+        min(
+            1.0,
+            float(
+                os.getenv(
+                    "PROTO_HUYS_DAYAN_LITE_MODULATION_GATE_THRESHOLD",
+                    "0.50",
+                )
+            ),
+        ),
+    )
+    proto_huys_dayan_lite_modulation_max_delta = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA", "0.10")),
+        ),
+    )
+    proto_huys_dayan_lite_low_c_threshold = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_HUYS_DAYAN_LITE_LOW_C_THRESHOLD", "0.45")),
+        ),
+    )
+    proto_huys_dayan_lite_high_c_threshold = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_HUYS_DAYAN_LITE_HIGH_C_THRESHOLD", "0.60")),
+        ),
+    )
 
     return RuntimeConfig(
         experiment_mode=experiment_mode,
@@ -388,5 +490,38 @@ def load_runtime_config() -> RuntimeConfig:
         proto_bayesian_policy_lite_lambda_llm=proto_bayesian_policy_lite_lambda_llm,
         proto_bayesian_policy_lite_min_llm_confidence=(
             proto_bayesian_policy_lite_min_llm_confidence
+        ),
+        proto_huys_dayan_lite_controllability_mode=(
+            proto_huys_dayan_lite_controllability_mode
+        ),
+        proto_huys_dayan_lite_confidence_k=proto_huys_dayan_lite_confidence_k,
+        proto_huys_dayan_lite_min_action_updates=(
+            proto_huys_dayan_lite_min_action_updates
+        ),
+        proto_huys_dayan_lite_global_update_weight=(
+            proto_huys_dayan_lite_global_update_weight
+        ),
+        proto_huys_dayan_lite_rho=proto_huys_dayan_lite_rho,
+        proto_huys_dayan_lite_use_avoid_in_main_score=(
+            proto_huys_dayan_lite_use_avoid_in_main_score
+        ),
+        proto_huys_dayan_lite_weight_entropy=(
+            proto_huys_dayan_lite_weight_entropy
+        ),
+        proto_huys_dayan_lite_weight_contrast=(
+            proto_huys_dayan_lite_weight_contrast
+        ),
+        proto_huys_dayan_lite_weight_chi=proto_huys_dayan_lite_weight_chi,
+        proto_huys_dayan_lite_modulation_gate_threshold=(
+            proto_huys_dayan_lite_modulation_gate_threshold
+        ),
+        proto_huys_dayan_lite_modulation_max_delta=(
+            proto_huys_dayan_lite_modulation_max_delta
+        ),
+        proto_huys_dayan_lite_low_c_threshold=(
+            proto_huys_dayan_lite_low_c_threshold
+        ),
+        proto_huys_dayan_lite_high_c_threshold=(
+            proto_huys_dayan_lite_high_c_threshold
         ),
     )

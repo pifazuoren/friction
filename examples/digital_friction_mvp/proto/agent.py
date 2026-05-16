@@ -13,6 +13,12 @@ from config_runtime import load_runtime_config
 from .attempt_strategy import choose_attempt_strategy, compute_rule_strategy_weights
 from .attribution_inference import infer_event_attribution
 from .bayesian_control import update_bayesian_control_memory
+from .bayesian_controllability_lite import (
+    apply_controllability_gated_modulation,
+    combine_huys_dayan_lite_audits,
+    compute_huys_dayan_lite_after_event_audit,
+    compute_huys_dayan_lite_before_event_audit,
+)
 from .bayesian_policy_lite import (
     build_semantic_reference_policy,
     combine_bayesian_policy_audits,
@@ -1446,6 +1452,33 @@ class DigitalHelplessnessAgent(SocietyAgent):
             )
         )
         bayesian_policy_pre_audit.update(bayesian_policy_reference_audit)
+        huys_dayan_memory_pre, huys_dayan_before_audit = (
+            compute_huys_dayan_lite_before_event_audit(
+                raw_policy_memory=bayesian_policy_memory_pre,
+                raw_controllability_memory=await self.memory.status.get(
+                    "proto_bayesian_controllability_lite_memory",
+                    {},
+                ),
+                mode=runtime_config.proto_huys_dayan_lite_controllability_mode,
+                task_family=task.task_family,
+                confidence_k=runtime_config.proto_huys_dayan_lite_confidence_k,
+                min_action_updates=(
+                    runtime_config.proto_huys_dayan_lite_min_action_updates
+                ),
+                use_avoid_in_main_score=(
+                    runtime_config.proto_huys_dayan_lite_use_avoid_in_main_score
+                ),
+                weight_entropy=runtime_config.proto_huys_dayan_lite_weight_entropy,
+                weight_contrast=runtime_config.proto_huys_dayan_lite_weight_contrast,
+                weight_chi=runtime_config.proto_huys_dayan_lite_weight_chi,
+                utility_profile=(
+                    runtime_config.proto_bayesian_policy_lite_utility_profile
+                ),
+                day=int(day),
+                env=env,
+                task_appraisal=task_appraisal.to_dict(),
+            )
+        )
         exp_seed = _safe_int(os.getenv("EXP_SEED", "101"), 101)
         pair_seed = _safe_int(os.getenv("PARALLEL_PAIR_SEED", str(exp_seed)), exp_seed)
         world_name = str(os.getenv("WORLD_NAME", "baseline_low_friction"))
@@ -1464,6 +1497,28 @@ class DigitalHelplessnessAgent(SocietyAgent):
             candidate_weights = bayesian_policy_pre_audit.get("pi_final")
             if isinstance(candidate_weights, dict):
                 gated_lite_final_weights = candidate_weights
+        huys_dayan_final_weights, huys_dayan_modulation_audit = (
+            apply_controllability_gated_modulation(
+                mode=runtime_config.proto_huys_dayan_lite_controllability_mode,
+                pi_base=gated_lite_final_weights,
+                q_bayes=bayesian_policy_pre_audit.get("q_bayes"),
+                before_event_audit=huys_dayan_before_audit,
+                gate_threshold=(
+                    runtime_config
+                    .proto_huys_dayan_lite_modulation_gate_threshold
+                ),
+                max_delta=(
+                    runtime_config.proto_huys_dayan_lite_modulation_max_delta
+                ),
+                low_c_threshold=runtime_config.proto_huys_dayan_lite_low_c_threshold,
+                high_c_threshold=(
+                    runtime_config.proto_huys_dayan_lite_high_c_threshold
+                ),
+                prob_floor=runtime_config.proto_bayesian_policy_lite_prob_floor,
+            )
+        )
+        if huys_dayan_final_weights is not None:
+            gated_lite_final_weights = huys_dayan_final_weights
         strategy = choose_attempt_strategy(
             effective_helplessness=memory_features.effective_helplessness,
             support_quality=support_quality,
@@ -1704,6 +1759,37 @@ class DigitalHelplessnessAgent(SocietyAgent):
             pre_audit=bayesian_policy_pre_audit,
             update_audit=bayesian_policy_update_audit,
             actual_strategy=strategy.strategy_type,
+        )
+        huys_dayan_memory, huys_dayan_after_audit = (
+            compute_huys_dayan_lite_after_event_audit(
+                raw_policy_memory=bayesian_policy_memory,
+                raw_controllability_memory=huys_dayan_memory_pre,
+                mode=runtime_config.proto_huys_dayan_lite_controllability_mode,
+                task_family=task.task_family,
+                confidence_k=runtime_config.proto_huys_dayan_lite_confidence_k,
+                min_action_updates=(
+                    runtime_config.proto_huys_dayan_lite_min_action_updates
+                ),
+                use_avoid_in_main_score=(
+                    runtime_config.proto_huys_dayan_lite_use_avoid_in_main_score
+                ),
+                weight_entropy=runtime_config.proto_huys_dayan_lite_weight_entropy,
+                weight_contrast=runtime_config.proto_huys_dayan_lite_weight_contrast,
+                weight_chi=runtime_config.proto_huys_dayan_lite_weight_chi,
+                utility_profile=(
+                    runtime_config.proto_bayesian_policy_lite_utility_profile
+                ),
+                global_update_weight=(
+                    runtime_config.proto_huys_dayan_lite_global_update_weight
+                ),
+                rho=runtime_config.proto_huys_dayan_lite_rho,
+                day=int(day),
+            )
+        )
+        huys_dayan_audit = combine_huys_dayan_lite_audits(
+            before_audit=huys_dayan_before_audit,
+            modulation_audit=huys_dayan_modulation_audit,
+            after_audit=huys_dayan_after_audit,
         )
         stream_episode_recording = await self._record_phase0_stream_episodes(
             runtime_config=runtime_config,
@@ -2009,6 +2095,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                         "rationale_snapshot": memory_update["rationale_snapshot"],
                         "bayesian_control": bayesian_control_audit,
                         "bayesian_policy_lite": bayesian_policy_audit,
+                        "huys_dayan_lite_controllability": huys_dayan_audit,
                         "stream_episode_recording": stream_episode_recording,
                         "stream_appraisal_retrieval": {
                             "condition": task_appraisal_retrieval_packet["condition"],
@@ -2137,6 +2224,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
             await self.memory.status.update(
                 "proto_bayesian_policy_memory",
                 bayesian_policy_memory,
+            )
+        if huys_dayan_after_audit.get("status") == "updated":
+            await self.memory.status.update(
+                "proto_bayesian_controllability_lite_memory",
+                huys_dayan_memory,
             )
         await self.memory.status.update(
             "proto_stage_attempt_rows_json", json.dumps(attempt_rows, ensure_ascii=False)

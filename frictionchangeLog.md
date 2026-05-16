@@ -2081,3 +2081,116 @@
   - 结果：`61 passed, 3 warnings`
   - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/bayesian_policy_lite.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/attempt_strategy.py examples/digital_friction_mvp/world_runner.py`
   - 结果：通过，无输出
+
+### Phase 5B Huys-Dayan controllability-aware gated modulation
+- 目的：
+  - 在 Phase4 `semantic_v2 + Bayesian gated_lite` 主链已经跑通的基础上，新增 Huys & Dayan-inspired controllability-aware gated modulation
+  - 本轮同时补齐最小 Phase5A substrate：controllability memory、diagnostic helper、before/after audit、analysis script
+  - Phase5B 只做小幅、证据门控、可审计的行动概率调节，不实现 full Huys & Dayan Bayesian RL
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/Huys–Dayan-litePlan.md`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_schema.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/bayesian_controllability_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis_huys_dayan_lite_controllability.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_bayesian_controllability_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_huys_dayan_lite_controllability_analysis.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- runtime / fingerprint：
+  - 新增 `PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE=off|shadow|gated_modulate`
+  - 新增 `PROTO_HUYS_DAYAN_LITE_CONFIDENCE_K`
+  - 新增 `PROTO_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES`
+  - 新增 `PROTO_HUYS_DAYAN_LITE_GLOBAL_UPDATE_WEIGHT`
+  - 新增 `PROTO_HUYS_DAYAN_LITE_RHO`
+  - 新增 `PROTO_HUYS_DAYAN_LITE_USE_AVOID_IN_MAIN_SCORE`
+  - 新增 `PROTO_HUYS_DAYAN_LITE_WEIGHT_ENTROPY`
+  - 新增 `PROTO_HUYS_DAYAN_LITE_WEIGHT_CONTRAST`
+  - 新增 `PROTO_HUYS_DAYAN_LITE_WEIGHT_CHI`
+  - 新增 `PROTO_HUYS_DAYAN_LITE_MODULATION_GATE_THRESHOLD`
+  - 新增 `PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA`
+  - 新增 `PROTO_HUYS_DAYAN_LITE_LOW_C_THRESHOLD`
+  - 新增 `PROTO_HUYS_DAYAN_LITE_HIGH_C_THRESHOLD`
+  - `world_runner.py::FINGERPRINT_ENV_KEYS` 已加入全部 `PROTO_HUYS_DAYAN_LITE_*` keys，保证实验可复现
+- controllability helper / memory：
+  - 新增 `proto_bayesian_controllability_lite_memory`
+  - 新增 `bayesian_controllability_lite.py`
+  - 新增 `build_initial_controllability_lite_memory()`
+  - 新增 `normalize_controllability_lite_memory()`
+  - 新增 `compute_family_controllability_diagnostic()`
+  - 新增 `compute_huys_dayan_lite_before_event_audit()`
+  - 新增 `compute_huys_dayan_lite_after_event_audit()`
+  - 新增 `apply_controllability_gated_modulation()`
+  - 新增 `update_controllability_lite_shadow_memory()`
+  - 新增 `combine_huys_dayan_lite_audits()`
+- diagnostic 口径：
+  - `C_family` 是 posterior-derived diagnostic controllability score，不称为完整 environment-level Bayesian posterior
+  - `C_global` 记录为 `global_controllability_trace`，是 family-level diagnostic score 的平滑轨迹
+  - outcome bins 使用 `success / controllable_failure / uncontrollable_failure / dropout / no_task_evidence / unknown`
+  - `failure_after_attempt_low_uncontrollability` 归入 `controllable_failure`，不归入 success
+  - 主 `C_family` 默认只使用 `attempt_self / seek_help_then_attempt`
+  - `avoid -> no_attempt` 默认不进入主 `C_family`，避免低熵的任务退出行为虚假抬高 controllability
+  - `family_confidence` 使用 attempt/help 平衡证据，不用 family 总次数直接开门
+- Phase5B action modulation：
+  - 只在 `PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE=gated_modulate` 且 Phase4 `gated_lite` 产生 `pi_final` 时进入行动概率调节
+  - 真实行动仍复用 `choose_attempt_strategy(..., precomputed_final_weights=...)`
+  - 不新增 sampler，不改 `attempt_strategy.py`
+  - 只允许 `C_before_event` 影响当前 action probability
+  - `C_after_event` 只用于 learning trace / lagged prediction，绝不影响当前 action
+  - Low-C 使用 flatten-only：把 Phase4 `pi_final` 小幅拉向 uniform policy
+  - Low-C 不直接推 `seek_help_then_attempt`
+  - Low-C 不直接推 `avoid`
+  - 第一版禁用 `extreme low C + weak help -> avoid` 分支
+  - High-C 减少 `avoid`，并把概率给 Phase4 `pi_final` 或 `q_bayes` 支持的 best non-avoid action
+  - High-C 不默认转向 `attempt_self`
+  - `PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA` 默认 `0.10`，并 clamp 到 `[0, 1]`
+  - 调节后继续执行 probability floor `0.05` 与 normalize，与现有 sampler floor 对齐
+- agent / payload：
+  - `agent.py` 在 action 前计算 `huys_dayan_lite_before_event_audit`
+  - `gated_modulate` 下对 Phase4 `pi_final` 调用 `apply_controllability_gated_modulation(...)`
+  - `bayesian_policy_lite.pi_final` 保留 Phase4 原始输出，不被覆盖
+  - `huys_dayan_lite_controllability.pi_final_controllability` 记录真实传入 sampler 的 Phase5B 最终概率
+  - outcome 后先更新 `proto_bayesian_policy_memory`，再计算 `C_after_event` 与更新 `proto_bayesian_controllability_lite_memory`
+  - payload 新增 `C_family_before_event / C_family_after_event`
+  - payload 新增 `global_controllability_trace_before / global_controllability_trace_after`
+  - payload 新增 `modulation_family / modulation_status / best_nonavoid_action / best_nonavoid_source`
+  - payload 新增 `uniform_mix_gamma / removed_avoid_mass`
+  - payload 新增 `pi_base_before_controllability / pi_after_controllability_shift / pi_final_controllability`
+  - payload 新增 `final_delta_after_controllability_floor`
+  - payload 新增 `total_variation_distance_from_phase4_pi_final / max_abs_controllability_delta`
+  - payload 保持 `uses_post_outcome_information_for_controllability_policy=false`
+- analysis：
+  - 新增 `analysis_huys_dayan_lite_controllability.py`
+  - 输出 `huys_dayan_lite_summary_<group_id>.csv`
+  - 输出 `huys_dayan_lite_by_world_<group_id>.csv`
+  - 输出 `huys_dayan_lite_by_world_day_<group_id>.csv`
+  - 输出 `huys_dayan_lite_by_task_family_<group_id>.csv`
+  - 输出 `huys_dayan_lite_lagged_prediction_<group_id>.csv`
+  - 输出 `huys_dayan_lite_qc_<group_id>.csv`
+  - 支持检查 payload coverage、post-outcome leakage true count、intervention rate、mean/max TVD、modulation family/status、Phase4 reference fields、lagged day t-1 C_after_event -> day t action rates
+- 未改变：
+  - 未修改 outcome model
+  - 未修改 helplessness update
+  - 未修改 event appraisal / event attribution
+  - 未修改 scope spillover
+  - 未修改 experience memory / stream memory / interview
+  - 未修改 DB schema
+  - 未修改 `llm_psychology.py`
+  - 未修改 `attempt_strategy.py`
+- 论文口径：
+  - 可以称为 `Huys & Dayan-inspired lightweight controllability modulation`
+  - 不应称为 full Huys & Dayan Bayesian RL
+  - 不声称 low controllability causes help-seeking
+  - 稳妥表述：Low controllability attenuates action-preference contrast by flattening the Phase4 policy toward a neutral distribution, while high controllability reduces avoidance in favor of the strongest non-avoid action already supported by the Phase4 policy.
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_controllability_lite.py examples/digital_friction_mvp/tests/test_huys_dayan_lite_controllability_analysis.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`34 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py examples/digital_friction_mvp/tests/test_bayesian_policy_shadow_analysis.py examples/digital_friction_mvp/tests/test_bayesian_control_audit.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
+  - 结果：`90 passed, 3 warnings`
+  - warnings 为既有 SQLAlchemy/Pydantic deprecation warning，本轮无测试失败
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/state_schema.py examples/digital_friction_mvp/proto/bayesian_policy_lite.py examples/digital_friction_mvp/proto/bayesian_controllability_lite.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/analysis_huys_dayan_lite_controllability.py`
+  - 结果：通过，无输出
+  - `git diff --check -- Huys–Dayan-litePlan.md frictionchangeLog.md examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/state_schema.py examples/digital_friction_mvp/proto/bayesian_controllability_lite.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/analysis_huys_dayan_lite_controllability.py examples/digital_friction_mvp/tests`
+  - 结果：通过，无输出
