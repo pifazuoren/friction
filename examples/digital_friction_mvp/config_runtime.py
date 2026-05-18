@@ -21,6 +21,7 @@ VALID_HUYS_DAYAN_LITE_CONTROLLABILITY_MODES = {
     "off",
     "shadow",
     "gated_modulate",
+    "control_centered_modulate",
 }
 
 
@@ -372,7 +373,7 @@ def load_runtime_config() -> RuntimeConfig:
     )
     proto_huys_dayan_lite_min_action_updates = max(
         0,
-        int(float(os.getenv("PROTO_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES", "2"))),
+        int(float(os.getenv("PROTO_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES", "1"))),
     )
     proto_huys_dayan_lite_global_update_weight = max(
         0.0,
@@ -420,7 +421,7 @@ def load_runtime_config() -> RuntimeConfig:
         0.0,
         min(
             1.0,
-            float(os.getenv("PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA", "0.10")),
+            float(os.getenv("PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA", "0.25")),
         ),
     )
     proto_huys_dayan_lite_low_c_threshold = max(

@@ -1406,6 +1406,10 @@ class DigitalHelplessnessAgent(SocietyAgent):
             digital_emotion_state=digital_emotion_state.to_dict(),
             daily_reflection=current_daily_reflection,
             rule_weights=rule_strategy_weights,
+            profile_summary=profile_summary,
+            task_relevant_memory=task_relevant_memory_packet,
+            recent_episode_summary=recent_episode_summary,
+            retrieved_episodic_memory=task_appraisal_retrieval_packet,
         )
         bayesian_policy_reference_audit = build_semantic_reference_policy(
             reference_mode=runtime_config.proto_bayesian_policy_lite_reference_mode,
@@ -1501,6 +1505,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             apply_controllability_gated_modulation(
                 mode=runtime_config.proto_huys_dayan_lite_controllability_mode,
                 pi_base=gated_lite_final_weights,
+                pi_ref=bayesian_policy_pre_audit.get("pi_ref"),
                 q_bayes=bayesian_policy_pre_audit.get("q_bayes"),
                 before_event_audit=huys_dayan_before_audit,
                 gate_threshold=(

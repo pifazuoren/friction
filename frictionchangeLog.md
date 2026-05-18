@@ -2194,3 +2194,194 @@
   - 结果：通过，无输出
   - `git diff --check -- Huys–Dayan-litePlan.md frictionchangeLog.md examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/state_schema.py examples/digital_friction_mvp/proto/bayesian_controllability_lite.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/analysis_huys_dayan_lite_controllability.py examples/digital_friction_mvp/tests`
   - 结果：通过，无输出
+
+## 2026-05-17
+
+### Phase 5C controllability-centered policy modulation
+- 目的：
+  - 在不删除 Phase4 action-outcome posterior 的前提下，新增 `control_centered_modulate` mode
+  - 让 posterior 继续提供 action-specific evidence，让 `C_family` 作为主中介调制传给 sampler 的最终权重
+  - 保持不新增 sampler、不改 outcome model、不改 helplessness / attribution / scope_spillover update、不改 DB schema
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/Huys–Dayan-litePlan.md`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/bayesian_controllability_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis_huys_dayan_lite_controllability.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_bayesian_controllability_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_huys_dayan_lite_controllability_analysis.py`
+- 核心改动：
+  - `config_runtime.py` 接受 `PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE=control_centered_modulate`
+  - `bayesian_controllability_lite.py` 将 `control_centered_modulate` 加入 `ACTIVE_HUYS_DAYAN_LITE_MODES` 和 mode normalization
+  - `apply_controllability_gated_modulation(...)` 增加 `pi_ref` 参数，保留返回类型和 sampler 接口不变
+  - 改掉只允许 `gated_modulate` 的硬早退，新 mode 不再静默 no-op
+  - `gated_modulate` 旧行为保留：low C 拉向 uniform，high C reduce avoid toward best non-avoid
+  - `control_centered_modulate` low C 在显式验证 `pi_ref` 合法后，才把 Phase4 `pi_final` 小幅拉向 `pi_ref`
+  - `pi_ref` 缺失、缺 action、非 finite、负值或总和非正时不调用 normalize 兜底到 uniform，而是 no-op 并记录 `modulation_status=reference_policy_unavailable`
+  - high C 继续复用 `_best_nonavoid_from(...)`，不手写第二份 argmax，不默认推 `attempt_self`
+  - `agent.py` 在现有 helper 调用中传入 `bayesian_policy_pre_audit.get("pi_ref")`，仍只替换 `choose_attempt_strategy(..., precomputed_final_weights=...)` 的 weights
+  - `analysis_huys_dayan_lite_controllability.py` 输出 `mean_reference_mix_gamma`、`control_centered_low_c_targets` 与 `mean_pi_reference_for_control_centered_*` 聚合列
+  - `Huys–Dayan-litePlan.md` 增加 Phase5C 机制、接入位置、no-fallback 边界和论文口径
+- 未改变：
+  - 未修改 `attempt_strategy.py`
+  - 未新增 sampler
+  - 未修改 outcome model
+  - 未修改 helplessness update
+  - 未修改 event appraisal / attribution
+  - 未修改 scope spillover
+  - 未修改 DB schema
+  - 未新增 low-C target 配置项
+  - `C_global` 仍只作为 trace / analysis 字段，不直接参与当前 action modulation
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_controllability_lite.py examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_huys_dayan_lite_controllability_analysis.py -q`
+  - 结果：`44 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py examples/digital_friction_mvp/tests/test_bayesian_policy_shadow_analysis.py examples/digital_friction_mvp/tests/test_bayesian_control_audit.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_stream_episode_recording.py -q`
+  - 结果：`90 passed, 3 warnings`
+  - warnings 为既有 SQLAlchemy/Pydantic deprecation warning，本轮无测试失败
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/state_schema.py examples/digital_friction_mvp/proto/bayesian_policy_lite.py examples/digital_friction_mvp/proto/bayesian_controllability_lite.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/analysis_huys_dayan_lite_controllability.py`
+  - 结果：通过，无输出
+  - `git diff --check -- Huys–Dayan-litePlan.md frictionchangeLog.md examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/state_schema.py examples/digital_friction_mvp/proto/bayesian_policy_lite.py examples/digital_friction_mvp/proto/bayesian_controllability_lite.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/analysis_huys_dayan_lite_controllability.py examples/digital_friction_mvp/tests`
+  - 结果：通过，无输出
+- 备注：
+  - 本地 `examples/digital_friction_mvp/tests/test_*.py` 受 `.gitignore:test*` 规则影响，不会出现在普通 `git diff` 中；本轮仍按计划补充并运行了相关测试文件。
+
+### Phase 5C Huys-Dayan-lite modulation max_delta 默认调到 0.25
+- 目的：
+  - 将 Huys-Dayan-lite controllability modulation 的默认上限从 `0.10` 调整为 `0.25`
+  - 让 `control_centered_modulate` 在 low-C shrink-to-`pi_ref` 与 high-C reduce-avoid 时拥有更强的默认调制力度
+  - 不改变 Phase4 `PROTO_BAYESIAN_POLICY_LITE_MAX_DELTA` 默认值，也不新增配置项
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/Huys–Dayan-litePlan.md`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/bayesian_controllability_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+- 核心改动：
+  - `DEFAULT_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA` 从 `0.10` 改为 `0.25`
+  - `PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA` 未设置时的 runtime 默认值从 `0.10` 改为 `0.25`
+  - 保留 clamp 到 `[0, 1]` 的现有逻辑
+  - 显式传入 `PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA=0.10` 的旧实验仍会按 `0.10` 运行
+  - `Huys–Dayan-litePlan.md` 中 Huys-Dayan-lite modulation 示例同步为 `0.25`
+- 未改变：
+  - 未修改 sampler
+  - 未修改 outcome model
+  - 未修改 helplessness / attribution / scope_spillover update
+  - 未修改 DB schema
+  - 未修改 Phase4 Bayesian policy max_delta 默认值
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_controllability_lite.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`43 passed`
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/bayesian_controllability_lite.py`
+  - 结果：通过，无输出
+  - `git diff --check -- Huys–Dayan-litePlan.md frictionchangeLog.md examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/bayesian_controllability_lite.py examples/digital_friction_mvp/tests/test_runtime.py`
+  - 结果：通过，无输出
+
+### Phase 5C Huys-Dayan-lite min_action_updates 默认调到 1
+- 目的：
+  - 将 Huys-Dayan-lite controllability diagnostic 的每个 control action 最小 evidence 门槛从 `2` 调整为 `1`
+  - 让 10-day smoke 中 attempt/help 两侧更早满足 coverage，不再必须每侧至少观察 2 次才进入 balanced evidence coverage
+  - 保持 confidence gate、confidence_k、sampler、outcome/update 主链不变
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/Huys–Dayan-litePlan.md`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/bayesian_controllability_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+- 核心改动：
+  - `DEFAULT_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES` 从 `2` 改为 `1`
+  - `PROTO_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES` 未设置时的 runtime 默认值从 `2` 改为 `1`
+  - `Huys–Dayan-litePlan.md` 中相关示例同步为 `1`
+  - 显式传入 `PROTO_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES=2` 的旧实验仍会按 `2` 运行
+- 未改变：
+  - 未修改 `PROTO_HUYS_DAYAN_LITE_CONFIDENCE_K`
+  - 未修改 `PROTO_HUYS_DAYAN_LITE_MODULATION_GATE_THRESHOLD`
+  - 未修改 sampler
+  - 未修改 outcome model
+  - 未修改 helplessness / attribution / scope_spillover update
+  - 未修改 DB schema
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_controllability_lite.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`43 passed`
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/bayesian_controllability_lite.py`
+  - 结果：通过，无输出
+  - `git diff --check -- Huys–Dayan-litePlan.md frictionchangeLog.md examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/bayesian_controllability_lite.py examples/digital_friction_mvp/tests/test_runtime.py`
+  - 结果：通过，无输出
+
+### Strategy LLM prompt 增强为 profile + memory context
+- 目的：
+  - 按 `strategy修改计划.md` 收紧 strategy LLM 的输入边界
+  - 让 `strategy_deliberation` 继续只负责 `attempt_self / seek_help_then_attempt / avoid` 三选一打分，但在打分时可看到受限的画像与记忆上下文
+  - 保持 `task_appraisal` 作为当前任务评价的权威摘要，不让 strategy LLM 重新评分 difficulty / risk / felt_control / help_effectiveness / task_value
+  - 不新增心理更新规则，不改变 `pi_ref` 生成公式，不引入新的动作或兜底抽象
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/llm_psychology.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_llm_psychology.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `_STRATEGY_DELIBERATION_PROMPT_VERSION = "v2_profile_memory_strategy_context_20260518"`，并把它写进 strategy cache key，避免旧缓存污染新 prompt
+  - 新增 bounded context 组装：
+    - `profile_summary`
+    - `task_relevant_memory`
+    - `recent_episode_summary`
+    - `retrieved_episodic_memory`
+  - strategy prompt 明确声明：
+    - 只能评估 `attempt_self / seek_help_then_attempt / avoid`
+    - `task_appraisal` 是权威当前摘要
+    - 不能重新打 difficulty / risk / felt control / help effectiveness / task value
+    - 不能输出 helplessness / self-efficacy / controllability / posterior / state delta
+  - `agent.py` 在调用 `resolve_strategy_deliberation(...)` 时把 profile 与 memory 上下文一起传入
+  - 新增测试覆盖：
+    - rich context 会进入 strategy LLM payload
+    - cache key 会随 profile / memory 上下文变化
+- 未改变：
+  - 未新增心理状态更新路径
+  - 未新增 sampler
+  - 未修改 helplessness / attribution / scope_spillover update
+  - 未修改 DB schema
+  - 未修改 `bayesian_policy_lite.pi_final` 的 Phase4 语义
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_llm_psychology.py -q`
+  - 结果：`15 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py examples/digital_friction_mvp/tests/test_bayesian_controllability_lite.py examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_huys_dayan_lite_controllability_analysis.py -q`
+  - 结果：`71 passed`
+  - `python -m py_compile examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/llm_psychology.py examples/digital_friction_mvp/proto/bayesian_policy_lite.py examples/digital_friction_mvp/proto/bayesian_controllability_lite.py`
+  - 结果：通过，无输出
+
+### Phase 5C controllability modulation 改为 sqrt confidence scaling
+- 目的：
+  - 减少 `family_confidence` 在 Phase5C 中的双重线性压制
+  - 保留 `family_confidence` 的 gate 作用，同时让通过 gate 的 low-C / high-C 调制使用次线性 confidence scaling
+  - 让短期稀疏证据下的 controllability modulation 不再被线性 confidence 压到几乎不可观测
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/bayesian_controllability_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_bayesian_controllability_lite.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - low-C 调制强度从：
+    - `gamma = max_delta * family_confidence * severity_low`
+  - 改为：
+    - `gamma = max_delta * sqrt(family_confidence) * severity_low`
+  - high-C reduce-avoid 强度从：
+    - `delta = max_delta * family_confidence * severity_high`
+  - 改为：
+    - `delta = max_delta * sqrt(family_confidence) * severity_high`
+  - `severity_low = (low_c_threshold - C_family) / low_c_threshold`
+  - `severity_high = (C_family - high_c_threshold) / (1 - high_c_threshold)`
+  - 低于 `modulation_gate_threshold` 的记录仍然 no-op；confidence 仍先作为 evidence gate
+- 未改变：
+  - 未修改 sampler
+  - 未修改 outcome model
+  - 未修改 helplessness / attribution / scope_spillover update
+  - 未修改 DB schema
+  - 未修改 Phase4 Bayesian policy 默认参数
+  - 未新增 env key 或 low-C target 配置项
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_bayesian_controllability_lite.py -q`
+  - 结果：`25 passed`
+  - `python -m py_compile examples/digital_friction_mvp/proto/bayesian_controllability_lite.py examples/digital_friction_mvp/tests/test_bayesian_controllability_lite.py`
+  - 结果：通过，无输出
+  - `python -m pytest examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_huys_dayan_lite_controllability_analysis.py examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py -q`
+  - 结果：`48 passed`

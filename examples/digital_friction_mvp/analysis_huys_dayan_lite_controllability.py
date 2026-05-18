@@ -190,6 +190,13 @@ def _extract_records(
                     huys.get("uniform_mix_gamma"),
                     None,
                 ),
+                "reference_mix_gamma": _safe_float(
+                    huys.get("reference_mix_gamma"),
+                    None,
+                ),
+                "control_centered_low_c_target": str(
+                    huys.get("control_centered_low_c_target", "")
+                ).strip(),
                 "removed_avoid_mass": _safe_float(
                     huys.get("removed_avoid_mass"),
                     None,
@@ -259,11 +266,16 @@ def _extract_records(
                     "attempt",
                 )
                 pi_base = _as_dict(huys.get("pi_base_before_controllability"))
+                pi_reference = _as_dict(huys.get("pi_reference_for_control_centered"))
                 pi_final = _as_dict(huys.get("pi_final_controllability"))
                 final_delta = _as_dict(
                     huys.get("final_delta_after_controllability_floor")
                 )
                 record[f"pi_base_{suffix}"] = _safe_float(pi_base.get(action), None)
+                record[f"pi_reference_for_control_centered_{suffix}"] = _safe_float(
+                    pi_reference.get(action),
+                    None,
+                )
                 record[f"pi_final_controllability_{suffix}"] = _safe_float(
                     pi_final.get(action),
                     None,
@@ -334,6 +346,27 @@ def _summary(records: list[dict[str, Any]], group_id: str) -> dict[str, Any]:
                 for record in records
             ]
         ),
+        "mean_reference_mix_gamma": _mean(
+            [record.get("reference_mix_gamma") for record in records]
+        ),
+        "mean_pi_reference_for_control_centered_attempt": _mean(
+            [
+                record.get("pi_reference_for_control_centered_attempt")
+                for record in records
+            ]
+        ),
+        "mean_pi_reference_for_control_centered_help": _mean(
+            [
+                record.get("pi_reference_for_control_centered_help")
+                for record in records
+            ]
+        ),
+        "mean_pi_reference_for_control_centered_avoid": _mean(
+            [
+                record.get("pi_reference_for_control_centered_avoid")
+                for record in records
+            ]
+        ),
         "max_total_variation_distance_from_phase4_pi_final": max(
             [
                 float(record.get("total_variation_distance_from_phase4_pi_final"))
@@ -346,6 +379,10 @@ def _summary(records: list[dict[str, Any]], group_id: str) -> dict[str, Any]:
         "utility_profiles": _unique_join(records, "utility_profile"),
         "modulation_families": _unique_join(records, "modulation_family"),
         "modulation_statuses": _unique_join(records, "modulation_status"),
+        "control_centered_low_c_targets": _unique_join(
+            records,
+            "control_centered_low_c_target",
+        ),
     }
 
 

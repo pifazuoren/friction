@@ -29,7 +29,7 @@ Phase5B 显式开启：
 ```bash
 PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE=gated_modulate
 PROTO_HUYS_DAYAN_LITE_MODULATION_GATE_THRESHOLD=0.50
-PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA=0.10
+PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA=0.25
 PROTO_HUYS_DAYAN_LITE_LOW_C_THRESHOLD=0.45
 PROTO_HUYS_DAYAN_LITE_HIGH_C_THRESHOLD=0.60
 ```
@@ -83,6 +83,77 @@ Phase5B 论文口径：
 Low controllability attenuates action-preference contrast by flattening the Phase4 policy toward a neutral distribution, while high controllability reduces avoidance in favor of the strongest non-avoid action already supported by the Phase4 policy.
 ```
 
+## Phase5C Amendment
+
+Phase5C 新增一个 **controllability-centered but action-outcome-grounded** mode：
+
+```bash
+PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE=control_centered_modulate
+```
+
+Phase5C 不删除 Phase4 的 action-outcome posterior。新的主链是：
+
+```text
+semantic_v2 pi_ref
+-> Bayesian action-outcome posterior / q_bayes / Phase4 pi_final
+-> C_before_event controllability diagnostic
+-> control-centered modulation
+-> choose_attempt_strategy(..., precomputed_final_weights=...)
+```
+
+Phase5C 与 Phase5B 共用硬边界：
+
+```text
+不新增 sampler
+不改 outcome model
+不改 helplessness / attribution / scope_spillover update
+不改 DB schema
+不让 C_family 单独直接选 action
+不使用 C_after_event、当前 outcome 或 post-outcome 字段影响当前 action
+```
+
+Phase5C 的 low-C 规则从 `uniform` 改为 `pi_ref`：
+
+```text
+if mode == control_centered_modulate
+and C_family_before_event < low_c_threshold
+and family_confidence >= gate_threshold
+and pi_ref is valid:
+  gamma = max_delta * family_confidence * ((low_c_threshold - C) / low_c_threshold)
+  gamma = min(gamma, max_delta)
+  pi_after = (1 - gamma) * pi_base + gamma * pi_ref
+```
+
+`pi_ref` 必须先显式验证为合法 action distribution，再 normalize；缺失、缺 action、非 finite、负值或总和非正时不进入 low-C shrink，也不回退到 uniform。此时：
+
+```text
+modulation_status = reference_policy_unavailable
+intervention_applied = false
+```
+
+Phase5C 的 high-C 规则继续复用 Phase5B：
+
+```text
+reduce avoid -> best non-avoid action
+best_nonavoid 仍由 _best_nonavoid_from(...) 决定
+不手写第二份 argmax
+不默认推 attempt_self
+```
+
+新增 audit/analysis 字段：
+
+```text
+reference_mix_gamma
+control_centered_low_c_target
+pi_reference_for_control_centered
+```
+
+Phase5C 论文口径：
+
+```text
+Action-outcome posterior supplies task-family/action-specific evidence. A Huys-Dayan-inspired controllability trace is the central mediator. The policy is modulated by controllability, while concrete non-avoid preference remains grounded in posterior/semantic evidence.
+```
+
 ## Summary
 
 本计划包含两个层级：
@@ -93,9 +164,12 @@ Phase5A:
 
 Phase5B:
   controllability-aware gated modulation
+
+Phase5C:
+  controllability-centered policy modulation
 ```
 
-当前实施目标是 Phase5B。它不是替代 Phase4 的 action-choice 主链，而是在已经跑通的 `semantic_v2 + Bayesian gated-lite2` 之上，把 Huys & Dayan-inspired controllability 接成一个 **小幅、证据门控、可审计的 action-probability modulation**。
+Phase5B/Phase5C 都不是替代 Phase4 的 action-choice 主链，而是在已经跑通的 `semantic_v2 + Bayesian gated-lite2` 之上，把 Huys & Dayan-inspired controllability 接成一个 **小幅、证据门控、可审计的 action-probability modulation**。
 
 Phase4 已经负责：
 
@@ -310,7 +384,7 @@ PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE=shadow
 ```text
 PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE=off
 PROTO_HUYS_DAYAN_LITE_CONFIDENCE_K=6
-PROTO_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES=2
+PROTO_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES=1
 PROTO_HUYS_DAYAN_LITE_GLOBAL_UPDATE_WEIGHT=0.05
 PROTO_HUYS_DAYAN_LITE_RHO=1.0
 PROTO_HUYS_DAYAN_LITE_USE_AVOID_IN_MAIN_SCORE=false
@@ -837,6 +911,31 @@ C_after_event 只用于 learning trace / lagged prediction
 不修改 outcome / helplessness / attribution / scope spillover
 ```
 
+Phase5C control_centered_modulate 接入位置与 Phase5B 相同，但 `apply_controllability_gated_modulation(...)` 额外读取 Phase4 audit 中的 `pi_ref`：
+
+```text
+strategy_deliberation
+-> build_semantic_reference_policy
+-> compute_bayesian_policy_shadow
+-> compute_huys_dayan_lite_before_event_audit
+-> apply_controllability_gated_modulation(
+     pi_base=Phase4 pi_final,
+     pi_ref=bayesian_policy_lite.pi_ref
+   )
+-> choose_attempt_strategy(..., precomputed_final_weights=pi_final_controllability)
+```
+
+Phase5C 要求：
+
+```text
+gated_modulate 旧行为不变
+control_centered_modulate low C shrink toward pi_ref
+pi_ref 缺失或非法时 no-op，不隐式 uniform fallback
+high C 继续复用 best_nonavoid helper
+bayesian_policy_lite.pi_final 保留 Phase4 原样
+huys_dayan_lite_controllability.pi_final_controllability 记录真实 sampler weights
+```
+
 在 payload 中写入：
 
 ```text
@@ -857,6 +956,11 @@ audit 字段必须包含：
   "policy_unchanged": true,
   "state_unchanged": true,
   "outcome_unchanged": true,
+  "modulation_family": "none",
+  "modulation_status": "disabled",
+  "reference_mix_gamma": 0.0,
+  "control_centered_low_c_target": "",
+  "pi_reference_for_control_centered": {},
   "control_relevant_actions": ["attempt_self", "seek_help_then_attempt"],
   "excluded_actions": {
     "avoid": "no_attempt is behavioral avoidance, not task controllability evidence"
@@ -1164,7 +1268,7 @@ git diff --check -- \
 ```bash
 PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE=shadow \
 PROTO_HUYS_DAYAN_LITE_CONFIDENCE_K=6 \
-PROTO_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES=2 \
+PROTO_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES=1 \
 PROTO_HUYS_DAYAN_LITE_GLOBAL_UPDATE_WEIGHT=0.05 \
 PROTO_HUYS_DAYAN_LITE_RHO=1.0 \
 PROTO_HUYS_DAYAN_LITE_USE_AVOID_IN_MAIN_SCORE=false \
@@ -1172,7 +1276,7 @@ PROTO_HUYS_DAYAN_LITE_WEIGHT_ENTROPY=0.25 \
 PROTO_HUYS_DAYAN_LITE_WEIGHT_CONTRAST=0.25 \
 PROTO_HUYS_DAYAN_LITE_WEIGHT_CHI=0.50 \
 PROTO_HUYS_DAYAN_LITE_MODULATION_GATE_THRESHOLD=0.50 \
-PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA=0.10 \
+PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA=0.25 \
 PROTO_HUYS_DAYAN_LITE_LOW_C_THRESHOLD=0.45 \
 PROTO_HUYS_DAYAN_LITE_HIGH_C_THRESHOLD=0.60 \
 ```

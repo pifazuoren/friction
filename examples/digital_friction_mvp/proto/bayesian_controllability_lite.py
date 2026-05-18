@@ -16,17 +16,21 @@ from .bayesian_policy_lite import (
 
 
 HUYS_DAYAN_LITE_VERSION = "huys_dayan_lite_controllability_v1"
-ACTIVE_HUYS_DAYAN_LITE_MODES = {"shadow", "gated_modulate"}
+ACTIVE_HUYS_DAYAN_LITE_MODES = {
+    "shadow",
+    "gated_modulate",
+    "control_centered_modulate",
+}
 CONTROL_RELEVANT_ACTIONS = ("attempt_self", "seek_help_then_attempt")
 DEFAULT_HUYS_DAYAN_LITE_CONFIDENCE_K = 6
-DEFAULT_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES = 2
+DEFAULT_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES = 1
 DEFAULT_HUYS_DAYAN_LITE_GLOBAL_UPDATE_WEIGHT = 0.05
 DEFAULT_HUYS_DAYAN_LITE_RHO = 1.0
 DEFAULT_HUYS_DAYAN_LITE_WEIGHT_ENTROPY = 0.25
 DEFAULT_HUYS_DAYAN_LITE_WEIGHT_CONTRAST = 0.25
 DEFAULT_HUYS_DAYAN_LITE_WEIGHT_CHI = 0.50
 DEFAULT_HUYS_DAYAN_LITE_MODULATION_GATE_THRESHOLD = 0.50
-DEFAULT_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA = 0.10
+DEFAULT_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA = 0.25
 DEFAULT_HUYS_DAYAN_LITE_LOW_C_THRESHOLD = 0.45
 DEFAULT_HUYS_DAYAN_LITE_HIGH_C_THRESHOLD = 0.60
 
@@ -133,10 +137,15 @@ def clamp_prob_floor(value: Any) -> float:
 
 def normalize_controllability_mode(value: Any) -> str:
     mode = str(value or "off").strip().lower()
-    if mode not in {"off", "shadow", "gated_modulate"}:
+    if mode not in {
+        "off",
+        "shadow",
+        "gated_modulate",
+        "control_centered_modulate",
+    }:
         raise ValueError(
             "PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE must be one of: "
-            "off, shadow, gated_modulate"
+            "off, shadow, gated_modulate, control_centered_modulate"
         )
     return mode
 
@@ -294,6 +303,21 @@ def _normalize_distribution(
     if total <= 0.0 or not math.isfinite(total):
         return {action: 1.0 / len(POLICY_LITE_ACTIONS) for action in POLICY_LITE_ACTIONS}
     return {action: source[action] / total for action in POLICY_LITE_ACTIONS}
+
+
+def _valid_action_distribution(weights: Any) -> bool:
+    if not isinstance(weights, dict):
+        return False
+    total = 0.0
+    for action in POLICY_LITE_ACTIONS:
+        value = weights.get(action)
+        if not isinstance(value, (int, float)):
+            return False
+        numeric = float(value)
+        if not math.isfinite(numeric) or numeric < 0.0:
+            return False
+        total += numeric
+    return total > 0.0 and math.isfinite(total)
 
 
 def _distribution_delta(
@@ -764,6 +788,7 @@ def apply_controllability_gated_modulation(
     *,
     mode: Any,
     pi_base: Any,
+    pi_ref: Any = None,
     q_bayes: Any = None,
     before_event_audit: Any = None,
     gate_threshold: Any = DEFAULT_HUYS_DAYAN_LITE_MODULATION_GATE_THRESHOLD,
@@ -801,6 +826,9 @@ def apply_controllability_gated_modulation(
         "best_nonavoid_action": best_nonavoid,
         "best_nonavoid_source": best_source,
         "uniform_mix_gamma": 0.0,
+        "reference_mix_gamma": 0.0,
+        "control_centered_low_c_target": "",
+        "pi_reference_for_control_centered": {},
         "removed_avoid_mass": 0.0,
         "pi_base_before_controllability": pi_base_normalized or {},
         "controllability_delta_before_clamp": {
@@ -828,8 +856,8 @@ def apply_controllability_gated_modulation(
         "C_family_before_event": c_family,
         "family_confidence": family_confidence,
     }
-    if normalized_mode != "gated_modulate":
-        base_audit["modulation_status"] = "not_gated_modulate"
+    if normalized_mode not in {"gated_modulate", "control_centered_modulate"}:
+        base_audit["modulation_status"] = "not_active_modulation_mode"
         return None, base_audit
     if not pi_base_normalized:
         base_audit["modulation_status"] = "base_policy_unavailable"
@@ -837,32 +865,57 @@ def apply_controllability_gated_modulation(
     if family_confidence < bounded_gate:
         base_audit["modulation_status"] = "gate_closed_low_confidence"
         return pi_base_normalized, base_audit
+    confidence_scale = math.sqrt(family_confidence)
     pi_shifted = dict(pi_base_normalized)
     uniform = {action: 1.0 / len(POLICY_LITE_ACTIONS) for action in POLICY_LITE_ACTIONS}
     delta_before = {action: 0.0 for action in POLICY_LITE_ACTIONS}
     if c_family < bounded_low:
-        gamma = bounded_max_delta * family_confidence * (
+        gamma = bounded_max_delta * confidence_scale * (
             (bounded_low - c_family) / max(bounded_low, 1e-9)
         )
         gamma = min(gamma, bounded_max_delta)
-        pi_shifted = {
-            action: (1.0 - gamma) * pi_base_normalized[action] + gamma * uniform[action]
-            for action in POLICY_LITE_ACTIONS
-        }
+        if normalized_mode == "control_centered_modulate":
+            if not _valid_action_distribution(pi_ref):
+                base_audit["modulation_status"] = "reference_policy_unavailable"
+                return pi_base_normalized, base_audit
+            normalized_ref = _normalize_distribution(pi_ref)
+            pi_shifted = {
+                action: (1.0 - gamma) * pi_base_normalized[action]
+                + gamma * normalized_ref[action]
+                for action in POLICY_LITE_ACTIONS
+            }
+            base_audit.update(
+                {
+                    "control_centered_low_c_target": "pi_ref",
+                    "modulation_family": "shrink_to_reference_low_c",
+                    "pi_reference_for_control_centered": normalized_ref,
+                    "reference_mix_gamma": gamma,
+                }
+            )
+        else:
+            pi_shifted = {
+                action: (1.0 - gamma) * pi_base_normalized[action]
+                + gamma * uniform[action]
+                for action in POLICY_LITE_ACTIONS
+            }
+            base_audit.update(
+                {
+                    "modulation_family": "flatten_low_c",
+                    "uniform_mix_gamma": gamma,
+                }
+            )
         delta_before = _distribution_delta(pi_shifted, pi_base_normalized)
         base_audit.update(
             {
                 "controllability_gate_open": True,
-                "modulation_family": "flatten_low_c",
                 "modulation_status": "modulated",
-                "uniform_mix_gamma": gamma,
             }
         )
     elif c_family > bounded_high:
         if not best_nonavoid:
             base_audit["modulation_status"] = "base_policy_unavailable"
             return None, base_audit
-        delta = bounded_max_delta * family_confidence * (
+        delta = bounded_max_delta * confidence_scale * (
             (c_family - bounded_high) / max(1.0 - bounded_high, 1e-9)
         )
         delta = min(delta, bounded_max_delta, pi_base_normalized["avoid"])

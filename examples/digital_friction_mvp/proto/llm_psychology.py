@@ -107,6 +107,7 @@ _TASK_APPRAISAL_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
 _STRATEGY_DELIBERATION_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
 _RULE_TEXT_MIXED = "昨天有顺也有卡，我还在慢慢摸索"
 _TASK_APPRAISAL_PROMPT_VERSION = "v3_profile_memory_packet_20260406"
+_STRATEGY_DELIBERATION_PROMPT_VERSION = "v2_profile_memory_strategy_context_20260518"
 
 
 def clear_llm_psychology_caches() -> None:
@@ -276,6 +277,82 @@ def _recent_outcome_pattern_bucket(value: Any) -> str:
     if any(outcome == "success_with_help" for outcome in outcomes):
         return "helped_success"
     return "mixed"
+
+
+def _truncate_text(value: Any, limit: int) -> str:
+    return str(value or "").strip()[: max(0, int(limit))]
+
+
+def _strategy_profile_context(profile_summary: Any) -> dict[str, Any]:
+    if not isinstance(profile_summary, dict):
+        return {}
+    context: dict[str, Any] = {}
+    for key, value in profile_summary.items():
+        if isinstance(value, str):
+            context[str(key)] = _truncate_text(value, 240)
+        elif isinstance(value, (int, float, bool)) or value is None:
+            context[str(key)] = value
+    return context
+
+
+def _strategy_task_memory_context(task_relevant_memory: Any) -> dict[str, Any]:
+    if not isinstance(task_relevant_memory, dict):
+        return {}
+    context: dict[str, Any] = {}
+    for key, value in task_relevant_memory.items():
+        if key == "recent_same_task_events_tail":
+            continue
+        if key == "same_task_attribution_summary":
+            context[key] = _truncate_text(value, 300)
+        elif isinstance(value, str):
+            context[str(key)] = _truncate_text(value, 240)
+        elif isinstance(value, (int, float, bool)) or value is None:
+            context[str(key)] = value
+        elif isinstance(value, list):
+            compact_items = []
+            for item in value[:8]:
+                if isinstance(item, (str, int, float, bool)) or item is None:
+                    compact_items.append(item if not isinstance(item, str) else _truncate_text(item, 120))
+            context[str(key)] = compact_items
+    return context
+
+
+def _strategy_recent_context(recent_episode_summary: Any) -> dict[str, Any]:
+    recent = recent_episode_summary if isinstance(recent_episode_summary, dict) else {}
+    return {
+        "recent_negative_feedback_ratio": round(
+            _safe_float(recent.get("recent_negative_feedback_ratio", 0.0)),
+            4,
+        ),
+        "recent_avoid_ratio": round(_safe_float(recent.get("recent_avoid_ratio", 0.0)), 4),
+        "recent_help_seek_ratio": round(
+            _safe_float(recent.get("recent_help_seek_ratio", 0.0)),
+            4,
+        ),
+        "recent_same_task_failure_count": _safe_int(
+            recent.get("recent_same_task_failure_count"),
+            0,
+        ),
+        "recent_failure_pressure": round(
+            _safe_float(recent.get("recent_failure_pressure", 0.0)),
+            4,
+        ),
+    }
+
+
+def _strategy_retrieved_memory_context(retrieved_episodic_memory: Any) -> dict[str, Any]:
+    retrieved = (
+        retrieved_episodic_memory
+        if isinstance(retrieved_episodic_memory, dict)
+        else {}
+    )
+    return {
+        "condition": str(retrieved.get("condition", "structured-only")),
+        "status": str(retrieved.get("status", "disabled")),
+        "count": _safe_int(retrieved.get("count", 0), 0),
+        "hash": str(retrieved.get("hash", "")),
+        "text": _truncate_text(retrieved.get("text", "Nothing"), 900) or "Nothing",
+    }
 
 
 def _extract_json_object(raw_text: str) -> dict[str, Any] | None:
@@ -1172,11 +1249,24 @@ def _build_strategy_deliberation_cache_key(
     recent_same_task_failure_count: int,
     digital_emotion_state: DigitalEmotionState,
     mastery_signal: str,
+    profile_summary: Any = None,
+    task_relevant_memory: Any = None,
+    recent_episode_summary: Any = None,
+    retrieved_episodic_memory: Any = None,
 ) -> tuple[Any, ...]:
     appraisal = TaskAppraisalResult.from_dict(
         task_appraisal if isinstance(task_appraisal, dict) else {}
     )
+    profile = profile_summary if isinstance(profile_summary, dict) else {}
+    task_memory = task_relevant_memory if isinstance(task_relevant_memory, dict) else {}
+    recent = recent_episode_summary if isinstance(recent_episode_summary, dict) else {}
+    retrieved = (
+        retrieved_episodic_memory
+        if isinstance(retrieved_episodic_memory, dict)
+        else {}
+    )
     return (
+        _STRATEGY_DELIBERATION_PROMPT_VERSION,
         str(task.task_family),
         _difficulty_bucket(float(task.difficulty)),
         _helplessness_bucket(float(effective_helplessness)),
@@ -1190,6 +1280,27 @@ def _build_strategy_deliberation_cache_key(
         _emotion_bucket(float(digital_emotion_state.anxiety)),
         _emotion_bucket(float(digital_emotion_state.confidence)),
         str(mastery_signal or "mixed"),
+        age_bucket(profile.get("age", -1)),
+        _education_bucket(profile.get("education", "")),
+        persona_bucket(profile.get("persona", ""), profile.get("background_summary", "")),
+        _profile_bucket(_safe_float(profile.get("digital_experience", 0.5), 0.5)),
+        _profile_bucket(_safe_float(profile.get("past_fraud_experience", 0.2), 0.2)),
+        _same_task_history_bucket(task_memory),
+        _profile_bucket(
+            _safe_float(task_memory.get("same_task_controllable_success_memory", 0.0), 0.0)
+        ),
+        _recent_outcome_pattern_bucket(
+            task_memory.get("recent_same_task_outcomes_tail", [])
+        ),
+        _help_rate_bucket(_safe_float(recent.get("recent_avoid_ratio", 0.0), 0.0)),
+        _help_rate_bucket(_safe_float(recent.get("recent_help_seek_ratio", 0.0), 0.0)),
+        _failure_bucket(
+            int(_safe_float(recent.get("recent_failure_pressure", 0.0), 0.0) // 6.0)
+        ),
+        str(retrieved.get("condition", "structured-only")),
+        str(retrieved.get("status", "disabled")),
+        _safe_int(retrieved.get("count", 0), 0),
+        str(retrieved.get("hash", "")),
     )
 
 
@@ -1730,6 +1841,10 @@ async def resolve_strategy_deliberation(
     digital_emotion_state: Any,
     daily_reflection: Any,
     rule_weights: dict[str, float],
+    profile_summary: Any = None,
+    task_relevant_memory: Any = None,
+    recent_episode_summary: Any = None,
+    retrieved_episodic_memory: Any = None,
 ) -> StrategyDeliberationResult:
     config = load_runtime_config()
     mode = str(config.proto_llm_psychology_mode)
@@ -1744,6 +1859,10 @@ async def resolve_strategy_deliberation(
         key: float(rule_weights.get(key, 0.0))
         for key in ("attempt_self", "seek_help_then_attempt", "avoid")
     }
+    profile_context = _strategy_profile_context(profile_summary)
+    task_memory_context = _strategy_task_memory_context(task_relevant_memory)
+    recent_context = _strategy_recent_context(recent_episode_summary)
+    retrieved_context = _strategy_retrieved_memory_context(retrieved_episodic_memory)
 
     if mode != "hybrid" or not bool(config.proto_llm_strategy_deliberation_enabled):
         return StrategyDeliberationResult(
@@ -1770,6 +1889,10 @@ async def resolve_strategy_deliberation(
         recent_same_task_failure_count=recent_same_task_failure_count,
         digital_emotion_state=normalized_emotion,
         mastery_signal=reflection.mastery_signal,
+        profile_summary=profile_summary,
+        task_relevant_memory=task_relevant_memory,
+        recent_episode_summary=recent_episode_summary,
+        retrieved_episodic_memory=retrieved_episodic_memory,
     )
     if bool(config.proto_llm_psychology_cache_enabled):
         payload = _STRATEGY_DELIBERATION_CACHE.get(cache_key)
@@ -1782,11 +1905,21 @@ async def resolve_strategy_deliberation(
             system_prompt=(
                 "You are a strict JSON-only bounded strategy deliberation module. "
                 "You must reason only over these three allowed strategies: attempt_self, "
-                "seek_help_then_attempt, avoid. You must not invent new actions."
+                "seek_help_then_attempt, avoid. You must not invent new actions. "
+                "Use profile and memory context only to score the three allowed strategies. "
+                "Treat task_appraisal as the authoritative current appraisal summary. "
+                "Do not re-score task difficulty, risk, felt control, help effectiveness, "
+                "or task value. Do not output helplessness, self-efficacy, controllability, "
+                "posterior updates, recommendations outside the JSON schema, or state deltas."
             ),
             user_payload={
+                "prompt_version": _STRATEGY_DELIBERATION_PROMPT_VERSION,
                 "task": task.to_dict(),
                 "task_appraisal": appraisal.to_dict(),
+                "agent_profile": profile_context,
+                "task_relevant_memory": task_memory_context,
+                "recent_episode_summary": recent_context,
+                "retrieved_episodic_memory": retrieved_context,
                 "effective_helplessness": round(float(effective_helplessness), 4),
                 "task_self_efficacy": round(float(task_self_efficacy), 4),
                 "help_success_rate_smoothed": round(
@@ -1801,6 +1934,28 @@ async def resolve_strategy_deliberation(
                 "digital_emotion_state": _emotion_dict(normalized_emotion),
                 "daily_reflection": reflection.to_dict(),
                 "rule_weights": normalized_rule_weights,
+                "allowed_strategies": [
+                    "attempt_self",
+                    "seek_help_then_attempt",
+                    "avoid",
+                ],
+                "decision_dimensions": [
+                    (
+                        "task appraisal as authoritative summary: difficulty, risk, "
+                        "felt control, help effectiveness, task value"
+                    ),
+                    (
+                        "agent profile: age, digital experience, fraud/risk "
+                        "background, persona"
+                    ),
+                    "task-specific memory: same-family failure/success/help history",
+                    (
+                        "recent experience: negative feedback, avoidance, "
+                        "help-seeking, failure pressure"
+                    ),
+                    "emotional state and daily reflection",
+                    "rule weights as baseline, not as a command",
+                ],
                 "output_schema_example": {
                     "attempt_self_score": 0.18,
                     "seek_help_score": 0.57,
