@@ -1003,6 +1003,12 @@ async def log_step_status(simulation: AgentSociety):
     failure_count_map = await simulation.gather(
         "failure_count", citizen_ids, keep_id=True
     )
+    friction_step_signal_map = await _safe_gather_status(
+        simulation, "friction_step_signal", citizen_ids
+    )
+    mobile_entry_decision_map = await _safe_gather_status(
+        simulation, "proto_mobile_entry_decision", citizen_ids
+    )
     logical_clock_enabled = is_proto_logical_clock_enabled(simulation.environment)
     if logical_clock_enabled:
         trip_count_map = {}
@@ -1141,6 +1147,8 @@ async def log_step_status(simulation: AgentSociety):
         status_payload = {
             "stage": stage,
             "intention": intention,
+            "friction_step_signal": friction_step_signal_map.get(agent_id, {}),
+            "proto_mobile_entry_decision": mobile_entry_decision_map.get(agent_id, {}),
             "helplessness_score": float(helplessness_map.get(agent_id, 0)),
             "trust_in_apps": float(trust_map.get(agent_id, 0)),
             "avoidance_tendency": float(avoidance_map.get(agent_id, 0)),

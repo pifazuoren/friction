@@ -1,0 +1,350 @@
+category_raw,category_normalized,mobile_intention,mapped_task_family,mapping_confidence,mapping_basis,review_status
+,,unknown_or_unmapped,,0.000,empty_category,auto_keyword_needs_human_review
+1 free,1 free,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+1 reputation,1 reputation,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+1 vitality,1 vitality,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+3 kindom game,3 kindom game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+80s Japanese comic,80s japanese comic,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+90s Japanese comic,90s japanese comic,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+A beauty care,a beauty care,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+A shares,a shares,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+ARPG,arpg,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Accounting,accounting,login_or_verify_account,account_login_verification,0.720,keyword_account,auto_keyword_needs_human_review
+Aeronautical Information Service,aeronautical information service,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+Air Travel,air travel,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+Airline type,airline type,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+And the Church,and the church,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Animation,animation,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+Animation aggregate class,animation aggregate class,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+Appliances,appliances,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Astrology Horoscope,astrology horoscope,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Audiobooks,audiobooks,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Automotive News,automotive news,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+Aviation Integrated Services,aviation integrated services,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+Bank Credit Card,bank credit card,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Bank financing,bank financing,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Beauty Nail,beauty nail,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Behalf of the drive,behalf of the drive,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Book hotel complex,book hotel complex,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Booking channels,booking channels,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Bus,bus,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Business simulation,business simulation,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+Buy,buy,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Buy class,buy class,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Calendar,calendar,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Car,car,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Car Owners,car owners,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Card Game,card game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+Cards RPG,cards rpg,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Casual puzzle categories,casual puzzle categories,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Chess categories,chess categories,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Chess game,chess game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+Chinese mainland (Airlines),chinese mainland (airlines),unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Chinese painting,chinese painting,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Coach reservations,coach reservations,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+College Students,college students,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Comics Reading Tools,comics reading tools,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+Commodity Futures,commodity futures,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Condition of the vehicles,condition of the vehicles,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Consumer Finance,consumer finance,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Consumer loans,consumer loans,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Contacts,contacts,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Cool trendy,cool trendy,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Cozy 1,cozy 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Crowdfunding,crowdfunding,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Crowdfunding financing,crowdfunding financing,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Cultivation fantasy game,cultivation fantasy game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+Custom label,custom label,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Customization,customization,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Customized 1,customized 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Cute style comic,cute style comic,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+DS_P2P net loan,ds_p2p net loan,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Debit and credit,debit and credit,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Decoration,decoration,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Desktop Enhancements,desktop enhancements,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Destination Region,destination region,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Direct Bank,direct bank,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Direct Banking,direct banking,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Direct Insurance,direct insurance,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Domestic travel,domestic travel,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+Entertainment News,entertainment news,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+Enthusiasm,enthusiasm,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Equity Fund,equity fund,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Exchange,exchange,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Express,express,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Families with babies,families with babies,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Families with big baby,families with big baby,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Families with small babies,families with small babies,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+File Editor,file editor,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Finance,finance,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Financial Futures,financial futures,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Financial Information,financial information,check_information,information_search_judgment,0.700,keyword_information,auto_keyword_needs_human_review
+Financial Services,financial services,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+Financial Supermarket,financial supermarket,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Flight Shooting,flight shooting,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Flight area,flight area,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Free exercise,free exercise,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Full Service Airlines,full service airlines,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+H shares,h shares,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Hardware Related,hardware related,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Health Management,health management,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+Heritage Foundation,heritage foundation,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+High Flow,high flow,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+High mobility,high mobility,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+High profitability,high profitability,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+High risk,high risk,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+High-speed rail train reservation,high-speed rail train reservation,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Higher income,higher income,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Hotel Chain,hotel chain,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Hotel Type,hotel type,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Hotel application,hotel application,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Hotels,hotels,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Housekeeping,housekeeping,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Housing Advice,housing advice,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+IM,im,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+IMF,imf,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+Industry tag,industry tag,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Insurance,insurance,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Integrated Air Travel Booking,integrated air travel booking,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+Integrated Living,integrated living,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Integrated ticket reservation,integrated ticket reservation,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Integrated tourism,integrated tourism,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Intellectual development game,intellectual development game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+Internet Banking,internet banking,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Internet Insurance,internet insurance,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Internet Securities,internet securities,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Internet banking,internet banking,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Irritation / Fun 1,irritation / fun 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Japan and South Korea (Travel),japan and south korea (travel),find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+Jobs,jobs,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Life Insurance,life insurance,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+Liquid medium,liquid medium,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Listening to books category,listening to books category,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Lottery ticket,lottery ticket,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Low Cost Airlines,low cost airlines,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Low Risk,low risk,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Low income,low income,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Low liquidity,low liquidity,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Low profitability,low profitability,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Low risk,low risk,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Lower liquidity,lower liquidity,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+MMO,mmo,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Maternal and child population,maternal and child population,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Maternal and child supplies,maternal and child supplies,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Medical,medical,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+Medium risk,medium risk,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Moderate profitability,moderate profitability,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Monetary Fund,monetary fund,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Nature 1,nature 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Ninja,ninja,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Noble 1,noble 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Non-standard accommodation,non-standard accommodation,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Occupational identity,occupational identity,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Online booking class,online booking class,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Other Read,other read,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Overseas travel,overseas travel,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+P2P,p2p,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+P2P net loan,p2p net loan,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Parenting,parenting,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Parenting stage,parenting stage,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Parkour avoid class,parkour avoid class,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Passion 1,passion 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Pay,pay,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Personal Effectiveness,personal effectiveness,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Personal Effectiveness 1,personal effectiveness 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Ping,ping,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Pirated content,pirated content,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Points Activities,points activities,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Precious Metals,precious metals,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Pregnant baby,pregnant baby,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Prepare baby,prepare baby,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Prepare pregnant pregnancy,prepare pregnant pregnancy,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Property Industry 1.0,property industry 1.0,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Property Industry 2.0,property industry 2.0,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Property Industry new,property industry new,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Purpose of travel,purpose of travel,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+Pursuit 1,pursuit 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Puzzles,puzzles,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Quality 1,quality 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Read the operator's,read the operator's,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Recipes,recipes,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Relatives,relatives,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Relatives 1,relatives 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Rentals,rentals,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Reputation,reputation,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Reviews,reviews,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+SLG (strategy),slg (strategy),unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Sale of cars,sale of cars,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Scheduling,scheduling,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Science and Technology,science and technology,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Science and Technology 1,science and technology 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Sea Amoy,sea amoy,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Securities,securities,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Sellers,sellers,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Services 1,services 1,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+Share Tour,share tour,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Share Travels,share travels,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+Shootout Shooting (STG),shootout shooting (stg),unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Simple 1,simple 1,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+Smart Appliances,smart appliances,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Smart Home,smart home,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Smart Shopping,smart shopping,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+Smart Shopping 1,smart shopping 1,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+Sports Games,sports games,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+Sports News,sports news,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+Stimulate fun,stimulate fun,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+Stock Futures,stock futures,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+System Tools,system tools,check_information,information_search_judgment,0.700,keyword_information,auto_keyword_needs_human_review
+Taxi,taxi,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+Technology Information,technology information,check_information,information_search_judgment,0.700,keyword_information,auto_keyword_needs_human_review
+Tencent,tencent,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Texas Poker,texas poker,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+The elimination of class,the elimination of class,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+Third party payment,third party payment,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Third-party card management,third-party card management,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Total Cost,total cost,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Total Cost 1,total cost 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Traditional Insurance,traditional insurance,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Traditional securities brokerage,traditional securities brokerage,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Travel Information,travel information,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+Travel Travel,travel travel,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+Travel advisory,travel advisory,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+Travel preferences,travel preferences,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+Trendy / cool,trendy / cool,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Trendy / cool 1,trendy / cool 1,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Turn based RPG game,turn based rpg game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+US and Europe animation,us and europe animation,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+US and Europe magic comic,us and europe magic comic,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+User Community,user community,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+Utilities,utilities,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+WIFI,wifi,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Wealth Management,wealth management,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+Wearable Health,wearable health,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+Weather,weather,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+World of Warcraft,world of warcraft,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+Xian Xia,xian xia,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+action games,action games,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+aviation,aviation,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+billards,billards,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+blogs,blogs,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+business,business,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+business cards,business cards,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+casual games,casual games,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+checkpoints game,checkpoints game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+chess,chess,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+children books,children books,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+chinese comic,chinese comic,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+class managemetn,class managemetn,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+classical,classical,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+coach transport,coach transport,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+comfortable,comfortable,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+comics,comics,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+community,community,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+convenience services,convenience services,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+coupon,coupon,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+dictionary,dictionary,check_information,information_search_judgment,0.700,keyword_information,auto_keyword_needs_human_review
+education for babies,education for babies,check_information,information_search_judgment,0.700,keyword_information,auto_keyword_needs_human_review
+education outside class,education outside class,check_information,information_search_judgment,0.700,keyword_information,auto_keyword_needs_human_review
+email,email,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+exams,exams,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+exchange rate,exchange rate,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+farm,farm,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+fashion,fashion,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+fashion outfit,fashion outfit,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+financial,financial,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+fixed income,fixed income,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+flight,flight,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+football,football,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+foreign language,foreign language,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+free,free,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+fund,fund,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+gambling,gambling,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+game,game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Answer,game-answer,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Box,game-box,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Cartoon,game-cartoon,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Competitive action,game-competitive action,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Fishing,game-fishing,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Horizontal version,game-horizontal version,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Lianliankan,game-lianliankan,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Music and Dance,game-music and dance,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Parkour,game-parkour,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Puzzle,game-puzzle,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Role -playing games,game-role -playing games,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Snipe,game-snipe,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-Tactics,game-tactics,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-card,game-card,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-flight,game-flight,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-pet,game-pet,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-shooting,game-shooting,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-stress reliever,game-stress reliever,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+game-tank,game-tank,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+gaming strategy,gaming strategy,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+health,health,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+household products,household products,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+japanese and korean style,japanese and korean style,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+japanese comic and animation,japanese comic and animation,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+joke,joke,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+knight game,knight game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+library,library,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+literature,literature,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+lose weight,lose weight,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+love and marriage,love and marriage,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+magazine and journal,magazine and journal,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+magic,magic,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+majiang,majiang,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+management,management,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+map,map,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+millitary and wars,millitary and wars,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+mobile bank,mobile bank,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+music,music,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+natural,natural,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+navigation,navigation,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+network disk,network disk,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+news,news,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+notes,notes,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+novels,novels,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+old style game,old style game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+online malls,online malls,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+"online shopping by group, like groupon","online shopping by group, like groupon",submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+online shopping navigation,online shopping navigation,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+"online shopping, price comparing","online shopping, price comparing",submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+other,other,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+picture sharing,picture sharing,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+pictures photography,pictures photography,upload_or_manage_profile,profile_form_upload,0.720,keyword_upload,auto_keyword_needs_human_review
+poker,poker,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+poker game_doudizhu,poker game_doudizhu,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+professional skills,professional skills,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+pursue,pursue,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+quality,quality,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+radio,radio,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+read,read,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+readers,readers,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+reading platform,reading platform,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+realistic style comic,realistic style comic,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+realtime fighting,realtime fighting,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+round,round,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+safety Insurance,safety insurance,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+science,science,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+service,service,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+shopping sharing,shopping sharing,submit_service_application,service_application_submission,0.720,keyword_service,auto_keyword_needs_human_review
+show,show,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+sports,sports,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+sports and gym,sports and gym,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+stock,stock,use_payment_or_finance,payment_risk_confirmation,0.800,keyword_finance,auto_keyword_needs_human_review
+store management,store management,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+strategy game,strategy game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+table game,table game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+takeaway ordering,takeaway ordering,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+the film,the film,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+tourism product,tourism product,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+train,train,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+travel,travel,find_location_or_service,navigation_service_location,0.780,keyword_navigation,auto_keyword_needs_human_review
+tribe,tribe,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+unknown,unknown,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+video,video,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review
+violence comic,violence comic,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+vitality,vitality,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+war chess,war chess,unknown_or_unmapped,,0.000,unmapped,auto_keyword_needs_human_review
+weibo,weibo,communicate_or_seek_help,,0.740,keyword_communication,auto_keyword_needs_human_review
+zombies game,zombies game,browse_entertainment,,0.740,keyword_entertainment,auto_keyword_needs_human_review

@@ -1,0 +1,2924 @@
+{
+  "global_hourly_prior": {
+    "0": {
+      "hour": 0,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.019279502390139952,
+        "check_information": 0.004348326902033059,
+        "communicate_or_seek_help": 0.027630593791395496,
+        "find_location_or_service": 0.010496457985371192,
+        "login_or_verify_account": 0.001339054310890975,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06375626331855094,
+        "unknown_or_unmapped": 0.7603524736508668,
+        "upload_or_manage_profile": 0.0008063122732246731,
+        "use_payment_or_finance": 0.11199101537752693
+      }
+    },
+    "1": {
+      "hour": 1,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018356539331191243,
+        "check_information": 0.003659407354516244,
+        "communicate_or_seek_help": 0.0279364512674045,
+        "find_location_or_service": 0.0102939426395335,
+        "login_or_verify_account": 0.001993335713435678,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06292395573009639,
+        "unknown_or_unmapped": 0.7610079733428537,
+        "upload_or_manage_profile": 0.0005057717481851719,
+        "use_payment_or_finance": 0.11332262287278352
+      }
+    },
+    "10": {
+      "hour": 10,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018296015554301177,
+        "check_information": 0.003494341854151547,
+        "communicate_or_seek_help": 0.027022910338771963,
+        "find_location_or_service": 0.01036654750064959,
+        "login_or_verify_account": 0.0016038133125464793,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.0684980601922784,
+        "unknown_or_unmapped": 0.7570267630746624,
+        "upload_or_manage_profile": 0.0009855835998888978,
+        "use_payment_or_finance": 0.1127059645727495
+      }
+    },
+    "11": {
+      "hour": 11,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017919811783158515,
+        "check_information": 0.0037251249877462995,
+        "communicate_or_seek_help": 0.02728163905499461,
+        "find_location_or_service": 0.010616606215076953,
+        "login_or_verify_account": 0.001460641113616312,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06623860405842565,
+        "unknown_or_unmapped": 0.7564356435643564,
+        "upload_or_manage_profile": 0.0008234486815018136,
+        "use_payment_or_finance": 0.11549848054112342
+      }
+    },
+    "12": {
+      "hour": 12,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018120672188162552,
+        "check_information": 0.003916571798594212,
+        "communicate_or_seek_help": 0.028115763418174983,
+        "find_location_or_service": 0.010193530867807868,
+        "login_or_verify_account": 0.0016815148255297815,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06787680031750343,
+        "unknown_or_unmapped": 0.757924530272489,
+        "upload_or_manage_profile": 0.0008877562743480214,
+        "use_payment_or_finance": 0.1112828600373902
+      }
+    },
+    "13": {
+      "hour": 13,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01750128685932789,
+        "check_information": 0.0037962350172806823,
+        "communicate_or_seek_help": 0.026693139201411867,
+        "find_location_or_service": 0.010046694609897787,
+        "login_or_verify_account": 0.001535039341128024,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06583204647400544,
+        "unknown_or_unmapped": 0.7579693359805868,
+        "upload_or_manage_profile": 0.0007353481873667181,
+        "use_payment_or_finance": 0.11589087432899478
+      }
+    },
+    "14": {
+      "hour": 14,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01922714233246975,
+        "check_information": 0.00397049919101079,
+        "communicate_or_seek_help": 0.02693983701100821,
+        "find_location_or_service": 0.011117397734830212,
+        "login_or_verify_account": 0.0014690847006739922,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.0664562302095431,
+        "unknown_or_unmapped": 0.7546628549874433,
+        "upload_or_manage_profile": 0.0009429935578650626,
+        "use_payment_or_finance": 0.1152139602751556
+      }
+    },
+    "15": {
+      "hour": 15,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.019359454105216816,
+        "check_information": 0.003907109839313229,
+        "communicate_or_seek_help": 0.027393792648029935,
+        "find_location_or_service": 0.010169491525423728,
+        "login_or_verify_account": 0.0015848558221439578,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06766453885097953,
+        "unknown_or_unmapped": 0.7581774158045345,
+        "upload_or_manage_profile": 0.000847457627118644,
+        "use_payment_or_finance": 0.1108958837772397
+      }
+    },
+    "16": {
+      "hour": 16,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01786611693999159,
+        "check_information": 0.003856291601284063,
+        "communicate_or_seek_help": 0.02739402890167482,
+        "find_location_or_service": 0.011066326164323148,
+        "login_or_verify_account": 0.0018563531378521687,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06589540834640985,
+        "unknown_or_unmapped": 0.7579869337353723,
+        "upload_or_manage_profile": 0.00082048757474129,
+        "use_payment_or_finance": 0.11325805359835082
+      }
+    },
+    "17": {
+      "hour": 17,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.016969070702772798,
+        "check_information": 0.003596429910139906,
+        "communicate_or_seek_help": 0.027079597605081603,
+        "find_location_or_service": 0.010161180844705143,
+        "login_or_verify_account": 0.001691841676037646,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06652888794334863,
+        "unknown_or_unmapped": 0.7590189344436677,
+        "upload_or_manage_profile": 0.0009320325400925954,
+        "use_payment_or_finance": 0.11402202433415393
+      }
+    },
+    "18": {
+      "hour": 18,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018066283320409663,
+        "check_information": 0.0034944260380056595,
+        "communicate_or_seek_help": 0.027200128901018118,
+        "find_location_or_service": 0.009556802046303662,
+        "login_or_verify_account": 0.0015609107662561304,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06649479864251115,
+        "unknown_or_unmapped": 0.7598312202294035,
+        "upload_or_manage_profile": 0.0010976727323994723,
+        "use_payment_or_finance": 0.11269775732369261
+      }
+    },
+    "19": {
+      "hour": 19,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017503907122125476,
+        "check_information": 0.003661531591873186,
+        "communicate_or_seek_help": 0.02648805536950212,
+        "find_location_or_service": 0.010296941281536057,
+        "login_or_verify_account": 0.002152266130832775,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06621120785889707,
+        "unknown_or_unmapped": 0.7588390265684305,
+        "upload_or_manage_profile": 0.0010002232641214558,
+        "use_payment_or_finance": 0.1138468408126814
+      }
+    },
+    "2": {
+      "hour": 2,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.019287901640842816,
+        "check_information": 0.004799122446181269,
+        "communicate_or_seek_help": 0.026463732346085286,
+        "find_location_or_service": 0.009324009324009324,
+        "login_or_verify_account": 0.001965354906531377,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06375976964212259,
+        "unknown_or_unmapped": 0.7609579962521139,
+        "upload_or_manage_profile": 0.0005941770647653001,
+        "use_payment_or_finance": 0.11284793637734815
+      }
+    },
+    "20": {
+      "hour": 20,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018622324216545652,
+        "check_information": 0.003686843986306008,
+        "communicate_or_seek_help": 0.028008728038824725,
+        "find_location_or_service": 0.009903690606072007,
+        "login_or_verify_account": 0.0014389977803694368,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06490538354463715,
+        "unknown_or_unmapped": 0.7626594183815507,
+        "upload_or_manage_profile": 0.0009687370678304051,
+        "use_payment_or_finance": 0.10980587637786389
+      }
+    },
+    "21": {
+      "hour": 21,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018581502279051674,
+        "check_information": 0.003700342107100468,
+        "communicate_or_seek_help": 0.02759796930012667,
+        "find_location_or_service": 0.009944046039836028,
+        "login_or_verify_account": 0.0014561993197753863,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06616730333828708,
+        "unknown_or_unmapped": 0.7647140962088947,
+        "upload_or_manage_profile": 0.0009774488584793689,
+        "use_payment_or_finance": 0.10686109254844856
+      }
+    },
+    "22": {
+      "hour": 22,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017462138058566046,
+        "check_information": 0.004014419138128789,
+        "communicate_or_seek_help": 0.026052760937243978,
+        "find_location_or_service": 0.009749303621169917,
+        "login_or_verify_account": 0.0018492076496336696,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06831534842349196,
+        "unknown_or_unmapped": 0.7610659862830926,
+        "upload_or_manage_profile": 0.0006905269071416868,
+        "use_payment_or_finance": 0.11080030898153133
+      }
+    },
+    "23": {
+      "hour": 23,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01871190486339031,
+        "check_information": 0.0041487290965147835,
+        "communicate_or_seek_help": 0.02713723484364122,
+        "find_location_or_service": 0.010357614764929031,
+        "login_or_verify_account": 0.0014207976357927341,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06981799582285494,
+        "unknown_or_unmapped": 0.7612917892104627,
+        "upload_or_manage_profile": 0.0010087663214128411,
+        "use_payment_or_finance": 0.10610516744100137
+      }
+    },
+    "3": {
+      "hour": 3,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.016975998050603094,
+        "check_information": 0.003452057019859481,
+        "communicate_or_seek_help": 0.024611135929821712,
+        "find_location_or_service": 0.010965357592494823,
+        "login_or_verify_account": 0.0017463347276936198,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.0682695041221622,
+        "unknown_or_unmapped": 0.7599805060309467,
+        "upload_or_manage_profile": 0.0003248994842220688,
+        "use_payment_or_finance": 0.11367420704219632
+      }
+    },
+    "4": {
+      "hour": 4,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01770952348948182,
+        "check_information": 0.0037636937966261173,
+        "communicate_or_seek_help": 0.025102493447140266,
+        "find_location_or_service": 0.009778882989448215,
+        "login_or_verify_account": 0.0013105719470394516,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06465488272061294,
+        "unknown_or_unmapped": 0.757813025068889,
+        "upload_or_manage_profile": 0.0005712749512736071,
+        "use_payment_or_finance": 0.11929565158948854
+      }
+    },
+    "5": {
+      "hour": 5,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01671126645185954,
+        "check_information": 0.002839823057178745,
+        "communicate_or_seek_help": 0.026541423188247502,
+        "find_location_or_service": 0.007955145358891741,
+        "login_or_verify_account": 0.0014199115285893724,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06751861358382029,
+        "unknown_or_unmapped": 0.7595616478255329,
+        "upload_or_manage_profile": 0.0007463637522072342,
+        "use_payment_or_finance": 0.11670580525367266
+      }
+    },
+    "6": {
+      "hour": 6,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017817507992425013,
+        "check_information": 0.0035940458979005887,
+        "communicate_or_seek_help": 0.025351768514936163,
+        "find_location_or_service": 0.00931601132175365,
+        "login_or_verify_account": 0.0018733836974892586,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06893848378097701,
+        "unknown_or_unmapped": 0.7501272679142316,
+        "upload_or_manage_profile": 0.0007534260522511149,
+        "use_payment_or_finance": 0.12222810482803559
+      }
+    },
+    "7": {
+      "hour": 7,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017941128245842645,
+        "check_information": 0.003581321896115776,
+        "communicate_or_seek_help": 0.02701956351021324,
+        "find_location_or_service": 0.009440882299640142,
+        "login_or_verify_account": 0.002416313568463656,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06676792171144039,
+        "unknown_or_unmapped": 0.7556848091543765,
+        "upload_or_manage_profile": 0.0007335237618550384,
+        "use_payment_or_finance": 0.11641453585205257
+      }
+    },
+    "8": {
+      "hour": 8,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018167959467336233,
+        "check_information": 0.0038649509034659013,
+        "communicate_or_seek_help": 0.02681253643007667,
+        "find_location_or_service": 0.010608438326682509,
+        "login_or_verify_account": 0.001685871855804152,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06927319194727166,
+        "unknown_or_unmapped": 0.7546608079630543,
+        "upload_or_manage_profile": 0.0008160337174371161,
+        "use_payment_or_finance": 0.11411020938887145
+      }
+    },
+    "9": {
+      "hour": 9,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01844813039810039,
+        "check_information": 0.0037748649659479347,
+        "communicate_or_seek_help": 0.026189212931956755,
+        "find_location_or_service": 0.010211270668255473,
+        "login_or_verify_account": 0.0018091518730810378,
+        "no_mobile_action": 0.0,
+        "submit_service_application": 0.06799975646032477,
+        "unknown_or_unmapped": 0.7549642953440433,
+        "upload_or_manage_profile": 0.0008610867088222247,
+        "use_payment_or_finance": 0.11574223064946813
+      }
+    }
+  },
+  "global_prior": {
+    "p_mobile_intention": {
+      "browse_entertainment": 0.01812850724191153,
+      "check_information": 0.0037551734023720624,
+      "communicate_or_seek_help": 0.026945742003281578,
+      "find_location_or_service": 0.010120228824642894,
+      "login_or_verify_account": 0.0016899497152347118,
+      "no_mobile_action": 0.0,
+      "submit_service_application": 0.06692823895265951,
+      "unknown_or_unmapped": 0.7580651049233901,
+      "upload_or_manage_profile": 0.0008547095910000443,
+      "use_payment_or_finance": 0.1135123453455076
+    }
+  },
+  "mobile_intention_prior_by_bucket_hour": {
+    "65_74|female|digital_mid|hour=0": {
+      "active_user_count": 9,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 0,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.02482758620689655,
+        "check_information": 0.005517241379310344,
+        "communicate_or_seek_help": 0.023448275862068966,
+        "find_location_or_service": 0.005517241379310344,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.013793103448275862,
+        "submit_service_application": 0.08068965517241379,
+        "unknown_or_unmapped": 0.7406896551724138,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.10551724137931034
+      }
+    },
+    "65_74|female|digital_mid|hour=1": {
+      "active_user_count": 4,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 1,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.020224719101123594,
+        "check_information": 0.011235955056179775,
+        "communicate_or_seek_help": 0.015730337078651686,
+        "find_location_or_service": 0.0044943820224719105,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.056179775280898875,
+        "submit_service_application": 0.09438202247191012,
+        "unknown_or_unmapped": 0.6606741573033708,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.13707865168539327
+      }
+    },
+    "65_74|female|digital_mid|hour=10": {
+      "active_user_count": 14,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 10,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.019644180874722018,
+        "check_information": 0.007412898443291327,
+        "communicate_or_seek_help": 0.02446256486286138,
+        "find_location_or_service": 0.003335804299481097,
+        "login_or_verify_account": 0.0014825796886582653,
+        "no_mobile_action": 0.005559673832468495,
+        "submit_service_application": 0.056338028169014086,
+        "unknown_or_unmapped": 0.7687175685693106,
+        "upload_or_manage_profile": 0.0014825796886582653,
+        "use_payment_or_finance": 0.11156412157153447
+      }
+    },
+    "65_74|female|digital_mid|hour=11": {
+      "active_user_count": 12,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 11,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.019821220365332296,
+        "check_information": 0.010882238631947143,
+        "communicate_or_seek_help": 0.026428293820443063,
+        "find_location_or_service": 0.003497862417411582,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.006607073455110766,
+        "submit_service_application": 0.07190050524679363,
+        "unknown_or_unmapped": 0.7500971628449281,
+        "upload_or_manage_profile": 0.003109211037699184,
+        "use_payment_or_finance": 0.10765643218033424
+      }
+    },
+    "65_74|female|digital_mid|hour=12": {
+      "active_user_count": 14,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 12,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01684717208182912,
+        "check_information": 0.009626955475330927,
+        "communicate_or_seek_help": 0.02045728038507822,
+        "find_location_or_service": 0.0024067388688327317,
+        "login_or_verify_account": 0.0024067388688327317,
+        "no_mobile_action": 0.006016847172081829,
+        "submit_service_application": 0.07099879663056559,
+        "unknown_or_unmapped": 0.7164059366225431,
+        "upload_or_manage_profile": 0.0012033694344163659,
+        "use_payment_or_finance": 0.15363016446048938
+      }
+    },
+    "65_74|female|digital_mid|hour=13": {
+      "active_user_count": 7,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 13,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018268467037331215,
+        "check_information": 0.004765687053216839,
+        "communicate_or_seek_help": 0.019062748212867357,
+        "find_location_or_service": 0.0015885623510722795,
+        "login_or_verify_account": 0.003177124702144559,
+        "no_mobile_action": 0.017474185861795076,
+        "submit_service_application": 0.0698967434471803,
+        "unknown_or_unmapped": 0.7092930897537728,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.15647339158061954
+      }
+    },
+    "65_74|female|digital_mid|hour=14": {
+      "active_user_count": 8,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 14,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.020050125313283207,
+        "check_information": 0.008771929824561403,
+        "communicate_or_seek_help": 0.023809523809523808,
+        "find_location_or_service": 0.003132832080200501,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.013157894736842105,
+        "submit_service_application": 0.06077694235588972,
+        "unknown_or_unmapped": 0.7606516290726817,
+        "upload_or_manage_profile": 0.0018796992481203006,
+        "use_payment_or_finance": 0.10776942355889724
+      }
+    },
+    "65_74|female|digital_mid|hour=15": {
+      "active_user_count": 7,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 15,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.023379383634431455,
+        "check_information": 0.011689691817215728,
+        "communicate_or_seek_help": 0.022316684378320937,
+        "find_location_or_service": 0.003188097768331562,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.023379383634431455,
+        "submit_service_application": 0.08289054197662062,
+        "unknown_or_unmapped": 0.71413390010627,
+        "upload_or_manage_profile": 0.0021253985122210413,
+        "use_payment_or_finance": 0.11689691817215728
+      }
+    },
+    "65_74|female|digital_mid|hour=16": {
+      "active_user_count": 8,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 16,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.021828103683492497,
+        "check_information": 0.010004547521600727,
+        "communicate_or_seek_help": 0.022282855843565257,
+        "find_location_or_service": 0.002728512960436562,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.009549795361527967,
+        "submit_service_application": 0.06275579809004093,
+        "unknown_or_unmapped": 0.7767166894042746,
+        "upload_or_manage_profile": 0.0018190086402910413,
+        "use_payment_or_finance": 0.09231468849477036
+      }
+    },
+    "65_74|female|digital_mid|hour=17": {
+      "active_user_count": 10,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 17,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.026301663982823402,
+        "check_information": 0.006977992485238862,
+        "communicate_or_seek_help": 0.02200751476113795,
+        "find_location_or_service": 0.006977992485238862,
+        "login_or_verify_account": 0.0021470746108427268,
+        "no_mobile_action": 0.010198604401502952,
+        "submit_service_application": 0.06977992485238863,
+        "unknown_or_unmapped": 0.7665056360708534,
+        "upload_or_manage_profile": 0.0021470746108427268,
+        "use_payment_or_finance": 0.08695652173913043
+      }
+    },
+    "65_74|female|digital_mid|hour=18": {
+      "active_user_count": 12,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 18,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.026366251198465963,
+        "check_information": 0.007190795781399808,
+        "communicate_or_seek_help": 0.026366251198465963,
+        "find_location_or_service": 0.005752636625119847,
+        "login_or_verify_account": 0.0009587727708533077,
+        "no_mobile_action": 0.008149568552253116,
+        "submit_service_application": 0.058485139022051776,
+        "unknown_or_unmapped": 0.7775647171620326,
+        "upload_or_manage_profile": 0.0023969319271332696,
+        "use_payment_or_finance": 0.08676893576222436
+      }
+    },
+    "65_74|female|digital_mid|hour=19": {
+      "active_user_count": 8,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 19,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.02152521525215252,
+        "check_information": 0.00922509225092251,
+        "communicate_or_seek_help": 0.01968019680196802,
+        "find_location_or_service": 0.0012300123001230013,
+        "login_or_verify_account": 0.0024600246002460025,
+        "no_mobile_action": 0.012915129151291513,
+        "submit_service_application": 0.05781057810578106,
+        "unknown_or_unmapped": 0.7675276752767528,
+        "upload_or_manage_profile": 0.006150061500615006,
+        "use_payment_or_finance": 0.1014760147601476
+      }
+    },
+    "65_74|female|digital_mid|hour=2": {
+      "active_user_count": 3,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 2,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.013422818791946308,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.020134228187919462,
+        "find_location_or_service": 0.006711409395973154,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.087248322147651,
+        "submit_service_application": 0.030201342281879196,
+        "unknown_or_unmapped": 0.7281879194630873,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.11409395973154363
+      }
+    },
+    "65_74|female|digital_mid|hour=20": {
+      "active_user_count": 8,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 20,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.013357079252003561,
+        "check_information": 0.003561887800534283,
+        "communicate_or_seek_help": 0.029385574354407838,
+        "find_location_or_service": 0.005342831700801425,
+        "login_or_verify_account": 0.0017809439002671415,
+        "no_mobile_action": 0.018699910952804988,
+        "submit_service_application": 0.07390917186108638,
+        "unknown_or_unmapped": 0.7711487088156723,
+        "upload_or_manage_profile": 0.003561887800534283,
+        "use_payment_or_finance": 0.0792520035618878
+      }
+    },
+    "65_74|female|digital_mid|hour=21": {
+      "active_user_count": 10,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 21,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.020705092333519866,
+        "check_information": 0.006155567991046447,
+        "communicate_or_seek_help": 0.02182428651371013,
+        "find_location_or_service": 0.008953553441522105,
+        "login_or_verify_account": 0.001119194180190263,
+        "no_mobile_action": 0.010632344711807499,
+        "submit_service_application": 0.07218802462227196,
+        "unknown_or_unmapped": 0.7504196978175713,
+        "upload_or_manage_profile": 0.0005595970900951316,
+        "use_payment_or_finance": 0.10744264129826525
+      }
+    },
+    "65_74|female|digital_mid|hour=22": {
+      "active_user_count": 9,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 22,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.013761467889908258,
+        "check_information": 0.005242463958060288,
+        "communicate_or_seek_help": 0.022280471821756225,
+        "find_location_or_service": 0.002621231979030144,
+        "login_or_verify_account": 0.003931847968545216,
+        "no_mobile_action": 0.01310615989515072,
+        "submit_service_application": 0.0727391874180865,
+        "unknown_or_unmapped": 0.7254259501965924,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.14089121887287026
+      }
+    },
+    "65_74|female|digital_mid|hour=23": {
+      "active_user_count": 6,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 23,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.02491103202846975,
+        "check_information": 0.011862396204033215,
+        "communicate_or_seek_help": 0.02491103202846975,
+        "find_location_or_service": 0.005931198102016607,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.027283511269276393,
+        "submit_service_application": 0.08066429418742586,
+        "unknown_or_unmapped": 0.7058125741399762,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.11862396204033215
+      }
+    },
+    "65_74|female|digital_mid|hour=3": {
+      "active_user_count": 2,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 3,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.0,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.0,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.4426229508196721,
+        "submit_service_application": 0.0,
+        "unknown_or_unmapped": 0.5573770491803278,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.0
+      }
+    },
+    "65_74|female|digital_mid|hour=4": {
+      "active_user_count": 4,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 4,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.03007518796992481,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.03007518796992481,
+        "find_location_or_service": 0.03007518796992481,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.09398496240601503,
+        "submit_service_application": 0.041353383458646614,
+        "unknown_or_unmapped": 0.7368421052631579,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.03759398496240601
+      }
+    },
+    "65_74|female|digital_mid|hour=5": {
+      "active_user_count": 4,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 5,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.021875,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.028125,
+        "find_location_or_service": 0.04375,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.078125,
+        "submit_service_application": 0.06875,
+        "unknown_or_unmapped": 0.75625,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.003125
+      }
+    },
+    "65_74|female|digital_mid|hour=6": {
+      "active_user_count": 13,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 6,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.025943396226415096,
+        "check_information": 0.0047169811320754715,
+        "communicate_or_seek_help": 0.024174528301886794,
+        "find_location_or_service": 0.001768867924528302,
+        "login_or_verify_account": 0.003537735849056604,
+        "no_mobile_action": 0.009433962264150943,
+        "submit_service_application": 0.0695754716981132,
+        "unknown_or_unmapped": 0.7553066037735849,
+        "upload_or_manage_profile": 0.0005896226415094339,
+        "use_payment_or_finance": 0.10495283018867925
+      }
+    },
+    "65_74|female|digital_mid|hour=7": {
+      "active_user_count": 11,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 7,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01908682634730539,
+        "check_information": 0.004491017964071856,
+        "communicate_or_seek_help": 0.022080838323353294,
+        "find_location_or_service": 0.002245508982035928,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.006736526946107785,
+        "submit_service_application": 0.07148203592814371,
+        "unknown_or_unmapped": 0.7485029940119761,
+        "upload_or_manage_profile": 0.0014970059880239522,
+        "use_payment_or_finance": 0.12387724550898203
+      }
+    },
+    "65_74|female|digital_mid|hour=8": {
+      "active_user_count": 13,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 8,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.02135374697824335,
+        "check_information": 0.008058017727639,
+        "communicate_or_seek_help": 0.0257856567284448,
+        "find_location_or_service": 0.00684931506849315,
+        "login_or_verify_account": 0.0008058017727639,
+        "no_mobile_action": 0.0064464141821112,
+        "submit_service_application": 0.06607574536663981,
+        "unknown_or_unmapped": 0.7546333601933924,
+        "upload_or_manage_profile": 0.0024174053182917004,
+        "use_payment_or_finance": 0.10757453666398066
+      }
+    },
+    "65_74|female|digital_mid|hour=9": {
+      "active_user_count": 16,
+      "bucket": "65_74|female|digital_mid",
+      "bucket_user_count": 29,
+      "hour": 9,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017902813299232736,
+        "check_information": 0.004262574595055414,
+        "communicate_or_seek_help": 0.02216538789428815,
+        "find_location_or_service": 0.005115089514066497,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.005541346973572037,
+        "submit_service_application": 0.0733162830349531,
+        "unknown_or_unmapped": 0.7531969309462916,
+        "upload_or_manage_profile": 0.0017050298380221654,
+        "use_payment_or_finance": 0.11679454390451834
+      }
+    },
+    "65_74|male|digital_mid|hour=0": {
+      "active_user_count": 13,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 0,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.011637572734829594,
+        "check_information": 0.0033250207813798837,
+        "communicate_or_seek_help": 0.0199501246882793,
+        "find_location_or_service": 0.021612635078969242,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.02743142144638404,
+        "submit_service_application": 0.06650041562759768,
+        "unknown_or_unmapped": 0.7364921030756443,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.11305070656691604
+      }
+    },
+    "65_74|male|digital_mid|hour=1": {
+      "active_user_count": 10,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 1,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.014727540500736377,
+        "check_information": 0.003681885125184094,
+        "communicate_or_seek_help": 0.025036818851251842,
+        "find_location_or_service": 0.020618556701030927,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.026509572901325478,
+        "submit_service_application": 0.05375552282768778,
+        "unknown_or_unmapped": 0.7511045655375552,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.10456553755522828
+      }
+    },
+    "65_74|male|digital_mid|hour=10": {
+      "active_user_count": 24,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 10,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.013687150837988826,
+        "check_information": 0.003910614525139665,
+        "communicate_or_seek_help": 0.02569832402234637,
+        "find_location_or_service": 0.016201117318435754,
+        "login_or_verify_account": 0.00027932960893854746,
+        "no_mobile_action": 0.006145251396648044,
+        "submit_service_application": 0.062290502793296086,
+        "unknown_or_unmapped": 0.743854748603352,
+        "upload_or_manage_profile": 0.00027932960893854746,
+        "use_payment_or_finance": 0.1276536312849162
+      }
+    },
+    "65_74|male|digital_mid|hour=11": {
+      "active_user_count": 26,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 11,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.014933058702368692,
+        "check_information": 0.0028321318228630276,
+        "communicate_or_seek_help": 0.029351184346035016,
+        "find_location_or_service": 0.007209062821833162,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.005149330587023687,
+        "submit_service_application": 0.06668383110195675,
+        "unknown_or_unmapped": 0.7644181256436663,
+        "upload_or_manage_profile": 0.0005149330587023687,
+        "use_payment_or_finance": 0.10890834191555097
+      }
+    },
+    "65_74|male|digital_mid|hour=12": {
+      "active_user_count": 22,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 12,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.014190821256038648,
+        "check_information": 0.002717391304347826,
+        "communicate_or_seek_help": 0.025060386473429952,
+        "find_location_or_service": 0.011473429951690822,
+        "login_or_verify_account": 0.00030193236714975844,
+        "no_mobile_action": 0.007246376811594203,
+        "submit_service_application": 0.06280193236714976,
+        "unknown_or_unmapped": 0.7503019323671497,
+        "upload_or_manage_profile": 0.0006038647342995169,
+        "use_payment_or_finance": 0.12530193236714976
+      }
+    },
+    "65_74|male|digital_mid|hour=13": {
+      "active_user_count": 20,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 13,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.013109756097560975,
+        "check_information": 0.00548780487804878,
+        "communicate_or_seek_help": 0.022865853658536585,
+        "find_location_or_service": 0.01920731707317073,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.007926829268292683,
+        "submit_service_application": 0.060060975609756095,
+        "unknown_or_unmapped": 0.7551829268292682,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.11615853658536586
+      }
+    },
+    "65_74|male|digital_mid|hour=14": {
+      "active_user_count": 25,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 14,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01739562624254473,
+        "check_information": 0.006709741550695825,
+        "communicate_or_seek_help": 0.022614314115308152,
+        "find_location_or_service": 0.02062624254473161,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.005218687872763419,
+        "submit_service_application": 0.0728131212723658,
+        "unknown_or_unmapped": 0.7263916500994035,
+        "upload_or_manage_profile": 0.0004970178926441351,
+        "use_payment_or_finance": 0.12773359840954274
+      }
+    },
+    "65_74|male|digital_mid|hour=15": {
+      "active_user_count": 21,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 15,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.016514302565614862,
+        "check_information": 0.005603066941905043,
+        "communicate_or_seek_help": 0.027130639929224418,
+        "find_location_or_service": 0.016809200825715128,
+        "login_or_verify_account": 0.0005897965202005308,
+        "no_mobile_action": 0.007372456502506636,
+        "submit_service_application": 0.05927455028015335,
+        "unknown_or_unmapped": 0.7455028015334709,
+        "upload_or_manage_profile": 0.0005897965202005308,
+        "use_payment_or_finance": 0.12061338838100855
+      }
+    },
+    "65_74|male|digital_mid|hour=16": {
+      "active_user_count": 19,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 16,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.019602577873254565,
+        "check_information": 0.005907626208378088,
+        "communicate_or_seek_help": 0.03141783029001074,
+        "find_location_or_service": 0.01987110633727175,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.007250268528464017,
+        "submit_service_application": 0.054242749731471536,
+        "unknown_or_unmapped": 0.7690655209452202,
+        "upload_or_manage_profile": 0.0005370569280343716,
+        "use_payment_or_finance": 0.09210526315789473
+      }
+    },
+    "65_74|male|digital_mid|hour=17": {
+      "active_user_count": 25,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 17,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.012102874432677761,
+        "check_information": 0.0045385779122541605,
+        "communicate_or_seek_help": 0.026021180030257187,
+        "find_location_or_service": 0.01573373676248109,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.006354009077155824,
+        "submit_service_application": 0.05809379727685325,
+        "unknown_or_unmapped": 0.7546142208774584,
+        "upload_or_manage_profile": 0.000302571860816944,
+        "use_payment_or_finance": 0.12223903177004539
+      }
+    },
+    "65_74|male|digital_mid|hour=18": {
+      "active_user_count": 22,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 18,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017284991568296795,
+        "check_information": 0.0042158516020236085,
+        "communicate_or_seek_help": 0.02993254637436762,
+        "find_location_or_service": 0.007588532883642495,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.01011804384485666,
+        "submit_service_application": 0.050590219224283306,
+        "unknown_or_unmapped": 0.7740303541315345,
+        "upload_or_manage_profile": 0.00042158516020236085,
+        "use_payment_or_finance": 0.10581787521079258
+      }
+    },
+    "65_74|male|digital_mid|hour=19": {
+      "active_user_count": 27,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 19,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.014826175869120654,
+        "check_information": 0.005112474437627812,
+        "communicate_or_seek_help": 0.03041922290388548,
+        "find_location_or_service": 0.01278118609406953,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.0048568507157464216,
+        "submit_service_application": 0.04141104294478527,
+        "unknown_or_unmapped": 0.7875766871165644,
+        "upload_or_manage_profile": 0.0005112474437627812,
+        "use_payment_or_finance": 0.10250511247443762
+      }
+    },
+    "65_74|male|digital_mid|hour=2": {
+      "active_user_count": 7,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 2,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.0195578231292517,
+        "check_information": 0.003401360544217687,
+        "communicate_or_seek_help": 0.031462585034013606,
+        "find_location_or_service": 0.017006802721088437,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.03316326530612245,
+        "submit_service_application": 0.0467687074829932,
+        "unknown_or_unmapped": 0.7602040816326531,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.08843537414965986
+      }
+    },
+    "65_74|male|digital_mid|hour=20": {
+      "active_user_count": 21,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 20,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.015645717316361708,
+        "check_information": 0.002916998143728454,
+        "communicate_or_seek_help": 0.02545743834526651,
+        "find_location_or_service": 0.011137629276054098,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.006629541235746487,
+        "submit_service_application": 0.04879342349509414,
+        "unknown_or_unmapped": 0.7623972421108459,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.12702201007690267
+      }
+    },
+    "65_74|male|digital_mid|hour=21": {
+      "active_user_count": 19,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 21,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.012449255751014885,
+        "check_information": 0.005142083897158322,
+        "communicate_or_seek_help": 0.022192151556156968,
+        "find_location_or_service": 0.015155615696887685,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.007307171853856563,
+        "submit_service_application": 0.055209742895805144,
+        "unknown_or_unmapped": 0.7534506089309878,
+        "upload_or_manage_profile": 0.00027063599458728013,
+        "use_payment_or_finance": 0.12882273342354533
+      }
+    },
+    "65_74|male|digital_mid|hour=22": {
+      "active_user_count": 19,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 22,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.011771808028976758,
+        "check_information": 0.003622094778146695,
+        "communicate_or_seek_help": 0.02384545728946574,
+        "find_location_or_service": 0.011771808028976758,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.008149713250830063,
+        "submit_service_application": 0.0651977060066405,
+        "unknown_or_unmapped": 0.7546030787805614,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.12103833383640206
+      }
+    },
+    "65_74|male|digital_mid|hour=23": {
+      "active_user_count": 20,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 23,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01871966720591634,
+        "check_information": 0.010399815114397967,
+        "communicate_or_seek_help": 0.01871966720591634,
+        "find_location_or_service": 0.011324243124566674,
+        "login_or_verify_account": 0.00046221400508435407,
+        "no_mobile_action": 0.006008782066096603,
+        "submit_service_application": 0.09290501502195517,
+        "unknown_or_unmapped": 0.716662814883291,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.1247977813727756
+      }
+    },
+    "65_74|male|digital_mid|hour=3": {
+      "active_user_count": 8,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 3,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01529051987767584,
+        "check_information": 0.004077471967380225,
+        "communicate_or_seek_help": 0.03058103975535168,
+        "find_location_or_service": 0.027522935779816515,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.03873598369011213,
+        "submit_service_application": 0.045871559633027525,
+        "unknown_or_unmapped": 0.7512742099898063,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.08664627930682976
+      }
+    },
+    "65_74|male|digital_mid|hour=4": {
+      "active_user_count": 11,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 4,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.015848670756646217,
+        "check_information": 0.00408997955010225,
+        "communicate_or_seek_help": 0.02607361963190184,
+        "find_location_or_service": 0.018404907975460124,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.01789366053169734,
+        "submit_service_application": 0.04959100204498978,
+        "unknown_or_unmapped": 0.7520449897750511,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.11605316973415133
+      }
+    },
+    "65_74|male|digital_mid|hour=5": {
+      "active_user_count": 17,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 5,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.013296652911508482,
+        "check_information": 0.002751031636863824,
+        "communicate_or_seek_help": 0.027968821641448878,
+        "find_location_or_service": 0.019715726730857405,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.013296652911508482,
+        "submit_service_application": 0.06602475928473177,
+        "unknown_or_unmapped": 0.7583677212287941,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.09857863365428703
+      }
+    },
+    "65_74|male|digital_mid|hour=6": {
+      "active_user_count": 16,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 6,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.010795250089960417,
+        "check_information": 0.004318100035984167,
+        "communicate_or_seek_help": 0.022670025188916875,
+        "find_location_or_service": 0.023029866858582222,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.010795250089960417,
+        "submit_service_application": 0.06513134220942784,
+        "unknown_or_unmapped": 0.7481108312342569,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.11514933429291112
+      }
+    },
+    "65_74|male|digital_mid|hour=7": {
+      "active_user_count": 19,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 7,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.013731825525040387,
+        "check_information": 0.007000538502961767,
+        "communicate_or_seek_help": 0.022617124394184167,
+        "find_location_or_service": 0.010231556273559504,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.007269789983844911,
+        "submit_service_application": 0.051427032848680665,
+        "unknown_or_unmapped": 0.7627894453419494,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.12493268712977922
+      }
+    },
+    "65_74|male|digital_mid|hour=8": {
+      "active_user_count": 24,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 8,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.011451273662070577,
+        "check_information": 0.0030380930123860717,
+        "communicate_or_seek_help": 0.024772143024071044,
+        "find_location_or_service": 0.015190465061930357,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.005141388174807198,
+        "submit_service_application": 0.06356625379761627,
+        "unknown_or_unmapped": 0.7560177611591493,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.12082262210796915
+      }
+    },
+    "65_74|male|digital_mid|hour=9": {
+      "active_user_count": 17,
+      "bucket": "65_74|male|digital_mid",
+      "bucket_user_count": 46,
+      "hour": 9,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.012582213325707749,
+        "check_information": 0.0031455533314269373,
+        "communicate_or_seek_help": 0.02459250786388333,
+        "find_location_or_service": 0.02030311695739205,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.00829282241921647,
+        "submit_service_application": 0.06519874177866743,
+        "unknown_or_unmapped": 0.7535030025736346,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.11238204175007149
+      }
+    },
+    "75plus|female|digital_mid|hour=0": {
+      "active_user_count": 6,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 0,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.029947916666666668,
+        "check_information": 0.006510416666666667,
+        "communicate_or_seek_help": 0.041666666666666664,
+        "find_location_or_service": 0.0078125,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.00390625,
+        "submit_service_application": 0.044270833333333336,
+        "unknown_or_unmapped": 0.7981770833333334,
+        "upload_or_manage_profile": 0.00390625,
+        "use_payment_or_finance": 0.06380208333333333
+      }
+    },
+    "75plus|female|digital_mid|hour=1": {
+      "active_user_count": 3,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 1,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.016,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.048,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.048,
+        "submit_service_application": 0.0,
+        "unknown_or_unmapped": 0.856,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.032
+      }
+    },
+    "75plus|female|digital_mid|hour=10": {
+      "active_user_count": 2,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 10,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.024390243902439025,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.04878048780487805,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.17073170731707318,
+        "submit_service_application": 0.024390243902439025,
+        "unknown_or_unmapped": 0.7317073170731707,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.0
+      }
+    },
+    "75plus|female|digital_mid|hour=11": {
+      "active_user_count": 4,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 11,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01288659793814433,
+        "check_information": 0.005154639175257732,
+        "communicate_or_seek_help": 0.03608247422680412,
+        "find_location_or_service": 0.010309278350515464,
+        "login_or_verify_account": 0.007731958762886598,
+        "no_mobile_action": 0.01288659793814433,
+        "submit_service_application": 0.04639175257731959,
+        "unknown_or_unmapped": 0.7268041237113402,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.14175257731958762
+      }
+    },
+    "75plus|female|digital_mid|hour=12": {
+      "active_user_count": 2,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 12,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.008,
+        "check_information": 0.008,
+        "communicate_or_seek_help": 0.034666666666666665,
+        "find_location_or_service": 0.008,
+        "login_or_verify_account": 0.008,
+        "no_mobile_action": 0.018666666666666668,
+        "submit_service_application": 0.072,
+        "unknown_or_unmapped": 0.6906666666666667,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.152
+      }
+    },
+    "75plus|female|digital_mid|hour=13": {
+      "active_user_count": 2,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 13,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017241379310344827,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.04310344827586207,
+        "find_location_or_service": 0.02586206896551724,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.0603448275862069,
+        "submit_service_application": 0.05172413793103448,
+        "unknown_or_unmapped": 0.7844827586206896,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.017241379310344827
+      }
+    },
+    "75plus|female|digital_mid|hour=14": {
+      "active_user_count": 3,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 14,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017045454545454544,
+        "check_information": 0.002840909090909091,
+        "communicate_or_seek_help": 0.03409090909090909,
+        "find_location_or_service": 0.011363636363636364,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.017045454545454544,
+        "submit_service_application": 0.056818181818181816,
+        "unknown_or_unmapped": 0.7329545454545454,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.1278409090909091
+      }
+    },
+    "75plus|female|digital_mid|hour=15": {
+      "active_user_count": 4,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 15,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.016129032258064516,
+        "check_information": 0.004398826979472141,
+        "communicate_or_seek_help": 0.03812316715542522,
+        "find_location_or_service": 0.004398826979472141,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.007331378299120235,
+        "submit_service_application": 0.05571847507331378,
+        "unknown_or_unmapped": 0.7448680351906158,
+        "upload_or_manage_profile": 0.004398826979472141,
+        "use_payment_or_finance": 0.12463343108504399
+      }
+    },
+    "75plus|female|digital_mid|hour=16": {
+      "active_user_count": 4,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 16,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.013930348258706468,
+        "check_information": 0.004975124378109453,
+        "communicate_or_seek_help": 0.03383084577114428,
+        "find_location_or_service": 0.011940298507462687,
+        "login_or_verify_account": 0.008955223880597015,
+        "no_mobile_action": 0.004975124378109453,
+        "submit_service_application": 0.06069651741293532,
+        "unknown_or_unmapped": 0.7174129353233831,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.14328358208955225
+      }
+    },
+    "75plus|female|digital_mid|hour=17": {
+      "active_user_count": 5,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 17,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.011881188118811881,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.033663366336633666,
+        "find_location_or_service": 0.01782178217821782,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.007920792079207921,
+        "submit_service_application": 0.03762376237623762,
+        "unknown_or_unmapped": 0.7346534653465346,
+        "upload_or_manage_profile": 0.0039603960396039604,
+        "use_payment_or_finance": 0.15247524752475247
+      }
+    },
+    "75plus|female|digital_mid|hour=18": {
+      "active_user_count": 3,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 18,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.0,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.0,
+        "find_location_or_service": 0.08108108108108109,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.16216216216216217,
+        "submit_service_application": 0.05405405405405406,
+        "unknown_or_unmapped": 0.7027027027027027,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.0
+      }
+    },
+    "75plus|female|digital_mid|hour=19": {
+      "active_user_count": 2,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 19,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.0297029702970297,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.033003300330033,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.0231023102310231,
+        "submit_service_application": 0.033003300330033,
+        "unknown_or_unmapped": 0.735973597359736,
+        "upload_or_manage_profile": 0.006600660066006601,
+        "use_payment_or_finance": 0.13861386138613863
+      }
+    },
+    "75plus|female|digital_mid|hour=2": {
+      "active_user_count": 3,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 2,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.0,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.0,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.15384615384615385,
+        "submit_service_application": 0.0,
+        "unknown_or_unmapped": 0.8461538461538461,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.0
+      }
+    },
+    "75plus|female|digital_mid|hour=20": {
+      "active_user_count": 4,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 20,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.022,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.054,
+        "find_location_or_service": 0.022,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.01,
+        "submit_service_application": 0.02,
+        "unknown_or_unmapped": 0.818,
+        "upload_or_manage_profile": 0.008,
+        "use_payment_or_finance": 0.046
+      }
+    },
+    "75plus|female|digital_mid|hour=21": {
+      "active_user_count": 2,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 21,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.02112676056338028,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.06338028169014084,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.04929577464788732,
+        "submit_service_application": 0.007042253521126761,
+        "unknown_or_unmapped": 0.7887323943661971,
+        "upload_or_manage_profile": 0.028169014084507043,
+        "use_payment_or_finance": 0.04225352112676056
+      }
+    },
+    "75plus|female|digital_mid|hour=22": {
+      "active_user_count": 5,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 22,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.03761061946902655,
+        "check_information": 0.0022123893805309734,
+        "communicate_or_seek_help": 0.048672566371681415,
+        "find_location_or_service": 0.01327433628318584,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.008849557522123894,
+        "submit_service_application": 0.030973451327433628,
+        "unknown_or_unmapped": 0.8163716814159292,
+        "upload_or_manage_profile": 0.004424778761061947,
+        "use_payment_or_finance": 0.03761061946902655
+      }
+    },
+    "75plus|female|digital_mid|hour=23": {
+      "active_user_count": 4,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 23,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.022044088176352707,
+        "check_information": 0.002004008016032064,
+        "communicate_or_seek_help": 0.04408817635270541,
+        "find_location_or_service": 0.002004008016032064,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.01002004008016032,
+        "submit_service_application": 0.022044088176352707,
+        "unknown_or_unmapped": 0.7575150300601202,
+        "upload_or_manage_profile": 0.01002004008016032,
+        "use_payment_or_finance": 0.13026052104208416
+      }
+    },
+    "75plus|female|digital_mid|hour=3": {
+      "active_user_count": 2,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 3,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.025974025974025976,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.03896103896103896,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.09090909090909091,
+        "submit_service_application": 0.0,
+        "unknown_or_unmapped": 0.8441558441558441,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.0
+      }
+    },
+    "75plus|female|digital_mid|hour=4": {
+      "active_user_count": 1,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 4,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.0,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.0,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.8888888888888888,
+        "submit_service_application": 0.0,
+        "unknown_or_unmapped": 0.1111111111111111,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.0
+      }
+    },
+    "75plus|female|digital_mid|hour=5": {
+      "active_user_count": 2,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 5,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.031055900621118012,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.062111801242236024,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.043478260869565216,
+        "submit_service_application": 0.024844720496894408,
+        "unknown_or_unmapped": 0.8012422360248447,
+        "upload_or_manage_profile": 0.012422360248447204,
+        "use_payment_or_finance": 0.024844720496894408
+      }
+    },
+    "75plus|female|digital_mid|hour=6": {
+      "active_user_count": 3,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 6,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.06548672566371681,
+        "check_information": 0.008849557522123894,
+        "communicate_or_seek_help": 0.05132743362831858,
+        "find_location_or_service": 0.0017699115044247787,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.010619469026548672,
+        "submit_service_application": 0.06371681415929203,
+        "unknown_or_unmapped": 0.7380530973451327,
+        "upload_or_manage_profile": 0.0035398230088495575,
+        "use_payment_or_finance": 0.05663716814159292
+      }
+    },
+    "75plus|female|digital_mid|hour=7": {
+      "active_user_count": 4,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 7,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.021922428330522766,
+        "check_information": 0.008431703204047217,
+        "communicate_or_seek_help": 0.03541315345699832,
+        "find_location_or_service": 0.0016863406408094434,
+        "login_or_verify_account": 0.003372681281618887,
+        "no_mobile_action": 0.008431703204047217,
+        "submit_service_application": 0.0387858347386172,
+        "unknown_or_unmapped": 0.7554806070826307,
+        "upload_or_manage_profile": 0.006745362563237774,
+        "use_payment_or_finance": 0.11973018549747048
+      }
+    },
+    "75plus|female|digital_mid|hour=8": {
+      "active_user_count": 2,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 8,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.0,
+        "check_information": 0.02040816326530612,
+        "communicate_or_seek_help": 0.02040816326530612,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.14285714285714285,
+        "submit_service_application": 0.04081632653061224,
+        "unknown_or_unmapped": 0.5510204081632653,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.22448979591836735
+      }
+    },
+    "75plus|female|digital_mid|hour=9": {
+      "active_user_count": 4,
+      "bucket": "75plus|female|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 9,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01914580265095729,
+        "check_information": 0.004418262150220913,
+        "communicate_or_seek_help": 0.042709867452135494,
+        "find_location_or_service": 0.004418262150220913,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.007363770250368188,
+        "submit_service_application": 0.025036818851251842,
+        "unknown_or_unmapped": 0.8350515463917526,
+        "upload_or_manage_profile": 0.008836524300441826,
+        "use_payment_or_finance": 0.053019145802650956
+      }
+    },
+    "75plus|male|digital_mid|hour=0": {
+      "active_user_count": 2,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 0,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.0056657223796034,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.019830028328611898,
+        "find_location_or_service": 0.0113314447592068,
+        "login_or_verify_account": 0.0056657223796034,
+        "no_mobile_action": 0.019830028328611898,
+        "submit_service_application": 0.0821529745042493,
+        "unknown_or_unmapped": 0.7422096317280453,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.11331444759206799
+      }
+    },
+    "75plus|male|digital_mid|hour=10": {
+      "active_user_count": 6,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 10,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.014827018121911038,
+        "check_information": 0.002471169686985173,
+        "communicate_or_seek_help": 0.018121911037891267,
+        "find_location_or_service": 0.0032948929159802307,
+        "login_or_verify_account": 0.0032948929159802307,
+        "no_mobile_action": 0.002471169686985173,
+        "submit_service_application": 0.060955518945634266,
+        "unknown_or_unmapped": 0.7742998352553542,
+        "upload_or_manage_profile": 0.004118616144975288,
+        "use_payment_or_finance": 0.11614497528830313
+      }
+    },
+    "75plus|male|digital_mid|hour=11": {
+      "active_user_count": 1,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 11,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.0365296803652968,
+        "check_information": 0.0091324200913242,
+        "communicate_or_seek_help": 0.0182648401826484,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.0365296803652968,
+        "submit_service_application": 0.0365296803652968,
+        "unknown_or_unmapped": 0.863013698630137,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.0
+      }
+    },
+    "75plus|male|digital_mid|hour=12": {
+      "active_user_count": 4,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 12,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.014705882352941176,
+        "check_information": 0.0029411764705882353,
+        "communicate_or_seek_help": 0.01764705882352941,
+        "find_location_or_service": 0.007352941176470588,
+        "login_or_verify_account": 0.0058823529411764705,
+        "no_mobile_action": 0.007352941176470588,
+        "submit_service_application": 0.06911764705882353,
+        "unknown_or_unmapped": 0.7602941176470588,
+        "upload_or_manage_profile": 0.0014705882352941176,
+        "use_payment_or_finance": 0.11323529411764706
+      }
+    },
+    "75plus|male|digital_mid|hour=13": {
+      "active_user_count": 2,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 13,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01875,
+        "check_information": 0.009375,
+        "communicate_or_seek_help": 0.01875,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.021875,
+        "submit_service_application": 0.09375,
+        "unknown_or_unmapped": 0.796875,
+        "upload_or_manage_profile": 0.003125,
+        "use_payment_or_finance": 0.0375
+      }
+    },
+    "75plus|male|digital_mid|hour=14": {
+      "active_user_count": 3,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 14,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01195219123505976,
+        "check_information": 0.00597609561752988,
+        "communicate_or_seek_help": 0.021912350597609563,
+        "find_location_or_service": 0.00398406374501992,
+        "login_or_verify_account": 0.00398406374501992,
+        "no_mobile_action": 0.01195219123505976,
+        "submit_service_application": 0.09163346613545817,
+        "unknown_or_unmapped": 0.7848605577689243,
+        "upload_or_manage_profile": 0.00398406374501992,
+        "use_payment_or_finance": 0.05976095617529881
+      }
+    },
+    "75plus|male|digital_mid|hour=15": {
+      "active_user_count": 3,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 15,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.024161073825503355,
+        "check_information": 0.013422818791946308,
+        "communicate_or_seek_help": 0.022818791946308724,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.008053691275167786,
+        "submit_service_application": 0.09395973154362416,
+        "unknown_or_unmapped": 0.7731543624161074,
+        "upload_or_manage_profile": 0.004026845637583893,
+        "use_payment_or_finance": 0.06040268456375839
+      }
+    },
+    "75plus|male|digital_mid|hour=16": {
+      "active_user_count": 1,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 16,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.024793388429752067,
+        "check_information": 0.01652892561983471,
+        "communicate_or_seek_help": 0.01652892561983471,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.06611570247933884,
+        "submit_service_application": 0.10743801652892562,
+        "unknown_or_unmapped": 0.743801652892562,
+        "upload_or_manage_profile": 0.008264462809917356,
+        "use_payment_or_finance": 0.01652892561983471
+      }
+    },
+    "75plus|male|digital_mid|hour=17": {
+      "active_user_count": 3,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 17,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.014388489208633094,
+        "check_information": 0.01079136690647482,
+        "communicate_or_seek_help": 0.02158273381294964,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0035971223021582736,
+        "no_mobile_action": 0.02158273381294964,
+        "submit_service_application": 0.07194244604316546,
+        "unknown_or_unmapped": 0.7266187050359713,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.12949640287769784
+      }
+    },
+    "75plus|male|digital_mid|hour=18": {
+      "active_user_count": 4,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 18,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.020100502512562814,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.02763819095477387,
+        "find_location_or_service": 0.002512562814070352,
+        "login_or_verify_account": 0.005025125628140704,
+        "no_mobile_action": 0.01256281407035176,
+        "submit_service_application": 0.0728643216080402,
+        "unknown_or_unmapped": 0.7512562814070352,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.10804020100502512
+      }
+    },
+    "75plus|male|digital_mid|hour=19": {
+      "active_user_count": 3,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 19,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.02734375,
+        "check_information": 0.0078125,
+        "communicate_or_seek_help": 0.02734375,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.0234375,
+        "submit_service_application": 0.08203125,
+        "unknown_or_unmapped": 0.7265625,
+        "upload_or_manage_profile": 0.00390625,
+        "use_payment_or_finance": 0.1015625
+      }
+    },
+    "75plus|male|digital_mid|hour=20": {
+      "active_user_count": 4,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 20,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.03550295857988166,
+        "check_information": 0.007889546351084813,
+        "communicate_or_seek_help": 0.029585798816568046,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.009861932938856016,
+        "submit_service_application": 0.07692307692307693,
+        "unknown_or_unmapped": 0.7928994082840237,
+        "upload_or_manage_profile": 0.0019723865877712033,
+        "use_payment_or_finance": 0.045364891518737675
+      }
+    },
+    "75plus|male|digital_mid|hour=21": {
+      "active_user_count": 3,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 21,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.011816838995568686,
+        "check_information": 0.013293943870014771,
+        "communicate_or_seek_help": 0.022156573116691284,
+        "find_location_or_service": 0.0014771048744460858,
+        "login_or_verify_account": 0.004431314623338257,
+        "no_mobile_action": 0.008862629246676515,
+        "submit_service_application": 0.07680945347119646,
+        "unknown_or_unmapped": 0.7104874446085672,
+        "upload_or_manage_profile": 0.0014771048744460858,
+        "use_payment_or_finance": 0.14918759231905465
+      }
+    },
+    "75plus|male|digital_mid|hour=22": {
+      "active_user_count": 3,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 22,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.010309278350515464,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.030927835051546393,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.061855670103092786,
+        "submit_service_application": 0.020618556701030927,
+        "unknown_or_unmapped": 0.7835051546391752,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.09278350515463918
+      }
+    },
+    "75plus|male|digital_mid|hour=23": {
+      "active_user_count": 1,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 23,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.0,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.0,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.27586206896551724,
+        "submit_service_application": 0.0,
+        "unknown_or_unmapped": 0.5172413793103449,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.20689655172413793
+      }
+    },
+    "75plus|male|digital_mid|hour=4": {
+      "active_user_count": 1,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 4,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.0,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.0,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.8,
+        "submit_service_application": 0.0,
+        "unknown_or_unmapped": 0.2,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.0
+      }
+    },
+    "75plus|male|digital_mid|hour=5": {
+      "active_user_count": 4,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 5,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.036290322580645164,
+        "check_information": 0.020161290322580645,
+        "communicate_or_seek_help": 0.03225806451612903,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.020161290322580645,
+        "submit_service_application": 0.0967741935483871,
+        "unknown_or_unmapped": 0.7943548387096774,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.0
+      }
+    },
+    "75plus|male|digital_mid|hour=6": {
+      "active_user_count": 2,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 6,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.02631578947368421,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.031578947368421054,
+        "find_location_or_service": 0.0,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.03684210526315789,
+        "submit_service_application": 0.031578947368421054,
+        "unknown_or_unmapped": 0.8526315789473684,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.021052631578947368
+      }
+    },
+    "75plus|male|digital_mid|hour=7": {
+      "active_user_count": 4,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 7,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.011456628477905073,
+        "check_information": 0.0032733224222585926,
+        "communicate_or_seek_help": 0.022913256955810146,
+        "find_location_or_service": 0.009819967266775777,
+        "login_or_verify_account": 0.0032733224222585926,
+        "no_mobile_action": 0.008183306055646482,
+        "submit_service_application": 0.07692307692307693,
+        "unknown_or_unmapped": 0.7741407528641571,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.09001636661211129
+      }
+    },
+    "75plus|male|digital_mid|hour=8": {
+      "active_user_count": 2,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 8,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.02,
+        "check_information": 0.0,
+        "communicate_or_seek_help": 0.02,
+        "find_location_or_service": 0.01,
+        "login_or_verify_account": 0.0,
+        "no_mobile_action": 0.07,
+        "submit_service_application": 0.03,
+        "unknown_or_unmapped": 0.85,
+        "upload_or_manage_profile": 0.0,
+        "use_payment_or_finance": 0.0
+      }
+    },
+    "75plus|male|digital_mid|hour=9": {
+      "active_user_count": 6,
+      "bucket": "75plus|male|digital_mid",
+      "bucket_user_count": 9,
+      "hour": 9,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.011166945840312675,
+        "check_information": 0.008375209380234505,
+        "communicate_or_seek_help": 0.018983807928531545,
+        "find_location_or_service": 0.005025125628140704,
+        "login_or_verify_account": 0.002233389168062535,
+        "no_mobile_action": 0.0016750418760469012,
+        "submit_service_application": 0.08096035734226689,
+        "unknown_or_unmapped": 0.7442769402568398,
+        "upload_or_manage_profile": 0.0005583472920156337,
+        "use_payment_or_finance": 0.12674483528754885
+      }
+    },
+    "lt65|female|digital_mid|hour=0": {
+      "active_user_count": 128,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 0,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.020728968733805492,
+        "check_information": 0.003051764841365809,
+        "communicate_or_seek_help": 0.029769102320492888,
+        "find_location_or_service": 0.007600621869062014,
+        "login_or_verify_account": 0.001324350780215351,
+        "no_mobile_action": 0.018540910923014912,
+        "submit_service_application": 0.062071745264006446,
+        "unknown_or_unmapped": 0.7560891345655554,
+        "upload_or_manage_profile": 0.00109402890539529,
+        "use_payment_or_finance": 0.09972937179708642
+      }
+    },
+    "lt65|female|digital_mid|hour=1": {
+      "active_user_count": 69,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 1,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.020622160083886752,
+        "check_information": 0.003844809507165327,
+        "communicate_or_seek_help": 0.030292438541302574,
+        "find_location_or_service": 0.009553769078410813,
+        "login_or_verify_account": 0.0016311313060701387,
+        "no_mobile_action": 0.044390073400908774,
+        "submit_service_application": 0.06081789584061517,
+        "unknown_or_unmapped": 0.7380869159967377,
+        "upload_or_manage_profile": 0.0002330187580100198,
+        "use_payment_or_finance": 0.09052778748689269
+      }
+    },
+    "lt65|female|digital_mid|hour=10": {
+      "active_user_count": 210,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 10,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.019050046191583576,
+        "check_information": 0.0031856264534420695,
+        "communicate_or_seek_help": 0.029530757223407984,
+        "find_location_or_service": 0.007518078430123283,
+        "login_or_verify_account": 0.0019432321365996624,
+        "no_mobile_action": 0.007645503488260967,
+        "submit_service_application": 0.0694466566850371,
+        "unknown_or_unmapped": 0.7527953872128954,
+        "upload_or_manage_profile": 0.0015291006976521932,
+        "use_payment_or_finance": 0.10735561148099773
+      }
+    },
+    "lt65|female|digital_mid|hour=11": {
+      "active_user_count": 186,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 11,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018636216740277926,
+        "check_information": 0.0034830694100326763,
+        "communicate_or_seek_help": 0.02998312327193077,
+        "find_location_or_service": 0.010126036841538295,
+        "login_or_verify_account": 0.001400409350425509,
+        "no_mobile_action": 0.00947969406441883,
+        "submit_service_application": 0.06804553125785485,
+        "unknown_or_unmapped": 0.7541024812381055,
+        "upload_or_manage_profile": 0.0013645014183633164,
+        "use_payment_or_finance": 0.10337893640705231
+      }
+    },
+    "lt65|female|digital_mid|hour=12": {
+      "active_user_count": 190,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 12,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01859001395062129,
+        "check_information": 0.004120299776141193,
+        "communicate_or_seek_help": 0.02923141809687571,
+        "find_location_or_service": 0.009051682185381047,
+        "login_or_verify_account": 0.0016546085715212666,
+        "no_mobile_action": 0.008435259384226065,
+        "submit_service_application": 0.07072640560620316,
+        "unknown_or_unmapped": 0.7499270025630211,
+        "upload_or_manage_profile": 0.0011679589916620706,
+        "use_payment_or_finance": 0.10709535087434707
+      }
+    },
+    "lt65|female|digital_mid|hour=13": {
+      "active_user_count": 200,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 13,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.020284462581767988,
+        "check_information": 0.004260937406229371,
+        "communicate_or_seek_help": 0.02877633079277441,
+        "find_location_or_service": 0.007651683370341475,
+        "login_or_verify_account": 0.0014403168697113364,
+        "no_mobile_action": 0.007501650363079877,
+        "submit_service_application": 0.06961531536938126,
+        "unknown_or_unmapped": 0.7566164556202365,
+        "upload_or_manage_profile": 0.0011402508551881414,
+        "use_payment_or_finance": 0.10271259677128969
+      }
+    },
+    "lt65|female|digital_mid|hour=14": {
+      "active_user_count": 194,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 14,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.020664082251811898,
+        "check_information": 0.004112590594977246,
+        "communicate_or_seek_help": 0.028147648744311478,
+        "find_location_or_service": 0.008697117815607619,
+        "login_or_verify_account": 0.0017191977077363897,
+        "no_mobile_action": 0.008629698297657171,
+        "submit_service_application": 0.0699477498735884,
+        "unknown_or_unmapped": 0.7538850497218945,
+        "upload_or_manage_profile": 0.0014158098769593798,
+        "use_payment_or_finance": 0.10278105511545592
+      }
+    },
+    "lt65|female|digital_mid|hour=15": {
+      "active_user_count": 180,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 15,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.02089122829960441,
+        "check_information": 0.004184784385523261,
+        "communicate_or_seek_help": 0.027626115670055906,
+        "find_location_or_service": 0.008500343283094125,
+        "login_or_verify_account": 0.001765455912642626,
+        "no_mobile_action": 0.00882727956321313,
+        "submit_service_application": 0.07016052571353844,
+        "unknown_or_unmapped": 0.752934253114068,
+        "upload_or_manage_profile": 0.0012096642364403177,
+        "use_payment_or_finance": 0.10390034982181973
+      }
+    },
+    "lt65|female|digital_mid|hour=16": {
+      "active_user_count": 173,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 16,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018205631958087755,
+        "check_information": 0.0034053700065487884,
+        "communicate_or_seek_help": 0.027177472167648986,
+        "find_location_or_service": 0.009692206941715782,
+        "login_or_verify_account": 0.0013097576948264572,
+        "no_mobile_action": 0.009070072036673215,
+        "submit_service_application": 0.07295350360183366,
+        "unknown_or_unmapped": 0.747675180091683,
+        "upload_or_manage_profile": 0.00114603798297315,
+        "use_payment_or_finance": 0.10936476751800916
+      }
+    },
+    "lt65|female|digital_mid|hour=17": {
+      "active_user_count": 183,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 17,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01742279311287237,
+        "check_information": 0.0036895326591965018,
+        "communicate_or_seek_help": 0.028491391090461875,
+        "find_location_or_service": 0.008745558895873189,
+        "login_or_verify_account": 0.0014689805957911997,
+        "no_mobile_action": 0.00912134462968024,
+        "submit_service_application": 0.07211669855151681,
+        "unknown_or_unmapped": 0.7516056299535392,
+        "upload_or_manage_profile": 0.0012298442197321673,
+        "use_payment_or_finance": 0.10610822629133643
+      }
+    },
+    "lt65|female|digital_mid|hour=18": {
+      "active_user_count": 191,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 18,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018515407103733325,
+        "check_information": 0.004301219799052388,
+        "communicate_or_seek_help": 0.028966027084243423,
+        "find_location_or_service": 0.008468026479384388,
+        "login_or_verify_account": 0.0014785443059242582,
+        "no_mobile_action": 0.008703249437145065,
+        "submit_service_application": 0.06613125441043045,
+        "unknown_or_unmapped": 0.7562082059208979,
+        "upload_or_manage_profile": 0.0011089082294431936,
+        "use_payment_or_finance": 0.10611915722974562
+      }
+    },
+    "lt65|female|digital_mid|hour=19": {
+      "active_user_count": 194,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 19,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018495459653172168,
+        "check_information": 0.0040088681021653964,
+        "communicate_or_seek_help": 0.026786527773559693,
+        "find_location_or_service": 0.01014365110699426,
+        "login_or_verify_account": 0.001548880857654812,
+        "no_mobile_action": 0.007774774501169254,
+        "submit_service_application": 0.06717891092416557,
+        "unknown_or_unmapped": 0.7566434840708234,
+        "upload_or_manage_profile": 0.0012148085158076958,
+        "use_payment_or_finance": 0.1062046344944878
+      }
+    },
+    "lt65|female|digital_mid|hour=2": {
+      "active_user_count": 53,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 2,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.019856673633920574,
+        "check_information": 0.005374738727978501,
+        "communicate_or_seek_help": 0.028366676619886535,
+        "find_location_or_service": 0.006718423409973126,
+        "login_or_verify_account": 0.002239474469991042,
+        "no_mobile_action": 0.05927142430576291,
+        "submit_service_application": 0.05479247536578083,
+        "unknown_or_unmapped": 0.7330546431770678,
+        "upload_or_manage_profile": 0.000746491489997014,
+        "use_payment_or_finance": 0.08957897879964169
+      }
+    },
+    "lt65|female|digital_mid|hour=20": {
+      "active_user_count": 196,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 20,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018746543242220477,
+        "check_information": 0.003813349634675283,
+        "communicate_or_seek_help": 0.028963991500014555,
+        "find_location_or_service": 0.008878409454778332,
+        "login_or_verify_account": 0.0013681483422117427,
+        "no_mobile_action": 0.00739382295578261,
+        "submit_service_application": 0.06887316973772305,
+        "unknown_or_unmapped": 0.7612435595144529,
+        "upload_or_manage_profile": 0.0013099292638197536,
+        "use_payment_or_finance": 0.09940907635432131
+      }
+    },
+    "lt65|female|digital_mid|hour=21": {
+      "active_user_count": 210,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 21,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018897480335955206,
+        "check_information": 0.0034662045060658577,
+        "communicate_or_seek_help": 0.030262631649113452,
+        "find_location_or_service": 0.008632182375683242,
+        "login_or_verify_account": 0.0015664578056259165,
+        "no_mobile_action": 0.007998933475536596,
+        "submit_service_application": 0.07692307692307693,
+        "unknown_or_unmapped": 0.7559992001066524,
+        "upload_or_manage_profile": 0.0012664978002932942,
+        "use_payment_or_finance": 0.09498733502199706
+      }
+    },
+    "lt65|female|digital_mid|hour=22": {
+      "active_user_count": 192,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 22,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018903390551851328,
+        "check_information": 0.003404738260746205,
+        "communicate_or_seek_help": 0.02752163427436516,
+        "find_location_or_service": 0.009646758405447582,
+        "login_or_verify_account": 0.0015959710597247836,
+        "no_mobile_action": 0.009150234075755426,
+        "submit_service_application": 0.07022272662789047,
+        "unknown_or_unmapped": 0.7520570293658675,
+        "upload_or_manage_profile": 0.0008511845651865513,
+        "use_payment_or_finance": 0.10664633281316499
+      }
+    },
+    "lt65|female|digital_mid|hour=23": {
+      "active_user_count": 148,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 23,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.019944552488931188,
+        "check_information": 0.0025654818554226837,
+        "communicate_or_seek_help": 0.027765134274010013,
+        "find_location_or_service": 0.009765382546447635,
+        "login_or_verify_account": 0.0015723921049364837,
+        "no_mobile_action": 0.012496379360284686,
+        "submit_service_application": 0.06835767782513345,
+        "unknown_or_unmapped": 0.7544171804526834,
+        "upload_or_manage_profile": 0.0009517110108826086,
+        "use_payment_or_finance": 0.10216410808126784
+      }
+    },
+    "lt65|female|digital_mid|hour=3": {
+      "active_user_count": 56,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 3,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017830609212481426,
+        "check_information": 0.00270160745643658,
+        "communicate_or_seek_help": 0.024854788599216533,
+        "find_location_or_service": 0.006889099013913279,
+        "login_or_verify_account": 0.001756044846683777,
+        "no_mobile_action": 0.05322166689180062,
+        "submit_service_application": 0.06672970417398352,
+        "unknown_or_unmapped": 0.7265973254086181,
+        "upload_or_manage_profile": 0.00040524111846548696,
+        "use_payment_or_finance": 0.09901391327840064
+      }
+    },
+    "lt65|female|digital_mid|hour=4": {
+      "active_user_count": 63,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 4,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.019844357976653695,
+        "check_information": 0.0038910505836575876,
+        "communicate_or_seek_help": 0.026329442282749676,
+        "find_location_or_service": 0.010376134889753566,
+        "login_or_verify_account": 0.0018158236057068742,
+        "no_mobile_action": 0.05019455252918288,
+        "submit_service_application": 0.058106355382619976,
+        "unknown_or_unmapped": 0.7286640726329442,
+        "upload_or_manage_profile": 0.0014267185473411154,
+        "use_payment_or_finance": 0.0993514915693904
+      }
+    },
+    "lt65|female|digital_mid|hour=5": {
+      "active_user_count": 118,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 5,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017517611121501152,
+        "check_information": 0.0034287139205785174,
+        "communicate_or_seek_help": 0.02998566174178667,
+        "find_location_or_service": 0.006608066828751325,
+        "login_or_verify_account": 0.0017455270868399725,
+        "no_mobile_action": 0.02069696402967396,
+        "submit_service_application": 0.06994576397980176,
+        "unknown_or_unmapped": 0.7473972944330154,
+        "upload_or_manage_profile": 0.0014961660744342623,
+        "use_payment_or_finance": 0.10117823078361698
+      }
+    },
+    "lt65|female|digital_mid|hour=6": {
+      "active_user_count": 186,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 6,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.020269823424376696,
+        "check_information": 0.0033066596124594933,
+        "communicate_or_seek_help": 0.029230870974141922,
+        "find_location_or_service": 0.009953045433503074,
+        "login_or_verify_account": 0.0026122610938429996,
+        "no_mobile_action": 0.008729581376893062,
+        "submit_service_application": 0.06778652205541962,
+        "unknown_or_unmapped": 0.7456848092057403,
+        "upload_or_manage_profile": 0.0011573308643608228,
+        "use_payment_or_finance": 0.11126909595926196
+      }
+    },
+    "lt65|female|digital_mid|hour=7": {
+      "active_user_count": 212,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 7,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.019695890495803784,
+        "check_information": 0.003592332228794401,
+        "communicate_or_seek_help": 0.030565792326035117,
+        "find_location_or_service": 0.009073735715834133,
+        "login_or_verify_account": 0.0028490910780093527,
+        "no_mobile_action": 0.007370474745285064,
+        "submit_service_application": 0.06540522126908427,
+        "unknown_or_unmapped": 0.7535845901334737,
+        "upload_or_manage_profile": 0.0008361462946331796,
+        "use_payment_or_finance": 0.10702672571304699
+      }
+    },
+    "lt65|female|digital_mid|hour=8": {
+      "active_user_count": 207,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 8,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018740390473151344,
+        "check_information": 0.0031330683763163237,
+        "communicate_or_seek_help": 0.02959009022076528,
+        "find_location_or_service": 0.010066432653534855,
+        "login_or_verify_account": 0.0022917814974906443,
+        "no_mobile_action": 0.007049403846711729,
+        "submit_service_application": 0.07095819674509007,
+        "unknown_or_unmapped": 0.750892054190479,
+        "upload_or_manage_profile": 0.0010443561254387746,
+        "use_payment_or_finance": 0.10623422587102202
+      }
+    },
+    "lt65|female|digital_mid|hour=9": {
+      "active_user_count": 216,
+      "bucket": "lt65|female|digital_mid",
+      "bucket_user_count": 450,
+      "hour": 9,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01971734315040714,
+        "check_information": 0.0035566093657379964,
+        "communicate_or_seek_help": 0.02801609833712913,
+        "find_location_or_service": 0.00786197859794715,
+        "login_or_verify_account": 0.0022462795994134714,
+        "no_mobile_action": 0.007300408698093782,
+        "submit_service_application": 0.0700090475150532,
+        "unknown_or_unmapped": 0.7515365176426544,
+        "upload_or_manage_profile": 0.0011543381274763673,
+        "use_payment_or_finance": 0.10860137896608742
+      }
+    },
+    "lt65|male|digital_mid|hour=0": {
+      "active_user_count": 234,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 0,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01837809266299376,
+        "check_information": 0.004716501656874504,
+        "communicate_or_seek_help": 0.026530321819919087,
+        "find_location_or_service": 0.01124235093211897,
+        "login_or_verify_account": 0.001382422899428734,
+        "no_mobile_action": 0.010022566020858322,
+        "submit_service_application": 0.06281892292992336,
+        "unknown_or_unmapped": 0.7489885950110797,
+        "upload_or_manage_profile": 0.000691211449714367,
+        "use_payment_or_finance": 0.11522901461708919
+      }
+    },
+    "lt65|male|digital_mid|hour=1": {
+      "active_user_count": 147,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 1,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01695055742053131,
+        "check_information": 0.003315512453893655,
+        "communicate_or_seek_help": 0.026192548385759875,
+        "find_location_or_service": 0.00969787392763894,
+        "login_or_verify_account": 0.0021965270007045464,
+        "no_mobile_action": 0.024037465290728997,
+        "submit_service_application": 0.061254092585685274,
+        "unknown_or_unmapped": 0.7386547308218326,
+        "upload_or_manage_profile": 0.0006216585851050603,
+        "use_payment_or_finance": 0.11707903352811969
+      }
+    },
+    "lt65|male|digital_mid|hour=10": {
+      "active_user_count": 378,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 10,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01804394375417684,
+        "check_information": 0.0034505803248728196,
+        "communicate_or_seek_help": 0.026008919681946508,
+        "find_location_or_service": 0.011592858798979828,
+        "login_or_verify_account": 0.0014866136577515309,
+        "no_mobile_action": 0.004759891436287012,
+        "submit_service_application": 0.06839786691398099,
+        "unknown_or_unmapped": 0.7522128721648641,
+        "upload_or_manage_profile": 0.0007092101853493542,
+        "use_payment_or_finance": 0.11333724308179102
+      }
+    },
+    "lt65|male|digital_mid|hour=11": {
+      "active_user_count": 345,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 11,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01750918236396088,
+        "check_information": 0.0035401885150384256,
+        "communicate_or_seek_help": 0.0257843730178632,
+        "find_location_or_service": 0.011210596964288349,
+        "login_or_verify_account": 0.0015783340462879648,
+        "no_mobile_action": 0.005634800053102827,
+        "submit_service_application": 0.06478544982520319,
+        "unknown_or_unmapped": 0.7492366468514449,
+        "upload_or_manage_profile": 0.0005310282772557638,
+        "use_payment_or_finance": 0.12018940008555455
+      }
+    },
+    "lt65|male|digital_mid|hour=12": {
+      "active_user_count": 340,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 12,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018038868656614818,
+        "check_information": 0.003573738130084068,
+        "communicate_or_seek_help": 0.027773050610939043,
+        "find_location_or_service": 0.010976481399543924,
+        "login_or_verify_account": 0.0016337088594670026,
+        "no_mobile_action": 0.006585888839726353,
+        "submit_service_application": 0.06568871039106906,
+        "unknown_or_unmapped": 0.7557094721078248,
+        "upload_or_manage_profile": 0.0007317654266362616,
+        "use_payment_or_finance": 0.10928831557809468
+      }
+    },
+    "lt65|male|digital_mid|hour=13": {
+      "active_user_count": 347,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 13,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.016211735948189875,
+        "check_information": 0.003427784723880702,
+        "communicate_or_seek_help": 0.02577862691934872,
+        "find_location_or_service": 0.010817189497492379,
+        "login_or_verify_account": 0.001615554275599511,
+        "no_mobile_action": 0.005338353258502733,
+        "submit_service_application": 0.06351235547813383,
+        "unknown_or_unmapped": 0.7520053945464507,
+        "upload_or_manage_profile": 0.0005759802199963474,
+        "use_payment_or_finance": 0.1207170251324052
+      }
+    },
+    "lt65|male|digital_mid|hour=14": {
+      "active_user_count": 331,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 14,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018527024957893126,
+        "check_information": 0.0035676006737099986,
+        "communicate_or_seek_help": 0.026443117439902006,
+        "find_location_or_service": 0.011759301791456133,
+        "login_or_verify_account": 0.0014546011330577248,
+        "no_mobile_action": 0.0060633899862195684,
+        "submit_service_application": 0.06375746440055122,
+        "unknown_or_unmapped": 0.7483386923901393,
+        "upload_or_manage_profile": 0.0007043331802174246,
+        "use_payment_or_finance": 0.11938447404685347
+      }
+    },
+    "lt65|male|digital_mid|hour=15": {
+      "active_user_count": 331,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 15,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01833882472211159,
+        "check_information": 0.003331040225931424,
+        "communicate_or_seek_help": 0.026937977479271517,
+        "find_location_or_service": 0.010880191172743402,
+        "login_or_verify_account": 0.001593106195010681,
+        "no_mobile_action": 0.007168977877548065,
+        "submit_service_application": 0.06544407835185923,
+        "unknown_or_unmapped": 0.7526340562656143,
+        "upload_or_manage_profile": 0.0005431043846627322,
+        "use_payment_or_finance": 0.11312864332524711
+      }
+    },
+    "lt65|male|digital_mid|hour=16": {
+      "active_user_count": 337,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 16,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017281751921110783,
+        "check_information": 0.0036443389070281323,
+        "communicate_or_seek_help": 0.02702747270868375,
+        "find_location_or_service": 0.011394742917449952,
+        "login_or_verify_account": 0.0021767092114376176,
+        "no_mobile_action": 0.006431186306520234,
+        "submit_service_application": 0.06238250717324627,
+        "unknown_or_unmapped": 0.7534217209194948,
+        "upload_or_manage_profile": 0.0006266284093532535,
+        "use_payment_or_finance": 0.11561294152567528
+      }
+    },
+    "lt65|male|digital_mid|hour=17": {
+      "active_user_count": 356,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 17,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.016611088602860972,
+        "check_information": 0.00336584909776545,
+        "communicate_or_seek_help": 0.026319070028360394,
+        "find_location_or_service": 0.010487113161093277,
+        "login_or_verify_account": 0.001854333530713373,
+        "no_mobile_action": 0.0057811574781063985,
+        "submit_service_application": 0.06381088914513666,
+        "unknown_or_unmapped": 0.7546046685573596,
+        "upload_or_manage_profile": 0.0007635491008819771,
+        "use_payment_or_finance": 0.11640228129772182
+      }
+    },
+    "lt65|male|digital_mid|hour=18": {
+      "active_user_count": 350,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 18,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017432695103846214,
+        "check_information": 0.0029692211151414972,
+        "communicate_or_seek_help": 0.026049558443148598,
+        "find_location_or_service": 0.010147389687313466,
+        "login_or_verify_account": 0.0016376631923718566,
+        "no_mobile_action": 0.005770084332001775,
+        "submit_service_application": 0.06676155930024336,
+        "unknown_or_unmapped": 0.752483278999648,
+        "upload_or_manage_profile": 0.0010713684436077567,
+        "use_payment_or_finance": 0.1156771813826775
+      }
+    },
+    "lt65|male|digital_mid|hour=19": {
+      "active_user_count": 350,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 19,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01686652090660945,
+        "check_information": 0.003272811222619064,
+        "communicate_or_seek_help": 0.026019528226299278,
+        "find_location_or_service": 0.010415959368252374,
+        "login_or_verify_account": 0.0025259040971250864,
+        "no_mobile_action": 0.005119708842022353,
+        "submit_service_application": 0.06674633676005269,
+        "unknown_or_unmapped": 0.7512391868218423,
+        "upload_or_manage_profile": 0.0007740673846028492,
+        "use_payment_or_finance": 0.11701997637057457
+      }
+    },
+    "lt65|male|digital_mid|hour=2": {
+      "active_user_count": 109,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 2,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.0177578961637522,
+        "check_information": 0.004405584926121729,
+        "communicate_or_seek_help": 0.02345126745289413,
+        "find_location_or_service": 0.009285617459671953,
+        "login_or_verify_account": 0.0018977904297139759,
+        "no_mobile_action": 0.041886945912972755,
+        "submit_service_application": 0.06533821336586688,
+        "unknown_or_unmapped": 0.7181103429578419,
+        "upload_or_manage_profile": 0.0005422258370611359,
+        "use_payment_or_finance": 0.11732411549410329
+      }
+    },
+    "lt65|male|digital_mid|hour=20": {
+      "active_user_count": 353,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 20,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018470803247745454,
+        "check_information": 0.003625250921293106,
+        "communicate_or_seek_help": 0.027144440782574827,
+        "find_location_or_service": 0.010321478862689876,
+        "login_or_verify_account": 0.0015579590736135662,
+        "no_mobile_action": 0.00560266051472571,
+        "submit_service_application": 0.06320220511130419,
+        "unknown_or_unmapped": 0.7548012104143572,
+        "upload_or_manage_profile": 0.0007340384096833148,
+        "use_payment_or_finance": 0.11453995266201276
+      }
+    },
+    "lt65|male|digital_mid|hour=21": {
+      "active_user_count": 361,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 21,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018600764457374536,
+        "check_information": 0.0035282648055585644,
+        "communicate_or_seek_help": 0.026523885424242895,
+        "find_location_or_service": 0.010290772349545813,
+        "login_or_verify_account": 0.0014546354900109872,
+        "no_mobile_action": 0.005663793503659801,
+        "submit_service_application": 0.060970891815354145,
+        "unknown_or_unmapped": 0.7624456446046951,
+        "upload_or_manage_profile": 0.0008201668188359821,
+        "use_payment_or_finance": 0.10970118073072221
+      }
+    },
+    "lt65|male|digital_mid|hour=22": {
+      "active_user_count": 311,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 22,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.016752552815227518,
+        "check_information": 0.004297476658616821,
+        "communicate_or_seek_help": 0.024948183080111812,
+        "find_location_or_service": 0.009735876323946072,
+        "login_or_verify_account": 0.0020346460286371675,
+        "no_mobile_action": 0.007910399513206184,
+        "submit_service_application": 0.06682005742645801,
+        "unknown_or_unmapped": 0.7562417996158892,
+        "upload_or_manage_profile": 0.0006275076536918367,
+        "use_payment_or_finance": 0.11063150088421533
+      }
+    },
+    "lt65|male|digital_mid|hour=23": {
+      "active_user_count": 242,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 23,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017453525757246114,
+        "check_information": 0.0042062513597795346,
+        "communicate_or_seek_help": 0.02695385210433437,
+        "find_location_or_service": 0.010588149974617449,
+        "login_or_verify_account": 0.0014504315033722532,
+        "no_mobile_action": 0.011724321318925713,
+        "submit_service_application": 0.06722750018130394,
+        "unknown_or_unmapped": 0.7556989871153335,
+        "upload_or_manage_profile": 0.0010394759107501149,
+        "use_payment_or_finance": 0.10365750477433704
+      }
+    },
+    "lt65|male|digital_mid|hour=3": {
+      "active_user_count": 121,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 3,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01566412391544867,
+        "check_information": 0.003552087579339661,
+        "communicate_or_seek_help": 0.02265183718628079,
+        "find_location_or_service": 0.011180341233331392,
+        "login_or_verify_account": 0.00174692831770803,
+        "no_mobile_action": 0.035287952017702205,
+        "submit_service_application": 0.06649973796075234,
+        "unknown_or_unmapped": 0.7277703371571653,
+        "upload_or_manage_profile": 0.000291154719618005,
+        "use_payment_or_finance": 0.11535549991265358
+      }
+    },
+    "lt65|male|digital_mid|hour=4": {
+      "active_user_count": 130,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 4,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01605405664446255,
+        "check_information": 0.0035462692289260555,
+        "communicate_or_seek_help": 0.02324244021660996,
+        "find_location_or_service": 0.00800306704365745,
+        "login_or_verify_account": 0.0011980639286912349,
+        "no_mobile_action": 0.02860976661714669,
+        "submit_service_application": 0.06555805817798438,
+        "unknown_or_unmapped": 0.7314419897445728,
+        "upload_or_manage_profile": 0.0002875353428858964,
+        "use_payment_or_finance": 0.12205875305506302
+      }
+    },
+    "lt65|male|digital_mid|hour=5": {
+      "active_user_count": 234,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 5,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.015919507498711793,
+        "check_information": 0.00244081034903588,
+        "communicate_or_seek_help": 0.024109782225476637,
+        "find_location_or_service": 0.00743091150706479,
+        "login_or_verify_account": 0.0013560057494643777,
+        "no_mobile_action": 0.013370216689718764,
+        "submit_service_application": 0.06489843516936512,
+        "unknown_or_unmapped": 0.7461828438152578,
+        "upload_or_manage_profile": 0.00040680172483931334,
+        "use_payment_or_finance": 0.12388468527106555
+      }
+    },
+    "lt65|male|digital_mid|hour=6": {
+      "active_user_count": 333,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 6,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01608811433433654,
+        "check_information": 0.0035926445330349967,
+        "communicate_or_seek_help": 0.02311583127176465,
+        "find_location_or_service": 0.008603438223846967,
+        "login_or_verify_account": 0.0015599640735546696,
+        "no_mobile_action": 0.006208341868490301,
+        "submit_service_application": 0.069016592345146,
+        "unknown_or_unmapped": 0.7435198462096024,
+        "upload_or_manage_profile": 0.000567259663110789,
+        "use_payment_or_finance": 0.12772796747711265
+      }
+    },
+    "lt65|male|digital_mid|hour=7": {
+      "active_user_count": 368,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 7,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.017234181343770385,
+        "check_information": 0.0033137638617090673,
+        "communicate_or_seek_help": 0.02564905414220483,
+        "find_location_or_service": 0.009784735812133072,
+        "login_or_verify_account": 0.002400521852576647,
+        "no_mobile_action": 0.0046836268754076975,
+        "submit_service_application": 0.06748858447488584,
+        "unknown_or_unmapped": 0.7499021526418786,
+        "upload_or_manage_profile": 0.0006523157208088715,
+        "use_payment_or_finance": 0.11889106327462493
+      }
+    },
+    "lt65|male|digital_mid|hour=8": {
+      "active_user_count": 403,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 8,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.018034570972255592,
+        "check_information": 0.004084632453747544,
+        "communicate_or_seek_help": 0.02539821633004961,
+        "find_location_or_service": 0.010642658261840488,
+        "login_or_verify_account": 0.0015123033652283296,
+        "no_mobile_action": 0.004579311124616624,
+        "submit_service_application": 0.06837872599041736,
+        "unknown_or_unmapped": 0.7498197956270406,
+        "upload_or_manage_profile": 0.0006925501392167116,
+        "use_payment_or_finance": 0.11685723573558718
+      }
+    },
+    "lt65|male|digital_mid|hour=9": {
+      "active_user_count": 364,
+      "bucket": "lt65|male|digital_mid",
+      "bucket_user_count": 727,
+      "hour": 9,
+      "p_mobile_intention": {
+        "browse_entertainment": 0.01820549619943656,
+        "check_information": 0.0037341200233880828,
+        "communicate_or_seek_help": 0.025407962579067665,
+        "find_location_or_service": 0.0109897411364482,
+        "login_or_verify_account": 0.0017541062031573912,
+        "no_mobile_action": 0.0048237920586828254,
+        "submit_service_application": 0.06660288098655186,
+        "unknown_or_unmapped": 0.7495880508159252,
+        "upload_or_manage_profile": 0.0006777228512199012,
+        "use_payment_or_finance": 0.11821612714612237
+      }
+    }
+  },
+  "row_count": 4659412,
+  "schema_version": "mobile_intention_calibration_v1",
+  "source_hash": "d97839a6ce6088d5",
+  "source_split": "elder_reference_may1_may3",
+  "user_count": 1270,
+  "uses_validation_data": false
+}

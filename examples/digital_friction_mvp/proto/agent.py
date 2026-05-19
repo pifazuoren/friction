@@ -32,6 +32,7 @@ from .experience_memory import (
 )
 from .models import HelplessnessUpdateInput
 from .llm_psychology import (
+    _query_json_payload,
     maybe_generate_daily_reflection,
     prepare_digital_emotion_state_for_day,
     resolve_event_appraisal,
@@ -48,10 +49,16 @@ from .outcome_model import (
     support_quality_from_env,
 )
 from .profile_buckets import age_bucket, persona_bucket
-from .runtime import assign_task_if_missing, build_stage_transition_updates
+from .runtime import assign_task_with_entry_decision, build_stage_transition_updates
 from .state_schema import build_proto_status_attributes
 from .state_update import apply_helplessness_update
-from .task_assignment import decode_task, encode_task, is_task_window_tick
+from .task_assignment import (
+    MobileEntryDecision,
+    decode_task,
+    encode_task,
+    is_task_window_tick,
+    skipped_mobile_entry_decision,
+)
 from .uncontrollability_calibrator import calibrate_uncontrollability
 
 
@@ -67,6 +74,11 @@ _SURVEY_SUMMARY_FIELDS = (
     "survey_usefulness_index",
     "survey_anxiety_index",
 )
+_MOBILE_ENTRY_LLM_SHADOW_KEYS = {
+    "selected_mobile_intention",
+    "confidence",
+    "reason",
+}
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -142,6 +154,33 @@ def _stream_search_count(text: str) -> int:
     if not text or str(text).strip() == "Nothing":
         return 0
     return sum(1 for line in str(text).splitlines() if line.strip().startswith("- ["))
+
+
+def _sanitize_mobile_entry_shadow(
+    payload: Any,
+    *,
+    allowed_intentions: set[str],
+    min_confidence: float,
+) -> tuple[dict[str, Any] | None, str]:
+    if not isinstance(payload, dict):
+        return None, "invalid_schema"
+    selected = str(payload.get("selected_mobile_intention", "")).strip()
+    if selected not in allowed_intentions:
+        return None, "out_of_set_intention"
+    confidence = _clamp(
+        _safe_float(payload.get("confidence"), 0.0),
+        0.0,
+        1.0,
+    )
+    reason = _compact_status_note(payload.get("reason", ""), default="", max_chars=120)
+    return (
+        {
+            "selected_mobile_intention": selected,
+            "confidence": confidence,
+            "reason": reason,
+        },
+        "ok",
+    )
 
 
 def _stream_appraisal_condition(runtime_config: Any) -> str:
@@ -681,18 +720,46 @@ class DigitalHelplessnessAgent(SocietyAgent):
         await self.memory.status.update("proto_last_housekeeping_day", normalized_day)
 
     async def _write_idle_step_state(self) -> None:
+        await DigitalHelplessnessAgent._write_mobile_entry_idle_state(self)
+
+    async def _write_mobile_entry_idle_state(
+        self,
+        entry_decision: MobileEntryDecision | None = None,
+    ) -> None:
+        status_text = "No mobile digital activity entered"
+        payload = {
+            "step_type": "idle",
+            "step_intention": status_text,
+            "step_outcome": "none",
+            "status_text": status_text,
+            "mobile_entry_evaluated": False,
+            "entry_status": "skipped_eval",
+            "selected_mobile_intention": "",
+            "mapped_task_family": None,
+            "task_generated": False,
+        }
+        if entry_decision is not None:
+            payload.update(
+                {
+                    "mobile_entry_evaluated": bool(entry_decision.entry_evaluated),
+                    "entry_status": entry_decision.entry_status,
+                    "selected_mobile_intention": (
+                        entry_decision.selected_mobile_intention
+                    ),
+                    "mapped_task_family": entry_decision.mapped_task_family,
+                    "mapping_confidence": float(entry_decision.mapping_confidence),
+                    "task_generated": bool(entry_decision.task_generated),
+                    "entry_audit": entry_decision.audit,
+                }
+            )
+            await self.memory.status.update(
+                "proto_mobile_entry_decision",
+                entry_decision.to_dict(),
+            )
         await self.memory.status.update(
-            "current_intention", "No digital task assigned"
+            "current_intention", status_text
         )
-        await self.memory.status.update(
-            "friction_step_signal",
-            {
-                "step_type": "idle",
-                "step_intention": "No digital task assigned",
-                "step_outcome": "none",
-                "status_text": "No digital task assigned",
-            },
-        )
+        await self.memory.status.update("friction_step_signal", payload)
 
     async def status_summary(self) -> None:
         try:
@@ -763,6 +830,146 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 1.0,
             ),
         }
+
+    async def _build_stable_mobile_entry_profile(self) -> dict[str, Any]:
+        profile = await self._build_task_appraisal_profile_summary()
+        gender = str(await self.memory.status.get("gender", "unknown")).strip()
+        profile["gender"] = gender or "unknown"
+        return profile
+
+    def _is_mobile_entry_eval_tick(
+        self,
+        *,
+        tick_seconds: float,
+        interval_minutes: int,
+    ) -> bool:
+        interval_seconds = max(60, int(interval_minutes) * 60)
+        normalized_tick = int(round(float(tick_seconds)))
+        return normalized_tick % interval_seconds == 0
+
+    async def _build_mobile_entry_llm_shadow(
+        self,
+        *,
+        entry_decision: MobileEntryDecision,
+        runtime_config: Any,
+        stable_profile: dict[str, Any] | None,
+        day: int,
+        tick_seconds: float,
+    ) -> dict[str, Any]:
+        candidates = {
+            key: float(value)
+            for key, value in sorted(
+                entry_decision.candidate_intentions.items(),
+                key=lambda item: float(item[1]),
+                reverse=True,
+            )[:5]
+        }
+        allowed_intentions = set(candidates)
+        payload = {
+            "llm_shadow_enabled": True,
+            "llm_prompt_version": str(
+                runtime_config.proto_mobile_intention_llm_prompt_version
+            ),
+            "llm_cache_key": hashlib.sha256(
+                json.dumps(
+                    {
+                        "prompt_version": (
+                            runtime_config.proto_mobile_intention_llm_prompt_version
+                        ),
+                        "agent_id": int(self.id),
+                        "day": int(day),
+                        "tick_seconds": int(round(float(tick_seconds))),
+                        "profile_bucket": entry_decision.audit.get("profile_bucket", ""),
+                        "candidate_intentions": candidates,
+                    },
+                    ensure_ascii=False,
+                    sort_keys=True,
+                ).encode("utf-8")
+            ).hexdigest()[:16],
+            "llm_cache_hit": False,
+            "llm_parse_status": "not_called",
+            "llm_selected_intention_raw": "",
+            "llm_confidence": 0.0,
+            "llm_response_hash": "",
+            "llm_agrees_with_rule": False,
+            "llm_affected_real_entry": False,
+        }
+        if not candidates:
+            payload["llm_parse_status"] = "no_candidates"
+            return payload
+        if getattr(self, "llm", None) is None:
+            payload["llm_parse_status"] = "request_error"
+            return payload
+        llm_payload, status = await _query_json_payload(
+            llm=getattr(self, "llm", None),
+            system_prompt=(
+                "You are a JSON-only shadow evaluator for a constrained mobile "
+                "intention entry layer. Choose exactly one intention from the "
+                "provided candidate_intentions. Do not invent intentions, tasks, "
+                "strategies, outcomes, help actions, or psychological state updates."
+            ),
+            user_payload={
+                "prompt_version": (
+                    runtime_config.proto_mobile_intention_llm_prompt_version
+                ),
+                "day": int(day),
+                "tick_seconds": float(tick_seconds),
+                "hour": entry_decision.audit.get("hour"),
+                "agent_profile": stable_profile or {},
+                "profile_bucket": entry_decision.audit.get("profile_bucket", ""),
+                "candidate_intentions": candidates,
+                "rule_selected_mobile_intention": (
+                    entry_decision.selected_mobile_intention
+                ),
+                "allowed_intentions": list(candidates),
+                "output_schema_example": {
+                    "selected_mobile_intention": "check_information",
+                    "confidence": 0.80,
+                    "reason": "Information use best matches the strongest prior.",
+                },
+            },
+            output_keys=_MOBILE_ENTRY_LLM_SHADOW_KEYS,
+            repair_schema_text=(
+                "- selected_mobile_intention must be one of allowed_intentions\n"
+                "- confidence must be a float in [0,1]\n"
+                "- reason must be <= 120 chars\n"
+                "- Do not output task, strategy, outcome, or psychological updates"
+            ),
+            sanitize_fn=lambda raw: _sanitize_mobile_entry_shadow(
+                raw,
+                allowed_intentions=allowed_intentions,
+                min_confidence=(
+                    runtime_config.proto_mobile_intention_llm_min_confidence
+                ),
+            ),
+            timeout=int(getattr(runtime_config, "proto_llm_psychology_timeout", 30)),
+            retries=int(getattr(runtime_config, "proto_llm_psychology_retries", 0)),
+        )
+        payload["llm_parse_status"] = status
+        if llm_payload is None:
+            return payload
+        selected = str(llm_payload.get("selected_mobile_intention", "")).strip()
+        confidence = _clamp(_safe_float(llm_payload.get("confidence"), 0.0), 0.0, 1.0)
+        if confidence < float(runtime_config.proto_mobile_intention_llm_min_confidence):
+            payload["llm_parse_status"] = "low_confidence"
+        payload.update(
+            {
+                "llm_selected_intention_raw": selected,
+                "llm_confidence": confidence,
+                "llm_reason": str(llm_payload.get("reason", ""))[:120],
+                "llm_response_hash": hashlib.sha256(
+                    json.dumps(
+                        llm_payload,
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    ).encode("utf-8")
+                ).hexdigest()[:16],
+                "llm_agrees_with_rule": (
+                    selected == entry_decision.selected_mobile_intention
+                ),
+            }
+        )
+        return payload
 
     async def _build_survey_summary(self) -> dict[str, float]:
         summary: dict[str, float] = {}
@@ -1195,14 +1402,38 @@ class DigitalHelplessnessAgent(SocietyAgent):
         current_day = int(day)
         existing_task_raw = await self.memory.status.get("proto_assigned_task_json", "")
         has_existing_task = existing_task_raw not in (None, "", "null")
-        if not has_existing_task and not is_task_window_tick(float(t)):
+        runtime_config = load_runtime_config()
+        entry_mode = runtime_config.proto_task_entry_mode
+        is_entry_tick = (
+            is_task_window_tick(float(t))
+            if entry_mode == "fixed_assignment"
+            else self._is_mobile_entry_eval_tick(
+                tick_seconds=float(t),
+                interval_minutes=(
+                    runtime_config.proto_mobile_intention_eval_interval_minutes
+                ),
+            )
+        )
+        if not has_existing_task and not is_entry_tick:
             await self._run_minimal_daily_housekeeping(
                 current_day=current_day,
                 env=env,
             )
-            await self._write_idle_step_state()
+            decision = (
+                skipped_mobile_entry_decision(
+                    agent_id=int(self.id),
+                    day=int(day),
+                    tick_seconds=float(t),
+                    entry_mode=entry_mode,
+                )
+                if entry_mode != "fixed_assignment"
+                else None
+            )
+            await DigitalHelplessnessAgent._write_mobile_entry_idle_state(
+                self,
+                decision,
+            )
             return 0.0
-        runtime_config = load_runtime_config()
         helplessness = _clamp(
             _safe_float(await self.memory.status.get("helplessness_score", 0.0))
         )
@@ -1288,17 +1519,49 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 current_reflection_count + 1,
             )
         task = decode_task(existing_task_raw)
-        task, task_updates, _ = assign_task_if_missing(
+        entry_profile = (
+            await self._build_stable_mobile_entry_profile()
+            if runtime_config.proto_task_entry_mode != "fixed_assignment"
+            else None
+        )
+        task, task_updates, _, entry_decision = assign_task_with_entry_decision(
             existing_task=task,
             agent_id=int(self.id),
             day=int(day),
             tick_seconds=float(t),
             env=env,
+            entry_mode=runtime_config.proto_task_entry_mode,
+            stable_profile=entry_profile,
+            calibration_path=(
+                runtime_config.proto_mobile_intention_calibration_path
+            ),
+            mapping_path=runtime_config.proto_mobile_intention_mapping_path,
+            confidence_threshold=(
+                runtime_config.proto_mobile_intention_confidence_threshold
+            ),
         )
+        if entry_decision is not None:
+            if runtime_config.proto_task_entry_mode == "mobile_intention_llm_shadow":
+                entry_decision.audit["llm_shadow"] = (
+                    await self._build_mobile_entry_llm_shadow(
+                        entry_decision=entry_decision,
+                        runtime_config=runtime_config,
+                        stable_profile=entry_profile,
+                        day=int(day),
+                        tick_seconds=float(t),
+                    )
+                )
+            entry_decision.audit["entry_eval_interval_minutes"] = (
+                runtime_config.proto_mobile_intention_eval_interval_minutes
+            )
+            await self.memory.status.update(
+                "proto_mobile_entry_decision",
+                entry_decision.to_dict(),
+            )
         for key, value in task_updates.items():
             await self.memory.status.update(key, value)
         if task is None:
-            await self._write_idle_step_state()
+            await self._write_mobile_entry_idle_state(entry_decision)
             return 0.0
 
         consecutive_failures = _safe_int(

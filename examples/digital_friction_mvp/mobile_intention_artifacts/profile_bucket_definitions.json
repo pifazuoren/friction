@@ -1,0 +1,16 @@
+{
+  "age_bucket": [
+    "lt65",
+    "65_74",
+    "75plus",
+    "unknown"
+  ],
+  "digital_bucket": [
+    "digital_mid"
+  ],
+  "gender_bucket": [
+    "female",
+    "male",
+    "unknown"
+  ]
+}

@@ -3,7 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from .models import DigitalTask
-from .task_assignment import encode_task, select_task_for_agent
+from .task_assignment import (
+    MobileEntryDecision,
+    encode_task,
+    evaluate_mobile_entry_for_agent,
+    select_task_for_agent,
+)
 
 
 def build_task_surface_updates(
@@ -50,6 +55,57 @@ def assign_task_if_missing(
             tick_seconds=float(tick_seconds),
         ),
         True,
+    )
+
+
+def assign_task_with_entry_decision(
+    *,
+    existing_task: DigitalTask | None,
+    agent_id: int,
+    day: int,
+    tick_seconds: float,
+    env: dict[str, Any],
+    entry_mode: str,
+    stable_profile: dict[str, Any] | None = None,
+    calibration_path: str = "",
+    mapping_path: str = "",
+    confidence_threshold: float = 0.70,
+) -> tuple[DigitalTask | None, dict[str, Any], bool, MobileEntryDecision | None]:
+    if existing_task is not None:
+        return existing_task, {}, False, None
+    normalized_mode = str(entry_mode or "fixed_assignment").strip().lower()
+    if normalized_mode == "fixed_assignment":
+        task, updates, seeded = assign_task_if_missing(
+            existing_task=None,
+            agent_id=int(agent_id),
+            day=int(day),
+            tick_seconds=float(tick_seconds),
+            env=env,
+        )
+        return task, updates, seeded, None
+    decision = evaluate_mobile_entry_for_agent(
+        agent_id=int(agent_id),
+        day=int(day),
+        tick_seconds=float(tick_seconds),
+        env=env,
+        stable_profile=stable_profile,
+        entry_mode=normalized_mode,
+        calibration_path=calibration_path,
+        mapping_path=mapping_path,
+        confidence_threshold=float(confidence_threshold),
+        llm_shadow_enabled=normalized_mode == "mobile_intention_llm_shadow",
+    )
+    if decision.task is None:
+        return None, {}, False, decision
+    return (
+        decision.task,
+        build_task_surface_updates(
+            task=decision.task,
+            day=int(day),
+            tick_seconds=float(tick_seconds),
+        ),
+        True,
+        decision,
     )
 
 

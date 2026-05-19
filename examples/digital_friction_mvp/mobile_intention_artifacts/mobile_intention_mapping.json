@@ -1,0 +1,46 @@
+{
+  "mobile_intention_mapping": {
+    "browse_entertainment": {
+      "mapped_task_family": null,
+      "mapping_confidence": 0.0
+    },
+    "check_information": {
+      "mapped_task_family": "information_search_judgment",
+      "mapping_confidence": 1.0
+    },
+    "communicate_or_seek_help": {
+      "mapped_task_family": null,
+      "mapping_confidence": 0.0
+    },
+    "find_location_or_service": {
+      "mapped_task_family": "navigation_service_location",
+      "mapping_confidence": 1.0
+    },
+    "login_or_verify_account": {
+      "mapped_task_family": "account_login_verification",
+      "mapping_confidence": 1.0
+    },
+    "no_mobile_action": {
+      "mapped_task_family": null,
+      "mapping_confidence": 0.0
+    },
+    "submit_service_application": {
+      "mapped_task_family": "service_application_submission",
+      "mapping_confidence": 1.0
+    },
+    "unknown_or_unmapped": {
+      "mapped_task_family": null,
+      "mapping_confidence": 0.0
+    },
+    "upload_or_manage_profile": {
+      "mapped_task_family": "profile_form_upload",
+      "mapping_confidence": 1.0
+    },
+    "use_payment_or_finance": {
+      "mapped_task_family": "payment_risk_confirmation",
+      "mapping_confidence": 1.0
+    }
+  },
+  "source_split": "elder_reference_may1_may3",
+  "uses_validation_data": false
+}

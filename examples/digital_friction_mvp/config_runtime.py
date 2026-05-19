@@ -17,6 +17,11 @@ VALID_BAYESIAN_POLICY_LITE_UTILITY_PROFILES = {"shadow_v1", "theory_v2"}
 DEFAULT_BAYESIAN_POLICY_LITE_UTILITY_PROFILE = "shadow_v1"
 VALID_BAYESIAN_POLICY_LITE_REFERENCE_MODES = {"hybrid_ref", "semantic_v2"}
 DEFAULT_BAYESIAN_POLICY_LITE_REFERENCE_MODE = "hybrid_ref"
+VALID_TASK_ENTRY_MODES = {
+    "fixed_assignment",
+    "mobile_intention_rule",
+    "mobile_intention_llm_shadow",
+}
 VALID_HUYS_DAYAN_LITE_CONTROLLABILITY_MODES = {
     "off",
     "shadow",
@@ -101,6 +106,14 @@ class RuntimeConfig:
     proto_bayesian_policy_lite_reference_mode: str
     proto_bayesian_policy_lite_lambda_llm: float
     proto_bayesian_policy_lite_min_llm_confidence: float
+    proto_task_entry_mode: str
+    proto_mobile_intention_calibration_path: str
+    proto_mobile_intention_mapping_path: str
+    proto_mobile_intention_confidence_threshold: float
+    proto_mobile_intention_eval_interval_minutes: int
+    proto_mobile_intention_world_neutral: bool
+    proto_mobile_intention_llm_prompt_version: str
+    proto_mobile_intention_llm_min_confidence: float
     proto_huys_dayan_lite_controllability_mode: str
     proto_huys_dayan_lite_confidence_k: int
     proto_huys_dayan_lite_min_action_updates: int
@@ -354,6 +367,57 @@ def load_runtime_config() -> RuntimeConfig:
             ),
         ),
     )
+    proto_task_entry_mode = (
+        os.getenv("PROTO_TASK_ENTRY_MODE", "fixed_assignment").strip().lower()
+    )
+    if proto_task_entry_mode not in VALID_TASK_ENTRY_MODES:
+        raise ValueError(
+            "PROTO_TASK_ENTRY_MODE must be one of: "
+            + ", ".join(sorted(VALID_TASK_ENTRY_MODES))
+        )
+    proto_mobile_intention_calibration_path = os.getenv(
+        "PROTO_MOBILE_INTENTION_CALIBRATION_PATH",
+        "",
+    ).strip()
+    proto_mobile_intention_mapping_path = os.getenv(
+        "PROTO_MOBILE_INTENTION_MAPPING_PATH",
+        "",
+    ).strip()
+    for artifact_name, artifact_path in (
+        (
+            "PROTO_MOBILE_INTENTION_CALIBRATION_PATH",
+            proto_mobile_intention_calibration_path,
+        ),
+        ("PROTO_MOBILE_INTENTION_MAPPING_PATH", proto_mobile_intention_mapping_path),
+    ):
+        if artifact_path and "validation" in artifact_path.lower():
+            raise ValueError(f"{artifact_name} must not point to validation data")
+    proto_mobile_intention_confidence_threshold = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_MOBILE_INTENTION_CONFIDENCE_THRESHOLD", "0.70")),
+        ),
+    )
+    proto_mobile_intention_eval_interval_minutes = max(
+        1,
+        int(float(os.getenv("PROTO_MOBILE_INTENTION_EVAL_INTERVAL_MINUTES", "60"))),
+    )
+    proto_mobile_intention_world_neutral = _parse_bool_env(
+        "PROTO_MOBILE_INTENTION_WORLD_NEUTRAL",
+        True,
+    )
+    proto_mobile_intention_llm_prompt_version = os.getenv(
+        "PROTO_MOBILE_INTENTION_LLM_PROMPT_VERSION",
+        "mobile_intention_shadow_v1",
+    ).strip()
+    proto_mobile_intention_llm_min_confidence = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_MOBILE_INTENTION_LLM_MIN_CONFIDENCE", "0.70")),
+        ),
+    )
     proto_huys_dayan_lite_controllability_mode = (
         os.getenv("PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE", "off")
         .strip()
@@ -491,6 +555,24 @@ def load_runtime_config() -> RuntimeConfig:
         proto_bayesian_policy_lite_lambda_llm=proto_bayesian_policy_lite_lambda_llm,
         proto_bayesian_policy_lite_min_llm_confidence=(
             proto_bayesian_policy_lite_min_llm_confidence
+        ),
+        proto_task_entry_mode=proto_task_entry_mode,
+        proto_mobile_intention_calibration_path=(
+            proto_mobile_intention_calibration_path
+        ),
+        proto_mobile_intention_mapping_path=proto_mobile_intention_mapping_path,
+        proto_mobile_intention_confidence_threshold=(
+            proto_mobile_intention_confidence_threshold
+        ),
+        proto_mobile_intention_eval_interval_minutes=(
+            proto_mobile_intention_eval_interval_minutes
+        ),
+        proto_mobile_intention_world_neutral=proto_mobile_intention_world_neutral,
+        proto_mobile_intention_llm_prompt_version=(
+            proto_mobile_intention_llm_prompt_version
+        ),
+        proto_mobile_intention_llm_min_confidence=(
+            proto_mobile_intention_llm_min_confidence
         ),
         proto_huys_dayan_lite_controllability_mode=(
             proto_huys_dayan_lite_controllability_mode

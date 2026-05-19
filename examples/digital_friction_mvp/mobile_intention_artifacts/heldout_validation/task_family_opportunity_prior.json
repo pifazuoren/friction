@@ -1,0 +1,14 @@
+{
+  "mapped_task_coverage": 0.200195940317371,
+  "p_task_family": {
+    "account_login_verification": 0.008479259093180048,
+    "information_search_judgment": 0.018473239048727053,
+    "navigation_service_location": 0.04649380959358521,
+    "payment_risk_confirmation": 0.5777547882303717,
+    "profile_form_upload": 0.0038203449255968407,
+    "service_application_submission": 0.3449785591085391
+  },
+  "source_split": "elder_validation_may4_may7",
+  "unknown_or_context_mass": 0.799804059682629,
+  "uses_validation_data": true
+}
