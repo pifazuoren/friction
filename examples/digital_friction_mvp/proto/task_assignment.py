@@ -134,6 +134,31 @@ def _stable_hash(payload: Any) -> str:
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
 
+def top_mobile_intention_candidates(
+    candidate_intentions: dict[str, float],
+    *,
+    top_k: int = 5,
+) -> dict[str, float]:
+    limit = max(1, int(top_k))
+    normalized = _normalize_distribution(candidate_intentions)
+    return {
+        key: float(value)
+        for key, value in sorted(
+            normalized.items(),
+            key=lambda item: (-float(item[1]), item[0]),
+        )[:limit]
+    }
+
+
+def mobile_intention_candidate_hash(candidate_intentions: dict[str, float]) -> str:
+    return _stable_hash(
+        {
+            key: round(float(value), 12)
+            for key, value in sorted(candidate_intentions.items())
+        }
+    )[:16]
+
+
 def _artifact_hash(path: str) -> str:
     normalized = str(path or "").strip()
     if not normalized:
@@ -350,8 +375,9 @@ def _entry_audit(
     mapping_hash: str,
     reason: str,
     llm_shadow: dict[str, Any] | None = None,
+    rerank_audit: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    return {
+    audit = {
         "agent_id": int(agent_id),
         "day": int(day),
         "tick_seconds": float(tick_seconds),
@@ -390,6 +416,9 @@ def _entry_audit(
         "reason": str(reason),
         "llm_shadow": llm_shadow or {},
     }
+    if rerank_audit:
+        audit.update(dict(rerank_audit))
+    return audit
 
 
 def task_pressure_from_env(task_template: dict[str, Any], env: dict[str, Any]) -> float:
@@ -495,12 +524,19 @@ def evaluate_mobile_entry_for_agent(
     confidence_threshold: float = 0.70,
     llm_shadow_enabled: bool = False,
     llm_shadow_payload: dict[str, Any] | None = None,
+    selected_intention_override: str | None = None,
+    rerank_audit_payload: dict[str, Any] | None = None,
+    rerank_top_k: int = 5,
 ) -> MobileEntryDecision:
     normalized_mode = str(entry_mode or "mobile_intention_rule").strip().lower()
-    if normalized_mode not in {"mobile_intention_rule", "mobile_intention_llm_shadow"}:
+    if normalized_mode not in {
+        "mobile_intention_rule",
+        "mobile_intention_llm_shadow",
+        "mobile_intention_llm_rerank_online_mc",
+    }:
         raise ValueError(
             "mobile entry mode must be one of: mobile_intention_rule, "
-            "mobile_intention_llm_shadow"
+            "mobile_intention_llm_shadow, mobile_intention_llm_rerank_online_mc"
         )
     calibration, calibration_hash = _load_json_artifact(
         calibration_path,
@@ -517,7 +553,7 @@ def evaluate_mobile_entry_for_agent(
         hour=hour,
     )
     profile_bucket = _bucket_for_profile(stable_profile)
-    selected = _stable_select_intention(
+    rule_selected = _stable_select_intention(
         priors=priors,
         seed=_resolve_schedule_seed(),
         agent_id=int(agent_id),
@@ -525,6 +561,44 @@ def evaluate_mobile_entry_for_agent(
         tick_seconds=float(tick_seconds),
         profile_bucket=profile_bucket,
     )
+    top_candidates = top_mobile_intention_candidates(priors, top_k=rerank_top_k)
+    selected = rule_selected
+    rerank_audit = dict(rerank_audit_payload or {})
+    if normalized_mode == "mobile_intention_llm_rerank_online_mc":
+        override = str(selected_intention_override or "").strip()
+        if not override:
+            raise ValueError(
+                "selected_intention_override is required for "
+                "mobile_intention_llm_rerank_online_mc"
+            )
+        if override not in top_candidates:
+            raise ValueError(
+                "selected_intention_override must be one of top-k candidate intentions"
+            )
+        selected = override
+        rerank_audit.update(
+            {
+                "rerank_enabled": True,
+                "rule_selected_mobile_intention": rule_selected,
+                "rerank_selected_mobile_intention": selected,
+                "rerank_top_k": int(max(1, rerank_top_k)),
+                "rerank_candidate_intentions": dict(top_candidates),
+                "rerank_candidate_hash": mobile_intention_candidate_hash(top_candidates),
+                "llm_drives_real_entry": True,
+                "uses_post_outcome_information": False,
+                "does_not_decide_strategy": True,
+                "does_not_decide_outcome": True,
+                "does_not_update_psychology": True,
+            }
+        )
+    else:
+        rerank_audit.update(
+            {
+                "rerank_enabled": False,
+                "rule_selected_mobile_intention": rule_selected,
+                "llm_drives_real_entry": False,
+            }
+        )
     mapped_task_family = MOBILE_INTENTION_TO_TASK_FAMILY.get(selected)
     mapping_confidence, mapping_source = _mapping_confidence_for_intention(
         intention=selected,
@@ -602,6 +676,7 @@ def evaluate_mobile_entry_for_agent(
         mapping_hash=mapping_hash,
         reason=reason,
         llm_shadow=llm_shadow,
+        rerank_audit=rerank_audit,
     )
     audit["profile_bucket"] = profile_bucket
     audit["prior_source"] = prior_source

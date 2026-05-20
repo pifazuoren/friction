@@ -21,6 +21,7 @@ VALID_TASK_ENTRY_MODES = {
     "fixed_assignment",
     "mobile_intention_rule",
     "mobile_intention_llm_shadow",
+    "mobile_intention_llm_rerank_online_mc",
 }
 VALID_HUYS_DAYAN_LITE_CONTROLLABILITY_MODES = {
     "off",
@@ -114,6 +115,10 @@ class RuntimeConfig:
     proto_mobile_intention_world_neutral: bool
     proto_mobile_intention_llm_prompt_version: str
     proto_mobile_intention_llm_min_confidence: float
+    proto_mobile_intention_rerank_top_k: int
+    proto_mobile_intention_rerank_schedule_path: str
+    proto_mobile_intention_rerank_schedule_role: str
+    proto_mobile_intention_rerank_run_id: str
     proto_huys_dayan_lite_controllability_mode: str
     proto_huys_dayan_lite_confidence_k: int
     proto_huys_dayan_lite_min_action_updates: int
@@ -418,6 +423,44 @@ def load_runtime_config() -> RuntimeConfig:
             float(os.getenv("PROTO_MOBILE_INTENTION_LLM_MIN_CONFIDENCE", "0.70")),
         ),
     )
+    proto_mobile_intention_rerank_top_k = max(
+        1,
+        int(float(os.getenv("PROTO_MOBILE_INTENTION_RERANK_TOP_K", "5"))),
+    )
+    proto_mobile_intention_rerank_schedule_path = os.getenv(
+        "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH",
+        "",
+    ).strip()
+    proto_mobile_intention_rerank_schedule_role = os.getenv(
+        "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE",
+        "",
+    ).strip().lower()
+    proto_mobile_intention_rerank_run_id = os.getenv(
+        "PROTO_MOBILE_INTENTION_RERANK_RUN_ID",
+        "",
+    ).strip()
+    if proto_task_entry_mode == "mobile_intention_llm_rerank_online_mc":
+        if proto_mobile_intention_rerank_schedule_role not in {"write", "read"}:
+            raise ValueError(
+                "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE must be one of: "
+                "write, read when PROTO_TASK_ENTRY_MODE=mobile_intention_llm_rerank_online_mc"
+            )
+        if not proto_mobile_intention_rerank_schedule_path:
+            raise ValueError(
+                "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH is required when "
+                "PROTO_TASK_ENTRY_MODE=mobile_intention_llm_rerank_online_mc"
+            )
+        if not proto_mobile_intention_rerank_run_id:
+            raise ValueError(
+                "PROTO_MOBILE_INTENTION_RERANK_RUN_ID is required when "
+                "PROTO_TASK_ENTRY_MODE=mobile_intention_llm_rerank_online_mc"
+            )
+    elif proto_mobile_intention_rerank_schedule_role and (
+        proto_mobile_intention_rerank_schedule_role not in {"write", "read"}
+    ):
+        raise ValueError(
+            "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE must be one of: write, read"
+        )
     proto_huys_dayan_lite_controllability_mode = (
         os.getenv("PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE", "off")
         .strip()
@@ -573,6 +616,16 @@ def load_runtime_config() -> RuntimeConfig:
         ),
         proto_mobile_intention_llm_min_confidence=(
             proto_mobile_intention_llm_min_confidence
+        ),
+        proto_mobile_intention_rerank_top_k=proto_mobile_intention_rerank_top_k,
+        proto_mobile_intention_rerank_schedule_path=(
+            proto_mobile_intention_rerank_schedule_path
+        ),
+        proto_mobile_intention_rerank_schedule_role=(
+            proto_mobile_intention_rerank_schedule_role
+        ),
+        proto_mobile_intention_rerank_run_id=(
+            proto_mobile_intention_rerank_run_id
         ),
         proto_huys_dayan_lite_controllability_mode=(
             proto_huys_dayan_lite_controllability_mode

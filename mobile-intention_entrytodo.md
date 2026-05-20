@@ -137,7 +137,7 @@
 1. 保留 `fixed_assignment` baseline
 2. 新增 `mobile_intention_rule`
 3. 新增 `mobile_intention_llm_shadow`
-4. **不**把 `mobile_intention_llm_rerank` 放进第一版主实验
+4. Phase 2 可新增 `mobile_intention_llm_rerank_online_mc`，作为 LLM entry 条件下的 Monte Carlo 主/辅助实验
 
 ### 为什么
 
@@ -145,7 +145,7 @@
 
 > controllability-centered post-entry policy modulation
 
-入口层是为了让 exposure 更像 agent-conditioned mobile activity，不是为了让 LLM 成为新的主机制。
+入口层是为了让 exposure 更像 agent-conditioned mobile activity。Phase 1 先用规则入口保证稳定基线；Phase 2 如果让 LLM rerank 进入主线，必须把它写成在线随机组件，通过多轮 Monte Carlo runs、均值和置信区间报告，而不是写成单次 deterministic paired-world 结论。
 
 ---
 
@@ -313,7 +313,7 @@ agent stable initial profile:
 
 ### 可以作为 entry feature 的稳定 profile
 
-这些特征如果是初始化时固定的、不会被不同 world 的任务结果改变，可以进入 `mobile_intention_rule` 或 LLM shadow / replay rerank：
+这些特征如果是初始化时固定的、不会被不同 world 的任务结果改变，可以进入 `mobile_intention_rule` 或 LLM shadow / online MC rerank：
 
 - age
 - gender
@@ -367,7 +367,7 @@ entry exposure 已经被 world-specific outcome history 改变
 
 ### LLM 介入时的 prompt 边界
 
-如果开启 `mobile_intention_llm_shadow` 或 replay/cached rerank，LLM 只能看到：
+如果开启 `mobile_intention_llm_shadow` 或 `mobile_intention_llm_rerank_online_mc`，LLM 只能看到：
 
 - constrained top-k mobile intention candidates
 - candidate priors
@@ -438,19 +438,28 @@ Given the elder's current psychological state after recent task failures...
 - **不能**驱动真实 task entry
 - 只做一致率分析 / prompt sanity check
 
-## Mode 3: `mobile_intention_llm_rerank`
+## Mode 3: `mobile_intention_llm_rerank_online_mc`
 
-不作为第一版主实验。
+Phase 2 可启用，作为 LLM entry 条件下的 Monte Carlo 主/辅助实验。
 
 仅允许：
 
-- appendix ablation
-- replay/cached robustness
+- rule/data top-k candidates 内 rerank
+- online LLM call
+- run-level shared entry schedule
+- 多轮 Monte Carlo runs
+- 均值 / 方差 / 置信区间报告
 
 不允许：
 
-- 第一版主论文主结果
-- 在线自由 rerank 四个 worlds
+- LLM 自由生成集合外 mobile intention
+- LLM 直接生成 `DigitalTask`
+- LLM 决定 strategy / outcome / helplessness / posterior
+- 同一 run 内四个 paired worlds 各自独立调用 LLM 造成 entry exposure 不一致
+
+可选 robustness：
+
+- 如果未来需要 deterministic ablation，可以另做 `mobile_intention_llm_rerank_replay`。
 
 ---
 
@@ -494,25 +503,50 @@ Phase 1 的验收标准：
 - held-out validation 报表可以生成。
 - LLM shadow 即使失败，也不影响真实实验。
 
-### Phase 2: replay-locked LLM rerank ablation
+### Phase 2: online LLM rerank Monte Carlo
 
-这是后续 appendix / robustness 阶段，不属于第一版主实验。
+这是后续 LLM entry 条件实验阶段。它不要求 persistent replay/cache 锁死 LLM 输出，而是把 LLM rerank 作为在线随机组件，通过多轮 Monte Carlo runs 估计平均效果。
+
+关键原则：
+
+```text
+不要求跨所有实验永久复用同一份 LLM cache
+但同一个 Monte Carlo run 内，四个 paired worlds 必须共享同一份 entry decision schedule
+```
+
+也就是说：
+
+```text
+run 1:
+  在线生成一份 LLM rerank entry schedule
+  world A/B/C/D 都使用这份 schedule
+
+run 2:
+  可以重新在线生成另一份 schedule
+  world A/B/C/D 再共享 run 2 的 schedule
+```
+
+这样既允许 LLM 随机性进入主线，又避免同一轮中不同 world 因为 LLM 随机差异看到完全不同的 entry exposure。
 
 目标：
 
-1. 启用 `mobile_intention_llm_rerank`，但只允许在 rule/data top-k candidates 内 rerank。
-2. 使用 replay/cache 机制固定 LLM decision。
-3. 四个 paired worlds 必须读取同一份 replay decision。
+1. 启用 `mobile_intention_llm_rerank_online_mc`，但只允许在 rule/data top-k candidates 内 rerank。
+2. LLM 可以在线读取 constrained candidates、candidate priors、hour、coarse observable context、stable initial profile。
+3. 同一 Monte Carlo run 内，四个 paired worlds 必须共享同一份 `selected_mobile_intention` schedule。
 4. LLM invalid JSON / out-of-set intention / low confidence 不能 fallback 到随机 task。
-5. 只报告作为 robustness / appendix ablation，不把它作为主结论来源。
+5. 跑多轮实验，报告 entry distribution、mapped task distribution、downstream outcome metrics 的均值、方差、置信区间。
+6. 和 Phase 1 `mobile_intention_rule` 分开报告，说明这是 LLM-entry-conditioned simulation。
 
 Phase 2 的验收标准：
 
-- cache key 包含 seed / agent_id / day / tick / profile bucket / hour / prompt version / candidate priors。
-- 同一 cache key 在四个 worlds 中返回完全相同的 `selected_mobile_intention`。
+- 每个 Monte Carlo run 有唯一 `run_id`。
+- 同一 `run_id / agent_id / day / tick` 在四个 worlds 中返回完全相同的 `selected_mobile_intention`。
 - LLM 不能生成集合外 intention。
 - LLM 不能决定 strategy / outcome / helplessness / posterior。
-- rerank ablation 与 Phase 1 主结果分开报告。
+- invalid / low-confidence handling policy 必须预先声明。
+- 每次 LLM 调用记录 prompt version / model id / candidate priors / selected intention / confidence / parse status / response hash。
+- Phase 2 报告 Monte Carlo mean / standard error / confidence interval。
+- Phase 2 与 Phase 1 主规则结果分开报告。
 
 ---
 
@@ -870,7 +904,10 @@ Phase 2 的验收标准：
 - LLM 选集合外 intent 被拒绝
 - low LLM confidence -> no-op / rejected according to mode
 - invalid LLM JSON 不隐式 fallback 到 random task
-- cache key 包含 prompt version / candidate priors / profile bucket / hour
+- online MC rerank 记录 run_id / prompt version / candidate priors / profile bucket / hour
+- 同一 run_id / agent_id / day / tick 在四个 worlds 中 entry decision 一致
+- 不同 run_id 可以有不同 LLM rerank schedule
+- Phase 2 汇总报告 mean / standard error / confidence interval
 
 ## analysis 测试
 
@@ -898,9 +935,20 @@ Phase 2 的验收标准：
 
 只做 shadow，不驱动真实 entry。
 
-### E4: `mobile_intention_llm_rerank_replay_ablation`
+### E4: `mobile_intention_llm_rerank_online_mc`
 
-仅 appendix / robustness。
+LLM entry 条件下的 Monte Carlo 实验。
+
+要求：
+
+- LLM 只能在 rule/data top-k candidates 内 rerank。
+- 同一个 run 内，四个 paired worlds 共享 entry schedule。
+- 多轮 runs 报告均值、方差、置信区间。
+- 不声称单次 run 的逐 tick paired-world 差异完全来自 Phase4 / Phase5C。
+
+### E5: `mobile_intention_llm_rerank_replay_ablation`
+
+可选 appendix / robustness，如果未来需要 deterministic replay/cache 对照再做。
 
 ### Held-out validation
 
@@ -980,7 +1028,7 @@ May4-May7 只做：
 3. `vision_limit` / `digital_experience` 是否已经在 profile 中稳定存在
 4. entry evaluation interval 最终取 30 还是 60 分钟
 5. mapping_confidence 的人工校准来源与审核标准
-6. 是否需要 `mobile_intention_llm_rerank` appendix
+6. 是否启用 `mobile_intention_llm_rerank_online_mc` 作为 Phase 2，以及 Monte Carlo run 数量
 7. `communicate_or_seek_help` 是否允许在未来作为 support availability proxy 留痕
 
 ---

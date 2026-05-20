@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import csv
 import json
 import os
@@ -17,6 +18,7 @@ WORLD_METRIC_FIELDS = (
     "abandon_rate",
     "negative_feedback_rate",
     "helplessness_delta",
+    "mobile_entry_task_generated_rate",
 )
 
 
@@ -44,6 +46,14 @@ def _table_exists(cur: sqlite3.Cursor, table_name: str) -> bool:
         (table_name,),
     ).fetchone()
     return row is not None
+
+
+def _table_columns(cur: sqlite3.Cursor, table_name: str) -> set[str]:
+    try:
+        rows = cur.execute(f"PRAGMA table_info({table_name})").fetchall()
+    except Exception:
+        return set()
+    return {str(row[1]) for row in rows}
 
 
 def _clamp(value: float, min_value: float = 0.0, max_value: float = 100.0) -> float:
@@ -242,6 +252,94 @@ def _compute_world_proto_metrics(
         "positives": success_count,
         "negatives": negative_feedback_count,
         "emitted": attempt_count,
+    }
+
+
+def _compute_mobile_entry_metrics(
+    cur: sqlite3.Cursor,
+    status_table: str,
+) -> dict[str, Any]:
+    if (
+        not _table_exists(cur, status_table)
+        or "status_json" not in _table_columns(cur, status_table)
+    ):
+        return {
+            "mobile_entry_eval_count": 0,
+            "mobile_entry_task_generated_count": 0,
+            "mobile_entry_noop_count": 0,
+            "mobile_entry_context_count": 0,
+            "mobile_entry_task_generated_rate": 0.0,
+            "mobile_entry_top_intentions_json": "{}",
+            "mobile_entry_mapped_task_families_json": "{}",
+        }
+    rows = cur.execute(
+        f"""
+        SELECT agent_id, day, t, status_json
+        FROM {status_table}
+        ORDER BY day, t, agent_id
+        """
+    ).fetchall()
+    seen: set[tuple[int, int, int]] = set()
+    intention_counts: Counter[str] = Counter()
+    task_family_counts: Counter[str] = Counter()
+    eval_count = 0
+    task_generated_count = 0
+    noop_count = 0
+    context_count = 0
+    for agent_id, row_day, row_t, raw_status in rows:
+        try:
+            status = json.loads(raw_status or "{}")
+        except Exception:
+            continue
+        if not isinstance(status, dict):
+            continue
+        decision = status.get("proto_mobile_entry_decision", {})
+        if not isinstance(decision, dict):
+            continue
+        if not bool(decision.get("entry_evaluated", False)):
+            continue
+        audit = decision.get("audit", {})
+        if not isinstance(audit, dict):
+            audit = {}
+        key = (
+            _safe_int(audit.get("agent_id", agent_id), _safe_int(agent_id, 0)),
+            _safe_int(audit.get("day", row_day), _safe_int(row_day, 0)),
+            int(round(_safe_float(audit.get("tick_seconds", row_t), _safe_float(row_t, 0.0)))),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        eval_count += 1
+        selected = str(decision.get("selected_mobile_intention", "")).strip()
+        if selected:
+            intention_counts[selected] += 1
+        mapped_family = str(decision.get("mapped_task_family", "") or "").strip()
+        if mapped_family:
+            task_family_counts[mapped_family] += 1
+        if bool(decision.get("task_generated", False)):
+            task_generated_count += 1
+        else:
+            noop_count += 1
+        entry_status = str(decision.get("entry_status", "")).strip()
+        if entry_status.endswith("_context_only"):
+            context_count += 1
+    denominator = max(1, eval_count)
+    return {
+        "mobile_entry_eval_count": int(eval_count),
+        "mobile_entry_task_generated_count": int(task_generated_count),
+        "mobile_entry_noop_count": int(noop_count),
+        "mobile_entry_context_count": int(context_count),
+        "mobile_entry_task_generated_rate": float(task_generated_count / denominator),
+        "mobile_entry_top_intentions_json": json.dumps(
+            dict(sorted(intention_counts.items())),
+            ensure_ascii=False,
+            sort_keys=True,
+        ),
+        "mobile_entry_mapped_task_families_json": json.dumps(
+            dict(sorted(task_family_counts.items())),
+            ensure_ascii=False,
+            sort_keys=True,
+        ),
     }
 
 
@@ -457,6 +555,7 @@ def main() -> None:
                 profile_index=profile_index,
                 profile_list=profile_list,
             )
+        mobile_entry_metrics = _compute_mobile_entry_metrics(cur, status_table)
 
         world_summary_rows.append(
             {
@@ -493,6 +592,30 @@ def main() -> None:
                 "neg_share": round(_safe_float(world_metrics["neg_share"]), 6),
                 "emit_given_attempt": round(
                     _safe_float(world_metrics["emit_given_attempt"]), 6
+                ),
+                "mobile_entry_eval_count": _safe_int(
+                    mobile_entry_metrics["mobile_entry_eval_count"], 0
+                ),
+                "mobile_entry_task_generated_count": _safe_int(
+                    mobile_entry_metrics["mobile_entry_task_generated_count"], 0
+                ),
+                "mobile_entry_noop_count": _safe_int(
+                    mobile_entry_metrics["mobile_entry_noop_count"], 0
+                ),
+                "mobile_entry_context_count": _safe_int(
+                    mobile_entry_metrics["mobile_entry_context_count"], 0
+                ),
+                "mobile_entry_task_generated_rate": round(
+                    _safe_float(
+                        mobile_entry_metrics["mobile_entry_task_generated_rate"]
+                    ),
+                    6,
+                ),
+                "mobile_entry_top_intentions_json": str(
+                    mobile_entry_metrics["mobile_entry_top_intentions_json"]
+                ),
+                "mobile_entry_mapped_task_families_json": str(
+                    mobile_entry_metrics["mobile_entry_mapped_task_families_json"]
                 ),
             }
         )
@@ -535,6 +658,13 @@ def main() -> None:
         "negatives",
         "neg_share",
         "emit_given_attempt",
+        "mobile_entry_eval_count",
+        "mobile_entry_task_generated_count",
+        "mobile_entry_noop_count",
+        "mobile_entry_context_count",
+        "mobile_entry_task_generated_rate",
+        "mobile_entry_top_intentions_json",
+        "mobile_entry_mapped_task_families_json",
     ]
     stage_fieldnames = [
         "group_id",

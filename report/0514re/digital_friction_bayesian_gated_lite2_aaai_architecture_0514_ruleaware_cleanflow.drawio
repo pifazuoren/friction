@@ -1,0 +1,175 @@
+<mxfile host="Electron" agent="Codex">
+  <diagram id="digital-friction-0514-rule-aware-clean-flow" name="0514 Rule-aware Clean Flow">
+    <mxGraphModel dx="1230" dy="983" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="layer1_event" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#D1D5DB;strokeWidth=1.5;fontSize=17;fontStyle=1;fontColor=#374151;align=left;verticalAlign=top;spacingLeft=16;spacingTop=10;fontFamily=Helvetica;" value="Task Event &amp;amp; LLM Appraisal" vertex="1">
+          <mxGeometry height="245" width="300" x="70" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="layer2_policy" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7FAFF;strokeColor=#D1D5DB;strokeWidth=1.5;fontSize=17;fontStyle=1;fontColor=#374151;align=left;verticalAlign=top;spacingLeft=16;spacingTop=10;fontFamily=Helvetica;" value="" vertex="1">
+          <mxGeometry height="240" width="700" x="410" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="layer3_control" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7FAFF;strokeColor=#D1D5DB;strokeWidth=1.5;fontSize=17;fontStyle=1;fontColor=#374151;align=left;verticalAlign=top;spacingLeft=16;spacingTop=10;fontFamily=Helvetica;" value="" vertex="1">
+          <mxGeometry height="160" width="700" x="410" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="layer4_update" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#D1D5DB;strokeWidth=1.5;fontSize=17;fontStyle=1;fontColor=#374151;align=left;verticalAlign=top;spacingLeft=16;spacingTop=10;fontFamily=Helvetica;" value="Layer 4. Outcome &amp; Psychological Update" vertex="1">
+          <mxGeometry height="445" width="590" x="1140" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="event_task" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=1.8;fontSize=15;fontStyle=1;fontColor=#374151;fontFamily=Helvetica;" value="Digital Friction&#xa;Task Event" vertex="1">
+          <mxGeometry height="58" width="115" x="105" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="event_appraisal" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=1.8;fontSize=14;fontStyle=1;fontColor=#374151;fontFamily=Helvetica;" value="LLM Appraisal&#xa;difficulty / risk / control" vertex="1">
+          <mxGeometry height="58" width="105" x="245" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_semantic" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="semantic_v2&#xa;pi_ref&#xa;no direct rule mix" vertex="1">
+          <mxGeometry height="72" width="135" x="445" y="212" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_posterior" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Posterior Memory&#xa;P(o | family, action)" vertex="1">
+          <mxGeometry height="58" width="165" x="620" y="305" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_qbayes" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Bayesian Value&#xa;Q_bayes -&gt; pi_bayes" vertex="1">
+          <mxGeometry height="58" width="130" x="815" y="305" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_gate" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Evidence Gate&#xa;pi_ref + pi_bayes&#xa;conf / entropy" vertex="1">
+          <mxGeometry height="72" width="145" x="790" y="212" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_final" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Final Distribution&#xa;pi_final" vertex="1">
+          <mxGeometry height="72" width="105" x="970" y="212" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_sample" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="Sampled Action&#xa;attempt / help / avoid" vertex="1">
+          <mxGeometry height="44" width="105" x="970" y="318" as="geometry" />
+        </mxCell>
+        <mxCell id="control_components" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7AA2D6;strokeWidth=1.8;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="C metrics&#xa;entropy / contrast / chi" vertex="1">
+          <mxGeometry height="58" width="180" x="475" y="487" as="geometry" />
+        </mxCell>
+        <mxCell id="control_score" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="C_family / C_global&#xa;diagnostic trace" vertex="1">
+          <mxGeometry height="58" width="150" x="700" y="487" as="geometry" />
+        </mxCell>
+        <mxCell id="control_mode" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF5FF;strokeColor=#7AA2D6;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#24466F;fontFamily=Helvetica;" value="shadow audit&#xa;or gated modulation&#xa;C_before_event" vertex="1">
+          <mxGeometry height="58" width="160" x="895" y="487" as="geometry" />
+        </mxCell>
+        <mxCell id="control_note" parent="1" style="text;html=1;strokeColor=none;fillColor=none;fontSize=13;fontColor=#64748B;align=center;verticalAlign=middle;fontFamily=Helvetica;" value="Low C: flatten-only; High C: reduce avoid toward best non-avoid action" vertex="1">
+          <mxGeometry height="26" width="555" x="485" y="552" as="geometry" />
+        </mxCell>
+        <mxCell id="update_outcome" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D6B48D;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#6B4A2D;fontFamily=Helvetica;" value="Digital Task&#xa;Outcome" vertex="1">
+          <mxGeometry height="58" width="120" x="1180" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="update_uncontrol" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D6B48D;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#6B4A2D;fontFamily=Helvetica;" value="Event-level&#xa;Uncontrollability" vertex="1">
+          <mxGeometry height="58" width="145" x="1330" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="update_attr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D6B48D;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#6B4A2D;fontFamily=Helvetica;" value="Attribution / Avoid Reason&#xa;Support Context" vertex="1">
+          <mxGeometry height="58" width="175" x="1515" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="update_psych" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D6B48D;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#6B4A2D;fontFamily=Helvetica;" value="Helplessness / Self-efficacy&#xa;Scope Spillover" vertex="1">
+          <mxGeometry height="58" width="175" x="1330" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="update_memory" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D6B48D;strokeWidth=2;fontSize=14;fontStyle=1;fontColor=#6B4A2D;fontFamily=Helvetica;" value="Memory + Posterior&#xa;Update after outcome" vertex="1">
+          <mxGeometry height="58" width="175" x="1515" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="update_boundary" parent="1" style="text;html=1;strokeColor=none;fillColor=none;fontSize=13;fontColor=#64748B;align=center;verticalAlign=middle;fontFamily=Helvetica;" value="Leakage boundary: action uses pre-outcome memory; updates affect future events only" vertex="1">
+          <mxGeometry height="28" width="490" x="1185" y="535" as="geometry" />
+        </mxCell>
+        <mxCell id="e_event_appraisal" edge="1" parent="1" source="event_task" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#9CA3AF;strokeWidth=2;" target="event_appraisal" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_appraisal_semantic" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.4;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="445" y="246" />
+            </Array>
+            <mxPoint x="350.0000000000001" y="246.0000000000001" as="sourcePoint" />
+            <mxPoint x="445" y="250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_semantic_gate" edge="1" parent="1" source="policy_semantic" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.4;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" target="policy_gate" value="pi_ref">
+          <mxGeometry relative="1" x="-0.0476" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_posterior_q" edge="1" parent="1" source="policy_posterior" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.2;" target="policy_qbayes" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_q_gate" edge="1" parent="1" source="policy_qbayes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.2;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" target="policy_gate" value="pi_bayes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_gate_final" edge="1" parent="1" source="policy_gate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.4;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" target="policy_final" value="bounded shift">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_final_sample" edge="1" parent="1" source="policy_final" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.4;" target="policy_sample" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sample_outcome" edge="1" parent="1" source="policy_sample" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D6B48D;strokeWidth=2.4;" target="update_outcome" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1105" y="340" />
+              <mxPoint x="1105" y="244" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_update1" edge="1" parent="1" source="update_outcome" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D6B48D;strokeWidth=2.4;" target="update_uncontrol" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_update2" edge="1" parent="1" source="update_uncontrol" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D6B48D;strokeWidth=2.4;" target="update_attr" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_update3" edge="1" parent="1" source="update_attr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D6B48D;strokeWidth=2.4;" target="update_psych" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1602" y="315" />
+              <mxPoint x="1418" y="315" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_update4" edge="1" parent="1" source="update_psych" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#D6B48D;strokeWidth=2.4;" target="update_memory" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1418" y="445" />
+              <mxPoint x="1602" y="445" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_posterior_control" edge="1" parent="1" source="policy_posterior" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.2;dashed=1;dashPattern=6 4;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" target="control_components" value="pre-outcome">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="702" y="410" />
+              <mxPoint x="565" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_control1" edge="1" parent="1" source="control_components" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2;" target="control_score" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_control2" edge="1" parent="1" source="control_score" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2;" target="control_mode" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_control_to_policy" edge="1" parent="1" source="control_mode" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2;dashed=1;dashPattern=6 4;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" target="policy_final" value="gated mode only">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1055" y="516" />
+              <mxPoint x="1055" y="405" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_memory_posterior" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.2;dashed=1;dashPattern=6 4;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" value="after outcome only">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1640" y="629" />
+              <mxPoint x="740" y="629" />
+            </Array>
+            <mxPoint x="1640.4827586206898" y="526.9999999999999" as="sourcePoint" />
+            <mxPoint x="740" y="361.9999999999999" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_memory_control" edge="1" parent="1" source="update_memory" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#7AA2D6;strokeWidth=2.2;dashed=1;dashPattern=6 4;fontSize=12;fontColor=#24466F;fontFamily=Helvetica;" target="control_score" value="updates next C">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1515" y="590" />
+              <mxPoint x="775" y="590" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

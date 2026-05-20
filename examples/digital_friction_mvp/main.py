@@ -2571,6 +2571,19 @@ def _write_run_metadata(
         "economy_binding_audit_strict": bool(ECONOMY_BINDING_AUDIT_STRICT),
         "proto_logical_clock_enabled": bool(proto_logical_clock_enabled),
         "agent_plan_prompt_profile": AGENT_PLAN_PROMPT_PROFILE,
+        "proto_task_entry_mode": RUNTIME_CONFIG.proto_task_entry_mode,
+        "proto_mobile_intention_rerank_top_k": (
+            RUNTIME_CONFIG.proto_mobile_intention_rerank_top_k
+        ),
+        "proto_mobile_intention_rerank_schedule_path": (
+            RUNTIME_CONFIG.proto_mobile_intention_rerank_schedule_path
+        ),
+        "proto_mobile_intention_rerank_schedule_role": (
+            RUNTIME_CONFIG.proto_mobile_intention_rerank_schedule_role
+        ),
+        "proto_mobile_intention_rerank_run_id": (
+            RUNTIME_CONFIG.proto_mobile_intention_rerank_run_id
+        ),
         "written_at": datetime.now().isoformat(timespec="seconds"),
     }
     metadata_path = Path(RUN_METADATA_PATH)

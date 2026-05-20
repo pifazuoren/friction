@@ -2385,3 +2385,64 @@
   - 结果：通过，无输出
   - `python -m pytest examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_huys_dayan_lite_controllability_analysis.py examples/digital_friction_mvp/tests/test_bayesian_policy_lite.py -q`
   - 结果：`48 passed`
+
+## 2026-05-20
+
+### Mobile-intention entry Phase 1 完成与 Phase 2 online MC rerank 落地
+- 目的：
+  - 记录 `mobile-intention_entrytodo.md` 中 Phase 1 / Phase 2 的实际完成状态与工程边界
+  - Phase 1 保留稳定规则入口：`fixed_assignment`、`mobile_intention_rule`、`mobile_intention_llm_shadow`
+  - Phase 2 新增 `mobile_intention_llm_rerank_online_mc`，让 LLM 只在 rule/data top-k candidates 内在线 rerank，并作为 LLM-entry-conditioned Monte Carlo 结果单独报告
+  - 同一 Monte Carlo run 内四个 paired worlds 共享 run-level schedule artifact，保证相同 `run_id / agent_id / day / tick` 的 entry exposure 一致
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/mobile-intention_entrytodo.md`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/task_assignment.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/main.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis_parallel_worlds.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - `config_runtime.py` 扩展合法 entry mode，加入 `mobile_intention_llm_rerank_online_mc`
+  - 新增最小 rerank env：
+    - `PROTO_MOBILE_INTENTION_RERANK_TOP_K`
+    - `PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH`
+    - `PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE=write|read`
+    - `PROTO_MOBILE_INTENTION_RERANK_RUN_ID`
+  - 复用 `MobileEntryDecision`，不新增复杂 entry dataclass；rerank 相关信息写入 audit
+  - `evaluate_mobile_entry_for_agent(...)` 支持 `selected_intention_override`、`rerank_audit_payload`、`rerank_top_k`
+  - `mobile_intention_llm_rerank_online_mc` 下，override 必须来自 rule/data top-k candidates；非法、低置信、缺 schedule、candidate hash mismatch 均 fail-fast，不随机兜底
+  - `DigitalHelplessnessAgent.forward()` 中新增 rerank 主链：
+    - 先走现有 rule/data entry evaluation 得到 priors、top-k 和 rule-selected intention
+    - schedule role 为 `write` 时调用 LLM rerank 并写入 JSONL schedule
+    - schedule role 为 `read` 时读取同 key schedule entry 并校验 candidate hash / prompt version / run id
+    - 再用 `selected_intention_override` 重新进入现有 mapping / no-op / task generation 链
+  - `world_runner.py` 为每个 pair/run 生成 shared schedule path：
+    - `world_order == 0` 使用 `write`
+    - `world_order > 0` 使用 `read`
+    - 四个 worlds 共享同一个 rerank run id 与 schedule artifact
+  - `main.py` 和 `analysis_parallel_worlds.py` 增加 mobile entry / rerank 相关 metadata 与聚合输出
+  - `mobile-intention_entrytodo.md` 更新 Phase 2 表述：不要求 persistent replay/cache 锁死 LLM 输出，而是采用 online MC rerank + 多轮均值 / 方差 / 置信区间
+- 保持不变：
+  - 不修改 DB schema
+  - 不修改 Phase4 / Phase5C / outcome / helplessness / posterior 主链
+  - 不让 entry 层直接生成 `DigitalTask` 之外的新接口；LLM 只能在现有 top-k mobile intentions 内 rerank
+  - 不让 `communicate_or_seek_help` 触发 help strategy；它仍是 context-only entry
+  - `browse_entertainment`、`no_mobile_action`、`unknown_or_unmapped`、低置信 mapping 仍保持 no-op / context-only 边界
+  - TalkingData 仍只用于 mobile activity exposure calibration / validation artifact，不作为 friction、outcome、help、avoid 或 helplessness 标签
+- 验证：
+  - Phase 1 相关测试此前已验证：`43 passed`
+  - Phase 2 targeted tests：`48 passed`
+  - 更大范围测试：
+    - `python -m pytest examples/digital_friction_mvp/tests --ignore=examples/digital_friction_mvp/tests/test_stream_memory_native_search.py -q`
+    - 结果：`252 passed, 3 warnings`
+  - 完整 `examples/digital_friction_mvp/tests` 当前仍被无关依赖阻塞：
+    - `test_stream_memory_native_search.py` collection error
+    - 原因：`ModuleNotFoundError: No module named 'grpc'`
+    - 该阻塞不是 mobile-intention Phase 1 / Phase 2 失败
+- 备注：
+  - Phase 2 作为 `LLM-entry-conditioned Monte Carlo` 结果与 Phase 1 `mobile_intention_rule` 分开报告
+  - 同一 run 内使用 shared schedule artifact 保证 paired-world entry exposure 一致；不同 run 可产生不同 LLM rerank schedule
+  - 后续若需要 deterministic robustness ablation，可另做 `mobile_intention_llm_rerank_replay`，不混入当前 Phase 2 主设定

@@ -1,0 +1,195 @@
+<mxfile host="app.diagrams.net" modified="2026-05-13T14:50:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="phase4-semantic-gated-lite2" name="Phase4 Semantic Gated-Lite2">
+    <mxGraphModel dx="1980" dy="1080" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Phase4 Semantic Gated-Lite2 Action Choice and Helplessness Update Architecture" style="text;html=1;strokeColor=none;fillColor=none;fontSize=30;fontStyle=1;fontColor=#1F2937;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="360" y="35" width="1480" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="panel_action" value="Action choice before outcome" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3FF;strokeColor=#6C8EBF;strokeWidth=2;fontSize=16;fontStyle=1;fontColor=#355C9A;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="210" y="115" width="1390" height="245" as="geometry"/>
+        </mxCell>
+        <mxCell id="panel_update" value="Post-outcome psychological update" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F6FF;strokeColor=#8EAADB;strokeWidth=2;fontSize=16;fontStyle=1;fontColor=#44546A;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="395" width="760" height="430" as="geometry"/>
+        </mxCell>
+        <mxCell id="panel_bayes" value="Bayesian action-outcome learning loop" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4EAFE;strokeColor=#9673A6;strokeWidth=2;fontSize=16;fontStyle=1;fontColor=#6B4C7A;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="860" y="380" width="440" height="260" as="geometry"/>
+        </mxCell>
+        <mxCell id="task_appraisal" value="Task Appraisal&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;difficulty / risk / value&lt;br&gt;felt control / expected help&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="205" width="170" height="105" as="geometry"/>
+        </mxCell>
+        <mxCell id="weak_prior" value="Weak Prior&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;attempt .34&lt;br&gt;help .33&lt;br&gt;avoid .33&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;strokeWidth=2;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="180" width="145" height="105" as="geometry"/>
+        </mxCell>
+        <mxCell id="llm_semantic" value="LLM Semantic&lt;br&gt;Adjustment&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;pi_llm + lambda_llm&lt;br&gt;=&gt; pi_semantic&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="435" y="180" width="165" height="105" as="geometry"/>
+        </mxCell>
+        <mxCell id="bayes_predictive" value="Bayesian Posterior&lt;br&gt;Predictive Policy&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;Q_bayes / pi_bayes&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;strokeWidth=2;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="180" width="180" height="105" as="geometry"/>
+        </mxCell>
+        <mxCell id="evidence_gate" value="Evidence Gate&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;confidence &amp;ge; threshold&lt;br&gt;entropy &amp;le; threshold&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;strokeWidth=2;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="875" y="180" width="145" height="105" as="geometry"/>
+        </mxCell>
+        <mxCell id="max_delta" value="Max-Delta Shift&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;bounded Bayesian&lt;br&gt;adjustment&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;strokeWidth=2;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="180" width="160" height="105" as="geometry"/>
+        </mxCell>
+        <mxCell id="safety_guard" value="Safety Guard&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;probability floor&lt;br&gt;normalize / fallback&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;strokeWidth=2;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="180" width="160" height="105" as="geometry"/>
+        </mxCell>
+        <mxCell id="sampled_action" value="Sampled Action&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;attempt / help / avoid&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1460" y="205" width="150" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="outcome" value="Digital Task&lt;br&gt;Outcome" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=17;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1685" y="205" width="165" height="105" as="geometry"/>
+        </mxCell>
+        <mxCell id="success" value="Success" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;strokeWidth=2;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="105" width="110" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="failure" value="Failure /&lt;br&gt;Abandon" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;strokeWidth=2;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="390" width="110" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="avoid" value="Avoid" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;strokeWidth=2;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="525" width="110" height="45" as="geometry"/>
+        </mxCell>
+        <mxCell id="recovery" value="Recovery&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;only controllable&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1900" y="90" width="150" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="uncontrollability" value="Event-level&lt;br&gt;Uncontrollability" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D6EAF8;strokeColor=#6C8EBF;strokeWidth=2;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1885" y="315" width="180" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="avoid_reason" value="Avoid Reason&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;helpless / risk / low value&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1885" y="505" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="helplessness" value="Helplessness&lt;br&gt;Update" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CFE2F3;strokeColor=#6C8EBF;strokeWidth=3;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1640" y="635" width="190" height="95" as="geometry"/>
+        </mxCell>
+        <mxCell id="attribution" value="Attribution&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;locus / stability / scope&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1370" y="635" width="180" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="generalization" value="Persistence /&lt;br&gt;Generalization" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="675" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="memory" value="Memory /&lt;br&gt;Next Round" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=17;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="735" y="680" width="180" height="85" as="geometry"/>
+        </mxCell>
+        <mxCell id="posterior_update" value="Bayesian Policy&lt;br&gt;Posterior Update&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;observed action only&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;strokeWidth=2;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="455" width="170" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="bayes_memory" value="Bayesian Policy Memory&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;task_family + action&lt;br&gt;-&amp;gt; outcome subtype&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;strokeWidth=2;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="890" y="455" width="180" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="payload" value="Payload Audit&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;pi_prior / pi_llm / pi_semantic&lt;br&gt;pi_bayes / pi_final / deltas&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;strokeWidth=2;dashed=1;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="455" width="260" height="95" as="geometry"/>
+        </mxCell>
+        <mxCell id="note_rule" value="Rule weights: audit / context / fallback only&lt;br&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;not direct semantic_v2 policy mixing&lt;/font&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="250" y="305" width="250" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_task_prior" style="endArrow=block;html=1;rounded=0;strokeWidth=3;strokeColor=#6C8EBF;" edge="1" parent="1" source="task_appraisal" target="weak_prior">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_prior_llm" style="endArrow=block;html=1;rounded=0;strokeWidth=3;strokeColor=#6C8EBF;" edge="1" parent="1" source="weak_prior" target="llm_semantic">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_llm_bayes" style="endArrow=block;html=1;rounded=0;strokeWidth=3;strokeColor=#6C8EBF;" edge="1" parent="1" source="llm_semantic" target="bayes_predictive">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_bayes_gate" style="endArrow=block;html=1;rounded=0;strokeWidth=3;strokeColor=#6C8EBF;" edge="1" parent="1" source="bayes_predictive" target="evidence_gate">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_gate_delta" style="endArrow=block;html=1;rounded=0;strokeWidth=3;strokeColor=#6C8EBF;" edge="1" parent="1" source="evidence_gate" target="max_delta">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_delta_guard" style="endArrow=block;html=1;rounded=0;strokeWidth=3;strokeColor=#6C8EBF;" edge="1" parent="1" source="max_delta" target="safety_guard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_guard_action" style="endArrow=block;html=1;rounded=0;strokeWidth=3;strokeColor=#6C8EBF;" edge="1" parent="1" source="safety_guard" target="sampled_action">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_action_outcome" style="endArrow=block;html=1;rounded=0;strokeWidth=3;strokeColor=#6C8EBF;" edge="1" parent="1" source="sampled_action" target="outcome">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_outcome_success" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#D79B00;" edge="1" parent="1" source="outcome" target="success">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_success_recovery" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#6C8EBF;" edge="1" parent="1" source="success" target="recovery">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_recovery_h" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#6C8EBF;" edge="1" parent="1" source="recovery" target="helplessness">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1975" y="680"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_outcome_failure" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#D79B00;" edge="1" parent="1" source="outcome" target="failure">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_failure_u" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#6C8EBF;" edge="1" parent="1" source="failure" target="uncontrollability">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_outcome_avoid" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#D79B00;" edge="1" parent="1" source="outcome" target="avoid">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_avoid_reason" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#6C8EBF;" edge="1" parent="1" source="avoid" target="avoid_reason">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_avoid_u" value="only helplessness avoid" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#6C8EBF;fontSize=11;" edge="1" parent="1" source="avoid_reason" target="uncontrollability">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_u_h" style="endArrow=block;html=1;rounded=0;strokeWidth=3;strokeColor=#6C8EBF;" edge="1" parent="1" source="uncontrollability" target="helplessness">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_u_attr" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#6C8EBF;" edge="1" parent="1" source="uncontrollability" target="attribution">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_attr_gen" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#6C8EBF;" edge="1" parent="1" source="attribution" target="generalization">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_gen_mem" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#6C8EBF;" edge="1" parent="1" source="generalization" target="memory">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_h_mem" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#6C8EBF;" edge="1" parent="1" source="helplessness" target="memory">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_mem_loop" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#6C8EBF;" edge="1" parent="1" source="memory" target="task_appraisal">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="90" y="725"/>
+              <mxPoint x="90" y="330"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_outcome_post_update" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#9673A6;" edge="1" parent="1" source="outcome" target="posterior_update">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1515" y="500"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_post_mem" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#9673A6;" edge="1" parent="1" source="posterior_update" target="bayes_memory">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_bayes_mem_predictive" value="next decisions" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#9673A6;fontSize=12;" edge="1" parent="1" source="bayes_memory" target="bayes_predictive">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="980" y="345"/>
+              <mxPoint x="730" y="345"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_policy_audit" style="endArrow=open;html=1;rounded=0;strokeWidth=2;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="safety_guard" target="payload">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_outcome_audit" style="endArrow=open;html=1;rounded=0;strokeWidth=2;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="outcome" target="payload">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1600" y="585"/>
+              <mxPoint x="680" y="585"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

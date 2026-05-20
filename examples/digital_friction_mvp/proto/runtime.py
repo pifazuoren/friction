@@ -70,6 +70,9 @@ def assign_task_with_entry_decision(
     calibration_path: str = "",
     mapping_path: str = "",
     confidence_threshold: float = 0.70,
+    selected_intention_override: str | None = None,
+    rerank_audit_payload: dict[str, Any] | None = None,
+    rerank_top_k: int = 5,
 ) -> tuple[DigitalTask | None, dict[str, Any], bool, MobileEntryDecision | None]:
     if existing_task is not None:
         return existing_task, {}, False, None
@@ -94,6 +97,9 @@ def assign_task_with_entry_decision(
         mapping_path=mapping_path,
         confidence_threshold=float(confidence_threshold),
         llm_shadow_enabled=normalized_mode == "mobile_intention_llm_shadow",
+        selected_intention_override=selected_intention_override,
+        rerank_audit_payload=rerank_audit_payload,
+        rerank_top_k=int(rerank_top_k),
     )
     if decision.task is None:
         return None, {}, False, decision

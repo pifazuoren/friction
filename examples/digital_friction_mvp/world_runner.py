@@ -75,6 +75,10 @@ FINGERPRINT_ENV_KEYS = (
     "PROTO_MOBILE_INTENTION_WORLD_NEUTRAL",
     "PROTO_MOBILE_INTENTION_LLM_PROMPT_VERSION",
     "PROTO_MOBILE_INTENTION_LLM_MIN_CONFIDENCE",
+    "PROTO_MOBILE_INTENTION_RERANK_TOP_K",
+    "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH",
+    "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE",
+    "PROTO_MOBILE_INTENTION_RERANK_RUN_ID",
     "PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE",
     "PROTO_HUYS_DAYAN_LITE_CONFIDENCE_K",
     "PROTO_HUYS_DAYAN_LITE_MIN_ACTION_UPDATES",
@@ -348,6 +352,22 @@ def main() -> None:
     base_env = os.environ.copy()
     base_env.setdefault("STAGE_MODE", "single")
     base_env.setdefault("STAGE_SINGLE_NAME", "steady")
+    if (
+        base_env.get("PROTO_TASK_ENTRY_MODE", "").strip().lower()
+        == "mobile_intention_llm_rerank_online_mc"
+    ):
+        base_env.setdefault(
+            "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH",
+            str(analysis_dir / f"mobile_entry_rerank_schedule_{group_id}_p{{pair_index}}.jsonl"),
+        )
+        base_env.setdefault(
+            "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE",
+            "auto_by_world_order",
+        )
+        base_env.setdefault(
+            "PROTO_MOBILE_INTENTION_RERANK_RUN_ID",
+            f"{group_id}_p{{pair_index}}",
+        )
     config_payload = _build_config_payload(base_env, worlds)
     config_fingerprint = _build_config_fingerprint(config_payload)
     config_snapshot_path = analysis_dir / f"config_snapshot_{group_id}.json"
@@ -366,6 +386,15 @@ def main() -> None:
 
     qc_failures = 0
     for pair_index, pair_seed in enumerate(seed_values):
+        rerank_schedule_path = (
+            analysis_dir / f"mobile_entry_rerank_schedule_{group_id}_p{pair_index:03d}.jsonl"
+        )
+        if (
+            base_env.get("PROTO_TASK_ENTRY_MODE", "").strip().lower()
+            == "mobile_intention_llm_rerank_online_mc"
+            and rerank_schedule_path.exists()
+        ):
+            rerank_schedule_path.unlink()
         for world_order, world_name in enumerate(worlds):
             now_token = datetime.now().strftime("%Y%m%d_%H%M%S")
             exp_name = (
@@ -389,6 +418,19 @@ def main() -> None:
             env["PARALLEL_WORLD_ORDER"] = str(world_order)
             env["PARALLEL_CONFIG_FINGERPRINT"] = config_fingerprint
             env["RUN_METADATA_PATH"] = str(metadata_path)
+            if (
+                env.get("PROTO_TASK_ENTRY_MODE", "").strip().lower()
+                == "mobile_intention_llm_rerank_online_mc"
+            ):
+                env["PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH"] = str(
+                    rerank_schedule_path
+                )
+                env["PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE"] = (
+                    "write" if int(world_order) == 0 else "read"
+                )
+                env["PROTO_MOBILE_INTENTION_RERANK_RUN_ID"] = (
+                    f"{group_id}_p{pair_index:03d}"
+                )
 
             if metadata_path.exists():
                 try:

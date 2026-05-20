@@ -5,6 +5,7 @@ import json
 import os
 import random
 import re
+from pathlib import Path
 from typing import Any
 
 from agentsociety.cityagent import SocietyAgent
@@ -32,6 +33,7 @@ from .experience_memory import (
 )
 from .models import HelplessnessUpdateInput
 from .llm_psychology import (
+    _extract_json_object,
     _query_json_payload,
     maybe_generate_daily_reflection,
     prepare_digital_emotion_state_for_day,
@@ -57,7 +59,9 @@ from .task_assignment import (
     decode_task,
     encode_task,
     is_task_window_tick,
+    mobile_intention_candidate_hash,
     skipped_mobile_entry_decision,
+    top_mobile_intention_candidates,
 )
 from .uncontrollability_calibrator import calibrate_uncontrollability
 
@@ -181,6 +185,59 @@ def _sanitize_mobile_entry_shadow(
         },
         "ok",
     )
+
+
+def _schedule_entry_key(
+    *,
+    run_id: str,
+    agent_id: int,
+    day: int,
+    tick_seconds: float,
+) -> str:
+    return "|".join(
+        (
+            str(run_id),
+            str(int(agent_id)),
+            str(int(day)),
+            str(int(round(float(tick_seconds)))),
+        )
+    )
+
+
+def _load_mobile_entry_rerank_schedule(path: str) -> dict[str, dict[str, Any]]:
+    schedule_path = str(path or "").strip()
+    if not schedule_path:
+        return {}
+    result: dict[str, dict[str, Any]] = {}
+    try:
+        with open(schedule_path, encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                payload = json.loads(line)
+                if not isinstance(payload, dict):
+                    continue
+                key = _schedule_entry_key(
+                    run_id=str(payload.get("run_id", "")),
+                    agent_id=_safe_int(payload.get("agent_id"), -1),
+                    day=_safe_int(payload.get("day"), -1),
+                    tick_seconds=_safe_float(payload.get("tick_seconds"), -1.0),
+                )
+                result[key] = payload
+    except FileNotFoundError:
+        return {}
+    return result
+
+
+def _append_mobile_entry_rerank_schedule(path: str, payload: dict[str, Any]) -> None:
+    schedule_path = str(path or "").strip()
+    if not schedule_path:
+        raise ValueError("mobile intention rerank schedule path is required")
+    target = Path(schedule_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
 
 
 def _stream_appraisal_condition(runtime_config: Any) -> str:
@@ -971,6 +1028,225 @@ class DigitalHelplessnessAgent(SocietyAgent):
         )
         return payload
 
+    async def _build_mobile_entry_llm_rerank(
+        self,
+        *,
+        entry_decision: MobileEntryDecision,
+        runtime_config: Any,
+        stable_profile: dict[str, Any] | None,
+        day: int,
+        tick_seconds: float,
+    ) -> dict[str, Any]:
+        candidates = top_mobile_intention_candidates(
+            entry_decision.candidate_intentions,
+            top_k=int(runtime_config.proto_mobile_intention_rerank_top_k),
+        )
+        allowed_intentions = set(candidates)
+        prompt_version = str(runtime_config.proto_mobile_intention_llm_prompt_version)
+        candidate_hash = mobile_intention_candidate_hash(candidates)
+        payload = {
+            "rerank_enabled": True,
+            "rerank_run_id": str(runtime_config.proto_mobile_intention_rerank_run_id),
+            "rerank_schedule_role": str(
+                runtime_config.proto_mobile_intention_rerank_schedule_role
+            ),
+            "rerank_prompt_version": prompt_version,
+            "rerank_top_k": int(runtime_config.proto_mobile_intention_rerank_top_k),
+            "rerank_candidate_intentions": dict(candidates),
+            "rerank_candidate_hash": candidate_hash,
+            "rule_selected_mobile_intention": (
+                entry_decision.selected_mobile_intention
+            ),
+            "rerank_selected_mobile_intention": "",
+            "rerank_parse_status": "not_called",
+            "rerank_confidence": 0.0,
+            "rerank_reason": "",
+            "rerank_response_hash": "",
+            "llm_drives_real_entry": True,
+            "uses_post_outcome_information": False,
+            "does_not_decide_strategy": True,
+            "does_not_decide_outcome": True,
+            "does_not_update_psychology": True,
+        }
+        if not candidates:
+            payload["rerank_parse_status"] = "no_candidates"
+            raise ValueError("mobile-intention LLM rerank has no candidates")
+        if getattr(self, "llm", None) is None:
+            payload["rerank_parse_status"] = "request_error"
+            raise ValueError("mobile-intention LLM rerank requires an LLM client")
+        user_payload = {
+            "prompt_version": prompt_version,
+            "day": int(day),
+            "tick_seconds": float(tick_seconds),
+            "hour": entry_decision.audit.get("hour"),
+            "agent_profile": stable_profile or {},
+            "profile_bucket": entry_decision.audit.get("profile_bucket", ""),
+            "candidate_intentions": candidates,
+            "rule_selected_mobile_intention": (
+                entry_decision.selected_mobile_intention
+            ),
+            "allowed_intentions": list(candidates),
+            "output_schema_example": {
+                "selected_mobile_intention": "check_information",
+                "confidence": 0.80,
+                "reason": "This candidate best matches the context and priors.",
+            },
+        }
+        dialog = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a JSON-only reranker for a constrained mobile intention "
+                    "entry layer. Choose exactly one intention from candidate_intentions. "
+                    "Do not invent intentions, tasks, strategies, outcomes, help actions, "
+                    "or psychological state updates."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    "Return one JSON object only.\n"
+                    + json.dumps(user_payload, ensure_ascii=False)
+                ),
+            },
+        ]
+        try:
+            raw_response = await getattr(self, "llm").atext_request(
+                dialog=dialog,
+                temperature=0.1,
+                timeout=int(getattr(runtime_config, "proto_llm_psychology_timeout", 30)),
+                retries=int(getattr(runtime_config, "proto_llm_psychology_retries", 0)),
+                max_tokens=260,
+            )
+        except Exception as exc:
+            payload["rerank_parse_status"] = "request_error"
+            raise ValueError("mobile-intention LLM rerank request failed") from exc
+        parsed = _extract_json_object(str(raw_response))
+        llm_payload, status = _sanitize_mobile_entry_shadow(
+            parsed,
+            allowed_intentions=allowed_intentions,
+            min_confidence=runtime_config.proto_mobile_intention_llm_min_confidence,
+        )
+        payload["rerank_parse_status"] = status
+        if llm_payload is None:
+            raise ValueError(f"mobile-intention LLM rerank failed: {status}")
+        selected = str(llm_payload.get("selected_mobile_intention", "")).strip()
+        confidence = _clamp(_safe_float(llm_payload.get("confidence"), 0.0), 0.0, 1.0)
+        if confidence < float(runtime_config.proto_mobile_intention_llm_min_confidence):
+            payload["rerank_parse_status"] = "low_confidence"
+            raise ValueError("mobile-intention LLM rerank confidence below threshold")
+        payload.update(
+            {
+                "rerank_selected_mobile_intention": selected,
+                "rerank_confidence": confidence,
+                "rerank_reason": str(llm_payload.get("reason", ""))[:120],
+                "rerank_response_hash": hashlib.sha256(
+                    json.dumps(
+                        llm_payload,
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    ).encode("utf-8")
+                ).hexdigest()[:16],
+            }
+        )
+        return payload
+
+    async def _resolve_mobile_entry_rerank_override(
+        self,
+        *,
+        entry_decision: MobileEntryDecision,
+        runtime_config: Any,
+        stable_profile: dict[str, Any] | None,
+        day: int,
+        tick_seconds: float,
+    ) -> tuple[str, dict[str, Any]]:
+        run_id = str(runtime_config.proto_mobile_intention_rerank_run_id)
+        role = str(runtime_config.proto_mobile_intention_rerank_schedule_role)
+        schedule_path = str(runtime_config.proto_mobile_intention_rerank_schedule_path)
+        candidates = top_mobile_intention_candidates(
+            entry_decision.candidate_intentions,
+            top_k=int(runtime_config.proto_mobile_intention_rerank_top_k),
+        )
+        candidate_hash = mobile_intention_candidate_hash(candidates)
+        key = _schedule_entry_key(
+            run_id=run_id,
+            agent_id=int(self.id),
+            day=int(day),
+            tick_seconds=float(tick_seconds),
+        )
+        if role == "read":
+            schedule = _load_mobile_entry_rerank_schedule(schedule_path)
+            row = schedule.get(key)
+            if row is None:
+                raise ValueError(f"missing mobile-intention rerank schedule entry: {key}")
+            if str(row.get("candidate_hash", "")) != candidate_hash:
+                raise ValueError(
+                    "mobile-intention rerank schedule candidate hash mismatch"
+                )
+            selected = str(row.get("selected_mobile_intention", "")).strip()
+            if selected not in candidates:
+                raise ValueError(
+                    "mobile-intention rerank schedule selected intention is not in top-k"
+                )
+            audit = {
+                "rerank_enabled": True,
+                "rerank_run_id": run_id,
+                "rerank_schedule_role": "read",
+                "rerank_prompt_version": str(row.get("prompt_version", "")),
+                "rerank_top_k": int(runtime_config.proto_mobile_intention_rerank_top_k),
+                "rerank_candidate_intentions": dict(candidates),
+                "rerank_candidate_hash": candidate_hash,
+                "rule_selected_mobile_intention": str(
+                    row.get(
+                        "rule_selected_mobile_intention",
+                        entry_decision.selected_mobile_intention,
+                    )
+                ),
+                "rerank_selected_mobile_intention": selected,
+                "rerank_parse_status": str(row.get("parse_status", "")),
+                "rerank_confidence": _clamp(
+                    _safe_float(row.get("confidence"), 0.0),
+                    0.0,
+                    1.0,
+                ),
+                "rerank_reason": str(row.get("reason", ""))[:120],
+                "rerank_response_hash": str(row.get("response_hash", "")),
+                "llm_drives_real_entry": True,
+                "uses_post_outcome_information": False,
+            }
+            return selected, audit
+        if role != "write":
+            raise ValueError(
+                "mobile-intention rerank schedule role must be write or read"
+            )
+        audit = await DigitalHelplessnessAgent._build_mobile_entry_llm_rerank(
+            self,
+            entry_decision=entry_decision,
+            runtime_config=runtime_config,
+            stable_profile=stable_profile,
+            day=int(day),
+            tick_seconds=float(tick_seconds),
+        )
+        selected = str(audit.get("rerank_selected_mobile_intention", "")).strip()
+        row = {
+            "run_id": run_id,
+            "agent_id": int(self.id),
+            "day": int(day),
+            "tick_seconds": float(tick_seconds),
+            "profile_bucket": entry_decision.audit.get("profile_bucket", ""),
+            "prompt_version": str(runtime_config.proto_mobile_intention_llm_prompt_version),
+            "candidate_hash": candidate_hash,
+            "candidate_intentions": dict(candidates),
+            "rule_selected_mobile_intention": entry_decision.selected_mobile_intention,
+            "selected_mobile_intention": selected,
+            "confidence": float(audit.get("rerank_confidence", 0.0)),
+            "parse_status": str(audit.get("rerank_parse_status", "")),
+            "reason": str(audit.get("rerank_reason", ""))[:120],
+            "response_hash": str(audit.get("rerank_response_hash", "")),
+        }
+        _append_mobile_entry_rerank_schedule(schedule_path, row)
+        return selected, audit
+
     async def _build_survey_summary(self) -> dict[str, float]:
         summary: dict[str, float] = {}
         for field_name in _SURVEY_SUMMARY_FIELDS:
@@ -1530,7 +1806,12 @@ class DigitalHelplessnessAgent(SocietyAgent):
             day=int(day),
             tick_seconds=float(t),
             env=env,
-            entry_mode=runtime_config.proto_task_entry_mode,
+            entry_mode=(
+                "mobile_intention_rule"
+                if runtime_config.proto_task_entry_mode
+                == "mobile_intention_llm_rerank_online_mc"
+                else runtime_config.proto_task_entry_mode
+            ),
             stable_profile=entry_profile,
             calibration_path=(
                 runtime_config.proto_mobile_intention_calibration_path
@@ -1540,6 +1821,39 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 runtime_config.proto_mobile_intention_confidence_threshold
             ),
         )
+        if (
+            entry_decision is not None
+            and runtime_config.proto_task_entry_mode
+            == "mobile_intention_llm_rerank_online_mc"
+        ):
+            selected_override, rerank_audit = (
+                await self._resolve_mobile_entry_rerank_override(
+                    entry_decision=entry_decision,
+                    runtime_config=runtime_config,
+                    stable_profile=entry_profile,
+                    day=int(day),
+                    tick_seconds=float(t),
+                )
+            )
+            task, task_updates, _, entry_decision = assign_task_with_entry_decision(
+                existing_task=None,
+                agent_id=int(self.id),
+                day=int(day),
+                tick_seconds=float(t),
+                env=env,
+                entry_mode=runtime_config.proto_task_entry_mode,
+                stable_profile=entry_profile,
+                calibration_path=(
+                    runtime_config.proto_mobile_intention_calibration_path
+                ),
+                mapping_path=runtime_config.proto_mobile_intention_mapping_path,
+                confidence_threshold=(
+                    runtime_config.proto_mobile_intention_confidence_threshold
+                ),
+                selected_intention_override=selected_override,
+                rerank_audit_payload=rerank_audit,
+                rerank_top_k=int(runtime_config.proto_mobile_intention_rerank_top_k),
+            )
         if entry_decision is not None:
             if runtime_config.proto_task_entry_mode == "mobile_intention_llm_shadow":
                 entry_decision.audit["llm_shadow"] = (

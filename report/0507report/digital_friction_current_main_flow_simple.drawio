@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-05-13T17:10:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="digital-friction-current-main-flow-simple" name="Current Main Flow">
+    <mxGraphModel dx="1600" dy="1700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1720" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="Current Digital Friction Experiment Main Flow" style="text;html=1;strokeColor=none;fillColor=none;fontSize=32;fontStyle=1;fontColor=#111827;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="250" y="30" width="1100" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Phase4 semantic gated-lite2 action choice + retained 0416 psychological update chain" style="text;html=1;strokeColor=none;fillColor=none;fontSize=16;fontColor=#4B5563;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="250" y="82" width="1100" height="34" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="legend_action" value="Action choice" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EAF2FF;strokeColor=#4F7DBD;strokeWidth=2;fontSize=13;fontColor=#24466F;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="130" width="130" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_psych" value="Psychological update" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8E9DC;strokeColor=#B7794D;strokeWidth=2;fontSize=13;fontColor=#6B3F27;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="168" width="130" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_memory" value="Memory / Bayesian learning" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E6F3EC;strokeColor=#5F9B78;strokeWidth=2;fontSize=13;fontColor=#315B45;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="206" width="180" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_audit" value="Audit / analysis" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F7EFCF;strokeColor=#B89A45;strokeWidth=2;fontSize=13;fontColor=#6A5420;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="244" width="130" height="28" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="world_runner" value="world_runner" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=2;fontSize=18;fontStyle=1;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="675" y="145" width="250" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="task_appears" value="Digital Task Appears" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=2;fontSize=18;fontStyle=1;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="675" y="245" width="250" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="task_appraisal" value="Task Appraisal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=2;fontSize=18;fontStyle=1;fontColor=#334155;" vertex="1" parent="1">
+          <mxGeometry x="675" y="345" width="250" height="64" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="action_box" value="Phase4 Action Choice" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F7FC;strokeColor=#4F7DBD;strokeWidth=3;fontSize=20;fontStyle=1;fontColor=#24466F;align=left;verticalAlign=top;spacingLeft=18;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="190" y="455" width="1220" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="weak_prior" value="Weak Prior" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4F7DBD;strokeWidth=3;fontSize=17;fontStyle=1;fontColor=#24466F;" vertex="1" parent="1">
+          <mxGeometry x="270" y="540" width="210" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="llm_semantic" value="LLM Semantic&#xa;Adjustment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FF;strokeColor=#4F7DBD;strokeWidth=3;fontSize=17;fontStyle=1;fontColor=#24466F;" vertex="1" parent="1">
+          <mxGeometry x="540" y="540" width="210" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="bayes_shift" value="Bayesian&#xa;Gated Shift" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FF;strokeColor=#4F7DBD;strokeWidth=3;fontSize=17;fontStyle=1;fontColor=#24466F;" vertex="1" parent="1">
+          <mxGeometry x="810" y="540" width="210" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="safety_guard" value="Safety Guard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FF;strokeColor=#4F7DBD;strokeWidth=3;fontSize=17;fontStyle=1;fontColor=#24466F;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="540" width="210" height="72" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="sampled_action" value="Sampled Action" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF2FF;strokeColor=#4F7DBD;strokeWidth=3;fontSize=18;fontStyle=1;fontColor=#24466F;" vertex="1" parent="1">
+          <mxGeometry x="675" y="735" width="250" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="task_outcome" value="Digital Task Outcome" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8E9DC;strokeColor=#B7794D;strokeWidth=2;fontSize=18;fontStyle=1;fontColor=#6B3F27;" vertex="1" parent="1">
+          <mxGeometry x="675" y="835" width="250" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="event_uncontrollability" value="Event Appraisal /&#xa;Uncontrollability" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8E9DC;strokeColor=#B7794D;strokeWidth=3;fontSize=18;fontStyle=1;fontColor=#6B3F27;" vertex="1" parent="1">
+          <mxGeometry x="640" y="935" width="320" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="interpretation" value="Attribution / Avoid Reason /&#xa;Support Mode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8E9DC;strokeColor=#B7794D;strokeWidth=3;fontSize=18;fontStyle=1;fontColor=#6B3F27;" vertex="1" parent="1">
+          <mxGeometry x="610" y="1045" width="380" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="state_update" value="Helplessness / Trust /&#xa;Avoidance Update" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8E9DC;strokeColor=#B7794D;strokeWidth=3;fontSize=18;fontStyle=1;fontColor=#6B3F27;" vertex="1" parent="1">
+          <mxGeometry x="610" y="1155" width="380" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="experience_memory" value="Experience Memory Update" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F3EC;strokeColor=#5F9B78;strokeWidth=3;fontSize=18;fontStyle=1;fontColor=#315B45;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1265" width="360" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="posterior_update" value="Bayesian Posterior Update" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F3EC;strokeColor=#5F9B78;strokeWidth=3;fontSize=18;fontStyle=1;fontColor=#315B45;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1365" width="360" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="stream_reflection" value="Stream Memory / Reflection / Interview" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F3EC;strokeColor=#5F9B78;strokeWidth=3;fontSize=18;fontStyle=1;fontColor=#315B45;" vertex="1" parent="1">
+          <mxGeometry x="560" y="1465" width="480" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="audit_outputs" value="Payload Audit / Analysis Outputs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7EFCF;strokeColor=#B89A45;strokeWidth=3;fontSize=18;fontStyle=1;fontColor=#6A5420;" vertex="1" parent="1">
+          <mxGeometry x="590" y="1570" width="420" height="72" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#64748B;strokeWidth=2;" edge="1" parent="1" source="world_runner" target="task_appears"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#64748B;strokeWidth=2;" edge="1" parent="1" source="task_appears" target="task_appraisal"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#4F7DBD;strokeWidth=3;" edge="1" parent="1" source="task_appraisal" target="action_box"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#4F7DBD;strokeWidth=4;" edge="1" parent="1" source="weak_prior" target="llm_semantic"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#4F7DBD;strokeWidth=4;" edge="1" parent="1" source="llm_semantic" target="bayes_shift"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#4F7DBD;strokeWidth=4;" edge="1" parent="1" source="bayes_shift" target="safety_guard"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#4F7DBD;strokeWidth=3;" edge="1" parent="1" source="action_box" target="sampled_action"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#B7794D;strokeWidth=3;" edge="1" parent="1" source="sampled_action" target="task_outcome"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e9" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#B7794D;strokeWidth=3;" edge="1" parent="1" source="task_outcome" target="event_uncontrollability"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e10" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#B7794D;strokeWidth=4;" edge="1" parent="1" source="event_uncontrollability" target="interpretation"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e11" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#B7794D;strokeWidth=4;" edge="1" parent="1" source="interpretation" target="state_update"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e12" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#5F9B78;strokeWidth=3;" edge="1" parent="1" source="state_update" target="experience_memory"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e13" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#5F9B78;strokeWidth=3;" edge="1" parent="1" source="experience_memory" target="posterior_update"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e14" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#5F9B78;strokeWidth=3;" edge="1" parent="1" source="posterior_update" target="stream_reflection"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e15" value="" style="endArrow=block;html=1;rounded=0;strokeColor=#B89A45;strokeWidth=3;" edge="1" parent="1" source="stream_reflection" target="audit_outputs"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
