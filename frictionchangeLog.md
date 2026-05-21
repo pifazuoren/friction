@@ -2446,3 +2446,199 @@
   - Phase 2 作为 `LLM-entry-conditioned Monte Carlo` 结果与 Phase 1 `mobile_intention_rule` 分开报告
   - 同一 run 内使用 shared schedule artifact 保证 paired-world entry exposure 一致；不同 run 可产生不同 LLM rerank schedule
   - 后续若需要 deterministic robustness ablation，可另做 `mobile_intention_llm_rerank_replay`，不混入当前 Phase 2 主设定
+
+### OutcomeModel E0-E3 Primary Outcome Bundle 落地
+- 目的：
+  - 按 `outcomenew.md` 实现 E0-E3 主实施包
+  - 保留 `rule_v1` 作为旧版 outcome resolver 的精确回归路径
+  - 新增 `appraisal_rule_v2` 作为规则型主 outcome 升级
+  - 新增 `trajectory_shadow` 作为 LLM action trajectory 审计层，不改变真实 outcome
+  - 新增 `trajectory_bounded_online_mc`，让 LLM trajectory 以 bounded residual fusion 方式进入 outcome 主线
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/llm_psychology.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/main.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis_parallel_worlds.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_llm_psychology.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_mobile_intention_phase2_analysis.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - `resolve_attempt_outcome(...)` 保持公共入口不变，新增可选参数：
+    - `outcome_model_mode`
+    - `task_appraisal`
+    - `memory_features`
+    - `trajectory_result`
+    - `trajectory_config`
+  - `rule_v1` 默认路径仍忽略新增参数，并调用旧逻辑 wrapper `_resolve_attempt_outcome_rule_v1(...)`
+  - 新增 `OutcomeAppraisalResult`，复用已有 `TaskAppraisalResult` / `MemoryFeatures`，不重造心理系统
+  - `appraisal_rule_v2` 生成 strategy-specific outcome distribution，并保留：
+    - `success_probability = sum(success outcomes)`
+    - `abandon_probability = P(abandon_midway)`
+  - `trajectory_bounded_online_mc` 使用 bounded residual fusion：
+    - `alpha_effective = alpha * trajectory_confidence * (1 - max(p_rule))`
+    - 限制 per-outcome shift
+    - 限制 total variation distance
+    - 禁止 impossible outcome
+  - `llm_psychology.py` 新增 strict trajectory schema / taxonomy sanitizer：
+    - fixed friction taxonomy
+    - strategy-specific outcome keys
+    - banned demographic causal phrase rejection
+    - invalid / taxonomy outside / low confidence 均可被显式标记
+  - `agent.py` 只在 strategy 已选出之后、outcome 采样之前调用 trajectory
+  - `avoid` 第一版不调用 trajectory，记录 `not_called_strategy_avoid`
+  - `analysis_parallel_worlds.py` 从 `payload_json` 汇总 trajectory call count、invalid count、low-confidence count、mean TVD 和 outcome mode distribution
+  - `world_runner.py` fingerprint 加入 outcome trajectory 相关 env
+  - `main.py` run metadata 加入 outcome mode、prompt/taxonomy version、alpha/caps、min confidence 和 invalid policy
+- 新增配置：
+  - `PROTO_OUTCOME_MODEL_MODE=rule_v1|appraisal_rule_v2|trajectory_shadow|trajectory_bounded_online_mc`
+  - `PROTO_OUTCOME_TRAJECTORY_PROMPT_VERSION=trajectory_v1`
+  - `PROTO_OUTCOME_TRAJECTORY_TAXONOMY_VERSION=friction_taxonomy_v1`
+  - `PROTO_OUTCOME_TRAJECTORY_ALPHA=0.10`
+  - `PROTO_OUTCOME_TRAJECTORY_MAX_OUTCOME_SHIFT=0.08`
+  - `PROTO_OUTCOME_TRAJECTORY_MAX_TVD=0.10`
+  - `PROTO_OUTCOME_TRAJECTORY_MIN_CONFIDENCE=0.65`
+  - `PROTO_OUTCOME_TRAJECTORY_STRICT_SCHEMA=1`
+  - `PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY=fail_run`
+- 保持不变：
+  - 默认 outcome mode 仍为 `rule_v1`
+  - 未实现 E4 replay/cache
+  - 未实现 FamilyHelperAgent
+  - 未修改 DB schema
+  - 未修改 `state_update.py`
+  - 未修改 `bayesian_policy_lite.py`
+  - 未修改 `bayesian_controllability_lite.py`
+  - 未修改 `task_assignment.py` entry semantics
+  - 未修改 `RecentEpisode`
+  - LLM trajectory 不输出 final sampled outcome、helplessness delta、posterior、`C_family / C_global` 或 Phase4 / Phase5C weights
+  - TalkingData validation artifacts 不进入 trajectory prompt
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/proto/outcome_model.py examples/digital_friction_mvp/proto/models.py examples/digital_friction_mvp/proto/llm_psychology.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/main.py examples/digital_friction_mvp/analysis_parallel_worlds.py`
+  - 结果：通过，无输出
+  - `python -m pytest examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_llm_psychology.py examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_mobile_intention_phase2_analysis.py -q`
+  - 结果：`61 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py -q`
+  - 结果：`8 passed, 3 warnings`
+  - `python -m pytest examples/digital_friction_mvp/tests --ignore=examples/digital_friction_mvp/tests/test_stream_memory_native_search.py -q`
+  - 结果：`266 passed, 3 warnings`
+  - 完整 `python -m pytest examples/digital_friction_mvp/tests -q` 仍被无关依赖阻塞：
+    - `test_stream_memory_native_search.py` collection error
+    - 原因：`ModuleNotFoundError: No module named 'grpc'`
+
+## 2026-05-20
+
+### Full-LLM 多 agent 运行稳定性修复
+- 目的：
+  - 支持后续扩大 agent 数量时按 AgentSociety 原生 LLM 设计做限流，而不是继续使用 MVP 里的硬编码并发
+  - 修复 `trajectory_bounded_online_mc` 下 `avoid` strategy 未调用 trajectory 却仍要求 `trajectory_result` 的运行错误
+  - 将数字摩擦 MVP 的 LLM psychology / trajectory 默认请求等待时间从 smoke-test 级别调到更适合 full-LLM 实验的默认值
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/main.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - `main.py` 新增可配置的原生 LLM 参数：
+    - `LLM_CONCURRENCY`，默认 `100`
+    - `LLM_TIMEOUT`，默认 `60`
+  - `LLM_CONCURRENCY / LLM_TIMEOUT` 直接传入 AgentSociety 原生 `LLMConfig(concurrency=..., timeout=...)`
+  - run metadata 记录 `llm_model / llm_concurrency / llm_timeout`
+  - `world_runner.py` fingerprint 加入 `LLM_MODEL / LLM_CONCURRENCY / LLM_TIMEOUT`
+  - `trajectory_bounded_online_mc` 先处理 `strategy_type == "avoid"`，保持 `avoid` 不调用 trajectory，并记录 `not_called_strategy_avoid`
+  - `PROTO_LLM_PSYCHOLOGY_TIMEOUT` 默认值：`8` -> `45`
+  - `PROTO_LLM_PSYCHOLOGY_RETRIES` 默认值：`1` -> `3`
+  - `PROTO_LLM_UNCONTROLLABILITY_TIMEOUT` 默认值：`8` -> `45`
+  - `PROTO_LLM_UNCONTROLLABILITY_RETRIES` 默认值：`1` -> `3`
+- Mobile rerank online MC 运行方式清理：
+  - 删除 world 0 写共享 schedule、world 1/2/3 读取 schedule 的 paired-entry 设计
+  - 删除 `PROTO_MOBILE_INTENTION_RERANK_PAIRING_MODE`
+  - 删除 `PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE`
+  - 删除 `read` 分支、candidate-hash reader 校验和 missing shared schedule fail-fast
+  - `world_runner.py` 现在为每个 world 写独立 audit artifact：
+    - `mobile_entry_rerank_schedule_<group>_pXXX_wYY.jsonl`
+    - 每个 world 都在线调用 LLM rerank
+    - 不再依赖 world 0 的半截或完整 schedule
+  - 新增 `PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY=fail_run|accept_with_audit`
+  - 默认仍为 `fail_run`
+  - `accept_with_audit` 模式下，top-k 内的低置信度 rerank 会继续运行，并记录 `low_confidence_accepted`
+- 保持不变：
+  - 未修改 AgentSociety package 内部 LLM actor / semaphore 实现
+  - 未新增 outcome replay/cache
+  - 未改变 `fail_run` invalid policy
+  - 未改变 DB schema、Phase4、Phase5C 或 state update 链路
+- 验证：
+  - `python -m pytest examples/digital_friction_mvp/tests/test_outcome_model.py -q`
+  - 结果：`14 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`28 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py -q`
+  - 结果：`38 passed, 3 warnings`
+  - `python -m py_compile examples/digital_friction_mvp/proto/outcome_model.py examples/digital_friction_mvp/main.py examples/digital_friction_mvp/world_runner.py`
+  - 结果：通过，无输出
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py`
+  - 结果：通过，无输出
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/main.py examples/digital_friction_mvp/proto/agent.py`
+  - 结果：通过，无输出
+  - `rg -n "RERANK_PAIRING_MODE|RERANK_SCHEDULE_ROLE|proto_mobile_intention_rerank_pairing_mode|proto_mobile_intention_rerank_schedule_role|auto_by_world_order|missing mobile-intention rerank schedule entry" examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/main.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/tests -S`
+  - 结果：无匹配
+  - `python -m pytest examples/digital_friction_mvp/tests/test_mobile_intention_phase2_analysis.py -q`
+  - 结果：`2 passed`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_task_assignment.py examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py examples/digital_friction_mvp/tests/test_mobile_intention_phase2_analysis.py -q`
+  - 结果：`56 passed, 3 warnings`
+### Mobile entry logical-clock tick 偏移修复
+- 目的：
+  - 修复 `exp_20260520_full_llm_smoke` 中 full-LLM 配置已启用但 `mobile_entry_eval_count=0` 的问题
+  - 根因是 logical clock 产出的决策 tick 为 `1, 3601, 7201, ...`，而 mobile entry eval 旧逻辑只接受 `tick % interval == 0`，导致所有 entry tick 被标记为 `not_evaluation_tick`
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - `_is_mobile_entry_eval_tick(...)` 保留 exact boundary 命中
+  - 额外接受 logical-clock 的 `boundary + 1s` tick，例如 `3601` 视为 `3600` 同一 evaluation slot
+  - 未改 mobile-intention rerank、schedule、mapping、outcome trajectory 或心理更新接口
+- 验证：
+  - 新增 `test_mobile_entry_eval_tick_accepts_logical_clock_plus_one_offset`
+  - `python -m py_compile examples/digital_friction_mvp/proto/agent.py`
+  - 结果：通过，无输出
+  - `python -m pytest examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py -q`
+  - 结果：`9 passed, 3 warnings`
+  - `python -m pytest examples/digital_friction_mvp/tests/test_task_assignment.py examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py -q`
+  - 结果：`25 passed, 3 warnings`
+- 备注：
+  - 修复后需重跑 `exp_20260520_full_llm_smoke`，预期 `mobile_entry_eval_count` 不再为 0，并且 writer world 会生成 mobile rerank schedule
+
+## 2026-05-20
+
+### 简化 trajectory bounded online MC fusion 权重
+- 目的：
+  - 将 `trajectory_bounded_online_mc` 的 outcome distribution 融合改成更清晰的实验变量：
+    - `final = rule + alpha * (trajectory - rule)`
+  - 避免旧公式 `alpha * trajectory_confidence * rule_uncertainty` 把 LLM trajectory residual 压得过小，导致 final TVD 难以体现 trajectory 模块贡献
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - `fuse_rule_and_trajectory_distribution(...)` 中 `alpha_effective` 改为直接使用 clamp 后的 `alpha`
+  - `trajectory_confidence` 不再参与 residual 缩放；它仍由上游 `min_confidence` 门槛控制有效性，并写入 audit
+  - audit 新增：
+    - `trajectory_confidence`
+    - `fusion_rule="rule_plus_alpha_trajectory_residual"`
+  - 新增单元测试锁定直接 residual 权重行为，验证 `alpha=0.20` 时 final distribution 等于 `rule + 0.20 * (trajectory - rule)`
+  - 保留 `max_outcome_shift` 与 `max_tvd` 两个安全上界
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/proto/outcome_model.py examples/digital_friction_mvp/tests/test_outcome_model.py`
+  - 结果：通过，无输出
+  - `python -m pytest examples/digital_friction_mvp/tests/test_outcome_model.py -q`
+  - 结果：`15 passed`
+- 备注：
+  - 后续正式实验建议做 `PROTO_OUTCOME_TRAJECTORY_ALPHA=0.00/0.10/0.25/0.40` ablation，并报告 raw trajectory TVD、bounded final TVD、repair rate、invalid/low-confidence rate

@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 import sqlite3
 
-from analysis_parallel_worlds import _compute_mobile_entry_metrics
+from analysis_parallel_worlds import (
+    _compute_mobile_entry_metrics,
+    _compute_world_proto_metrics,
+)
 
 
 def test_mobile_entry_metrics_parse_status_json_once_per_entry() -> None:
@@ -72,4 +75,60 @@ def test_mobile_entry_metrics_parse_status_json_once_per_entry() -> None:
     }
     assert json.loads(metrics["mobile_entry_mapped_task_families_json"]) == {
         "payment_risk_confirmation": 1,
+    }
+
+
+def test_world_proto_metrics_parse_trajectory_audit_from_payload_json() -> None:
+    conn = sqlite3.connect(":memory:")
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE attempt_rows (
+            strategy_type TEXT,
+            outcome_type TEXT,
+            payload_json TEXT
+        )
+        """
+    )
+    cur.executemany(
+        "INSERT INTO attempt_rows VALUES (?, ?, ?)",
+        [
+            (
+                "attempt_self",
+                "failure_after_attempt",
+                json.dumps(
+                    {
+                        "outcome": {
+                            "outcome_model_mode": "trajectory_bounded_online_mc",
+                            "trajectory_status": "ok",
+                            "trajectory_tvd_from_rule": 0.04,
+                        }
+                    }
+                ),
+            ),
+            (
+                "attempt_self",
+                "success_self",
+                json.dumps(
+                    {
+                        "outcome": {
+                            "outcome_model_mode": "trajectory_shadow",
+                            "trajectory_status": "low_confidence",
+                            "trajectory_tvd_from_rule": 0.0,
+                        }
+                    }
+                ),
+            ),
+        ],
+    )
+
+    metrics = _compute_world_proto_metrics(cur, "attempt_rows")
+
+    assert metrics["trajectory_call_count"] == 2
+    assert metrics["trajectory_low_confidence_count"] == 1
+    assert metrics["trajectory_invalid_count"] == 0
+    assert metrics["trajectory_mean_tvd_from_rule"] == 0.04
+    assert json.loads(metrics["outcome_model_modes_json"]) == {
+        "trajectory_bounded_online_mc": 1,
+        "trajectory_shadow": 1,
     }

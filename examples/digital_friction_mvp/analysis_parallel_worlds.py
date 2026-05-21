@@ -191,7 +191,7 @@ def _compute_world_proto_metrics(
 ) -> dict[str, Any]:
     rows = cur.execute(
         f"""
-        SELECT strategy_type, outcome_type
+        SELECT strategy_type, outcome_type, payload_json
         FROM {attempt_table}
         """
     ).fetchall()
@@ -214,23 +214,71 @@ def _compute_world_proto_metrics(
             "positives": 0,
             "negatives": 0,
             "emitted": 0,
+            "trajectory_call_count": 0,
+            "trajectory_invalid_count": 0,
+            "trajectory_low_confidence_count": 0,
+            "trajectory_mean_tvd_from_rule": 0.0,
+            "outcome_model_modes_json": "{}",
         }
 
-    attempt_count = sum(1 for _, outcome in rows if outcome != "avoid_without_attempt")
+    attempt_count = sum(
+        1 for _, outcome, _ in rows if outcome != "avoid_without_attempt"
+    )
     success_count = sum(
         1
-        for _, outcome in rows
+        for _, outcome, _ in rows
         if outcome in {"success_self", "success_with_help"}
     )
     help_seek_count = sum(
-        1 for strategy, _ in rows if strategy == "seek_help_then_attempt"
+        1 for strategy, _, _ in rows if strategy == "seek_help_then_attempt"
     )
-    abandon_count = sum(1 for _, outcome in rows if outcome == "abandon_midway")
+    abandon_count = sum(
+        1 for _, outcome, _ in rows if outcome == "abandon_midway"
+    )
     negative_feedback_count = sum(
         1
-        for _, outcome in rows
+        for _, outcome, _ in rows
         if outcome in {"failure_after_attempt", "failure_even_with_help", "abandon_midway"}
     )
+    trajectory_call_count = 0
+    trajectory_invalid_count = 0
+    trajectory_low_confidence_count = 0
+    trajectory_tvd_values: list[float] = []
+    outcome_model_modes: Counter[str] = Counter()
+    for _, _, raw_payload in rows:
+        try:
+            payload = json.loads(raw_payload or "{}")
+        except Exception:
+            payload = {}
+        if not isinstance(payload, dict):
+            continue
+        outcome_payload = payload.get("outcome", {})
+        if not isinstance(outcome_payload, dict):
+            continue
+        mode = str(outcome_payload.get("outcome_model_mode", "")).strip()
+        if mode:
+            outcome_model_modes[mode] += 1
+        trajectory_status = str(outcome_payload.get("trajectory_status", "")).strip()
+        if trajectory_status and not trajectory_status.startswith("not_called"):
+            trajectory_call_count += 1
+        if trajectory_status in {
+            "parse_failed",
+            "request_error",
+            "invalid_schema",
+            "taxonomy_outside",
+            "invalid_probability_sum",
+            "invalid_outcome_keys",
+            "banned_phrase",
+        }:
+            trajectory_invalid_count += 1
+        if trajectory_status == "low_confidence":
+            trajectory_low_confidence_count += 1
+        trajectory_tvd = _safe_float(
+            outcome_payload.get("trajectory_tvd_from_rule"),
+            0.0,
+        )
+        if trajectory_tvd > 0:
+            trajectory_tvd_values.append(trajectory_tvd)
     denominator = float(total_rows)
     neg_share = (
         float(negative_feedback_count) / float(attempt_count) if attempt_count > 0 else 0.0
@@ -252,6 +300,19 @@ def _compute_world_proto_metrics(
         "positives": success_count,
         "negatives": negative_feedback_count,
         "emitted": attempt_count,
+        "trajectory_call_count": int(trajectory_call_count),
+        "trajectory_invalid_count": int(trajectory_invalid_count),
+        "trajectory_low_confidence_count": int(trajectory_low_confidence_count),
+        "trajectory_mean_tvd_from_rule": (
+            sum(trajectory_tvd_values) / len(trajectory_tvd_values)
+            if trajectory_tvd_values
+            else 0.0
+        ),
+        "outcome_model_modes_json": json.dumps(
+            dict(sorted(outcome_model_modes.items())),
+            ensure_ascii=False,
+            sort_keys=True,
+        ),
     }
 
 
@@ -541,6 +602,11 @@ def main() -> None:
             "positives": 0,
             "negatives": 0,
             "emitted": 0,
+            "trajectory_call_count": 0,
+            "trajectory_invalid_count": 0,
+            "trajectory_low_confidence_count": 0,
+            "trajectory_mean_tvd_from_rule": 0.0,
+            "outcome_model_modes_json": "{}",
         }
         if exp_id and attempt_table and _table_exists(cur, attempt_table):
             world_metrics = _compute_world_proto_metrics(cur, attempt_table)
@@ -617,6 +683,21 @@ def main() -> None:
                 "mobile_entry_mapped_task_families_json": str(
                     mobile_entry_metrics["mobile_entry_mapped_task_families_json"]
                 ),
+                "trajectory_call_count": _safe_int(
+                    world_metrics["trajectory_call_count"], 0
+                ),
+                "trajectory_invalid_count": _safe_int(
+                    world_metrics["trajectory_invalid_count"], 0
+                ),
+                "trajectory_low_confidence_count": _safe_int(
+                    world_metrics["trajectory_low_confidence_count"], 0
+                ),
+                "trajectory_mean_tvd_from_rule": round(
+                    _safe_float(world_metrics["trajectory_mean_tvd_from_rule"]), 6
+                ),
+                "outcome_model_modes_json": str(
+                    world_metrics["outcome_model_modes_json"]
+                ),
             }
         )
 
@@ -665,6 +746,11 @@ def main() -> None:
         "mobile_entry_task_generated_rate",
         "mobile_entry_top_intentions_json",
         "mobile_entry_mapped_task_families_json",
+        "trajectory_call_count",
+        "trajectory_invalid_count",
+        "trajectory_low_confidence_count",
+        "trajectory_mean_tvd_from_rule",
+        "outcome_model_modes_json",
     ]
     stage_fieldnames = [
         "group_id",

@@ -23,6 +23,17 @@ VALID_TASK_ENTRY_MODES = {
     "mobile_intention_llm_shadow",
     "mobile_intention_llm_rerank_online_mc",
 }
+VALID_OUTCOME_MODEL_MODES = {
+    "rule_v1",
+    "appraisal_rule_v2",
+    "trajectory_shadow",
+    "trajectory_bounded_online_mc",
+}
+VALID_OUTCOME_TRAJECTORY_INVALID_POLICIES = {"fail_run"}
+VALID_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICIES = {
+    "fail_run",
+    "accept_with_audit",
+}
 VALID_HUYS_DAYAN_LITE_CONTROLLABILITY_MODES = {
     "off",
     "shadow",
@@ -116,9 +127,18 @@ class RuntimeConfig:
     proto_mobile_intention_llm_prompt_version: str
     proto_mobile_intention_llm_min_confidence: float
     proto_mobile_intention_rerank_top_k: int
+    proto_mobile_intention_rerank_low_confidence_policy: str
     proto_mobile_intention_rerank_schedule_path: str
-    proto_mobile_intention_rerank_schedule_role: str
     proto_mobile_intention_rerank_run_id: str
+    proto_outcome_model_mode: str
+    proto_outcome_trajectory_prompt_version: str
+    proto_outcome_trajectory_taxonomy_version: str
+    proto_outcome_trajectory_alpha: float
+    proto_outcome_trajectory_max_outcome_shift: float
+    proto_outcome_trajectory_max_tvd: float
+    proto_outcome_trajectory_min_confidence: float
+    proto_outcome_trajectory_strict_schema: bool
+    proto_outcome_trajectory_invalid_policy: str
     proto_huys_dayan_lite_controllability_mode: str
     proto_huys_dayan_lite_confidence_k: int
     proto_huys_dayan_lite_min_action_updates: int
@@ -193,11 +213,11 @@ def load_runtime_config() -> RuntimeConfig:
     )
     proto_llm_psychology_timeout = max(
         1,
-        int(os.getenv("PROTO_LLM_PSYCHOLOGY_TIMEOUT", "8")),
+        int(os.getenv("PROTO_LLM_PSYCHOLOGY_TIMEOUT", "45")),
     )
     proto_llm_psychology_retries = max(
         0,
-        int(os.getenv("PROTO_LLM_PSYCHOLOGY_RETRIES", "1")),
+        int(os.getenv("PROTO_LLM_PSYCHOLOGY_RETRIES", "3")),
     )
     proto_llm_psychology_cache_enabled = _parse_bool_env(
         "PROTO_LLM_PSYCHOLOGY_CACHE_ENABLED",
@@ -233,11 +253,11 @@ def load_runtime_config() -> RuntimeConfig:
     )
     proto_llm_uncontrollability_timeout = max(
         1,
-        int(os.getenv("PROTO_LLM_UNCONTROLLABILITY_TIMEOUT", "8")),
+        int(os.getenv("PROTO_LLM_UNCONTROLLABILITY_TIMEOUT", "45")),
     )
     proto_llm_uncontrollability_retries = max(
         0,
-        int(os.getenv("PROTO_LLM_UNCONTROLLABILITY_RETRIES", "1")),
+        int(os.getenv("PROTO_LLM_UNCONTROLLABILITY_RETRIES", "3")),
     )
     proto_llm_uncontrollability_cache_enabled = _parse_bool_env(
         "PROTO_LLM_UNCONTROLLABILITY_CACHE_ENABLED",
@@ -427,39 +447,93 @@ def load_runtime_config() -> RuntimeConfig:
         1,
         int(float(os.getenv("PROTO_MOBILE_INTENTION_RERANK_TOP_K", "5"))),
     )
+    proto_mobile_intention_rerank_low_confidence_policy = (
+        os.getenv(
+            "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY",
+            "fail_run",
+        )
+        .strip()
+        .lower()
+    )
+    if (
+        proto_mobile_intention_rerank_low_confidence_policy
+        not in VALID_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICIES
+    ):
+        raise ValueError(
+            "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY must be one of: "
+            + ", ".join(sorted(VALID_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICIES))
+        )
     proto_mobile_intention_rerank_schedule_path = os.getenv(
         "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH",
         "",
     ).strip()
-    proto_mobile_intention_rerank_schedule_role = os.getenv(
-        "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE",
-        "",
-    ).strip().lower()
     proto_mobile_intention_rerank_run_id = os.getenv(
         "PROTO_MOBILE_INTENTION_RERANK_RUN_ID",
         "",
     ).strip()
-    if proto_task_entry_mode == "mobile_intention_llm_rerank_online_mc":
-        if proto_mobile_intention_rerank_schedule_role not in {"write", "read"}:
-            raise ValueError(
-                "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE must be one of: "
-                "write, read when PROTO_TASK_ENTRY_MODE=mobile_intention_llm_rerank_online_mc"
-            )
-        if not proto_mobile_intention_rerank_schedule_path:
-            raise ValueError(
-                "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH is required when "
-                "PROTO_TASK_ENTRY_MODE=mobile_intention_llm_rerank_online_mc"
-            )
-        if not proto_mobile_intention_rerank_run_id:
-            raise ValueError(
-                "PROTO_MOBILE_INTENTION_RERANK_RUN_ID is required when "
-                "PROTO_TASK_ENTRY_MODE=mobile_intention_llm_rerank_online_mc"
-            )
-    elif proto_mobile_intention_rerank_schedule_role and (
-        proto_mobile_intention_rerank_schedule_role not in {"write", "read"}
+    proto_outcome_model_mode = (
+        os.getenv("PROTO_OUTCOME_MODEL_MODE", "rule_v1").strip().lower()
+    )
+    if proto_outcome_model_mode not in VALID_OUTCOME_MODEL_MODES:
+        raise ValueError(
+            "PROTO_OUTCOME_MODEL_MODE must be one of: "
+            + ", ".join(sorted(VALID_OUTCOME_MODEL_MODES))
+        )
+    if (
+        proto_outcome_model_mode
+        in {"trajectory_shadow", "trajectory_bounded_online_mc"}
+        and proto_llm_psychology_mode != "hybrid"
     ):
         raise ValueError(
-            "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE must be one of: write, read"
+            "PROTO_LLM_PSYCHOLOGY_MODE=hybrid is required when "
+            "PROTO_OUTCOME_MODEL_MODE uses trajectory LLM"
+        )
+    proto_outcome_trajectory_prompt_version = os.getenv(
+        "PROTO_OUTCOME_TRAJECTORY_PROMPT_VERSION",
+        "trajectory_v1",
+    ).strip()
+    proto_outcome_trajectory_taxonomy_version = os.getenv(
+        "PROTO_OUTCOME_TRAJECTORY_TAXONOMY_VERSION",
+        "friction_taxonomy_v1",
+    ).strip()
+    proto_outcome_trajectory_alpha = max(
+        0.0,
+        min(1.0, float(os.getenv("PROTO_OUTCOME_TRAJECTORY_ALPHA", "0.10"))),
+    )
+    proto_outcome_trajectory_max_outcome_shift = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_OUTCOME_TRAJECTORY_MAX_OUTCOME_SHIFT", "0.08")),
+        ),
+    )
+    proto_outcome_trajectory_max_tvd = max(
+        0.0,
+        min(1.0, float(os.getenv("PROTO_OUTCOME_TRAJECTORY_MAX_TVD", "0.10"))),
+    )
+    proto_outcome_trajectory_min_confidence = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_OUTCOME_TRAJECTORY_MIN_CONFIDENCE", "0.65")),
+        ),
+    )
+    proto_outcome_trajectory_strict_schema = _parse_bool_env(
+        "PROTO_OUTCOME_TRAJECTORY_STRICT_SCHEMA",
+        True,
+    )
+    proto_outcome_trajectory_invalid_policy = (
+        os.getenv("PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY", "fail_run")
+        .strip()
+        .lower()
+    )
+    if (
+        proto_outcome_trajectory_invalid_policy
+        not in VALID_OUTCOME_TRAJECTORY_INVALID_POLICIES
+    ):
+        raise ValueError(
+            "PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY first version only supports: "
+            + ", ".join(sorted(VALID_OUTCOME_TRAJECTORY_INVALID_POLICIES))
         )
     proto_huys_dayan_lite_controllability_mode = (
         os.getenv("PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE", "off")
@@ -618,14 +692,35 @@ def load_runtime_config() -> RuntimeConfig:
             proto_mobile_intention_llm_min_confidence
         ),
         proto_mobile_intention_rerank_top_k=proto_mobile_intention_rerank_top_k,
+        proto_mobile_intention_rerank_low_confidence_policy=(
+            proto_mobile_intention_rerank_low_confidence_policy
+        ),
         proto_mobile_intention_rerank_schedule_path=(
             proto_mobile_intention_rerank_schedule_path
         ),
-        proto_mobile_intention_rerank_schedule_role=(
-            proto_mobile_intention_rerank_schedule_role
-        ),
         proto_mobile_intention_rerank_run_id=(
             proto_mobile_intention_rerank_run_id
+        ),
+        proto_outcome_model_mode=proto_outcome_model_mode,
+        proto_outcome_trajectory_prompt_version=(
+            proto_outcome_trajectory_prompt_version
+        ),
+        proto_outcome_trajectory_taxonomy_version=(
+            proto_outcome_trajectory_taxonomy_version
+        ),
+        proto_outcome_trajectory_alpha=proto_outcome_trajectory_alpha,
+        proto_outcome_trajectory_max_outcome_shift=(
+            proto_outcome_trajectory_max_outcome_shift
+        ),
+        proto_outcome_trajectory_max_tvd=proto_outcome_trajectory_max_tvd,
+        proto_outcome_trajectory_min_confidence=(
+            proto_outcome_trajectory_min_confidence
+        ),
+        proto_outcome_trajectory_strict_schema=(
+            proto_outcome_trajectory_strict_schema
+        ),
+        proto_outcome_trajectory_invalid_policy=(
+            proto_outcome_trajectory_invalid_policy
         ),
         proto_huys_dayan_lite_controllability_mode=(
             proto_huys_dayan_lite_controllability_mode

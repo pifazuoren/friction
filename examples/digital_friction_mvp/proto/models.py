@@ -132,6 +132,50 @@ class AttemptOutcome:
     event_attribution_cache_hit: bool = False
     scope_spillover_total: float = 0.0
     scope_spillover_targets_json: str = ""
+    outcome_model_mode: str = "rule_v1"
+    trajectory_status: str = "not_called"
+    trajectory_confidence: float = 0.0
+    trajectory_prompt_version: str = ""
+    trajectory_taxonomy_version: str = ""
+    trajectory_friction_points_json: str = ""
+    trajectory_tendency_json: str = ""
+    rule_distribution_json: str = ""
+    final_distribution_json: str = ""
+    trajectory_alpha_effective: float = 0.0
+    trajectory_tvd_from_rule: float = 0.0
+    trajectory_invalid_reason: str = ""
+    probability_audit_json: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(slots=True)
+class OutcomeAppraisalResult:
+    mode: str
+    status: str
+    source: str
+    confidence: float
+    reason: str
+    cache_hit: bool
+    perceived_task_difficulty: float
+    perceived_task_risk: float
+    felt_control: float
+    expected_help_effectiveness: float
+    task_value: float
+    effective_helplessness: float
+    task_self_efficacy: float
+    controllable_success_memory: float
+    recent_negative_feedback_ratio: float
+    recent_same_task_failure_count: int
+    recent_failure_pressure: float
+    friction_tier: int
+    difficulty_pressure: float
+    risk_pressure: float
+    control_deficit: float
+    efficacy_deficit: float
+    support_effective_quality: float
+    abandonment_pressure: float
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

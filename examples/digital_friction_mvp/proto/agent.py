@@ -42,6 +42,7 @@ from .llm_psychology import (
     resolve_stage_interview,
     resolve_strategy_deliberation,
     resolve_task_appraisal,
+    resolve_trajectory_appraisal,
 )
 from .logical_clock import is_proto_logical_clock_enabled
 from .outcome_model import (
@@ -187,53 +188,10 @@ def _sanitize_mobile_entry_shadow(
     )
 
 
-def _schedule_entry_key(
-    *,
-    run_id: str,
-    agent_id: int,
-    day: int,
-    tick_seconds: float,
-) -> str:
-    return "|".join(
-        (
-            str(run_id),
-            str(int(agent_id)),
-            str(int(day)),
-            str(int(round(float(tick_seconds)))),
-        )
-    )
-
-
-def _load_mobile_entry_rerank_schedule(path: str) -> dict[str, dict[str, Any]]:
-    schedule_path = str(path or "").strip()
-    if not schedule_path:
-        return {}
-    result: dict[str, dict[str, Any]] = {}
-    try:
-        with open(schedule_path, encoding="utf-8") as handle:
-            for line in handle:
-                line = line.strip()
-                if not line:
-                    continue
-                payload = json.loads(line)
-                if not isinstance(payload, dict):
-                    continue
-                key = _schedule_entry_key(
-                    run_id=str(payload.get("run_id", "")),
-                    agent_id=_safe_int(payload.get("agent_id"), -1),
-                    day=_safe_int(payload.get("day"), -1),
-                    tick_seconds=_safe_float(payload.get("tick_seconds"), -1.0),
-                )
-                result[key] = payload
-    except FileNotFoundError:
-        return {}
-    return result
-
-
 def _append_mobile_entry_rerank_schedule(path: str, payload: dict[str, Any]) -> None:
     schedule_path = str(path or "").strip()
     if not schedule_path:
-        raise ValueError("mobile intention rerank schedule path is required")
+        return
     target = Path(schedule_path)
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open("a", encoding="utf-8") as handle:
@@ -902,7 +860,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
     ) -> bool:
         interval_seconds = max(60, int(interval_minutes) * 60)
         normalized_tick = int(round(float(tick_seconds)))
-        return normalized_tick % interval_seconds == 0
+        if normalized_tick % interval_seconds == 0:
+            return True
+        # The logical clock records decision ticks one second after the wall-clock
+        # boundary, e.g. 3601 instead of 3600. Treat that offset as the same slot.
+        return normalized_tick > 0 and (normalized_tick - 1) % interval_seconds == 0
 
     async def _build_mobile_entry_llm_shadow(
         self,
@@ -1046,9 +1008,8 @@ class DigitalHelplessnessAgent(SocietyAgent):
         candidate_hash = mobile_intention_candidate_hash(candidates)
         payload = {
             "rerank_enabled": True,
-            "rerank_run_id": str(runtime_config.proto_mobile_intention_rerank_run_id),
-            "rerank_schedule_role": str(
-                runtime_config.proto_mobile_intention_rerank_schedule_role
+            "rerank_run_id": str(
+                getattr(runtime_config, "proto_mobile_intention_rerank_run_id", "")
             ),
             "rerank_prompt_version": prompt_version,
             "rerank_top_k": int(runtime_config.proto_mobile_intention_rerank_top_k),
@@ -1133,8 +1094,22 @@ class DigitalHelplessnessAgent(SocietyAgent):
         selected = str(llm_payload.get("selected_mobile_intention", "")).strip()
         confidence = _clamp(_safe_float(llm_payload.get("confidence"), 0.0), 0.0, 1.0)
         if confidence < float(runtime_config.proto_mobile_intention_llm_min_confidence):
-            payload["rerank_parse_status"] = "low_confidence"
-            raise ValueError("mobile-intention LLM rerank confidence below threshold")
+            low_confidence_policy = str(
+                getattr(
+                    runtime_config,
+                    "proto_mobile_intention_rerank_low_confidence_policy",
+                    "fail_run",
+                )
+            ).strip().lower()
+            payload["rerank_parse_status"] = (
+                "low_confidence_accepted"
+                if low_confidence_policy == "accept_with_audit"
+                else "low_confidence"
+            )
+            if low_confidence_policy != "accept_with_audit":
+                raise ValueError(
+                    "mobile-intention LLM rerank confidence below threshold"
+                )
         payload.update(
             {
                 "rerank_selected_mobile_intention": selected,
@@ -1160,65 +1135,15 @@ class DigitalHelplessnessAgent(SocietyAgent):
         day: int,
         tick_seconds: float,
     ) -> tuple[str, dict[str, Any]]:
-        run_id = str(runtime_config.proto_mobile_intention_rerank_run_id)
-        role = str(runtime_config.proto_mobile_intention_rerank_schedule_role)
-        schedule_path = str(runtime_config.proto_mobile_intention_rerank_schedule_path)
+        run_id = str(getattr(runtime_config, "proto_mobile_intention_rerank_run_id", ""))
+        schedule_path = str(
+            getattr(runtime_config, "proto_mobile_intention_rerank_schedule_path", "")
+        )
         candidates = top_mobile_intention_candidates(
             entry_decision.candidate_intentions,
             top_k=int(runtime_config.proto_mobile_intention_rerank_top_k),
         )
         candidate_hash = mobile_intention_candidate_hash(candidates)
-        key = _schedule_entry_key(
-            run_id=run_id,
-            agent_id=int(self.id),
-            day=int(day),
-            tick_seconds=float(tick_seconds),
-        )
-        if role == "read":
-            schedule = _load_mobile_entry_rerank_schedule(schedule_path)
-            row = schedule.get(key)
-            if row is None:
-                raise ValueError(f"missing mobile-intention rerank schedule entry: {key}")
-            if str(row.get("candidate_hash", "")) != candidate_hash:
-                raise ValueError(
-                    "mobile-intention rerank schedule candidate hash mismatch"
-                )
-            selected = str(row.get("selected_mobile_intention", "")).strip()
-            if selected not in candidates:
-                raise ValueError(
-                    "mobile-intention rerank schedule selected intention is not in top-k"
-                )
-            audit = {
-                "rerank_enabled": True,
-                "rerank_run_id": run_id,
-                "rerank_schedule_role": "read",
-                "rerank_prompt_version": str(row.get("prompt_version", "")),
-                "rerank_top_k": int(runtime_config.proto_mobile_intention_rerank_top_k),
-                "rerank_candidate_intentions": dict(candidates),
-                "rerank_candidate_hash": candidate_hash,
-                "rule_selected_mobile_intention": str(
-                    row.get(
-                        "rule_selected_mobile_intention",
-                        entry_decision.selected_mobile_intention,
-                    )
-                ),
-                "rerank_selected_mobile_intention": selected,
-                "rerank_parse_status": str(row.get("parse_status", "")),
-                "rerank_confidence": _clamp(
-                    _safe_float(row.get("confidence"), 0.0),
-                    0.0,
-                    1.0,
-                ),
-                "rerank_reason": str(row.get("reason", ""))[:120],
-                "rerank_response_hash": str(row.get("response_hash", "")),
-                "llm_drives_real_entry": True,
-                "uses_post_outcome_information": False,
-            }
-            return selected, audit
-        if role != "write":
-            raise ValueError(
-                "mobile-intention rerank schedule role must be write or read"
-            )
         audit = await DigitalHelplessnessAgent._build_mobile_entry_llm_rerank(
             self,
             entry_decision=entry_decision,
@@ -2114,6 +2039,41 @@ class DigitalHelplessnessAgent(SocietyAgent):
             precomputed_final_weights=gated_lite_final_weights,
             rng=strategy_rng,
         )
+        trajectory_result: dict[str, Any] | None = None
+        outcome_model_mode = str(runtime_config.proto_outcome_model_mode)
+        if (
+            outcome_model_mode
+            in {"trajectory_shadow", "trajectory_bounded_online_mc"}
+            and strategy.strategy_type != "avoid"
+        ):
+            trajectory_result = await resolve_trajectory_appraisal(
+                llm=getattr(self, "llm", None),
+                task=task,
+                strategy=strategy,
+                task_appraisal=task_appraisal.to_dict(),
+                memory_features=memory_features.to_dict(),
+                env=env,
+                profile_summary=profile_summary,
+                run_context={
+                    "agent_id": int(self.id),
+                    "day": int(day),
+                    "tick": float(t),
+                    "world_name": world_name,
+                    "parallel_pair_index": int(
+                        os.getenv("PARALLEL_PAIR_INDEX", "0")
+                    ),
+                    "parallel_world_order": int(
+                        os.getenv("PARALLEL_WORLD_ORDER", "0")
+                    ),
+                },
+            )
+            if outcome_model_mode == "trajectory_bounded_online_mc" and str(
+                trajectory_result.get("status", "")
+            ) not in {"ok", "ok_repaired"}:
+                raise ValueError(
+                    "trajectory_bounded_online_mc requires valid trajectory appraisal: "
+                    + str(trajectory_result.get("invalid_reason") or trajectory_result.get("status"))
+                )
         outcome = resolve_attempt_outcome(
             task=task,
             strategy=strategy,
@@ -2121,6 +2081,20 @@ class DigitalHelplessnessAgent(SocietyAgent):
             env=env,
             consecutive_failures=consecutive_failures,
             rng=random.Random(base_rng_seed + 29),
+            outcome_model_mode=outcome_model_mode,
+            task_appraisal=task_appraisal.to_dict(),
+            memory_features=memory_features.to_dict(),
+            trajectory_result=trajectory_result,
+            trajectory_config={
+                "alpha": runtime_config.proto_outcome_trajectory_alpha,
+                "max_outcome_shift": (
+                    runtime_config.proto_outcome_trajectory_max_outcome_shift
+                ),
+                "max_tvd": runtime_config.proto_outcome_trajectory_max_tvd,
+                "min_confidence": (
+                    runtime_config.proto_outcome_trajectory_min_confidence
+                ),
+            },
         )
         calibration = await calibrate_uncontrollability(
             llm=getattr(self, "llm", None),
@@ -2442,6 +2416,10 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "strategy_weights": dict(strategy.weights),
             "effective_helplessness": memory_features.effective_helplessness,
             "memory_features": memory_features.to_dict(),
+            "outcome_model_mode": outcome.outcome_model_mode,
+            "trajectory_status": outcome.trajectory_status,
+            "trajectory_confidence": float(outcome.trajectory_confidence),
+            "trajectory_tvd_from_rule": float(outcome.trajectory_tvd_from_rule),
             "retrieved_episodic_memory_hash": task_appraisal_retrieval_packet["hash"],
             "retrieved_episodic_memory_count": task_appraisal_retrieval_packet["count"],
             "retrieved_episodic_memory_status": task_appraisal_retrieval_packet[
@@ -2512,6 +2490,10 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "helplessness_delta": float(update_result.delta),
             "help_used": bool(outcome.help_used),
             "negative_feedback": bool(outcome.negative_feedback),
+            "outcome_model_mode": str(outcome.outcome_model_mode),
+            "trajectory_status": str(outcome.trajectory_status),
+            "trajectory_confidence": float(outcome.trajectory_confidence),
+            "trajectory_tvd_from_rule": float(outcome.trajectory_tvd_from_rule),
             "strategy_weights_json": json.dumps(strategy.weights, ensure_ascii=False),
             "payload_json": json.dumps(
                 {

@@ -450,6 +450,36 @@ def test_forward_returns_early_for_non_window_idle_step_and_marks_housekeeping()
     assert agent.memory.status.data["proto_active_stage_key"] == "steady"
 
 
+def test_mobile_entry_eval_tick_accepts_logical_clock_plus_one_offset() -> None:
+    agent = _FakeAgent()
+
+    assert DigitalHelplessnessAgent._is_mobile_entry_eval_tick(
+        agent,
+        tick_seconds=3600.0,
+        interval_minutes=60,
+    )
+    assert DigitalHelplessnessAgent._is_mobile_entry_eval_tick(
+        agent,
+        tick_seconds=3601.0,
+        interval_minutes=60,
+    )
+    assert DigitalHelplessnessAgent._is_mobile_entry_eval_tick(
+        agent,
+        tick_seconds=7201.0,
+        interval_minutes=60,
+    )
+    assert not DigitalHelplessnessAgent._is_mobile_entry_eval_tick(
+        agent,
+        tick_seconds=3599.0,
+        interval_minutes=60,
+    )
+    assert not DigitalHelplessnessAgent._is_mobile_entry_eval_tick(
+        agent,
+        tick_seconds=3602.0,
+        interval_minutes=60,
+    )
+
+
 def test_mobile_entry_llm_shadow_cannot_change_real_entry(monkeypatch, tmp_path) -> None:
     calibration = tmp_path / "reference_calibration.json"
     calibration.write_text(
@@ -495,7 +525,7 @@ def test_mobile_entry_llm_shadow_cannot_change_real_entry(monkeypatch, tmp_path)
     assert llm.calls >= 1
 
 
-def test_mobile_entry_llm_rerank_writes_and_reads_shared_schedule(
+def test_mobile_entry_llm_rerank_writes_per_world_audit_schedule(
     monkeypatch,
     tmp_path,
 ) -> None:
@@ -511,7 +541,6 @@ def test_mobile_entry_llm_rerank_writes_and_reads_shared_schedule(
     monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "mobile_intention_llm_rerank_online_mc")
     monkeypatch.setenv("PROTO_MOBILE_INTENTION_CALIBRATION_PATH", str(calibration))
     monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH", str(schedule))
-    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE", "write")
     monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_RUN_ID", "run-1")
     monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_TOP_K", "2")
     monkeypatch.setenv("PROTO_LLM_PSYCHOLOGY_RETRIES", "0")
@@ -548,25 +577,66 @@ def test_mobile_entry_llm_rerank_writes_and_reads_shared_schedule(
     assert row["selected_mobile_intention"] == "use_payment_or_finance"
     assert llm.calls >= 1
 
-    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE", "read")
-    read_config = __import__("config_runtime").load_runtime_config()
-    reader = _FakeAgent(llm=_ForbiddenLLM())
-    selected_read, audit_read = asyncio.run(
+
+def test_mobile_entry_llm_rerank_can_accept_low_confidence_with_audit(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    calibration = tmp_path / "reference_calibration.json"
+    schedule = tmp_path / "rerank_schedule_low_confidence.jsonl"
+    calibration.write_text(
+        '{"global_prior":{"p_mobile_intention":{'
+        '"check_information":0.6,'
+        '"use_payment_or_finance":0.4'
+        '}}, "uses_validation_data":false}',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "mobile_intention_llm_rerank_online_mc")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_CALIBRATION_PATH", str(calibration))
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH", str(schedule))
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_RUN_ID", "run-low-conf")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_TOP_K", "2")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_LLM_MIN_CONFIDENCE", "0.70")
+    monkeypatch.setenv(
+        "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY",
+        "accept_with_audit",
+    )
+    monkeypatch.setenv("PROTO_LLM_PSYCHOLOGY_RETRIES", "0")
+    config = __import__("config_runtime").load_runtime_config()
+    decision = evaluate_mobile_entry_for_agent(
+        agent_id=7,
+        day=1,
+        tick_seconds=28800.0,
+        env={},
+        entry_mode="mobile_intention_rule",
+        calibration_path=str(calibration),
+    )
+    agent = _FakeAgent(
+        llm=_DummyLLM(
+            '{"selected_mobile_intention":"use_payment_or_finance",'
+            '"confidence":0.55,"reason":"uncertain but in top-k"}'
+        )
+    )
+
+    selected, audit = asyncio.run(
         DigitalHelplessnessAgent._resolve_mobile_entry_rerank_override(
-            reader,
-            entry_decision=base_decision,
-            runtime_config=read_config,
-            stable_profile={"age": 70, "gender": "female", "digital_experience": 0.5},
+            agent,
+            entry_decision=decision,
+            runtime_config=config,
+            stable_profile={"age": 70, "gender": "female"},
             day=1,
             tick_seconds=28800.0,
         )
     )
 
-    assert selected_read == selected
-    assert audit_read["rerank_schedule_role"] == "read"
+    assert selected == "use_payment_or_finance"
+    assert audit["rerank_parse_status"] == "low_confidence_accepted"
+    row = json.loads(schedule.read_text(encoding="utf-8").strip())
+    assert row["parse_status"] == "low_confidence_accepted"
+    assert row["confidence"] == 0.55
 
 
-def test_mobile_entry_llm_rerank_rejects_invalid_and_missing_schedule(
+def test_mobile_entry_llm_rerank_rejects_invalid_json_before_audit_write(
     monkeypatch,
     tmp_path,
 ) -> None:
@@ -582,7 +652,6 @@ def test_mobile_entry_llm_rerank_rejects_invalid_and_missing_schedule(
     monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "mobile_intention_llm_rerank_online_mc")
     monkeypatch.setenv("PROTO_MOBILE_INTENTION_CALIBRATION_PATH", str(calibration))
     monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH", str(schedule))
-    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE", "write")
     monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_RUN_ID", "run-2")
     monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_TOP_K", "2")
     monkeypatch.setenv("PROTO_LLM_PSYCHOLOGY_RETRIES", "0")
@@ -613,24 +682,6 @@ def test_mobile_entry_llm_rerank_rejects_invalid_and_missing_schedule(
     else:
         raise AssertionError("invalid rerank JSON should fail fast")
     assert not schedule.exists()
-
-    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE", "read")
-    read_config = __import__("config_runtime").load_runtime_config()
-    try:
-        asyncio.run(
-            DigitalHelplessnessAgent._resolve_mobile_entry_rerank_override(
-                _FakeAgent(llm=_ForbiddenLLM()),
-                entry_decision=base_decision,
-                runtime_config=read_config,
-                stable_profile={"age": 70, "gender": "female"},
-                day=1,
-                tick_seconds=28800.0,
-            )
-        )
-    except ValueError as exc:
-        assert "missing" in str(exc)
-    else:
-        raise AssertionError("missing rerank schedule entry should fail fast")
 
 
 def test_before_forward_keeps_minimal_motion_sync_when_logical_clock_enabled() -> None:

@@ -81,6 +81,8 @@ PROFILES_PATH = Path(
 MAP_FILE_PATH = os.getenv("MAP_FILE_PATH", str(DEFAULT_MAP_PATH))
 LLM_API_KEY = os.getenv("LLM_API_KEY") or os.getenv("ZHIPUAI_API_KEY") or "<YOUR-API-KEY>"
 LLM_MODEL = os.getenv("LLM_MODEL", "glm-4-flashx")
+LLM_CONCURRENCY = max(1, int(os.getenv("LLM_CONCURRENCY", "100")))
+LLM_TIMEOUT = max(1, int(os.getenv("LLM_TIMEOUT", "60")))
 AGENT_COUNT = int(os.getenv("AGENT_COUNT", "10"))
 AGENT_PLAN_PROMPT_PROFILE = os.getenv("AGENT_PLAN_PROMPT_PROFILE", "off").strip().lower()
 EXP_SEED = int(os.getenv("EXP_SEED", "101"))
@@ -2467,8 +2469,8 @@ config = Config(
             base_url=None,
             api_key=LLM_API_KEY,
             model=LLM_MODEL,
-            concurrency=100,
-            timeout=60,
+            concurrency=LLM_CONCURRENCY,
+            timeout=LLM_TIMEOUT,
         )
     ],
     env=EnvConfig(
@@ -2559,6 +2561,9 @@ def _write_run_metadata(
         "world_order": int(PARALLEL_WORLD_ORDER),
         "config_fingerprint": PARALLEL_CONFIG_FINGERPRINT,
         "agent_count": int(AGENT_COUNT),
+        "llm_model": LLM_MODEL,
+        "llm_concurrency": int(LLM_CONCURRENCY),
+        "llm_timeout": int(LLM_TIMEOUT),
         "stage_mode": STAGE_MODE,
         "stage_count": stage_count,
         "stage_days": int(STAGE_DAYS),
@@ -2575,14 +2580,36 @@ def _write_run_metadata(
         "proto_mobile_intention_rerank_top_k": (
             RUNTIME_CONFIG.proto_mobile_intention_rerank_top_k
         ),
+        "proto_mobile_intention_rerank_low_confidence_policy": (
+            RUNTIME_CONFIG.proto_mobile_intention_rerank_low_confidence_policy
+        ),
         "proto_mobile_intention_rerank_schedule_path": (
             RUNTIME_CONFIG.proto_mobile_intention_rerank_schedule_path
         ),
-        "proto_mobile_intention_rerank_schedule_role": (
-            RUNTIME_CONFIG.proto_mobile_intention_rerank_schedule_role
-        ),
         "proto_mobile_intention_rerank_run_id": (
             RUNTIME_CONFIG.proto_mobile_intention_rerank_run_id
+        ),
+        "proto_outcome_model_mode": RUNTIME_CONFIG.proto_outcome_model_mode,
+        "proto_outcome_trajectory_prompt_version": (
+            RUNTIME_CONFIG.proto_outcome_trajectory_prompt_version
+        ),
+        "proto_outcome_trajectory_taxonomy_version": (
+            RUNTIME_CONFIG.proto_outcome_trajectory_taxonomy_version
+        ),
+        "proto_outcome_trajectory_alpha": (
+            RUNTIME_CONFIG.proto_outcome_trajectory_alpha
+        ),
+        "proto_outcome_trajectory_max_outcome_shift": (
+            RUNTIME_CONFIG.proto_outcome_trajectory_max_outcome_shift
+        ),
+        "proto_outcome_trajectory_max_tvd": (
+            RUNTIME_CONFIG.proto_outcome_trajectory_max_tvd
+        ),
+        "proto_outcome_trajectory_min_confidence": (
+            RUNTIME_CONFIG.proto_outcome_trajectory_min_confidence
+        ),
+        "proto_outcome_trajectory_invalid_policy": (
+            RUNTIME_CONFIG.proto_outcome_trajectory_invalid_policy
         ),
         "written_at": datetime.now().isoformat(timespec="seconds"),
     }

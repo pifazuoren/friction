@@ -241,6 +241,23 @@ def test_load_runtime_config_exposes_scope_spillover_defaults_and_overrides(
     assert config.proto_scope_spillover_sigma == 0.55
 
 
+def test_load_runtime_config_exposes_llm_module_timeout_defaults(monkeypatch) -> None:
+    for key in (
+        "PROTO_LLM_PSYCHOLOGY_TIMEOUT",
+        "PROTO_LLM_PSYCHOLOGY_RETRIES",
+        "PROTO_LLM_UNCONTROLLABILITY_TIMEOUT",
+        "PROTO_LLM_UNCONTROLLABILITY_RETRIES",
+    ):
+        monkeypatch.delenv(key, raising=False)
+
+    config = load_runtime_config()
+
+    assert config.proto_llm_psychology_timeout == 45
+    assert config.proto_llm_psychology_retries == 3
+    assert config.proto_llm_uncontrollability_timeout == 45
+    assert config.proto_llm_uncontrollability_retries == 3
+
+
 def test_load_runtime_config_exposes_bayesian_control_defaults(monkeypatch) -> None:
     monkeypatch.delenv("PROTO_BAYESIAN_CONTROL_AUDIT_ENABLED", raising=False)
     monkeypatch.delenv("PROTO_BAYESIAN_CONTROL_RHO", raising=False)
@@ -312,9 +329,18 @@ def test_load_runtime_config_exposes_mobile_entry_defaults(monkeypatch) -> None:
         "PROTO_MOBILE_INTENTION_LLM_PROMPT_VERSION",
         "PROTO_MOBILE_INTENTION_LLM_MIN_CONFIDENCE",
         "PROTO_MOBILE_INTENTION_RERANK_TOP_K",
+        "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY",
         "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH",
-        "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE",
         "PROTO_MOBILE_INTENTION_RERANK_RUN_ID",
+        "PROTO_OUTCOME_MODEL_MODE",
+        "PROTO_OUTCOME_TRAJECTORY_PROMPT_VERSION",
+        "PROTO_OUTCOME_TRAJECTORY_TAXONOMY_VERSION",
+        "PROTO_OUTCOME_TRAJECTORY_ALPHA",
+        "PROTO_OUTCOME_TRAJECTORY_MAX_OUTCOME_SHIFT",
+        "PROTO_OUTCOME_TRAJECTORY_MAX_TVD",
+        "PROTO_OUTCOME_TRAJECTORY_MIN_CONFIDENCE",
+        "PROTO_OUTCOME_TRAJECTORY_STRICT_SCHEMA",
+        "PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY",
     ):
         monkeypatch.delenv(key, raising=False)
 
@@ -329,31 +355,59 @@ def test_load_runtime_config_exposes_mobile_entry_defaults(monkeypatch) -> None:
     assert config.proto_mobile_intention_llm_prompt_version == "mobile_intention_shadow_v1"
     assert config.proto_mobile_intention_llm_min_confidence == 0.70
     assert config.proto_mobile_intention_rerank_top_k == 5
+    assert config.proto_mobile_intention_rerank_low_confidence_policy == "fail_run"
     assert config.proto_mobile_intention_rerank_schedule_path == ""
-    assert config.proto_mobile_intention_rerank_schedule_role == ""
     assert config.proto_mobile_intention_rerank_run_id == ""
+    assert config.proto_outcome_model_mode == "rule_v1"
+    assert config.proto_outcome_trajectory_prompt_version == "trajectory_v1"
+    assert config.proto_outcome_trajectory_taxonomy_version == "friction_taxonomy_v1"
+    assert config.proto_outcome_trajectory_alpha == 0.10
+    assert config.proto_outcome_trajectory_max_outcome_shift == 0.08
+    assert config.proto_outcome_trajectory_max_tvd == 0.10
+    assert config.proto_outcome_trajectory_min_confidence == 0.65
+    assert config.proto_outcome_trajectory_strict_schema is True
+    assert config.proto_outcome_trajectory_invalid_policy == "fail_run"
 
 
-def test_load_runtime_config_requires_rerank_schedule(monkeypatch, tmp_path) -> None:
-    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "mobile_intention_llm_rerank_online_mc")
-    with pytest.raises(ValueError, match="SCHEDULE_ROLE"):
+def test_load_runtime_config_validates_outcome_modes(monkeypatch) -> None:
+    monkeypatch.setenv("PROTO_OUTCOME_MODEL_MODE", "not_real")
+    with pytest.raises(ValueError, match="PROTO_OUTCOME_MODEL_MODE"):
         load_runtime_config()
 
-    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE", "write")
-    with pytest.raises(ValueError, match="SCHEDULE_PATH"):
+    monkeypatch.setenv("PROTO_OUTCOME_MODEL_MODE", "trajectory_shadow")
+    monkeypatch.setenv("PROTO_LLM_PSYCHOLOGY_MODE", "off")
+    with pytest.raises(ValueError, match="hybrid"):
+        load_runtime_config()
+
+    monkeypatch.setenv("PROTO_LLM_PSYCHOLOGY_MODE", "hybrid")
+    monkeypatch.setenv("PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY", "rule_only")
+    with pytest.raises(ValueError, match="INVALID_POLICY"):
+        load_runtime_config()
+
+    monkeypatch.setenv("PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY", "fail_run")
+    config = load_runtime_config()
+    assert config.proto_outcome_model_mode == "trajectory_shadow"
+
+
+def test_load_runtime_config_mobile_rerank_low_confidence_policy(monkeypatch) -> None:
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "mobile_intention_llm_rerank_online_mc")
+    monkeypatch.setenv(
+        "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY",
+        "invent_result",
+    )
+    with pytest.raises(ValueError, match="LOW_CONFIDENCE_POLICY"):
         load_runtime_config()
 
     monkeypatch.setenv(
-        "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH",
-        str(tmp_path / "schedule.jsonl"),
+        "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY",
+        "accept_with_audit",
     )
-    with pytest.raises(ValueError, match="RUN_ID"):
-        load_runtime_config()
-
-    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_RUN_ID", "run-1")
     config = load_runtime_config()
     assert config.proto_task_entry_mode == "mobile_intention_llm_rerank_online_mc"
-    assert config.proto_mobile_intention_rerank_schedule_role == "write"
+    assert (
+        config.proto_mobile_intention_rerank_low_confidence_policy
+        == "accept_with_audit"
+    )
 
 
 def test_load_runtime_config_rejects_validation_artifact_paths(monkeypatch) -> None:
@@ -370,22 +424,43 @@ def test_world_runner_fingerprint_includes_mobile_entry_env(monkeypatch) -> None
     payload = _build_config_payload(
         {
             "PROTO_TASK_ENTRY_MODE": "mobile_intention_rule",
+            "LLM_MODEL": "glm-4-flashx",
+            "LLM_CONCURRENCY": "16",
+            "LLM_TIMEOUT": "90",
             "PROTO_MOBILE_INTENTION_CONFIDENCE_THRESHOLD": "0.70",
             "PROTO_MOBILE_INTENTION_EVAL_INTERVAL_MINUTES": "60",
             "PROTO_MOBILE_INTENTION_RERANK_TOP_K": "5",
+            "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY": "accept_with_audit",
             "PROTO_MOBILE_INTENTION_RERANK_RUN_ID": "run-1",
             "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH": "/tmp/schedule.jsonl",
-            "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE": "write",
+            "PROTO_OUTCOME_MODEL_MODE": "trajectory_bounded_online_mc",
+            "PROTO_OUTCOME_TRAJECTORY_PROMPT_VERSION": "trajectory_v1",
+            "PROTO_OUTCOME_TRAJECTORY_TAXONOMY_VERSION": "friction_taxonomy_v1",
+            "PROTO_OUTCOME_TRAJECTORY_ALPHA": "0.10",
+            "PROTO_OUTCOME_TRAJECTORY_MAX_OUTCOME_SHIFT": "0.08",
+            "PROTO_OUTCOME_TRAJECTORY_MAX_TVD": "0.10",
+            "PROTO_OUTCOME_TRAJECTORY_MIN_CONFIDENCE": "0.65",
+            "PROTO_OUTCOME_TRAJECTORY_STRICT_SCHEMA": "1",
+            "PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY": "fail_run",
         },
         ["baseline_low_friction"],
     )
     assert payload["PROTO_TASK_ENTRY_MODE"] == "mobile_intention_rule"
+    assert payload["LLM_MODEL"] == "glm-4-flashx"
+    assert payload["LLM_CONCURRENCY"] == "16"
+    assert payload["LLM_TIMEOUT"] == "90"
     assert payload["PROTO_MOBILE_INTENTION_CONFIDENCE_THRESHOLD"] == "0.70"
     assert payload["PROTO_MOBILE_INTENTION_EVAL_INTERVAL_MINUTES"] == "60"
     assert payload["PROTO_MOBILE_INTENTION_RERANK_TOP_K"] == "5"
+    assert (
+        payload["PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY"]
+        == "accept_with_audit"
+    )
     assert payload["PROTO_MOBILE_INTENTION_RERANK_RUN_ID"] == "run-1"
     assert payload["PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH"] == "/tmp/schedule.jsonl"
-    assert payload["PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_ROLE"] == "write"
+    assert payload["PROTO_OUTCOME_MODEL_MODE"] == "trajectory_bounded_online_mc"
+    assert payload["PROTO_OUTCOME_TRAJECTORY_ALPHA"] == "0.10"
+    assert payload["PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY"] == "fail_run"
 
 
 def test_load_runtime_config_exposes_huys_dayan_lite_defaults(

@@ -61,6 +61,18 @@ _STRATEGY_DELIBERATION_KEYS = {
     "judge_confidence",
     "reason",
 }
+_TRAJECTORY_APPRAISAL_KEYS = {
+    "planned_steps",
+    "selected_friction_points",
+    "friction_encounter_likelihood",
+    "cognitive_load",
+    "help_need",
+    "trajectory_outcome_tendency",
+    "trajectory_confidence",
+    "reason",
+    "does_not_sample_final_outcome",
+    "does_not_update_psychology",
+}
 _STAGE_INTERVIEW_KEYS = {
     "main_difficulty_source",
     "support_comment",
@@ -108,6 +120,86 @@ _STRATEGY_DELIBERATION_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
 _RULE_TEXT_MIXED = "昨天有顺也有卡，我还在慢慢摸索"
 _TASK_APPRAISAL_PROMPT_VERSION = "v3_profile_memory_packet_20260406"
 _STRATEGY_DELIBERATION_PROMPT_VERSION = "v2_profile_memory_strategy_context_20260518"
+_TRAJECTORY_PROMPT_VERSION = "trajectory_v1"
+_TRAJECTORY_TAXONOMY_VERSION = "friction_taxonomy_v1"
+_CROSS_CUTTING_FRICTION_POINTS = {
+    "visual_accessibility_load",
+    "small_touch_target",
+    "terminology_jargon",
+    "navigation_depth",
+    "unclear_feedback",
+    "error_recovery_uncertainty",
+    "session_timeout_pressure",
+    "permission_or_privacy_concern",
+    "security_or_scam_concern",
+    "multi_step_memory_load",
+    "authentication_handoff",
+    "support_unavailable_or_delayed",
+}
+_TASK_FRICTION_POINTS = {
+    "navigation_service_location": {
+        "location_permission_confusion",
+        "address_disambiguation",
+        "route_choice_overload",
+        "map_visual_density",
+        "service_filter_confusion",
+        "location_accuracy_uncertainty",
+    },
+    "account_login_verification": {
+        "password_memory_failure",
+        "otp_delay_or_expiry",
+        "captcha_visual_difficulty",
+        "account_lockout_anxiety",
+        "multi_factor_switching",
+        "device_trust_prompt_confusion",
+    },
+    "information_search_judgment": {
+        "query_formulation_difficulty",
+        "information_overload",
+        "source_credibility_uncertainty",
+        "ad_or_sponsored_result_confusion",
+        "medical_or_service_jargon",
+        "contradictory_information",
+    },
+    "profile_form_upload": {
+        "form_field_ambiguity",
+        "document_photo_quality_issue",
+        "file_format_or_size_error",
+        "upload_progress_uncertainty",
+        "privacy_concern_about_documents",
+        "required_field_discovery",
+    },
+    "service_application_submission": {
+        "eligibility_rule_confusion",
+        "multi_step_form_burden",
+        "required_document_uncertainty",
+        "submission_confirmation_uncertainty",
+        "opaque_error_message",
+        "deadline_or_timeout_pressure",
+    },
+    "payment_risk_confirmation": {
+        "risk_popup_anxiety",
+        "scam_security_concern",
+        "amount_or_fee_confusion",
+        "confirm_cancel_button_ambiguity",
+        "payment_failure_recovery_uncertainty",
+        "authentication_or_bank_handoff",
+    },
+}
+_TRAJECTORY_BANNED_REASON_PHRASES = {
+    "because the user is old",
+    "because the user is female",
+    "because she is female",
+    "because he is male",
+    "older adults cannot",
+    "elderly people are confused",
+    "old people are confused",
+    "becomes helpless",
+    "helplessness_delta",
+    "posterior",
+    "c_family",
+    "c_global",
+}
 
 
 def clear_llm_psychology_caches() -> None:
@@ -410,6 +502,7 @@ async def _query_json_payload(
     sanitize_fn: Callable[[Any], tuple[dict[str, Any] | None, str]],
     timeout: int,
     retries: int,
+    max_tokens: int = 260,
 ) -> tuple[dict[str, Any] | None, str]:
     if llm is None:
         return None, "request_error"
@@ -432,7 +525,7 @@ async def _query_json_payload(
             temperature=0.1,
             timeout=timeout,
             retries=retries,
-            max_tokens=260,
+            max_tokens=max_tokens,
         )
     except Exception:
         return None, "request_error"
@@ -470,7 +563,7 @@ async def _query_json_payload(
             temperature=0.0,
             timeout=timeout,
             retries=1,
-            max_tokens=220,
+            max_tokens=max(220, int(max_tokens)),
         )
     except Exception:
         return None, "request_error"
@@ -872,6 +965,170 @@ def _sanitize_strategy_deliberation(payload: Any) -> tuple[dict[str, Any] | None
         return None, "invalid_schema"
     result["reason"] = reason.strip()[:120]
     return result, "ok"
+
+
+def _trajectory_allowed_outcomes(strategy_type: str) -> tuple[str, ...]:
+    if strategy_type == "attempt_self":
+        return ("success_self", "failure_after_attempt", "abandon_midway")
+    if strategy_type == "seek_help_then_attempt":
+        return (
+            "success_with_help",
+            "failure_even_with_help",
+            "failure_after_attempt",
+            "abandon_midway",
+        )
+    return ()
+
+
+def _trajectory_allowed_friction_points(task_family: str) -> set[str]:
+    return set(_CROSS_CUTTING_FRICTION_POINTS) | set(
+        _TASK_FRICTION_POINTS.get(task_family, set())
+    )
+
+
+def _contains_banned_trajectory_phrase(value: Any) -> bool:
+    text = str(value or "").strip().lower()
+    return any(phrase in text for phrase in _TRAJECTORY_BANNED_REASON_PHRASES)
+
+
+def _sanitize_trajectory_appraisal_for_context(
+    payload: Any,
+    *,
+    task_family: str,
+    strategy_type: str,
+) -> tuple[dict[str, Any] | None, str]:
+    if not isinstance(payload, dict):
+        return None, "invalid_schema"
+    if set(payload.keys()) != _TRAJECTORY_APPRAISAL_KEYS:
+        return None, "invalid_schema"
+    if strategy_type == "avoid":
+        return None, "invalid_strategy"
+
+    planned_steps = payload.get("planned_steps")
+    if not isinstance(planned_steps, list) or not (2 <= len(planned_steps) <= 6):
+        return None, "invalid_schema"
+    sanitized_steps: list[dict[str, Any]] = []
+    seen_step_ids: set[int] = set()
+    for item in planned_steps:
+        if not isinstance(item, dict) or set(item.keys()) != {"step_id", "action"}:
+            return None, "invalid_schema"
+        step_id = _safe_int(item.get("step_id"), -1)
+        action = str(item.get("action", "")).strip()
+        if step_id <= 0 or step_id in seen_step_ids or not action:
+            return None, "invalid_schema"
+        if len(action) > 80 or _contains_banned_trajectory_phrase(action):
+            return None, "banned_phrase"
+        seen_step_ids.add(step_id)
+        sanitized_steps.append({"step_id": step_id, "action": action[:80]})
+
+    allowed_points = _trajectory_allowed_friction_points(task_family)
+    selected_points = payload.get("selected_friction_points")
+    if not isinstance(selected_points, list) or len(selected_points) > 3:
+        return None, "invalid_schema"
+    sanitized_points: list[dict[str, Any]] = []
+    for item in selected_points:
+        if not isinstance(item, dict) or set(item.keys()) != {
+            "point",
+            "severity",
+            "step_id",
+        }:
+            return None, "invalid_schema"
+        point = str(item.get("point", "")).strip()
+        if point not in allowed_points:
+            return None, "taxonomy_outside"
+        step_id = _safe_int(item.get("step_id"), -1)
+        if step_id not in seen_step_ids:
+            return None, "invalid_schema"
+        try:
+            severity = _clamp(float(item.get("severity")), 0.0, 1.0)
+        except (TypeError, ValueError):
+            return None, "invalid_schema"
+        sanitized_points.append(
+            {
+                "point": point,
+                "severity": round(float(severity), 4),
+                "step_id": int(step_id),
+            }
+        )
+
+    result: dict[str, Any] = {
+        "planned_steps": sanitized_steps,
+        "selected_friction_points": sanitized_points,
+    }
+    for field in ("friction_encounter_likelihood", "cognitive_load", "help_need"):
+        raw_value = payload.get(field)
+        if isinstance(raw_value, bool):
+            return None, "invalid_schema"
+        try:
+            result[field] = round(_clamp(float(raw_value), 0.0, 1.0), 4)
+        except (TypeError, ValueError):
+            return None, "invalid_schema"
+
+    allowed_outcomes = _trajectory_allowed_outcomes(strategy_type)
+    tendency = payload.get("trajectory_outcome_tendency")
+    if not isinstance(tendency, dict) or set(tendency.keys()) != set(allowed_outcomes):
+        return None, "invalid_outcome_keys"
+    sanitized_tendency: dict[str, float] = {}
+    for key in allowed_outcomes:
+        raw_value = tendency.get(key)
+        if isinstance(raw_value, bool):
+            return None, "invalid_schema"
+        try:
+            value = float(raw_value)
+        except (TypeError, ValueError):
+            return None, "invalid_schema"
+        if value < -0.0001 or value > 1.0001:
+            return None, "invalid_schema"
+        sanitized_tendency[key] = max(0.0, min(1.0, value))
+    total = sum(sanitized_tendency.values())
+    if abs(total - 1.0) > 0.02 or total <= 0:
+        return None, "invalid_probability_sum"
+    result["trajectory_outcome_tendency"] = {
+        key: round(sanitized_tendency[key] / total, 6)
+        for key in allowed_outcomes
+    }
+
+    confidence = payload.get("trajectory_confidence")
+    if isinstance(confidence, bool):
+        return None, "invalid_schema"
+    try:
+        result["trajectory_confidence"] = round(_clamp(float(confidence), 0.0, 1.0), 4)
+    except (TypeError, ValueError):
+        return None, "invalid_schema"
+
+    reason = str(payload.get("reason", "")).strip()
+    if not reason:
+        return None, "invalid_schema"
+    if len(reason) > 180 or _contains_banned_trajectory_phrase(reason):
+        return None, "banned_phrase"
+    result["reason"] = reason[:180]
+
+    if _as_bool(payload.get("does_not_sample_final_outcome")) is not True:
+        return None, "invalid_schema"
+    if _as_bool(payload.get("does_not_update_psychology")) is not True:
+        return None, "invalid_schema"
+    result["does_not_sample_final_outcome"] = True
+    result["does_not_update_psychology"] = True
+    result["prompt_version"] = _TRAJECTORY_PROMPT_VERSION
+    result["taxonomy_version"] = _TRAJECTORY_TAXONOMY_VERSION
+    result["status"] = "ok"
+    return result, "ok"
+
+
+def _sanitize_trajectory_appraisal(payload: Any) -> tuple[dict[str, Any] | None, str]:
+    context = payload if isinstance(payload, dict) else {}
+    task_family = str(context.get("_task_family", "")).strip()
+    strategy_type = str(context.get("_strategy_type", "")).strip()
+    public_payload = {
+        key: value
+        for key, value in context.items()
+        if not str(key).startswith("_")
+    }
+    return _sanitize_trajectory_appraisal_for_context(
+        public_payload,
+        task_family=task_family,
+        strategy_type=strategy_type,
+    )
 
 
 def _sanitize_stage_interview(payload: Any) -> tuple[dict[str, Any] | None, str]:
@@ -2039,6 +2296,245 @@ async def resolve_strategy_deliberation(
         llm_weights=llm_weights,
         final_weights=final_weights,
     )
+
+
+def _trajectory_profile_context(profile_summary: Any) -> dict[str, Any]:
+    profile = profile_summary if isinstance(profile_summary, dict) else {}
+    return {
+        "digital_experience_bucket": _profile_bucket(
+            _safe_float(profile.get("digital_experience"), 0.5)
+        ),
+        "vision_accessibility_constraint": _profile_bucket(
+            _safe_float(profile.get("vision_limit"), 0.3)
+        ),
+        "fraud_risk_background": _profile_bucket(
+            _safe_float(profile.get("past_fraud_experience"), 0.2)
+        ),
+        "persona_bucket": persona_bucket(profile.get("persona", "")),
+    }
+
+
+def _trajectory_memory_context(memory_features: Any) -> dict[str, Any]:
+    memory = memory_features if isinstance(memory_features, dict) else {}
+    if hasattr(memory_features, "to_dict"):
+        try:
+            memory = memory_features.to_dict()
+        except Exception:
+            memory = {}
+    return {
+        "effective_helplessness_bucket": _helplessness_bucket(
+            _safe_float(memory.get("effective_helplessness"), 50.0)
+        ),
+        "task_self_efficacy_bucket": _self_efficacy_bucket(
+            _safe_float(memory.get("task_self_efficacy"), 50.0)
+        ),
+        "controllable_success_memory_bucket": _profile_bucket(
+            _safe_float(memory.get("controllable_success_memory"), 0.0)
+        ),
+        "recent_same_task_failure_count": min(
+            _safe_int(memory.get("recent_same_task_failure_count"), 0),
+            3,
+        ),
+        "recent_negative_feedback_ratio_bucket": _profile_bucket(
+            _safe_float(memory.get("recent_negative_feedback_ratio"), 0.0)
+        ),
+    }
+
+
+def _trajectory_env_context(env: Any) -> dict[str, Any]:
+    env_dict = env if isinstance(env, dict) else {}
+    return {
+        "friction_level_bucket": _world_level_bucket(
+            _safe_int(env_dict.get("friction_level"), 0)
+        ),
+        "malicious_friction_level_bucket": _world_level_bucket(
+            _safe_int(env_dict.get("malicious_friction_level"), 0)
+        ),
+        "risk_level_bucket": _world_level_bucket(_safe_int(env_dict.get("risk_level"), 0)),
+        "complexity_level_bucket": _world_level_bucket(
+            _safe_int(env_dict.get("complexity_level"), 0)
+        ),
+        "accessibility_level_bucket": _world_level_bucket(
+            _safe_int(env_dict.get("accessibility_level"), 0)
+        ),
+    }
+
+
+async def resolve_trajectory_appraisal(
+    *,
+    llm: Any,
+    task: DigitalTask,
+    strategy: AttemptStrategy,
+    task_appraisal: Any,
+    memory_features: Any,
+    env: Any,
+    profile_summary: Any = None,
+    run_context: Any = None,
+) -> dict[str, Any]:
+    config = load_runtime_config()
+    mode = str(config.proto_llm_psychology_mode)
+    strategy_type = str(strategy.strategy_type)
+    prompt_version = str(
+        getattr(config, "proto_outcome_trajectory_prompt_version", _TRAJECTORY_PROMPT_VERSION)
+    )
+    taxonomy_version = str(
+        getattr(
+            config,
+            "proto_outcome_trajectory_taxonomy_version",
+            _TRAJECTORY_TAXONOMY_VERSION,
+        )
+    )
+    if strategy_type == "avoid":
+        return {
+            "status": "not_called_strategy_avoid",
+            "invalid_reason": "",
+            "trajectory_confidence": 0.0,
+            "prompt_version": prompt_version,
+            "taxonomy_version": taxonomy_version,
+        }
+    if mode != "hybrid":
+        return {
+            "status": "disabled",
+            "invalid_reason": "proto_llm_psychology_mode_not_hybrid",
+            "trajectory_confidence": 0.0,
+            "prompt_version": prompt_version,
+            "taxonomy_version": taxonomy_version,
+        }
+
+    appraisal = TaskAppraisalResult.from_dict(
+        task_appraisal if isinstance(task_appraisal, dict) else (
+            task_appraisal.to_dict() if hasattr(task_appraisal, "to_dict") else None
+        )
+    )
+    allowed_outcomes = _trajectory_allowed_outcomes(strategy_type)
+    if not allowed_outcomes:
+        return {
+            "status": "invalid_strategy",
+            "invalid_reason": "unsupported_strategy_for_trajectory",
+            "trajectory_confidence": 0.0,
+            "prompt_version": prompt_version,
+            "taxonomy_version": taxonomy_version,
+        }
+
+    allowed_points = sorted(_trajectory_allowed_friction_points(task.task_family))
+
+    def _sanitize_for_this_episode(payload: Any) -> tuple[dict[str, Any] | None, str]:
+        return _sanitize_trajectory_appraisal_for_context(
+            payload,
+            task_family=str(task.task_family),
+            strategy_type=strategy_type,
+        )
+
+    payload, status = await _query_json_payload(
+        llm=llm,
+        system_prompt=(
+            "You are a strict JSON-only constrained cognitive walkthrough module "
+            "for a digital task simulation. Produce a pre-outcome task trajectory "
+            "appraisal only. Do not decide the final sampled outcome. Do not output "
+            "helplessness, self-efficacy, controllability, posterior, C_family, "
+            "C_global, policy weights, or state updates. Use capability descriptors "
+            "and task context; do not attribute difficulty to age or gender."
+        ),
+        user_payload={
+            "prompt_version": prompt_version,
+            "taxonomy_version": taxonomy_version,
+            "task": {
+                "task_family": task.task_family,
+                "friction_type": task.friction_type,
+                "difficulty_bucket": _difficulty_bucket(float(task.difficulty)),
+                "support_sensitivity_bucket": _profile_bucket(
+                    float(task.support_sensitivity)
+                ),
+            },
+            "selected_strategy": strategy_type,
+            "task_appraisal": {
+                "perceived_task_difficulty": _appraisal_bucket(
+                    appraisal.perceived_task_difficulty
+                ),
+                "perceived_task_risk": _appraisal_bucket(appraisal.perceived_task_risk),
+                "felt_control": _appraisal_bucket(appraisal.felt_control),
+                "expected_help_effectiveness": _appraisal_bucket(
+                    appraisal.expected_help_effectiveness
+                ),
+                "task_value": _appraisal_bucket(appraisal.task_value),
+            },
+            "memory_features": _trajectory_memory_context(memory_features),
+            "env": _trajectory_env_context(env),
+            "capability_profile": _trajectory_profile_context(profile_summary),
+            "run_context": run_context if isinstance(run_context, dict) else {},
+            "allowed_friction_points": allowed_points,
+            "allowed_outcome_keys": list(allowed_outcomes),
+            "rules": [
+                "planned_steps must describe actions only, not final results",
+                "select 0 to 3 friction points only from allowed_friction_points",
+                "trajectory_outcome_tendency must use exactly allowed_outcome_keys",
+                "does_not_sample_final_outcome must be true",
+                "does_not_update_psychology must be true",
+            ],
+            "output_schema_example": {
+                "planned_steps": [
+                    {"step_id": 1, "action": "open the relevant app page"},
+                    {"step_id": 2, "action": "read the main instruction"},
+                ],
+                "selected_friction_points": [
+                    {
+                        "point": allowed_points[0] if allowed_points else "navigation_depth",
+                        "severity": 0.45,
+                        "step_id": 2,
+                    }
+                ],
+                "friction_encounter_likelihood": 0.50,
+                "cognitive_load": 0.50,
+                "help_need": 0.30,
+                "trajectory_outcome_tendency": {
+                    key: round(1.0 / len(allowed_outcomes), 6)
+                    for key in allowed_outcomes
+                },
+                "trajectory_confidence": 0.75,
+                "reason": "Task steps contain moderate friction but no final outcome is sampled.",
+                "does_not_sample_final_outcome": True,
+                "does_not_update_psychology": True,
+            },
+        },
+        output_keys=_TRAJECTORY_APPRAISAL_KEYS,
+        repair_schema_text=(
+            "- Return exactly the required keys and no extra keys\n"
+            "- planned_steps must be 2-6 objects with step_id and action\n"
+            "- selected_friction_points must be 0-3 objects with point/severity/step_id\n"
+            "- friction point must come from allowed_friction_points\n"
+            "- trajectory_outcome_tendency keys must exactly match allowed_outcome_keys\n"
+            "- all probabilities and confidence must be in [0,1]\n"
+            "- trajectory_outcome_tendency must sum to 1\n"
+            "- does_not_sample_final_outcome and does_not_update_psychology must be true"
+        ),
+        sanitize_fn=_sanitize_for_this_episode,
+        timeout=int(config.proto_llm_psychology_timeout),
+        retries=int(config.proto_llm_psychology_retries),
+        max_tokens=760,
+    )
+    if payload is None:
+        return {
+            "status": status,
+            "invalid_reason": status,
+            "trajectory_confidence": 0.0,
+            "prompt_version": prompt_version,
+            "taxonomy_version": taxonomy_version,
+        }
+    confidence = float(payload.get("trajectory_confidence", 0.0))
+    min_confidence = float(
+        getattr(config, "proto_outcome_trajectory_min_confidence", 0.65)
+    )
+    if confidence < min_confidence:
+        payload = {
+            **payload,
+            "status": "low_confidence",
+            "invalid_reason": "low_confidence",
+        }
+    else:
+        payload = {**payload, "status": status, "invalid_reason": ""}
+    payload["prompt_version"] = prompt_version
+    payload["taxonomy_version"] = taxonomy_version
+    return payload
 
 
 async def resolve_stage_interview(
