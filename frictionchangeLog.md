@@ -2642,3 +2642,199 @@
   - 结果：`15 passed`
 - 备注：
   - 后续正式实验建议做 `PROTO_OUTCOME_TRAJECTORY_ALPHA=0.00/0.10/0.25/0.40` ablation，并报告 raw trajectory TVD、bounded final TVD、repair rate、invalid/low-confidence rate
+
+## 2026-05-23
+
+### 提高 strategy deliberation 中 LLM 权重
+- 目的：
+  - 将策略 deliberation 的 rule/LLM 融合从 rule-dominant 调整为 LLM-dominant，使 LLM strategy reference 在真实策略入口前拥有更强语义影响。
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/llm_psychology.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_llm_psychology.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - `_BLEND_RATIO` 从 `0.25` 调整为 `0.70`
+  - `strategy_deliberation.final_weights` 现在为 `0.30 * rule_weights + 0.70 * llm_weights`
+  - 补充测试断言，锁定新的 30% rule / 70% LLM 融合公式
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/proto/llm_psychology.py examples/digital_friction_mvp/tests/test_llm_psychology.py`
+  - 结果：通过，无输出
+  - `python -m pytest examples/digital_friction_mvp/tests/test_llm_psychology.py -q`
+  - 结果：`19 passed`
+- 备注：
+  - LLM disabled、LLM 请求失败或 low-confidence 时仍 fallback 到 rule weights
+
+## 2026-05-24
+
+### Helplessness update v2 U1-U4 最小闭环
+- 目的：
+  - 按 `helplessness_updatetodo.md` 先落地 U1-U4：保留 `rule_v1` 对照，新增可显式启用的 `theory_update_v2`，并让 attribution 与 rational security avoidance 进入可审计的 helplessness update。
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/main.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `PROTO_HELPLESSNESS_UPDATE_MODE=rule_v1|theory_update_v2`，默认仍为 `rule_v1`
+  - `apply_helplessness_update(...)` 改为 dispatcher，旧公式保留为 `apply_helplessness_update_rule_v1(...)`
+  - 新增 `apply_helplessness_update_v2(...)`，记录 `mode/status/base_failure_signal/noncontingency_harm/self_efficacy_harm/affective_distress_harm/attribution_multiplier`
+  - v2 对失败/放弃/回避事件按现有 attribution 标签施加保守 multiplier；成功事件保持原恢复逻辑
+  - `HelplessnessUpdateInput` 接收现有 `outcome.event_attribution_*` 字段，attempt payload 写入 v2 audit terms
+  - `infer_avoid_reason(...)` 新增 `rational_security_avoid`，用于高风险支付/安全场景；其 helplessness multiplier 为 `0.00`
+  - `world_runner` fingerprint 与 run metadata 记录 helplessness update mode
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/models.py examples/digital_friction_mvp/proto/state_update.py examples/digital_friction_mvp/proto/outcome_model.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/main.py`
+  - 结果：通过，无输出
+  - `python -m pytest examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`66 passed`
+- 备注：
+  - `apply_helplessness_update(...)` 对未知 `helplessness_update_mode` 显式抛出 `ValueError`，避免静默 fallback
+  - 本轮没有实现 U5-U7，没有新增 support process、LLM helplessness appraisal 或 helper-agent 接口
+
+### H1-H3 FamilyHelperAgent support loop
+- 目的：
+  - 按 `多agenttodo.md` 中 H1-H3 落地第一版 family helper support loop：older adult agent 在 `seek_help_then_attempt` 时直接调用映射好的 `FamilyHelperAgent`，拿到结构化 `support_response`。
+  - 采用本轮确认的直接调用路线，不等待 AgentSociety 异步 message queue。
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/support_protocol.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/support_response_block.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/family_helper_agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/main.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_schema.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_support_protocol.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_support_response_block.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_family_helper_agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_experience_memory.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+- 核心改动：
+  - 新增 `SupportRequest` / `SupportResponse` 协议，严格拒绝 `outcome_type/success/helplessness_delta/helplessness_after/posterior/C_family/scope_spillover_total` 等 forbidden keys。
+  - 新增 `SupportResponseBlock`，LLM 只输出结构化 support response；schema invalid、请求失败或低置信度统一返回 `support_style="unavailable"`。
+  - 新增 `FamilyHelperAgent(CitizenAgentBase)`，提供 `provide_support(...)` 供 older adult agent 当前 attempt 内直接调用；`do_chat(...)` 复用同一生成逻辑，作为未来 message path 入口。
+  - 新增 `PROTO_SUPPORT_ECOLOGY_MODE=off|family_helper_llm`，默认 `family_helper_llm`；`world_runner` fingerprint 和 run metadata 写入该开关。
+  - `main.py` 在支持生态启用时装配同等数量 `FamilyHelperAgent`，并通过 init function 建立 deterministic older-adult/helper 一一映射；核心实验 agent filter 仍只包含 older adult agent。
+  - `DigitalHelplessnessAgent` 仅在 `seek_help_then_attempt` 时构造 `support_request` 并直接调用 helper；`attempt_self` 和 `avoid` 不触发 helper。
+  - `outcome_model.py` 新增可选 `support_response` 参数和 `derive_effective_support_features(...)`，只在 help strategy 下小幅调节 `success_with_help/failure_even_with_help/abandon_midway` 概率。
+  - `experience_memory.py` 将 support style、instruction quality、autonomy preservation、proxy completion 写入 help memory / recent episode audit。
+- 核心边界：
+  - 本轮没有让 helper 决定 final outcome。
+  - 本轮没有让 helper 或 LLM 输出/修改 helplessness delta、helplessness_after 或 final helplessness score。
+  - 本轮没有修改 `state_update.py` 的 helplessness update 公式。
+  - 本轮没有修改 Bayesian posterior key、Huys-Dayan `C_family`、Huys-Dayan formula 或 scope spillover 公式。
+  - `response_text` 只用于 replay/audit，不进入 numeric features。
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/main.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/proto/support_protocol.py examples/digital_friction_mvp/proto/support_response_block.py examples/digital_friction_mvp/proto/family_helper_agent.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/outcome_model.py examples/digital_friction_mvp/proto/experience_memory.py`
+  - 结果：通过，无输出
+  - `python -m pytest examples/digital_friction_mvp/tests/test_support_protocol.py examples/digital_friction_mvp/tests/test_support_response_block.py examples/digital_friction_mvp/tests/test_family_helper_agent.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`100 passed in 1.04s`
+- 备注：
+  - 当前 helper 数量与 older adult agent 数量一致，第一版只实现 family helper，不引入 peer/customer-service/volunteer helper。
+  - 测试环境缺少部分完整 AgentSociety 运行依赖时，新增 proto helper/block 保留轻量 fallback 以便单元测试；正式运行仍复用 AgentSociety `Block` / `CitizenAgentBase`。
+
+### Outcome trajectory JSON retry hardening
+- 目的：
+  - 解决 `trajectory_bounded_online_mc` 中 LLM trajectory appraisal 偶发 `invalid_schema` 导致整个 world 失败的问题。
+  - 采用有限重试，而不是静默吞错：同一次 trajectory appraisal 若原始 JSON + repair 后仍不合格，会重新请求 LLM，默认总共尝试 3 轮。
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/main.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/llm_psychology.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/outcome_model.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis_parallel_worlds.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_trajectory_json_retry.py`
+- 核心改动：
+  - 新增 `PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS`，默认 `3`，有效范围 clamp 到 `1..5`。
+  - `_query_json_payload(...)` 新增可选 `json_attempts`，每轮仍保留原有 raw JSON parse + JSON repair；仅 trajectory appraisal 启用多轮 retry。
+  - `resolve_trajectory_appraisal(...)` 写入 `trajectory_json_attempts_configured` 和 `trajectory_json_attempts_used`。
+  - `AttemptOutcome` 和 outcome payload 增加 trajectory retry audit 字段，不改变 outcome fusion 公式。
+  - `analysis_parallel_worlds.py` 新增 `trajectory_retry_success_count` 和 `trajectory_json_attempts_used_max`，用于 summary 层查看重试是否救回坏格式输出。
+- 核心边界：
+  - 本轮没有改变 `trajectory_bounded_online_mc` 的概率融合公式、alpha、max shift 或 max TVD。
+  - 本轮没有引入 rule fallback；若所有 JSON attempts 都失败，仍按现有 `PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY=fail_run` 处理。
+  - 本轮没有修改 helper support loop、Bayesian/Huys-Dayan 公式或 helplessness update。
+- 验证：
+  - `python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/main.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/analysis_parallel_worlds.py examples/digital_friction_mvp/proto/llm_psychology.py examples/digital_friction_mvp/proto/models.py examples/digital_friction_mvp/proto/outcome_model.py examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_trajectory_json_retry.py`
+  - 结果：通过，无输出
+  - `python -m pytest examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_trajectory_json_retry.py -q`
+  - 结果：`34 passed in 0.06s`
+
+## 2026-05-26
+
+### FamilyHelperAgent mapping 顺序修复
+- 目的：
+  - 修复 H1-H3 support loop 实验中所有 `seek_help_then_attempt` 都落到 `helper_not_found -> unavailable` 的问题。
+  - 根因是 `init_family_helper_mapping()` 在 AgentSociety init 阶段先写入 helper id，但 workflow 第一项 `init_status()` 随后重置 proto 初始状态，把 `family_helper_agent_id` 恢复为 `-1`。
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/main.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_family_helper_agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 在 workflow 中将一次正式 `init_family_helper_mapping` 安排到 `init_status` 之后、survey/stage/attempt 之前，确保 `family_helper_agent_id` 不会被初始状态覆盖。
+  - 保留现有 AgentSociety init function，不重构 init 机制，避免引入 `default(config)` 自动 `bind_agent_info` 的额外行为变化。
+  - `init_family_helper_mapping()` 继续复用现有 `simulation.filter(...)` 和 helper registry 逻辑；不新增全局 registry，不改成 message queue。
+  - 新增 `support_helper_mapping_audit` 轻量 status 字段，记录 mapped count、older/helper count、requester/helper id，便于后续 smoke 检查 mapping 是否有效。
+  - 扩展 helper 单测：用 AST 验证 workflow 顺序；仅编译执行 `main.py` 中真实 `init_family_helper_mapping` 函数体，验证被 `init_status` 重置后的 `family_helper_agent_id=-1` 会被修复为有效 helper id。
+- 核心边界：
+  - 本轮没有修改 `SupportRequest` / `SupportResponse` schema。
+  - 本轮没有修改 `outcome_model.py`、`state_update.py`、Bayesian posterior key、Huys-Dayan formula 或 scope spillover。
+  - 本轮没有让 helper 决定 final outcome，也没有让 support response 直接进入 helplessness update。
+  - 本轮没有处理 mobile-intention rerank `invalid_schema`；这是独立失败源，应单独修复。
+- 验证：
+  - `/opt/anaconda3/envs/agent_env/bin/python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/main.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/proto/support_protocol.py examples/digital_friction_mvp/proto/support_response_block.py examples/digital_friction_mvp/proto/family_helper_agent.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/outcome_model.py examples/digital_friction_mvp/proto/experience_memory.py examples/digital_friction_mvp/tests/test_family_helper_agent.py`
+  - 结果：通过，无输出
+  - `/opt/anaconda3/envs/agent_env/bin/python -m pytest examples/digital_friction_mvp/tests/test_support_protocol.py examples/digital_friction_mvp/tests/test_support_response_block.py examples/digital_friction_mvp/tests/test_family_helper_agent.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_experience_memory.py examples/digital_friction_mvp/tests/test_runtime.py -q`
+  - 结果：`102 passed in 3.72s`
+- 备注：
+  - 本轮尚未运行新的 full world smoke；下一次小规模 smoke 应重点检查 SQLite 中 `payload_json.support_request.helper_agent_id` 不再全为 `null`，`support_response.audit_status` 不再系统性为 `helper_not_found`。
+
+### Mobile-intention rerank JSON retry/repair hardening
+- 目的：
+  - 修复 4-world / 7-day 实验中 `high_friction_low_assist` 因 `mobile-intention LLM rerank failed: invalid_schema` 提前失败的问题。
+  - 将 mobile-intention rerank 补齐到与 trajectory appraisal 相同的 JSON retry/repair 防护等级，避免入口层 LLM 偶发格式错误杀死整个 world。
+  - 按本轮要求，将 trajectory appraisal 与 mobile-intention rerank 的默认 JSON attempts 都设为 `5`。
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/main.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `PROTO_MOBILE_INTENTION_RERANK_JSON_ATTEMPTS`，默认 `5`，有效范围 clamp 到 `1..5`。
+  - `PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS` 默认值从 `3` 改为 `5`，仍保留 `1..5` clamp。
+  - `world_runner` fingerprint 纳入 `PROTO_MOBILE_INTENTION_RERANK_JSON_ATTEMPTS`，`main.py` run metadata 写入 `proto_mobile_intention_rerank_json_attempts`。
+  - `DigitalHelplessnessAgent._build_mobile_entry_llm_rerank(...)` 不再手写单次 `atext_request + parse`；改为复用现有 `_query_json_payload(...)`，每次 attempt 仍包含 raw JSON parse 和 JSON repair。
+  - rerank audit / schedule row 增加 `rerank_json_attempts_configured` / `rerank_json_attempts_used` 与 `json_attempts_configured` / `json_attempts_used`，方便后续 QC 统计 retry 是否救回坏格式输出。
+  - 新增测试覆盖：首次 valid JSON、invalid 后 retry 成功、low confidence 仍按 policy、连续 invalid 仍 fail-run 且不写 schedule。
+- 核心边界：
+  - 本轮只修复 mobile-intention rerank 的 JSON/schema 稳定性，不改变 top-k candidate 约束。
+  - repair/retry 后如果 `selected_mobile_intention` 不在 allowed top-k，仍拒绝。
+  - low confidence 仍走现有 `PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY`，没有绕过阈值。
+  - rerank 仍只决定 mobile entry intention，不决定 task outcome、strategy、help action、helplessness update 或心理状态。
+  - trajectory appraisal 只改变默认 JSON attempts 数量；没有改变 outcome fusion alpha、max shift、max TVD、invalid policy 或 rule fallback 行为。
+- 验证：
+  - `/opt/anaconda3/envs/agent_env/bin/python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/main.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/llm_psychology.py examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py examples/digital_friction_mvp/tests/test_trajectory_json_retry.py`
+  - 结果：通过，无输出
+  - `/opt/anaconda3/envs/agent_env/bin/python -m pytest examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py examples/digital_friction_mvp/tests/test_trajectory_json_retry.py -q`
+  - 结果：`45 passed, 3 warnings in 1.16s`
+  - `/opt/anaconda3/envs/agent_env/bin/python -m pytest examples/digital_friction_mvp/tests/test_task_assignment.py examples/digital_friction_mvp/tests/test_llm_psychology.py -q`
+  - 结果：`35 passed in 0.10s`
+- 备注：
+  - 本轮没有运行新的 full world smoke；建议下一次重跑 4-world / 7-day 时重点查看 mobile rerank schedule 中 `parse_status`、`json_attempts_used`，以及 world summary 是否不再因 mobile rerank `invalid_schema` 中断。

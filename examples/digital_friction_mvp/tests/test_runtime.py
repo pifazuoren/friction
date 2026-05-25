@@ -258,6 +258,48 @@ def test_load_runtime_config_exposes_llm_module_timeout_defaults(monkeypatch) ->
     assert config.proto_llm_uncontrollability_retries == 3
 
 
+def test_load_runtime_config_exposes_helplessness_update_default(monkeypatch) -> None:
+    monkeypatch.delenv("PROTO_HELPLESSNESS_UPDATE_MODE", raising=False)
+    monkeypatch.delenv("PROTO_SUPPORT_ECOLOGY_MODE", raising=False)
+
+    config = load_runtime_config()
+
+    assert config.proto_helplessness_update_mode == "rule_v1"
+    assert config.proto_support_ecology_mode == "family_helper_llm"
+
+
+def test_load_runtime_config_accepts_theory_update_v2(monkeypatch) -> None:
+    monkeypatch.setenv("PROTO_HELPLESSNESS_UPDATE_MODE", "theory_update_v2")
+
+    config = load_runtime_config()
+
+    assert config.proto_helplessness_update_mode == "theory_update_v2"
+
+
+def test_load_runtime_config_rejects_invalid_helplessness_update_mode(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("PROTO_HELPLESSNESS_UPDATE_MODE", "full_llm_delta")
+
+    with pytest.raises(ValueError):
+        load_runtime_config()
+
+
+def test_load_runtime_config_accepts_support_ecology_off(monkeypatch) -> None:
+    monkeypatch.setenv("PROTO_SUPPORT_ECOLOGY_MODE", "off")
+
+    config = load_runtime_config()
+
+    assert config.proto_support_ecology_mode == "off"
+
+
+def test_load_runtime_config_rejects_invalid_support_ecology_mode(monkeypatch) -> None:
+    monkeypatch.setenv("PROTO_SUPPORT_ECOLOGY_MODE", "random_helper")
+
+    with pytest.raises(ValueError, match="PROTO_SUPPORT_ECOLOGY_MODE"):
+        load_runtime_config()
+
+
 def test_load_runtime_config_exposes_bayesian_control_defaults(monkeypatch) -> None:
     monkeypatch.delenv("PROTO_BAYESIAN_CONTROL_AUDIT_ENABLED", raising=False)
     monkeypatch.delenv("PROTO_BAYESIAN_CONTROL_RHO", raising=False)
@@ -329,6 +371,7 @@ def test_load_runtime_config_exposes_mobile_entry_defaults(monkeypatch) -> None:
         "PROTO_MOBILE_INTENTION_LLM_PROMPT_VERSION",
         "PROTO_MOBILE_INTENTION_LLM_MIN_CONFIDENCE",
         "PROTO_MOBILE_INTENTION_RERANK_TOP_K",
+        "PROTO_MOBILE_INTENTION_RERANK_JSON_ATTEMPTS",
         "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY",
         "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH",
         "PROTO_MOBILE_INTENTION_RERANK_RUN_ID",
@@ -340,6 +383,7 @@ def test_load_runtime_config_exposes_mobile_entry_defaults(monkeypatch) -> None:
         "PROTO_OUTCOME_TRAJECTORY_MAX_TVD",
         "PROTO_OUTCOME_TRAJECTORY_MIN_CONFIDENCE",
         "PROTO_OUTCOME_TRAJECTORY_STRICT_SCHEMA",
+        "PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS",
         "PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY",
     ):
         monkeypatch.delenv(key, raising=False)
@@ -355,6 +399,7 @@ def test_load_runtime_config_exposes_mobile_entry_defaults(monkeypatch) -> None:
     assert config.proto_mobile_intention_llm_prompt_version == "mobile_intention_shadow_v1"
     assert config.proto_mobile_intention_llm_min_confidence == 0.70
     assert config.proto_mobile_intention_rerank_top_k == 5
+    assert config.proto_mobile_intention_rerank_json_attempts == 5
     assert config.proto_mobile_intention_rerank_low_confidence_policy == "fail_run"
     assert config.proto_mobile_intention_rerank_schedule_path == ""
     assert config.proto_mobile_intention_rerank_run_id == ""
@@ -366,6 +411,7 @@ def test_load_runtime_config_exposes_mobile_entry_defaults(monkeypatch) -> None:
     assert config.proto_outcome_trajectory_max_tvd == 0.10
     assert config.proto_outcome_trajectory_min_confidence == 0.65
     assert config.proto_outcome_trajectory_strict_schema is True
+    assert config.proto_outcome_trajectory_json_attempts == 5
     assert config.proto_outcome_trajectory_invalid_policy == "fail_run"
 
 
@@ -385,8 +431,10 @@ def test_load_runtime_config_validates_outcome_modes(monkeypatch) -> None:
         load_runtime_config()
 
     monkeypatch.setenv("PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY", "fail_run")
+    monkeypatch.setenv("PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS", "9")
     config = load_runtime_config()
     assert config.proto_outcome_model_mode == "trajectory_shadow"
+    assert config.proto_outcome_trajectory_json_attempts == 5
 
 
 def test_load_runtime_config_mobile_rerank_low_confidence_policy(monkeypatch) -> None:
@@ -402,12 +450,14 @@ def test_load_runtime_config_mobile_rerank_low_confidence_policy(monkeypatch) ->
         "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY",
         "accept_with_audit",
     )
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_JSON_ATTEMPTS", "9")
     config = load_runtime_config()
     assert config.proto_task_entry_mode == "mobile_intention_llm_rerank_online_mc"
     assert (
         config.proto_mobile_intention_rerank_low_confidence_policy
         == "accept_with_audit"
     )
+    assert config.proto_mobile_intention_rerank_json_attempts == 5
 
 
 def test_load_runtime_config_rejects_validation_artifact_paths(monkeypatch) -> None:
@@ -430,6 +480,7 @@ def test_world_runner_fingerprint_includes_mobile_entry_env(monkeypatch) -> None
             "PROTO_MOBILE_INTENTION_CONFIDENCE_THRESHOLD": "0.70",
             "PROTO_MOBILE_INTENTION_EVAL_INTERVAL_MINUTES": "60",
             "PROTO_MOBILE_INTENTION_RERANK_TOP_K": "5",
+            "PROTO_MOBILE_INTENTION_RERANK_JSON_ATTEMPTS": "5",
             "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY": "accept_with_audit",
             "PROTO_MOBILE_INTENTION_RERANK_RUN_ID": "run-1",
             "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH": "/tmp/schedule.jsonl",
@@ -441,6 +492,7 @@ def test_world_runner_fingerprint_includes_mobile_entry_env(monkeypatch) -> None
             "PROTO_OUTCOME_TRAJECTORY_MAX_TVD": "0.10",
             "PROTO_OUTCOME_TRAJECTORY_MIN_CONFIDENCE": "0.65",
             "PROTO_OUTCOME_TRAJECTORY_STRICT_SCHEMA": "1",
+            "PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS": "5",
             "PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY": "fail_run",
         },
         ["baseline_low_friction"],
@@ -452,6 +504,7 @@ def test_world_runner_fingerprint_includes_mobile_entry_env(monkeypatch) -> None
     assert payload["PROTO_MOBILE_INTENTION_CONFIDENCE_THRESHOLD"] == "0.70"
     assert payload["PROTO_MOBILE_INTENTION_EVAL_INTERVAL_MINUTES"] == "60"
     assert payload["PROTO_MOBILE_INTENTION_RERANK_TOP_K"] == "5"
+    assert payload["PROTO_MOBILE_INTENTION_RERANK_JSON_ATTEMPTS"] == "5"
     assert (
         payload["PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY"]
         == "accept_with_audit"
@@ -460,6 +513,7 @@ def test_world_runner_fingerprint_includes_mobile_entry_env(monkeypatch) -> None
     assert payload["PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH"] == "/tmp/schedule.jsonl"
     assert payload["PROTO_OUTCOME_MODEL_MODE"] == "trajectory_bounded_online_mc"
     assert payload["PROTO_OUTCOME_TRAJECTORY_ALPHA"] == "0.10"
+    assert payload["PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS"] == "5"
     assert payload["PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY"] == "fail_run"
 
 
@@ -640,6 +694,7 @@ def test_world_runner_fingerprint_payload_includes_bayesian_env_keys() -> None:
             "PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA": "0.10",
             "PROTO_HUYS_DAYAN_LITE_LOW_C_THRESHOLD": "0.45",
             "PROTO_HUYS_DAYAN_LITE_HIGH_C_THRESHOLD": "0.60",
+            "PROTO_SUPPORT_ECOLOGY_MODE": "family_helper_llm",
         },
         ["baseline_low_friction"],
     )
@@ -676,3 +731,4 @@ def test_world_runner_fingerprint_payload_includes_bayesian_env_keys() -> None:
     assert payload["PROTO_HUYS_DAYAN_LITE_MODULATION_MAX_DELTA"] == "0.10"
     assert payload["PROTO_HUYS_DAYAN_LITE_LOW_C_THRESHOLD"] == "0.45"
     assert payload["PROTO_HUYS_DAYAN_LITE_HIGH_C_THRESHOLD"] == "0.60"
+    assert payload["PROTO_SUPPORT_ECOLOGY_MODE"] == "family_helper_llm"

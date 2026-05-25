@@ -55,6 +55,7 @@ from .profile_buckets import age_bucket, persona_bucket
 from .runtime import assign_task_with_entry_decision, build_stage_transition_updates
 from .state_schema import build_proto_status_attributes
 from .state_update import apply_helplessness_update
+from .support_protocol import SupportRequest, SupportResponse
 from .task_assignment import (
     MobileEntryDecision,
     decode_task,
@@ -84,6 +85,7 @@ _MOBILE_ENTRY_LLM_SHADOW_KEYS = {
     "confidence",
     "reason",
 }
+SUPPORT_HELPER_REGISTRY_ATTRIBUTE = "_support_helper_registry"
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -278,6 +280,11 @@ def _support_snapshot_for_task(
         "source": (
             by_source.get("generic", {})
             if isinstance(by_source, dict)
+            else {}
+        ),
+        "support_response_audit": (
+            help_effect_memory.get("support_response_audit", {})
+            if isinstance(help_effect_memory.get("support_response_audit"), dict)
             else {}
         ),
     }
@@ -675,6 +682,34 @@ def _build_task_relevant_memory_packet(
     }
 
 
+def _compact_support_context(payload: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "same_task_attempt_count": _safe_int(payload.get("same_task_attempt_count"), 0),
+        "same_task_failure_count": _safe_int(payload.get("same_task_failure_count"), 0),
+        "same_task_failure_streak": _safe_int(
+            payload.get("same_task_failure_streak"),
+            0,
+        ),
+        "same_task_last_outcome": _compact_status_text(
+            payload.get("same_task_last_outcome"),
+            default="",
+        ),
+        "help_success_rate_same_task": _safe_float(
+            payload.get("help_success_rate_same_task"),
+            0.5,
+        ),
+        "same_task_attribution_summary": _compact_status_note(
+            payload.get("same_task_attribution_summary"),
+            default="",
+            max_chars=220,
+        ),
+        "recent_same_task_outcomes_tail": payload.get(
+            "recent_same_task_outcomes_tail",
+            [],
+        ),
+    }
+
+
 class DigitalHelplessnessAgent(SocietyAgent):
     StatusAttributes = SocietyAgent.StatusAttributes + build_proto_status_attributes()
     survey_recent_alignment = True
@@ -736,6 +771,107 @@ class DigitalHelplessnessAgent(SocietyAgent):
 
     async def _write_idle_step_state(self) -> None:
         await DigitalHelplessnessAgent._write_mobile_entry_idle_state(self)
+
+    def set_support_helper_registry(self, registry: dict[int, Any]) -> None:
+        setattr(self, SUPPORT_HELPER_REGISTRY_ATTRIBUTE, dict(registry))
+
+    async def _resolve_family_support_response(
+        self,
+        *,
+        task: Any,
+        strategy: Any,
+        task_appraisal: Any,
+        task_relevant_memory_packet: dict[str, Any],
+        env: dict[str, Any],
+        profile_summary: dict[str, Any],
+        day: int,
+        tick: float,
+    ) -> tuple[SupportRequest | None, SupportResponse | None, str]:
+        runtime_config = load_runtime_config()
+        if runtime_config.proto_support_ecology_mode == "off":
+            return None, None, "off"
+        if strategy.strategy_type != "seek_help_then_attempt":
+            return None, None, "not_requested"
+        helper_id = _safe_int(
+            await self.memory.status.get("family_helper_agent_id", -1),
+            -1,
+        )
+        registry = getattr(self, SUPPORT_HELPER_REGISTRY_ATTRIBUTE, {})
+        helper = registry.get(helper_id) if isinstance(registry, dict) else None
+        request = SupportRequest(
+            request_id=f"{int(self.id)}-{int(day)}-{int(float(tick))}-{task.task_id}",
+            requester_agent_id=int(self.id),
+            helper_agent_id=helper_id if helper_id >= 0 else None,
+            day=int(day),
+            tick=float(tick),
+            task_id=str(task.task_id),
+            task_family=str(task.task_family),
+            friction_type=str(task.friction_type),
+            difficulty=float(task.difficulty),
+            need_type=str(task.need_type),
+            support_sensitivity=float(task.support_sensitivity),
+            strategy_type=str(strategy.strategy_type),
+            support_need="help me complete the digital task while preserving my ability to learn",
+            task_appraisal={
+                "perceived_task_difficulty": float(
+                    getattr(task_appraisal, "perceived_task_difficulty", 50.0)
+                ),
+                "perceived_task_risk": float(
+                    getattr(task_appraisal, "perceived_task_risk", 50.0)
+                ),
+                "felt_control": float(getattr(task_appraisal, "felt_control", 50.0)),
+                "expected_help_effectiveness": float(
+                    getattr(task_appraisal, "expected_help_effectiveness", 50.0)
+                ),
+                "task_value": float(getattr(task_appraisal, "task_value", 50.0)),
+            },
+            memory_context=_compact_support_context(task_relevant_memory_packet),
+            env_context={
+                "digital_stage": str(env.get("digital_stage") or env.get("stage_name") or ""),
+                "friction_level": _safe_int(env.get("friction_level", 0), 0),
+                "complexity_level": _safe_int(env.get("complexity_level", 0), 0),
+                "risk_level": _safe_int(env.get("risk_level", 0), 0),
+                "assist_level": _safe_int(env.get("assist_level", 0), 0),
+                "human_support_level": _safe_int(env.get("human_support_level", 0), 0),
+                "accessibility_level": _safe_int(env.get("accessibility_level", 0), 0),
+            },
+            profile_summary={
+                "age_bucket": age_bucket(profile_summary.get("age", -1)),
+                "persona_tag": persona_bucket(profile_summary.get("persona", "")),
+                "education": _compact_status_text(
+                    profile_summary.get("education"),
+                    default="unknown",
+                ),
+            },
+            relationship={
+                "relationship_type": "family",
+                "mapped_helper_agent_id": helper_id,
+            },
+        )
+        if helper is None or not hasattr(helper, "provide_support"):
+            return (
+                request,
+                SupportResponse.unavailable(
+                    request=request,
+                    source="helper_unavailable",
+                    audit_status="helper_not_found",
+                ),
+                "helper_not_found",
+            )
+        try:
+            response = await helper.provide_support(request)
+        except Exception as exc:
+            return (
+                request,
+                SupportResponse.unavailable(
+                    request=request,
+                    source="helper_unavailable",
+                    audit_status="request_error",
+                    rationale=str(exc)[:300],
+                ),
+                "request_error",
+            )
+        return request, response, str(response.audit_status)
 
     async def _write_mobile_entry_idle_state(
         self,
@@ -1013,6 +1149,10 @@ class DigitalHelplessnessAgent(SocietyAgent):
             ),
             "rerank_prompt_version": prompt_version,
             "rerank_top_k": int(runtime_config.proto_mobile_intention_rerank_top_k),
+            "rerank_json_attempts_configured": int(
+                getattr(runtime_config, "proto_mobile_intention_rerank_json_attempts", 5)
+            ),
+            "rerank_json_attempts_used": 0,
             "rerank_candidate_intentions": dict(candidates),
             "rerank_candidate_hash": candidate_hash,
             "rule_selected_mobile_intention": (
@@ -1053,44 +1193,44 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 "reason": "This candidate best matches the context and priors.",
             },
         }
-        dialog = [
-            {
-                "role": "system",
-                "content": (
-                    "You are a JSON-only reranker for a constrained mobile intention "
-                    "entry layer. Choose exactly one intention from candidate_intentions. "
-                    "Do not invent intentions, tasks, strategies, outcomes, help actions, "
-                    "or psychological state updates."
-                ),
-            },
-            {
-                "role": "user",
-                "content": (
-                    "Return one JSON object only.\n"
-                    + json.dumps(user_payload, ensure_ascii=False)
-                ),
-            },
-        ]
-        try:
-            raw_response = await getattr(self, "llm").atext_request(
-                dialog=dialog,
-                temperature=0.1,
-                timeout=int(getattr(runtime_config, "proto_llm_psychology_timeout", 30)),
-                retries=int(getattr(runtime_config, "proto_llm_psychology_retries", 0)),
-                max_tokens=260,
+        def _sanitize_for_this_rerank(value: Any) -> tuple[dict[str, Any] | None, str]:
+            return _sanitize_mobile_entry_shadow(
+                value,
+                allowed_intentions=allowed_intentions,
+                min_confidence=runtime_config.proto_mobile_intention_llm_min_confidence,
             )
-        except Exception as exc:
-            payload["rerank_parse_status"] = "request_error"
-            raise ValueError("mobile-intention LLM rerank request failed") from exc
-        parsed = _extract_json_object(str(raw_response))
-        llm_payload, status = _sanitize_mobile_entry_shadow(
-            parsed,
-            allowed_intentions=allowed_intentions,
-            min_confidence=runtime_config.proto_mobile_intention_llm_min_confidence,
+
+        llm_payload, status = await _query_json_payload(
+            llm=getattr(self, "llm"),
+            system_prompt=(
+                "You are a JSON-only reranker for a constrained mobile intention "
+                "entry layer. Choose exactly one intention from candidate_intentions. "
+                "Do not invent intentions, tasks, strategies, outcomes, help actions, "
+                "or psychological state updates."
+            ),
+            user_payload=user_payload,
+            output_keys=_MOBILE_ENTRY_LLM_SHADOW_KEYS,
+            repair_schema_text=(
+                "- Return exactly selected_mobile_intention, confidence, and reason\n"
+                "- selected_mobile_intention must be one of allowed_intentions\n"
+                "- confidence must be a number in [0,1]\n"
+                "- reason must be a short explanation and must not include task outcomes, "
+                "strategies, or psychological state updates"
+            ),
+            sanitize_fn=_sanitize_for_this_rerank,
+            timeout=int(getattr(runtime_config, "proto_llm_psychology_timeout", 30)),
+            retries=int(getattr(runtime_config, "proto_llm_psychology_retries", 0)),
+            max_tokens=260,
+            json_attempts=int(
+                getattr(runtime_config, "proto_mobile_intention_rerank_json_attempts", 5)
+            ),
+            attempt_metadata_key="_rerank_json_attempts_used",
         )
         payload["rerank_parse_status"] = status
         if llm_payload is None:
             raise ValueError(f"mobile-intention LLM rerank failed: {status}")
+        json_attempts_used = int(llm_payload.pop("_rerank_json_attempts_used", 1) or 1)
+        payload["rerank_json_attempts_used"] = json_attempts_used
         selected = str(llm_payload.get("selected_mobile_intention", "")).strip()
         confidence = _clamp(_safe_float(llm_payload.get("confidence"), 0.0), 0.0, 1.0)
         if confidence < float(runtime_config.proto_mobile_intention_llm_min_confidence):
@@ -1166,6 +1306,10 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "selected_mobile_intention": selected,
             "confidence": float(audit.get("rerank_confidence", 0.0)),
             "parse_status": str(audit.get("rerank_parse_status", "")),
+            "json_attempts_configured": int(
+                audit.get("rerank_json_attempts_configured", 1) or 1
+            ),
+            "json_attempts_used": int(audit.get("rerank_json_attempts_used", 1) or 1),
             "reason": str(audit.get("rerank_reason", ""))[:120],
             "response_hash": str(audit.get("rerank_response_hash", "")),
         }
@@ -2039,6 +2183,18 @@ class DigitalHelplessnessAgent(SocietyAgent):
             precomputed_final_weights=gated_lite_final_weights,
             rng=strategy_rng,
         )
+        support_request, support_response, support_ecology_status = (
+            await self._resolve_family_support_response(
+                task=task,
+                strategy=strategy,
+                task_appraisal=task_appraisal,
+                task_relevant_memory_packet=task_relevant_memory_packet,
+                env=env,
+                profile_summary=profile_summary,
+                day=int(day),
+                tick=float(t),
+            )
+        )
         trajectory_result: dict[str, Any] | None = None
         outcome_model_mode = str(runtime_config.proto_outcome_model_mode)
         if (
@@ -2095,7 +2251,16 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     runtime_config.proto_outcome_trajectory_min_confidence
                 ),
             },
+            support_response=support_response,
         )
+        outcome.support_ecology_status = str(support_ecology_status)
+        if support_response is not None:
+            outcome.support_response_json = json.dumps(
+                support_response.to_dict(),
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+            outcome.helper_agent_id = int(support_response.helper_agent_id or -1)
         calibration = await calibrate_uncontrollability(
             llm=getattr(self, "llm", None),
             task=task,
@@ -2138,6 +2303,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 support_quality=outcome.support_quality,
                 felt_control=task_appraisal.felt_control,
                 expected_help_effectiveness=task_appraisal.expected_help_effectiveness,
+                support_response=support_response,
             )
             outcome.support_mode = str(support_mode_result["label"])
             outcome.support_mode_source = str(support_mode_result["source"])
@@ -2250,6 +2416,13 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 avoid_reason=outcome.avoid_reason,
                 controllable_success_memory=memory_features.controllable_success_memory,
                 support_mode=outcome.support_mode,
+                helplessness_update_mode=(
+                    runtime_config.proto_helplessness_update_mode
+                ),
+                event_attribution_locus=outcome.event_attribution_locus,
+                event_attribution_stability=outcome.event_attribution_stability,
+                event_attribution_scope=outcome.event_attribution_scope,
+                event_attribution_confidence=outcome.event_attribution_confidence,
             )
         )
         compat = apply_compatibility_updates(
@@ -2270,6 +2443,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             recent_episode_buffer=recent_episode_buffer,
             rationale_memory=rationale_memory,
             task_appraisal_result=task_appraisal.to_dict(),
+            support_response=support_response,
         )
         bayesian_control_memory, bayesian_control_audit = (
             update_bayesian_control_memory(
@@ -2380,6 +2554,14 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "avoid_reason_confidence": outcome.avoid_reason_confidence,
             "support_mode": outcome.support_mode,
             "support_mode_source": outcome.support_mode_source,
+            "helper_agent_id": int(outcome.helper_agent_id),
+            "support_ecology_status": str(support_ecology_status),
+            "support_request": (
+                support_request.to_dict() if support_request is not None else {}
+            ),
+            "support_response": (
+                support_response.to_dict() if support_response is not None else {}
+            ),
             "event_attribution_locus": outcome.event_attribution_locus,
             "event_attribution_stability": outcome.event_attribution_stability,
             "event_attribution_scope": outcome.event_attribution_scope,
@@ -2500,6 +2682,16 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     "task": task.to_dict(),
                     "strategy": strategy.to_dict(),
                     "outcome": outcome.to_dict(),
+                    "support_request": (
+                        support_request.to_dict()
+                        if support_request is not None
+                        else {}
+                    ),
+                    "support_response": (
+                        support_response.to_dict()
+                        if support_response is not None
+                        else {}
+                    ),
                     "profile_summary": profile_summary,
                     "task_relevant_memory": task_relevant_memory_packet,
                     "retrieved_episodic_memory": task_appraisal_retrieval_packet,
@@ -2524,15 +2716,35 @@ class DigitalHelplessnessAgent(SocietyAgent):
                             "delta": float(update_result.delta),
                         },
                         "update_breakdown": {
+                            "mode": str(update_result.mode),
+                            "status": str(update_result.status),
                             "base_delta": float(update_result.base_delta),
+                            "base_failure_signal": float(
+                                update_result.base_failure_signal
+                            ),
                             "uncontrollability_delta": float(
                                 update_result.uncontrollability_delta
+                            ),
+                            "noncontingency_harm": float(
+                                update_result.noncontingency_harm
                             ),
                             "efficacy_loss_term": float(
                                 update_result.efficacy_loss_term
                             ),
+                            "self_efficacy_harm": float(
+                                update_result.self_efficacy_harm
+                            ),
+                            "affective_distress_harm": float(
+                                update_result.affective_distress_harm
+                            ),
                             "mastery_recovery_term": float(
                                 update_result.mastery_recovery_term
+                            ),
+                            "attribution_multiplier": float(
+                                update_result.attribution_multiplier
+                            ),
+                            "attribution_recovery_multiplier": float(
+                                update_result.attribution_recovery_multiplier
                             ),
                             "raw_delta_before_damping": float(
                                 update_result.raw_delta_before_damping
@@ -2543,6 +2755,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
                             ),
                             "controllable_success_protection": float(
                                 update_result.controllable_success_protection
+                            ),
+                            "rule_fallback_reason": str(
+                                update_result.rule_fallback_reason
                             ),
                             "effective_delta": float(update_result.delta),
                         },
@@ -2597,6 +2812,28 @@ class DigitalHelplessnessAgent(SocietyAgent):
                             "support_quality": int(outcome.support_quality),
                             "support_mode": str(outcome.support_mode),
                             "support_mode_source": str(outcome.support_mode_source),
+                            "support_ecology_status": str(support_ecology_status),
+                            "helper_agent_id": int(outcome.helper_agent_id),
+                            "support_style": (
+                                support_response.support_style
+                                if support_response is not None
+                                else "not_applicable"
+                            ),
+                            "instruction_quality": (
+                                support_response.instruction_quality
+                                if support_response is not None
+                                else "not_applicable"
+                            ),
+                            "autonomy_preservation": (
+                                support_response.autonomy_preservation
+                                if support_response is not None
+                                else "not_applicable"
+                            ),
+                            "proxy_completion_level": (
+                                support_response.proxy_completion_level
+                                if support_response is not None
+                                else "not_applicable"
+                            ),
                             "mode_note": (
                                 str(support_mode_result["note"])
                                 if isinstance(support_mode_result, dict)

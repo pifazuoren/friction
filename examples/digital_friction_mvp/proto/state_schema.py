@@ -382,6 +382,18 @@ def build_proto_status_attributes() -> list[MemoryAttribute]:
             description="Huys-Dayan-lite controllability audit memory",
         ),
         MemoryAttribute(
+            name="support_ecology_mode",
+            type=str,
+            default_or_value="off",
+            description="configured support ecology mode for this agent",
+        ),
+        MemoryAttribute(
+            name="family_helper_agent_id",
+            type=int,
+            default_or_value=-1,
+            description="mapped FamilyHelperAgent id for direct support calls",
+        ),
+        MemoryAttribute(
             name="task_domain_memory",
             type=dict,
             default_or_value={},
@@ -583,6 +595,8 @@ def build_initial_proto_status(
         "proto_bayesian_controllability_lite_memory": (
             build_initial_controllability_lite_memory()
         ),
+        "support_ecology_mode": "off",
+        "family_helper_agent_id": -1,
         "task_domain_memory": build_initial_task_domain_memory(
             digital_experience=float(scores["digital_experience"]),
             vision_limit=float(scores["vision_limit"]),

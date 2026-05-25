@@ -13,6 +13,7 @@ from .models import (
     OutcomeAppraisalResult,
     TaskAppraisalResult,
 )
+from .support_protocol import SupportResponse, support_style_to_support_mode
 
 
 OUTCOME_MODEL_MODES = {
@@ -199,6 +200,94 @@ def support_quality_from_env(env: dict[str, Any]) -> int:
     return 2
 
 
+def _support_response_from_any(value: Any) -> SupportResponse | None:
+    if value is None:
+        return None
+    if isinstance(value, SupportResponse):
+        return value
+    if isinstance(value, dict):
+        try:
+            return SupportResponse.from_dict(value)
+        except ValueError:
+            return None
+    return None
+
+
+def derive_effective_support_features(
+    support_response: Any,
+    env: dict[str, Any] | None = None,
+) -> dict[str, float | str]:
+    response = _support_response_from_any(support_response)
+    if response is None:
+        return {
+            "effective_support_quality": 0.0,
+            "substitution_pressure": 0.0,
+            "support_unavailability": 0.0,
+            "support_style": "none",
+            "source": "none",
+        }
+
+    style = response.support_style
+    quality = 0.0
+    substitution = 0.0
+    unavailable = 0.0
+    if style == "enabling":
+        quality = 0.75
+        substitution = 0.05
+    elif style == "substituting":
+        quality = 0.45
+        substitution = 0.65
+    elif style == "dismissive":
+        quality = 0.10
+        substitution = 0.35
+        unavailable = 0.35
+    else:
+        quality = 0.0
+        substitution = 0.0
+        unavailable = 1.0
+
+    instruction_bonus = {
+        "none": -0.10,
+        "low": -0.04,
+        "medium": 0.04,
+        "high": 0.12,
+    }.get(response.instruction_quality, 0.0)
+    autonomy_bonus = {
+        "low": -0.10,
+        "medium": 0.0,
+        "high": 0.10,
+        "not_applicable": 0.0,
+    }.get(response.autonomy_preservation, 0.0)
+    proxy_pressure = {
+        "none": 0.0,
+        "partial": 0.25,
+        "full": 0.60,
+        "not_applicable": 0.0,
+    }.get(response.proxy_completion_level, 0.0)
+    delay_penalty = {
+        "immediate": 0.0,
+        "delayed": 0.20,
+        "no_response": 0.65,
+    }.get(response.response_delay, 0.0)
+    env_quality = 0.0
+    if isinstance(env, dict):
+        env_quality = float(support_quality_from_env(env)) / 2.0
+    confidence_scale = 0.55 + 0.45 * _clamp_unit(response.confidence)
+    quality = _clamp_unit(
+        (0.78 * quality + 0.22 * env_quality + instruction_bonus + autonomy_bonus)
+        * confidence_scale
+    )
+    substitution = _clamp_unit(substitution + proxy_pressure)
+    unavailable = _clamp_unit(unavailable + delay_penalty)
+    return {
+        "effective_support_quality": float(quality),
+        "substitution_pressure": float(substitution),
+        "support_unavailability": float(unavailable),
+        "support_style": style,
+        "source": str(response.source),
+    }
+
+
 def friction_tier_from_env(task: DigitalTask, env: dict[str, Any]) -> int:
     friction = float(env.get("friction_level", 0))
     malicious = float(env.get("malicious_friction_level", 0))
@@ -273,6 +362,26 @@ def infer_avoid_reason(
         risk_score += 0.45
     if float(felt_control) >= 45.0:
         risk_score += 0.10
+    rational_security_score = 0.0
+    if task.task_family == "payment_risk_confirmation":
+        rational_security_score += 0.55
+    if task.friction_type == "payment_risk_popup":
+        rational_security_score += 0.45
+    rational_security_score += _clamp_unit((float(perceived_task_risk) - 72.0) / 18.0)
+    rational_security_score += 0.35 * max(
+        0.0,
+        min(2.0, float(env.get("risk_level", 0)) - 1.0),
+    )
+    rational_security_score += 0.30 * max(
+        0.0,
+        min(2.0, float(env.get("malicious_friction_level", 0)) - 1.0),
+    )
+    if float(task_value) >= 35.0:
+        rational_security_score += 0.20
+    else:
+        rational_security_score -= 0.35
+    if float(task_self_efficacy) < 45.0 or float(felt_control) < 35.0:
+        rational_security_score -= 0.25
 
     value_score = _clamp_unit((42.0 - float(task_value)) / 15.0)
     if float(task_value) < 40.0:
@@ -286,6 +395,7 @@ def infer_avoid_reason(
         "helpless_avoid": round(float(helpless_score), 4),
         "risk_avoid": round(float(risk_score), 4),
         "low_value_avoid": round(float(value_score), 4),
+        "rational_security_avoid": round(float(rational_security_score), 4),
     }
     ranking = sorted(scores.items(), key=lambda item: (item[1], item[0]), reverse=True)
     label, top_score = ranking[0]
@@ -295,6 +405,8 @@ def infer_avoid_reason(
         note = "low_control_or_repeat_failure_dominates"
     elif label == "risk_avoid":
         note = "risk_signal_dominates"
+    elif label == "rational_security_avoid":
+        note = "rational_security_stop_dominates"
     else:
         note = "low_value_signal_dominates"
     return {
@@ -312,6 +424,7 @@ def infer_support_mode(
     support_quality: int,
     felt_control: float,
     expected_help_effectiveness: float,
+    support_response: Any = None,
 ) -> dict[str, Any]:
     if outcome_type not in {"success_with_help", "failure_even_with_help", "abandon_midway"}:
         return {
@@ -319,6 +432,15 @@ def infer_support_mode(
             "source": "not_applicable",
             "confidence": 0.0,
             "note": "",
+        }
+    response = _support_response_from_any(support_response)
+    if response is not None:
+        label = support_style_to_support_mode(response.support_style)
+        return {
+            "label": label,
+            "source": "support_response",
+            "confidence": round(float(response.confidence), 4),
+            "note": f"structured_support_style={response.support_style}",
         }
 
     support_signal = 0.0
@@ -357,6 +479,7 @@ def build_outcome_appraisal_rule_v2(
     consecutive_failures: int,
     task_appraisal: Any,
     memory_features: Any,
+    support_response: Any = None,
 ) -> OutcomeAppraisalResult:
     appraisal = _task_appraisal_from_any(task_appraisal)
     support_quality = support_quality_from_env(env)
@@ -403,6 +526,17 @@ def build_outcome_appraisal_rule_v2(
         + 0.35 * (float(appraisal.expected_help_effectiveness) / 100.0)
         + 0.15 * float(task.support_sensitivity)
     )
+    support_features = derive_effective_support_features(
+        support_response,
+        env,
+    )
+    if strategy.strategy_type == "seek_help_then_attempt" and support_response is not None:
+        support_effective_quality = _clamp_unit(
+            0.78 * support_effective_quality
+            + 0.22 * float(support_features["effective_support_quality"])
+            - 0.10 * float(support_features["support_unavailability"])
+            - 0.04 * float(support_features["substitution_pressure"])
+        )
     if strategy.strategy_type != "seek_help_then_attempt":
         support_effective_quality *= 0.35
     abandonment_pressure = _clamp_unit(
@@ -453,6 +587,7 @@ def build_rule_outcome_distribution_v2(
     consecutive_failures: int,
     task_appraisal: Any,
     memory_features: Any,
+    support_response: Any = None,
 ) -> tuple[OutcomeAppraisalResult, dict[str, float]]:
     appraisal = build_outcome_appraisal_rule_v2(
         task=task,
@@ -462,12 +597,27 @@ def build_rule_outcome_distribution_v2(
         consecutive_failures=consecutive_failures,
         task_appraisal=task_appraisal,
         memory_features=memory_features,
+        support_response=support_response,
     )
     if strategy.strategy_type == "avoid":
         return appraisal, {"avoid_without_attempt": 1.0}
 
     support_term = (
         appraisal.support_effective_quality
+        if strategy.strategy_type == "seek_help_then_attempt"
+        else 0.0
+    )
+    support_features = derive_effective_support_features(
+        support_response,
+        env,
+    )
+    substitution_pressure = (
+        float(support_features["substitution_pressure"])
+        if strategy.strategy_type == "seek_help_then_attempt"
+        else 0.0
+    )
+    support_unavailability = (
+        float(support_features["support_unavailability"])
         if strategy.strategy_type == "seek_help_then_attempt"
         else 0.0
     )
@@ -481,6 +631,7 @@ def build_rule_outcome_distribution_v2(
         + 0.55 * appraisal.risk_pressure
         + 0.45 * appraisal.recent_negative_feedback_ratio
         + 0.22 * min(max(float(appraisal.recent_same_task_failure_count), 0.0), 3.0)
+        + 0.30 * support_unavailability
         - 0.40 * _clamp_unit(appraisal.task_value / 100.0)
         - 0.55 * support_term
     )
@@ -499,6 +650,8 @@ def build_rule_outcome_distribution_v2(
         - 0.45 * appraisal.risk_pressure
         - 0.45 * appraisal.recent_negative_feedback_ratio
         - 0.18 * min(max(float(appraisal.recent_same_task_failure_count), 0.0), 3.0)
+        - 0.14 * support_unavailability
+        - 0.06 * substitution_pressure
     )
     p_success_given_not_abandon = _sigmoid(success_logit)
     p_success = (1.0 - p_abandon) * p_success_given_not_abandon
@@ -511,7 +664,12 @@ def build_rule_outcome_distribution_v2(
             "abandon_midway": p_abandon,
         }
     elif strategy.strategy_type == "seek_help_then_attempt":
-        effective_help_share = _clamp_unit(0.20 + 0.70 * support_term)
+        effective_help_share = _clamp_unit(
+            0.20
+            + 0.70 * support_term
+            + 0.15 * substitution_pressure
+            - 0.20 * support_unavailability
+        )
         distribution = {
             "success_with_help": p_success,
             "failure_even_with_help": p_failure * effective_help_share,
@@ -763,8 +921,10 @@ def _outcome_from_distribution(
     outcome_appraisal: OutcomeAppraisalResult | None = None,
     trajectory_result: dict[str, Any] | None = None,
     trajectory_audit: dict[str, Any] | None = None,
+    support_response: Any = None,
 ) -> AttemptOutcome:
     support_quality = support_quality_from_env(env)
+    response = _support_response_from_any(support_response)
     friction_tier = friction_tier_from_env(task, env)
     allowed_keys = allowed_outcome_keys_for_strategy(strategy)
     final_distribution = validate_outcome_distribution(
@@ -809,6 +969,10 @@ def _outcome_from_distribution(
         "rule_distribution": _round_distribution(rule_distribution),
         "final_distribution": _round_distribution(final_distribution),
         "trajectory_audit": trajectory_audit,
+        "support_response_features": derive_effective_support_features(
+            response,
+            env,
+        ),
     }
     return AttemptOutcome(
         outcome_type=outcome_type,  # type: ignore[arg-type]
@@ -817,6 +981,11 @@ def _outcome_from_distribution(
         negative_feedback=outcome_type
         in {"failure_after_attempt", "failure_even_with_help", "abandon_midway"},
         support_quality=support_quality,
+        support_response_json=_json_dumps(response.to_dict() if response else {}),
+        support_ecology_status=(
+            str(response.audit_status) if response is not None else "not_called"
+        ),
+        helper_agent_id=int(response.helper_agent_id or -1) if response else -1,
         event_level_uncontrollability=event_level_uncontrollability,
         friction_tier=friction_tier,
         success_probability=float(success_probability),
@@ -835,6 +1004,12 @@ def _outcome_from_distribution(
         trajectory_alpha_effective=float(trajectory_audit.get("alpha_effective", 0.0) or 0.0),
         trajectory_tvd_from_rule=float(trajectory_audit.get("tvd_from_rule", 0.0) or 0.0),
         trajectory_invalid_reason=str(trajectory_result.get("invalid_reason", "")),
+        trajectory_json_attempts_configured=int(
+            trajectory_result.get("trajectory_json_attempts_configured", 1) or 1
+        ),
+        trajectory_json_attempts_used=int(
+            trajectory_result.get("trajectory_json_attempts_used", 1) or 1
+        ),
         probability_audit_json=_json_dumps(probability_audit),
     )
 
@@ -851,6 +1026,7 @@ def _resolve_attempt_outcome_appraisal_rule_v2(
     rng: random.Random,
     outcome_model_mode: str = "appraisal_rule_v2",
     trajectory_result: dict[str, Any] | None = None,
+    support_response: Any = None,
 ) -> AttemptOutcome:
     outcome_appraisal, rule_distribution = build_rule_outcome_distribution_v2(
         task=task,
@@ -860,7 +1036,9 @@ def _resolve_attempt_outcome_appraisal_rule_v2(
         consecutive_failures=consecutive_failures,
         task_appraisal=task_appraisal,
         memory_features=memory_features,
+        support_response=support_response,
     )
+    response = _support_response_from_any(support_response)
     if strategy.strategy_type == "avoid":
         support_quality = support_quality_from_env(env)
         friction_tier = friction_tier_from_env(task, env)
@@ -876,6 +1054,11 @@ def _resolve_attempt_outcome_appraisal_rule_v2(
             help_used=False,
             negative_feedback=False,
             support_quality=support_quality,
+            support_response_json=_json_dumps(response.to_dict() if response else {}),
+            support_ecology_status=(
+                str(response.audit_status) if response is not None else "not_called"
+            ),
+            helper_agent_id=int(response.helper_agent_id or -1) if response else -1,
             event_level_uncontrollability=event_level_uncontrollability,
             friction_tier=friction_tier,
             success_probability=0.0,
@@ -911,6 +1094,7 @@ def _resolve_attempt_outcome_appraisal_rule_v2(
         note_prefix="appraisal_rule_v2",
         outcome_appraisal=outcome_appraisal,
         trajectory_result=trajectory_result,
+        support_response=response,
     )
 
 
@@ -926,6 +1110,7 @@ def _resolve_attempt_outcome_trajectory_bounded_online_mc(
     trajectory_result: Any,
     trajectory_config: dict[str, Any] | None,
     rng: random.Random,
+    support_response: Any = None,
 ) -> AttemptOutcome:
     if strategy.strategy_type == "avoid":
         return _resolve_attempt_outcome_appraisal_rule_v2(
@@ -938,6 +1123,7 @@ def _resolve_attempt_outcome_trajectory_bounded_online_mc(
             memory_features=memory_features,
             rng=rng,
             outcome_model_mode="trajectory_bounded_online_mc",
+            support_response=support_response,
         )
     if not isinstance(trajectory_result, dict):
         raise ValueError("trajectory_bounded_online_mc requires trajectory_result")
@@ -955,6 +1141,7 @@ def _resolve_attempt_outcome_trajectory_bounded_online_mc(
         consecutive_failures=consecutive_failures,
         task_appraisal=task_appraisal,
         memory_features=memory_features,
+        support_response=support_response,
     )
     allowed_keys = allowed_outcome_keys_for_strategy(strategy)
     trajectory_distribution = trajectory_result.get("trajectory_outcome_tendency")
@@ -988,6 +1175,7 @@ def _resolve_attempt_outcome_trajectory_bounded_online_mc(
         outcome_appraisal=outcome_appraisal,
         trajectory_result=trajectory_result,
         trajectory_audit=trajectory_audit,
+        support_response=support_response,
     )
 
 
@@ -1004,6 +1192,7 @@ def resolve_attempt_outcome(
     memory_features: Any = None,
     trajectory_result: Any = None,
     trajectory_config: dict[str, Any] | None = None,
+    support_response: Any = None,
 ) -> AttemptOutcome:
     rng = rng or random.Random()
     mode = str(outcome_model_mode or "rule_v1").strip().lower()
@@ -1033,6 +1222,7 @@ def resolve_attempt_outcome(
             rng=rng,
             outcome_model_mode=mode,
             trajectory_result=trajectory_result if mode == "trajectory_shadow" else None,
+            support_response=support_response,
         )
     return _resolve_attempt_outcome_trajectory_bounded_online_mc(
         task=task,
@@ -1045,4 +1235,5 @@ def resolve_attempt_outcome(
         trajectory_result=trajectory_result,
         trajectory_config=trajectory_config,
         rng=rng,
+        support_response=support_response,
     )

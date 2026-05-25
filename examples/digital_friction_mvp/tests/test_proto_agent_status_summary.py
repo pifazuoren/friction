@@ -245,13 +245,14 @@ class _ForbiddenLLM:
 
 
 class _DummyLLM:
-    def __init__(self, response: str):
-        self.response = response
+    def __init__(self, response: str | list[str]):
+        self.responses = list(response) if isinstance(response, list) else [response]
         self.calls = 0
 
     async def atext_request(self, **kwargs):
         self.calls += 1
-        return self.response
+        index = min(self.calls - 1, len(self.responses) - 1)
+        return self.responses[index]
 
 
 class _FakeStatusStore:
@@ -572,10 +573,75 @@ def test_mobile_entry_llm_rerank_writes_per_world_audit_schedule(
 
     assert selected == "use_payment_or_finance"
     assert audit["rerank_parse_status"] == "ok"
+    assert audit["rerank_json_attempts_configured"] == 5
+    assert audit["rerank_json_attempts_used"] == 1
     assert schedule.exists()
     row = json.loads(schedule.read_text(encoding="utf-8").strip())
     assert row["selected_mobile_intention"] == "use_payment_or_finance"
+    assert row["json_attempts_configured"] == 5
+    assert row["json_attempts_used"] == 1
     assert llm.calls >= 1
+
+
+def test_mobile_entry_llm_rerank_retries_invalid_json_then_accepts_valid(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    calibration = tmp_path / "reference_calibration.json"
+    schedule = tmp_path / "rerank_schedule_retry.jsonl"
+    calibration.write_text(
+        '{"global_prior":{"p_mobile_intention":{'
+        '"check_information":0.6,'
+        '"use_payment_or_finance":0.4'
+        '}}, "uses_validation_data":false}',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "mobile_intention_llm_rerank_online_mc")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_CALIBRATION_PATH", str(calibration))
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH", str(schedule))
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_RUN_ID", "run-retry")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_TOP_K", "2")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_JSON_ATTEMPTS", "5")
+    monkeypatch.setenv("PROTO_LLM_PSYCHOLOGY_RETRIES", "0")
+    config = __import__("config_runtime").load_runtime_config()
+    base_decision = evaluate_mobile_entry_for_agent(
+        agent_id=7,
+        day=1,
+        tick_seconds=28800.0,
+        env={},
+        entry_mode="mobile_intention_rule",
+        calibration_path=str(calibration),
+    )
+    writer = _FakeAgent(
+        llm=_DummyLLM(
+            [
+                "not json",
+                "still not json",
+                '{"selected_mobile_intention":"use_payment_or_finance",'
+                '"confidence":0.93,"reason":"retry recovered valid JSON"}',
+            ]
+        )
+    )
+
+    selected, audit = asyncio.run(
+        DigitalHelplessnessAgent._resolve_mobile_entry_rerank_override(
+            writer,
+            entry_decision=base_decision,
+            runtime_config=config,
+            stable_profile={"age": 70, "gender": "female"},
+            day=1,
+            tick_seconds=28800.0,
+        )
+    )
+
+    assert selected == "use_payment_or_finance"
+    assert audit["rerank_parse_status"] == "ok"
+    assert audit["rerank_json_attempts_configured"] == 5
+    assert audit["rerank_json_attempts_used"] == 2
+    row = json.loads(schedule.read_text(encoding="utf-8").strip())
+    assert row["parse_status"] == "ok"
+    assert row["json_attempts_used"] == 2
+    assert writer.llm.calls == 3
 
 
 def test_mobile_entry_llm_rerank_can_accept_low_confidence_with_audit(
@@ -631,6 +697,8 @@ def test_mobile_entry_llm_rerank_can_accept_low_confidence_with_audit(
 
     assert selected == "use_payment_or_finance"
     assert audit["rerank_parse_status"] == "low_confidence_accepted"
+    assert audit["rerank_json_attempts_configured"] == 5
+    assert audit["rerank_json_attempts_used"] == 1
     row = json.loads(schedule.read_text(encoding="utf-8").strip())
     assert row["parse_status"] == "low_confidence_accepted"
     assert row["confidence"] == 0.55
@@ -678,7 +746,7 @@ def test_mobile_entry_llm_rerank_rejects_invalid_json_before_audit_write(
             )
         )
     except ValueError as exc:
-        assert "invalid_schema" in str(exc)
+        assert "parse_failed" in str(exc)
     else:
         raise AssertionError("invalid rerank JSON should fail fast")
     assert not schedule.exists()

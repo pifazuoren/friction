@@ -18,6 +18,7 @@ from .models import (
     TaskAppraisalResult,
     TaskDomainState,
 )
+from .support_protocol import SupportResponse
 from .llm_psychology import normalize_digital_emotion_state
 from .task_assignment import TASK_LIBRARY
 
@@ -384,6 +385,12 @@ def build_initial_help_effect_memory() -> dict[str, Any]:
         "by_source": {
             "generic": _blank_help_bucket(),
         },
+        "support_response_audit": {
+            "style_counts": {},
+            "instruction_quality_counts": {},
+            "proxy_completion_counts": {},
+            "latest": {},
+        },
     }
 
 
@@ -437,6 +444,16 @@ def _normalize_help_effect_memory(raw_value: Any) -> dict[str, Any]:
                 else None
             ).to_dict()
         },
+        "support_response_audit": (
+            copy.deepcopy(raw_value.get("support_response_audit"))
+            if isinstance(raw_value.get("support_response_audit"), dict)
+            else {
+                "style_counts": {},
+                "instruction_quality_counts": {},
+                "proxy_completion_counts": {},
+                "latest": {},
+            }
+        ),
     }
     for task_family in TASK_FAMILIES:
         payload = (
@@ -450,14 +467,38 @@ def _normalize_help_effect_memory(raw_value: Any) -> dict[str, Any]:
     return normalized
 
 
+def _support_response_from_any(value: Any) -> SupportResponse | None:
+    if value is None:
+        return None
+    if isinstance(value, SupportResponse):
+        return value
+    if isinstance(value, dict):
+        try:
+            return SupportResponse.from_dict(value)
+        except ValueError:
+            return None
+    return None
+
+
 def _normalize_recent_episode_buffer(raw_value: Any) -> list[dict[str, Any]]:
     if not isinstance(raw_value, list):
         return []
-    episodes = [
-        RecentEpisode.from_dict(item).to_dict()
-        for item in raw_value
-        if isinstance(item, dict)
-    ]
+    episodes = []
+    for item in raw_value:
+        if not isinstance(item, dict):
+            continue
+        normalized_item = RecentEpisode.from_dict(item).to_dict()
+        for key in (
+            "support_style",
+            "autonomy_preservation",
+            "proxy_completion_level",
+            "instruction_quality",
+            "support_response_source",
+            "support_response_audit_status",
+        ):
+            if key in item:
+                normalized_item[key] = item[key]
+        episodes.append(normalized_item)
     return episodes[-8:]
 
 
@@ -698,6 +739,7 @@ def update_help_effect_memory(
     strategy: AttemptStrategy,
     outcome: AttemptOutcome,
     help_effect_memory: Any,
+    support_response: Any = None,
 ) -> dict[str, Any]:
     normalized = _normalize_help_effect_memory(help_effect_memory)
     if strategy.strategy_type != "seek_help_then_attempt":
@@ -719,6 +761,45 @@ def update_help_effect_memory(
         normalized["by_source"]["generic"],
         success=success,
     )
+    response = _support_response_from_any(support_response)
+    if response is not None:
+        audit = normalized.setdefault(
+            "support_response_audit",
+            {
+                "style_counts": {},
+                "instruction_quality_counts": {},
+                "proxy_completion_counts": {},
+                "latest": {},
+            },
+        )
+        if not isinstance(audit, dict):
+            audit = {
+                "style_counts": {},
+                "instruction_quality_counts": {},
+                "proxy_completion_counts": {},
+                "latest": {},
+            }
+            normalized["support_response_audit"] = audit
+        for bucket_name, label in (
+            ("style_counts", response.support_style),
+            ("instruction_quality_counts", response.instruction_quality),
+            ("proxy_completion_counts", response.proxy_completion_level),
+        ):
+            bucket = audit.get(bucket_name)
+            if not isinstance(bucket, dict):
+                bucket = {}
+                audit[bucket_name] = bucket
+            bucket[label] = int(bucket.get(label, 0)) + 1
+        audit["latest"] = {
+            "support_style": response.support_style,
+            "instruction_quality": response.instruction_quality,
+            "autonomy_preservation": response.autonomy_preservation,
+            "proxy_completion_level": response.proxy_completion_level,
+            "response_delay": response.response_delay,
+            "confidence": float(response.confidence),
+            "source": response.source,
+            "audit_status": response.audit_status,
+        }
     return normalized
 
 
@@ -730,9 +811,10 @@ def update_recent_episode_buffer(
     day: int,
     helplessness_delta: float,
     recent_episode_buffer: Any,
+    support_response: Any = None,
 ) -> list[dict[str, Any]]:
     normalized = _normalize_recent_episode_buffer(recent_episode_buffer)
-    normalized.append(
+    episode = (
         RecentEpisode(
             day=int(day),
             task_family=task.task_family,
@@ -746,6 +828,19 @@ def update_recent_episode_buffer(
             helplessness_delta=float(helplessness_delta),
         ).to_dict()
     )
+    response = _support_response_from_any(support_response)
+    if response is not None:
+        episode.update(
+            {
+                "support_style": response.support_style,
+                "autonomy_preservation": response.autonomy_preservation,
+                "proxy_completion_level": response.proxy_completion_level,
+                "instruction_quality": response.instruction_quality,
+                "support_response_source": response.source,
+                "support_response_audit_status": response.audit_status,
+            }
+        )
+    normalized.append(episode)
     return normalized[-8:]
 
 
@@ -813,6 +908,7 @@ def update_experience_memory(
     recent_episode_buffer: Any,
     rationale_memory: Any,
     task_appraisal_result: Any = None,
+    support_response: Any = None,
 ) -> dict[str, Any]:
     normalized_task_memory = _normalize_task_domain_memory(task_domain_memory)
     previous_task_state = TaskDomainState.from_dict(
@@ -833,6 +929,7 @@ def update_experience_memory(
         strategy=strategy,
         outcome=outcome,
         help_effect_memory=help_effect_memory,
+        support_response=support_response,
     )
     updated_recent_buffer = update_recent_episode_buffer(
         task=task,
@@ -841,7 +938,9 @@ def update_experience_memory(
         day=day,
         helplessness_delta=helplessness_delta,
         recent_episode_buffer=recent_episode_buffer,
+        support_response=support_response,
     )
+    response = _support_response_from_any(support_response)
     updated_rationale_memory = update_rationale_memory(
         task=task,
         outcome=outcome,
@@ -866,7 +965,22 @@ def update_experience_memory(
                 updated_help_memory["by_task_family"][task.task_family]
             ),
             "source": copy.deepcopy(updated_help_memory["by_source"]["generic"]),
+            "support_response_audit": copy.deepcopy(
+                updated_help_memory.get("support_response_audit", {})
+            ),
         },
         "recent_episode_summary": recent_summary,
         "rationale_snapshot": copy.deepcopy(updated_rationale_memory),
+        "support_response_snapshot": (
+            {
+                "support_style": response.support_style,
+                "instruction_quality": response.instruction_quality,
+                "autonomy_preservation": response.autonomy_preservation,
+                "proxy_completion_level": response.proxy_completion_level,
+                "source": response.source,
+                "audit_status": response.audit_status,
+            }
+            if response is not None
+            else {}
+        ),
     }

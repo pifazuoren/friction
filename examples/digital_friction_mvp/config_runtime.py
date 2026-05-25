@@ -40,6 +40,8 @@ VALID_HUYS_DAYAN_LITE_CONTROLLABILITY_MODES = {
     "gated_modulate",
     "control_centered_modulate",
 }
+VALID_HELPLESSNESS_UPDATE_MODES = {"rule_v1", "theory_update_v2"}
+VALID_SUPPORT_ECOLOGY_MODES = {"off", "family_helper_llm"}
 
 
 def _parse_bool_env(name: str, default: bool = False) -> bool:
@@ -96,6 +98,7 @@ class RuntimeConfig:
     proto_llm_uncontrollability_timeout: int
     proto_llm_uncontrollability_retries: int
     proto_llm_uncontrollability_cache_enabled: bool
+    proto_helplessness_update_mode: str
     proto_scope_spillover_beta: float
     proto_scope_spillover_threshold: float
     proto_scope_spillover_sigma: float
@@ -127,6 +130,7 @@ class RuntimeConfig:
     proto_mobile_intention_llm_prompt_version: str
     proto_mobile_intention_llm_min_confidence: float
     proto_mobile_intention_rerank_top_k: int
+    proto_mobile_intention_rerank_json_attempts: int
     proto_mobile_intention_rerank_low_confidence_policy: str
     proto_mobile_intention_rerank_schedule_path: str
     proto_mobile_intention_rerank_run_id: str
@@ -138,6 +142,7 @@ class RuntimeConfig:
     proto_outcome_trajectory_max_tvd: float
     proto_outcome_trajectory_min_confidence: float
     proto_outcome_trajectory_strict_schema: bool
+    proto_outcome_trajectory_json_attempts: int
     proto_outcome_trajectory_invalid_policy: str
     proto_huys_dayan_lite_controllability_mode: str
     proto_huys_dayan_lite_confidence_k: int
@@ -152,6 +157,7 @@ class RuntimeConfig:
     proto_huys_dayan_lite_modulation_max_delta: float
     proto_huys_dayan_lite_low_c_threshold: float
     proto_huys_dayan_lite_high_c_threshold: float
+    proto_support_ecology_mode: str
 
 
 def load_runtime_config() -> RuntimeConfig:
@@ -263,6 +269,14 @@ def load_runtime_config() -> RuntimeConfig:
         "PROTO_LLM_UNCONTROLLABILITY_CACHE_ENABLED",
         True,
     )
+    proto_helplessness_update_mode = (
+        os.getenv("PROTO_HELPLESSNESS_UPDATE_MODE", "rule_v1").strip().lower()
+    )
+    if proto_helplessness_update_mode not in VALID_HELPLESSNESS_UPDATE_MODES:
+        raise ValueError(
+            "PROTO_HELPLESSNESS_UPDATE_MODE must be one of: "
+            + ", ".join(sorted(VALID_HELPLESSNESS_UPDATE_MODES))
+        )
     proto_scope_spillover_beta = max(
         0.0,
         float(os.getenv("PROTO_SCOPE_SPILLOVER_BETA", "1.2")),
@@ -447,6 +461,13 @@ def load_runtime_config() -> RuntimeConfig:
         1,
         int(float(os.getenv("PROTO_MOBILE_INTENTION_RERANK_TOP_K", "5"))),
     )
+    proto_mobile_intention_rerank_json_attempts = max(
+        1,
+        min(
+            5,
+            int(float(os.getenv("PROTO_MOBILE_INTENTION_RERANK_JSON_ATTEMPTS", "5"))),
+        ),
+    )
     proto_mobile_intention_rerank_low_confidence_policy = (
         os.getenv(
             "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY",
@@ -521,6 +542,13 @@ def load_runtime_config() -> RuntimeConfig:
     proto_outcome_trajectory_strict_schema = _parse_bool_env(
         "PROTO_OUTCOME_TRAJECTORY_STRICT_SCHEMA",
         True,
+    )
+    proto_outcome_trajectory_json_attempts = max(
+        1,
+        min(
+            5,
+            int(float(os.getenv("PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS", "5"))),
+        ),
     )
     proto_outcome_trajectory_invalid_policy = (
         os.getenv("PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY", "fail_run")
@@ -619,6 +647,16 @@ def load_runtime_config() -> RuntimeConfig:
             float(os.getenv("PROTO_HUYS_DAYAN_LITE_HIGH_C_THRESHOLD", "0.60")),
         ),
     )
+    proto_support_ecology_mode = (
+        os.getenv("PROTO_SUPPORT_ECOLOGY_MODE", "family_helper_llm")
+        .strip()
+        .lower()
+    )
+    if proto_support_ecology_mode not in VALID_SUPPORT_ECOLOGY_MODES:
+        raise ValueError(
+            "PROTO_SUPPORT_ECOLOGY_MODE must be one of: "
+            + ", ".join(sorted(VALID_SUPPORT_ECOLOGY_MODES))
+        )
 
     return RuntimeConfig(
         experiment_mode=experiment_mode,
@@ -641,6 +679,7 @@ def load_runtime_config() -> RuntimeConfig:
         proto_llm_uncontrollability_timeout=proto_llm_uncontrollability_timeout,
         proto_llm_uncontrollability_retries=proto_llm_uncontrollability_retries,
         proto_llm_uncontrollability_cache_enabled=proto_llm_uncontrollability_cache_enabled,
+        proto_helplessness_update_mode=proto_helplessness_update_mode,
         proto_scope_spillover_beta=proto_scope_spillover_beta,
         proto_scope_spillover_threshold=proto_scope_spillover_threshold,
         proto_scope_spillover_sigma=proto_scope_spillover_sigma,
@@ -692,6 +731,9 @@ def load_runtime_config() -> RuntimeConfig:
             proto_mobile_intention_llm_min_confidence
         ),
         proto_mobile_intention_rerank_top_k=proto_mobile_intention_rerank_top_k,
+        proto_mobile_intention_rerank_json_attempts=(
+            proto_mobile_intention_rerank_json_attempts
+        ),
         proto_mobile_intention_rerank_low_confidence_policy=(
             proto_mobile_intention_rerank_low_confidence_policy
         ),
@@ -718,6 +760,9 @@ def load_runtime_config() -> RuntimeConfig:
         ),
         proto_outcome_trajectory_strict_schema=(
             proto_outcome_trajectory_strict_schema
+        ),
+        proto_outcome_trajectory_json_attempts=(
+            proto_outcome_trajectory_json_attempts
         ),
         proto_outcome_trajectory_invalid_policy=(
             proto_outcome_trajectory_invalid_policy
@@ -755,4 +800,5 @@ def load_runtime_config() -> RuntimeConfig:
         proto_huys_dayan_lite_high_c_threshold=(
             proto_huys_dayan_lite_high_c_threshold
         ),
+        proto_support_ecology_mode=proto_support_ecology_mode,
     )

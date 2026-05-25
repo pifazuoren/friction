@@ -49,7 +49,9 @@ from persistence import (
     stage_explanation_table_name,
     write_stage_explanation_rows,
 )
-from proto.agent import DigitalHelplessnessAgent
+from proto.agent import DigitalHelplessnessAgent, SUPPORT_HELPER_REGISTRY_ATTRIBUTE
+from proto.family_helper_agent import FamilyHelperAgent
+from proto.support_response_block import SupportResponseBlock
 from proto.logical_clock import (
     enable_proto_logical_clock,
     is_proto_logical_clock_enabled,
@@ -2233,7 +2235,74 @@ EXPERIMENT_AGENT_CLASS = (
 EXPERIMENT_AGENT_CLASSES = (EXPERIMENT_AGENT_CLASS,)
 
 
+async def init_family_helper_mapping(simulation: AgentSociety) -> None:
+    if (
+        EXPERIMENT_ENGINE != "proto"
+        or RUNTIME_CONFIG.proto_support_ecology_mode == "off"
+    ):
+        return
+    older_ids = sorted(await simulation.filter(types=(DigitalHelplessnessAgent,)))
+    helper_ids = sorted(await simulation.filter(types=(FamilyHelperAgent,)))
+    if not older_ids or not helper_ids:
+        return
+    if len(helper_ids) < len(older_ids):
+        raise ValueError("FamilyHelperAgent count must cover older adult agents")
+    id2agent = getattr(simulation, "_id2agent", {})
+    helper_registry = {
+        helper_id: id2agent.get(helper_id)
+        for helper_id in helper_ids
+    }
+    for older_id, helper_id in zip(older_ids, helper_ids):
+        older_agent = id2agent.get(older_id)
+        helper_agent = helper_registry.get(helper_id)
+        if older_agent is None or helper_agent is None:
+            raise ValueError("family helper mapping references a missing agent")
+        mapping_audit = {
+            "status": "mapped",
+            "support_ecology_mode": RUNTIME_CONFIG.proto_support_ecology_mode,
+            "older_agent_count": int(len(older_ids)),
+            "helper_agent_count": int(len(helper_ids)),
+            "mapped_count": int(len(older_ids)),
+            "requester_agent_id": int(older_id),
+            "helper_agent_id": int(helper_id),
+        }
+        await older_agent.status.update("family_helper_agent_id", int(helper_id))
+        await older_agent.status.update(
+            "support_ecology_mode",
+            RUNTIME_CONFIG.proto_support_ecology_mode,
+        )
+        await older_agent.status.update("support_helper_mapping_audit", mapping_audit)
+        if hasattr(older_agent, "set_support_helper_registry"):
+            older_agent.set_support_helper_registry(helper_registry)
+        else:
+            setattr(older_agent, SUPPORT_HELPER_REGISTRY_ATTRIBUTE, helper_registry)
+        relationship_profiles = await helper_agent.status.get(
+            "relationship_profiles",
+            {},
+        )
+        if not isinstance(relationship_profiles, dict):
+            relationship_profiles = {}
+        relationship_profiles[str(older_id)] = {
+            "relationship_type": "family",
+            "requester_agent_id": int(older_id),
+            "helper_agent_id": int(helper_id),
+        }
+        await helper_agent.status.update(
+            "relationship_profiles",
+            relationship_profiles,
+        )
+
+
 workflow_steps = [WorkflowStepConfig(type=WorkflowType.FUNCTION, func=init_status)]
+if (
+    EXPERIMENT_ENGINE == "proto"
+    and RUNTIME_CONFIG.proto_support_ecology_mode == "family_helper_llm"
+):
+    # init_status resets proto status defaults, so the durable helper id mapping
+    # must be written after it and before any survey/stage attempt can run.
+    workflow_steps.append(
+        WorkflowStepConfig(type=WorkflowType.FUNCTION, func=init_family_helper_mapping)
+    )
 if ECONOMY_BLOCK_ENABLED:
     workflow_steps.append(
         WorkflowStepConfig(type=WorkflowType.FUNCTION, func=audit_economy_bindings)
@@ -2462,6 +2531,39 @@ def _build_digital_friction_blocks() -> dict[Any, Any]:
     return blocks
 
 
+citizen_agent_configs = [
+    AgentConfig(
+        agent_class=EXPERIMENT_AGENT_CLASS,
+        number=AGENT_COUNT,
+        agent_params=SocietyAgentConfig(
+            plan_generation_prompt=_resolve_plan_generation_prompt()
+        ),
+        memory_from_file=str(PROFILES_PATH),
+        memory_config_func=copy.deepcopy(memory_config_societyagent),
+        blocks=_build_digital_friction_blocks(),
+    )
+]
+if (
+    EXPERIMENT_ENGINE == "proto"
+    and RUNTIME_CONFIG.proto_support_ecology_mode == "family_helper_llm"
+):
+    citizen_agent_configs.append(
+        AgentConfig(
+            agent_class=FamilyHelperAgent,
+            number=AGENT_COUNT,
+            memory_config_func=copy.deepcopy(memory_config_societyagent),
+            memory_distributions=copy.deepcopy(DEFAULT_DISTRIBUTIONS),
+            blocks={SupportResponseBlock: SupportResponseBlock.ParamsType()},
+        )
+    )
+
+agent_init_funcs = []
+if (
+    EXPERIMENT_ENGINE == "proto"
+    and RUNTIME_CONFIG.proto_support_ecology_mode == "family_helper_llm"
+):
+    agent_init_funcs.append(init_family_helper_mapping)
+
 config = Config(
     llm=[
         LLMConfig(
@@ -2484,18 +2586,8 @@ config = Config(
         file_path=MAP_FILE_PATH,
     ),
     agents=AgentsConfig(
-        citizens=[
-            AgentConfig(
-                agent_class=EXPERIMENT_AGENT_CLASS,
-                number=AGENT_COUNT,
-                agent_params=SocietyAgentConfig(
-                    plan_generation_prompt=_resolve_plan_generation_prompt()
-                ),
-                memory_from_file=str(PROFILES_PATH),
-                memory_config_func=copy.deepcopy(memory_config_societyagent),
-                blocks=_build_digital_friction_blocks(),
-            )
-        ],
+        citizens=citizen_agent_configs,
+        init_funcs=agent_init_funcs,
         firms=[AgentConfig(agent_class="firm", number=1)]
         if ECONOMY_BLOCK_ENABLED
         else [],
@@ -2526,6 +2618,13 @@ for citizen_cfg in config.agents.citizens:
             citizen_cfg.memory_distributions = copy.deepcopy(DEFAULT_DISTRIBUTIONS)
         if citizen_cfg.blocks is None:
             citizen_cfg.blocks = _build_digital_friction_blocks()
+    elif citizen_cfg.agent_class is FamilyHelperAgent:
+        if citizen_cfg.memory_config_func is None:
+            citizen_cfg.memory_config_func = copy.deepcopy(memory_config_societyagent)
+        if citizen_cfg.memory_distributions is None:
+            citizen_cfg.memory_distributions = copy.deepcopy(DEFAULT_DISTRIBUTIONS)
+        if citizen_cfg.blocks is None:
+            citizen_cfg.blocks = {}
 
 
 def _write_run_metadata(
@@ -2580,6 +2679,9 @@ def _write_run_metadata(
         "proto_mobile_intention_rerank_top_k": (
             RUNTIME_CONFIG.proto_mobile_intention_rerank_top_k
         ),
+        "proto_mobile_intention_rerank_json_attempts": (
+            RUNTIME_CONFIG.proto_mobile_intention_rerank_json_attempts
+        ),
         "proto_mobile_intention_rerank_low_confidence_policy": (
             RUNTIME_CONFIG.proto_mobile_intention_rerank_low_confidence_policy
         ),
@@ -2608,9 +2710,16 @@ def _write_run_metadata(
         "proto_outcome_trajectory_min_confidence": (
             RUNTIME_CONFIG.proto_outcome_trajectory_min_confidence
         ),
+        "proto_outcome_trajectory_json_attempts": (
+            RUNTIME_CONFIG.proto_outcome_trajectory_json_attempts
+        ),
         "proto_outcome_trajectory_invalid_policy": (
             RUNTIME_CONFIG.proto_outcome_trajectory_invalid_policy
         ),
+        "proto_helplessness_update_mode": (
+            RUNTIME_CONFIG.proto_helplessness_update_mode
+        ),
+        "proto_support_ecology_mode": RUNTIME_CONFIG.proto_support_ecology_mode,
         "written_at": datetime.now().isoformat(timespec="seconds"),
     }
     metadata_path = Path(RUN_METADATA_PATH)

@@ -243,6 +243,8 @@ def _compute_world_proto_metrics(
     trajectory_call_count = 0
     trajectory_invalid_count = 0
     trajectory_low_confidence_count = 0
+    trajectory_retry_success_count = 0
+    trajectory_json_attempts_used_max = 0
     trajectory_tvd_values: list[float] = []
     outcome_model_modes: Counter[str] = Counter()
     for _, _, raw_payload in rows:
@@ -273,6 +275,16 @@ def _compute_world_proto_metrics(
             trajectory_invalid_count += 1
         if trajectory_status == "low_confidence":
             trajectory_low_confidence_count += 1
+        attempts_used = _safe_int(
+            outcome_payload.get("trajectory_json_attempts_used"),
+            1,
+        )
+        trajectory_json_attempts_used_max = max(
+            trajectory_json_attempts_used_max,
+            attempts_used,
+        )
+        if attempts_used > 1 and trajectory_status in {"ok", "ok_repaired"}:
+            trajectory_retry_success_count += 1
         trajectory_tvd = _safe_float(
             outcome_payload.get("trajectory_tvd_from_rule"),
             0.0,
@@ -303,6 +315,8 @@ def _compute_world_proto_metrics(
         "trajectory_call_count": int(trajectory_call_count),
         "trajectory_invalid_count": int(trajectory_invalid_count),
         "trajectory_low_confidence_count": int(trajectory_low_confidence_count),
+        "trajectory_retry_success_count": int(trajectory_retry_success_count),
+        "trajectory_json_attempts_used_max": int(trajectory_json_attempts_used_max),
         "trajectory_mean_tvd_from_rule": (
             sum(trajectory_tvd_values) / len(trajectory_tvd_values)
             if trajectory_tvd_values
@@ -749,6 +763,8 @@ def main() -> None:
         "trajectory_call_count",
         "trajectory_invalid_count",
         "trajectory_low_confidence_count",
+        "trajectory_retry_success_count",
+        "trajectory_json_attempts_used_max",
         "trajectory_mean_tvd_from_rule",
         "outcome_model_modes_json",
     ]

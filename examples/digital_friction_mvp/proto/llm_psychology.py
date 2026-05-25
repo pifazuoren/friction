@@ -113,7 +113,7 @@ _NEUTRAL_TASK_APPRAISAL = {
     "expected_help_effectiveness": 50.0,
     "task_value": 50.0,
 }
-_BLEND_RATIO = 0.25
+_BLEND_RATIO = 0.70
 _EVENT_APPRAISAL_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
 _TASK_APPRAISAL_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
 _STRATEGY_DELIBERATION_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
@@ -503,6 +503,8 @@ async def _query_json_payload(
     timeout: int,
     retries: int,
     max_tokens: int = 260,
+    json_attempts: int = 1,
+    attempt_metadata_key: str | None = None,
 ) -> tuple[dict[str, Any] | None, str]:
     if llm is None:
         return None, "request_error"
@@ -518,63 +520,80 @@ async def _query_json_payload(
         },
     ]
 
-    first_error = "parse_failed"
-    try:
-        raw = await llm.atext_request(
-            dialog=dialog,
-            temperature=0.1,
-            timeout=timeout,
-            retries=retries,
-            max_tokens=max_tokens,
-        )
-    except Exception:
-        return None, "request_error"
+    attempts = max(1, int(json_attempts))
+    last_error = "parse_failed"
+    for attempt_index in range(attempts):
+        first_error = "parse_failed"
+        try:
+            raw = await llm.atext_request(
+                dialog=dialog,
+                temperature=0.1,
+                timeout=timeout,
+                retries=retries,
+                max_tokens=max_tokens,
+            )
+        except Exception:
+            last_error = "request_error"
+            continue
 
-    parsed = _extract_json_object(str(raw))
-    if parsed is not None:
-        sanitized, status = sanitize_fn(parsed)
-        if sanitized is not None:
-            return sanitized, "ok"
-        first_error = status
+        parsed = _extract_json_object(str(raw))
+        if parsed is not None:
+            sanitized, status = sanitize_fn(parsed)
+            if sanitized is not None:
+                if attempt_metadata_key:
+                    sanitized[attempt_metadata_key] = attempt_index + 1
+                return sanitized, "ok"
+            first_error = status
+            last_error = status
+        else:
+            last_error = "parse_failed"
 
-    repair_dialog = [
-        {
-            "role": "system",
-            "content": (
-                "You are a strict JSON reformatter. Return exactly one valid JSON object "
-                f"with keys: {', '.join(sorted(output_keys))}."
-            ),
-        },
-        {
-            "role": "user",
-            "content": (
-                "Rules:\n"
-                + repair_schema_text
-                + "\nDo not output markdown or extra text.\nOriginal context:\n"
-                + json.dumps(user_payload, ensure_ascii=False)
-                + "\nRaw model output:\n"
-                + str(raw)[:1400]
-            ),
-        },
-    ]
-    try:
-        repaired = await llm.atext_request(
-            dialog=repair_dialog,
-            temperature=0.0,
-            timeout=timeout,
-            retries=1,
-            max_tokens=max(220, int(max_tokens)),
-        )
-    except Exception:
-        return None, "request_error"
+        repair_dialog = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a strict JSON reformatter. Return exactly one valid JSON object "
+                    f"with keys: {', '.join(sorted(output_keys))}."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    "Rules:\n"
+                    + repair_schema_text
+                    + "\nDo not output markdown or extra text.\nOriginal context:\n"
+                    + json.dumps(user_payload, ensure_ascii=False)
+                    + "\nRaw model output:\n"
+                    + str(raw)[:1400]
+                ),
+            },
+        ]
+        try:
+            repaired = await llm.atext_request(
+                dialog=repair_dialog,
+                temperature=0.0,
+                timeout=timeout,
+                retries=1,
+                max_tokens=max(220, int(max_tokens)),
+            )
+        except Exception:
+            last_error = "request_error"
+            continue
 
-    repaired_payload = _extract_json_object(str(repaired))
-    if repaired_payload is None:
-        return None, first_error if first_error == "invalid_schema" else "parse_failed"
-    sanitized, status = sanitize_fn(repaired_payload)
-    if sanitized is None:
-        return None, status
-    return sanitized, "ok_repaired"
+        repaired_payload = _extract_json_object(str(repaired))
+        if repaired_payload is None:
+            last_error = (
+                first_error if first_error == "invalid_schema" else "parse_failed"
+            )
+            continue
+        sanitized, status = sanitize_fn(repaired_payload)
+        if sanitized is None:
+            last_error = status
+            continue
+        if attempt_metadata_key:
+            sanitized[attempt_metadata_key] = attempt_index + 1
+        return sanitized, "ok_repaired"
+    return None, last_error
 
 
 def _fallback_source_for_status(status: str) -> str:
@@ -2511,6 +2530,10 @@ async def resolve_trajectory_appraisal(
         timeout=int(config.proto_llm_psychology_timeout),
         retries=int(config.proto_llm_psychology_retries),
         max_tokens=760,
+        json_attempts=int(
+            getattr(config, "proto_outcome_trajectory_json_attempts", 1)
+        ),
+        attempt_metadata_key="_json_attempts_used",
     )
     if payload is None:
         return {
@@ -2519,7 +2542,14 @@ async def resolve_trajectory_appraisal(
             "trajectory_confidence": 0.0,
             "prompt_version": prompt_version,
             "taxonomy_version": taxonomy_version,
+            "trajectory_json_attempts_configured": int(
+                getattr(config, "proto_outcome_trajectory_json_attempts", 1)
+            ),
+            "trajectory_json_attempts_used": int(
+                getattr(config, "proto_outcome_trajectory_json_attempts", 1)
+            ),
         }
+    json_attempts_used = int(payload.pop("_json_attempts_used", 1) or 1)
     confidence = float(payload.get("trajectory_confidence", 0.0))
     min_confidence = float(
         getattr(config, "proto_outcome_trajectory_min_confidence", 0.65)
@@ -2534,6 +2564,10 @@ async def resolve_trajectory_appraisal(
         payload = {**payload, "status": status, "invalid_reason": ""}
     payload["prompt_version"] = prompt_version
     payload["taxonomy_version"] = taxonomy_version
+    payload["trajectory_json_attempts_configured"] = int(
+        getattr(config, "proto_outcome_trajectory_json_attempts", 1)
+    )
+    payload["trajectory_json_attempts_used"] = json_attempts_used
     return payload
 
 

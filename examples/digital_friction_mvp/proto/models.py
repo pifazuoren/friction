@@ -121,6 +121,9 @@ class AttemptOutcome:
     avoid_reason_note: str = ""
     support_mode: str = "not_applicable"
     support_mode_source: str = "not_applicable"
+    support_response_json: str = ""
+    support_ecology_status: str = "off"
+    helper_agent_id: int = -1
     event_attribution_locus: EventAttributionLocus = "not_applicable"
     event_attribution_stability: EventAttributionStability = "not_applicable"
     event_attribution_scope: EventAttributionScope = "not_applicable"
@@ -144,6 +147,8 @@ class AttemptOutcome:
     trajectory_alpha_effective: float = 0.0
     trajectory_tvd_from_rule: float = 0.0
     trajectory_invalid_reason: str = ""
+    trajectory_json_attempts_configured: int = 1
+    trajectory_json_attempts_used: int = 1
     probability_audit_json: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -194,6 +199,11 @@ class HelplessnessUpdateInput:
     avoid_reason: str
     controllable_success_memory: float
     support_mode: str
+    helplessness_update_mode: str = "rule_v1"
+    event_attribution_locus: EventAttributionLocus = "not_applicable"
+    event_attribution_stability: EventAttributionStability = "not_applicable"
+    event_attribution_scope: EventAttributionScope = "not_applicable"
+    event_attribution_confidence: float = 0.0
 
 
 @dataclass(slots=True)
@@ -211,6 +221,15 @@ class HelplessnessUpdateResult:
     avoid_reason_multiplier: float
     controllable_success_protection: float
     next_consecutive_failures: int
+    mode: str = "rule_v1"
+    status: str = "ok"
+    base_failure_signal: float = 0.0
+    noncontingency_harm: float = 0.0
+    self_efficacy_harm: float = 0.0
+    affective_distress_harm: float = 0.0
+    attribution_multiplier: float = 1.0
+    attribution_recovery_multiplier: float = 1.0
+    rule_fallback_reason: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
