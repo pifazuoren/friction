@@ -2403,6 +2403,18 @@ class DigitalHelplessnessAgent(SocietyAgent):
             **event_appraisal.final_after,
             "last_updated_day": current_day,
         }
+        h_update_budget_day = _safe_int(
+            await self.memory.status.get("proto_h_update_budget_day", -1),
+            -1,
+        )
+        h_update_daily_harm_used_before = (
+            _safe_float(
+                await self.memory.status.get("proto_h_update_daily_harm_used", 0.0),
+                0.0,
+            )
+            if h_update_budget_day == int(day)
+            else 0.0
+        )
         update_result = apply_helplessness_update(
             HelplessnessUpdateInput(
                 helplessness_now=helplessness,
@@ -2423,6 +2435,21 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 event_attribution_stability=outcome.event_attribution_stability,
                 event_attribution_scope=outcome.event_attribution_scope,
                 event_attribution_confidence=outcome.event_attribution_confidence,
+                h_update_calibration_mode=(
+                    runtime_config.proto_h_update_calibration_mode
+                ),
+                h_update_negative_scale=runtime_config.proto_h_update_negative_scale,
+                h_update_damping_strength=(
+                    runtime_config.proto_h_update_damping_strength
+                ),
+                h_update_damping_power=runtime_config.proto_h_update_damping_power,
+                h_update_damping_floor=runtime_config.proto_h_update_damping_floor,
+                h_update_daily_harm_cap=(
+                    runtime_config.proto_h_update_daily_harm_cap
+                ),
+                h_update_daily_harm_used_before=(
+                    h_update_daily_harm_used_before
+                ),
             )
         )
         compat = apply_compatibility_updates(
@@ -2750,6 +2777,38 @@ class DigitalHelplessnessAgent(SocietyAgent):
                                 update_result.raw_delta_before_damping
                             ),
                             "damping_factor": float(update_result.damping_factor),
+                            "calibration_mode_configured": str(
+                                update_result.calibration_mode_configured
+                            ),
+                            "calibration_mode_effective": str(
+                                update_result.calibration_mode_effective
+                            ),
+                            "negative_scale": float(update_result.negative_scale),
+                            "damping_formula": str(update_result.damping_formula),
+                            "damping_strength": float(
+                                update_result.damping_strength
+                            ),
+                            "damping_power": float(update_result.damping_power),
+                            "damping_floor": float(update_result.damping_floor),
+                            "delta_before_daily_cap": float(
+                                update_result.delta_before_daily_cap
+                            ),
+                            "daily_harm_cap": float(update_result.daily_harm_cap),
+                            "daily_harm_used_before": float(
+                                update_result.daily_harm_used_before
+                            ),
+                            "daily_harm_remaining_before": float(
+                                update_result.daily_harm_remaining_before
+                            ),
+                            "daily_cap_applied": bool(
+                                update_result.daily_cap_applied
+                            ),
+                            "delta_after_daily_cap": float(
+                                update_result.delta_after_daily_cap
+                            ),
+                            "daily_harm_used_after": float(
+                                update_result.daily_harm_used_after
+                            ),
                             "avoid_reason_multiplier": float(
                                 update_result.avoid_reason_multiplier
                             ),
@@ -2973,6 +3032,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
         )
         await self.memory.status.update(
             "proto_consecutive_failures", update_result.next_consecutive_failures
+        )
+        await self.memory.status.update("proto_h_update_budget_day", int(day))
+        await self.memory.status.update(
+            "proto_h_update_daily_harm_used",
+            float(update_result.daily_harm_used_after),
         )
         await self.memory.status.update("negative_event_count", negative_event_count)
         await self.memory.status.update("help_request_count", help_request_count)

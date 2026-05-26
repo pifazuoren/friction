@@ -191,7 +191,7 @@ def _compute_world_proto_metrics(
 ) -> dict[str, Any]:
     rows = cur.execute(
         f"""
-        SELECT strategy_type, outcome_type, payload_json
+        SELECT day, strategy_type, outcome_type, payload_json
         FROM {attempt_table}
         """
     ).fetchall()
@@ -217,27 +217,37 @@ def _compute_world_proto_metrics(
             "trajectory_call_count": 0,
             "trajectory_invalid_count": 0,
             "trajectory_low_confidence_count": 0,
+            "trajectory_retry_success_count": 0,
+            "trajectory_json_attempts_used_max": 0,
             "trajectory_mean_tvd_from_rule": 0.0,
             "outcome_model_modes_json": "{}",
-        }
+            "outcome_types_json": "{}",
+            "daily_negative_episode_count_json": "{}",
+            "h_update_mean_raw_delta_before_damping": 0.0,
+            "h_update_mean_damping_factor": 0.0,
+            "h_update_mean_delta_before_daily_cap": 0.0,
+            "h_update_mean_final_delta": 0.0,
+            "h_update_daily_cap_applied_count": 0,
+            "h_update_mean_daily_harm_used_after": 0.0,
+    }
 
     attempt_count = sum(
-        1 for _, outcome, _ in rows if outcome != "avoid_without_attempt"
+        1 for _, _, outcome, _ in rows if outcome != "avoid_without_attempt"
     )
     success_count = sum(
         1
-        for _, outcome, _ in rows
+        for _, _, outcome, _ in rows
         if outcome in {"success_self", "success_with_help"}
     )
     help_seek_count = sum(
-        1 for strategy, _, _ in rows if strategy == "seek_help_then_attempt"
+        1 for _, strategy, _, _ in rows if strategy == "seek_help_then_attempt"
     )
     abandon_count = sum(
-        1 for _, outcome, _ in rows if outcome == "abandon_midway"
+        1 for _, _, outcome, _ in rows if outcome == "abandon_midway"
     )
     negative_feedback_count = sum(
         1
-        for _, outcome, _ in rows
+        for _, _, outcome, _ in rows
         if outcome in {"failure_after_attempt", "failure_even_with_help", "abandon_midway"}
     )
     trajectory_call_count = 0
@@ -247,13 +257,28 @@ def _compute_world_proto_metrics(
     trajectory_json_attempts_used_max = 0
     trajectory_tvd_values: list[float] = []
     outcome_model_modes: Counter[str] = Counter()
-    for _, _, raw_payload in rows:
+    outcome_types: Counter[str] = Counter(str(outcome) for _, _, outcome, _ in rows)
+    daily_negative_counts: Counter[str] = Counter()
+    raw_delta_values: list[float] = []
+    damping_values: list[float] = []
+    delta_before_cap_values: list[float] = []
+    final_delta_values: list[float] = []
+    daily_harm_used_after_values: list[float] = []
+    daily_cap_applied_count = 0
+    for day_value_raw, _, outcome, raw_payload in rows:
         try:
             payload = json.loads(raw_payload or "{}")
         except Exception:
             payload = {}
         if not isinstance(payload, dict):
             continue
+        if outcome in {
+            "failure_after_attempt",
+            "failure_even_with_help",
+            "abandon_midway",
+        }:
+            day_value = str(day_value_raw).strip()
+            daily_negative_counts[day_value or "unknown"] += 1
         outcome_payload = payload.get("outcome", {})
         if not isinstance(outcome_payload, dict):
             continue
@@ -291,6 +316,23 @@ def _compute_world_proto_metrics(
         )
         if trajectory_tvd > 0:
             trajectory_tvd_values.append(trajectory_tvd)
+        update_payload = payload.get("update", {})
+        if isinstance(update_payload, dict):
+            raw_delta_values.append(
+                _safe_float(update_payload.get("raw_delta_before_damping"), 0.0)
+            )
+            damping_values.append(
+                _safe_float(update_payload.get("damping_factor"), 0.0)
+            )
+            delta_before_cap_values.append(
+                _safe_float(update_payload.get("delta_before_daily_cap"), 0.0)
+            )
+            final_delta_values.append(_safe_float(update_payload.get("delta"), 0.0))
+            daily_harm_used_after_values.append(
+                _safe_float(update_payload.get("daily_harm_used_after"), 0.0)
+            )
+            if bool(update_payload.get("daily_cap_applied", False)):
+                daily_cap_applied_count += 1
     denominator = float(total_rows)
     neg_share = (
         float(negative_feedback_count) / float(attempt_count) if attempt_count > 0 else 0.0
@@ -326,6 +368,42 @@ def _compute_world_proto_metrics(
             dict(sorted(outcome_model_modes.items())),
             ensure_ascii=False,
             sort_keys=True,
+        ),
+        "outcome_types_json": json.dumps(
+            dict(sorted(outcome_types.items())),
+            ensure_ascii=False,
+            sort_keys=True,
+        ),
+        "daily_negative_episode_count_json": json.dumps(
+            dict(sorted(daily_negative_counts.items())),
+            ensure_ascii=False,
+            sort_keys=True,
+        ),
+        "h_update_mean_raw_delta_before_damping": (
+            sum(raw_delta_values) / len(raw_delta_values)
+            if raw_delta_values
+            else 0.0
+        ),
+        "h_update_mean_damping_factor": (
+            sum(damping_values) / len(damping_values)
+            if damping_values
+            else 0.0
+        ),
+        "h_update_mean_delta_before_daily_cap": (
+            sum(delta_before_cap_values) / len(delta_before_cap_values)
+            if delta_before_cap_values
+            else 0.0
+        ),
+        "h_update_mean_final_delta": (
+            sum(final_delta_values) / len(final_delta_values)
+            if final_delta_values
+            else 0.0
+        ),
+        "h_update_daily_cap_applied_count": int(daily_cap_applied_count),
+        "h_update_mean_daily_harm_used_after": (
+            sum(daily_harm_used_after_values) / len(daily_harm_used_after_values)
+            if daily_harm_used_after_values
+            else 0.0
         ),
     }
 
@@ -619,8 +697,18 @@ def main() -> None:
             "trajectory_call_count": 0,
             "trajectory_invalid_count": 0,
             "trajectory_low_confidence_count": 0,
+            "trajectory_retry_success_count": 0,
+            "trajectory_json_attempts_used_max": 0,
             "trajectory_mean_tvd_from_rule": 0.0,
             "outcome_model_modes_json": "{}",
+            "outcome_types_json": "{}",
+            "daily_negative_episode_count_json": "{}",
+            "h_update_mean_raw_delta_before_damping": 0.0,
+            "h_update_mean_damping_factor": 0.0,
+            "h_update_mean_delta_before_daily_cap": 0.0,
+            "h_update_mean_final_delta": 0.0,
+            "h_update_daily_cap_applied_count": 0,
+            "h_update_mean_daily_harm_used_after": 0.0,
         }
         if exp_id and attempt_table and _table_exists(cur, attempt_table):
             world_metrics = _compute_world_proto_metrics(cur, attempt_table)
@@ -706,11 +794,48 @@ def main() -> None:
                 "trajectory_low_confidence_count": _safe_int(
                     world_metrics["trajectory_low_confidence_count"], 0
                 ),
+                "trajectory_retry_success_count": _safe_int(
+                    world_metrics["trajectory_retry_success_count"], 0
+                ),
+                "trajectory_json_attempts_used_max": _safe_int(
+                    world_metrics["trajectory_json_attempts_used_max"], 0
+                ),
                 "trajectory_mean_tvd_from_rule": round(
                     _safe_float(world_metrics["trajectory_mean_tvd_from_rule"]), 6
                 ),
                 "outcome_model_modes_json": str(
                     world_metrics["outcome_model_modes_json"]
+                ),
+                "outcome_types_json": str(world_metrics["outcome_types_json"]),
+                "daily_negative_episode_count_json": str(
+                    world_metrics["daily_negative_episode_count_json"]
+                ),
+                "h_update_mean_raw_delta_before_damping": round(
+                    _safe_float(
+                        world_metrics["h_update_mean_raw_delta_before_damping"]
+                    ),
+                    6,
+                ),
+                "h_update_mean_damping_factor": round(
+                    _safe_float(world_metrics["h_update_mean_damping_factor"]),
+                    6,
+                ),
+                "h_update_mean_delta_before_daily_cap": round(
+                    _safe_float(
+                        world_metrics["h_update_mean_delta_before_daily_cap"]
+                    ),
+                    6,
+                ),
+                "h_update_mean_final_delta": round(
+                    _safe_float(world_metrics["h_update_mean_final_delta"]),
+                    6,
+                ),
+                "h_update_daily_cap_applied_count": _safe_int(
+                    world_metrics["h_update_daily_cap_applied_count"], 0
+                ),
+                "h_update_mean_daily_harm_used_after": round(
+                    _safe_float(world_metrics["h_update_mean_daily_harm_used_after"]),
+                    6,
                 ),
             }
         )
@@ -767,6 +892,14 @@ def main() -> None:
         "trajectory_json_attempts_used_max",
         "trajectory_mean_tvd_from_rule",
         "outcome_model_modes_json",
+        "outcome_types_json",
+        "daily_negative_episode_count_json",
+        "h_update_mean_raw_delta_before_damping",
+        "h_update_mean_damping_factor",
+        "h_update_mean_delta_before_daily_cap",
+        "h_update_mean_final_delta",
+        "h_update_daily_cap_applied_count",
+        "h_update_mean_daily_harm_used_after",
     ]
     stage_fieldnames = [
         "group_id",

@@ -2719,6 +2719,24 @@ def _write_run_metadata(
         "proto_helplessness_update_mode": (
             RUNTIME_CONFIG.proto_helplessness_update_mode
         ),
+        "proto_h_update_calibration_mode": (
+            RUNTIME_CONFIG.proto_h_update_calibration_mode
+        ),
+        "proto_h_update_negative_scale": (
+            RUNTIME_CONFIG.proto_h_update_negative_scale
+        ),
+        "proto_h_update_damping_strength": (
+            RUNTIME_CONFIG.proto_h_update_damping_strength
+        ),
+        "proto_h_update_damping_power": (
+            RUNTIME_CONFIG.proto_h_update_damping_power
+        ),
+        "proto_h_update_damping_floor": (
+            RUNTIME_CONFIG.proto_h_update_damping_floor
+        ),
+        "proto_h_update_daily_harm_cap": (
+            RUNTIME_CONFIG.proto_h_update_daily_harm_cap
+        ),
         "proto_support_ecology_mode": RUNTIME_CONFIG.proto_support_ecology_mode,
         "written_at": datetime.now().isoformat(timespec="seconds"),
     }

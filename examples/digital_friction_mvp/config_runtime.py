@@ -42,6 +42,11 @@ VALID_HUYS_DAYAN_LITE_CONTROLLABILITY_MODES = {
 }
 VALID_HELPLESSNESS_UPDATE_MODES = {"rule_v1", "theory_update_v2"}
 VALID_SUPPORT_ECOLOGY_MODES = {"off", "family_helper_llm"}
+VALID_H_UPDATE_CALIBRATION_MODES = {
+    "original_v2",
+    "scaled_nonlinear",
+    "scaled_nonlinear_daily_cap",
+}
 
 
 def _parse_bool_env(name: str, default: bool = False) -> bool:
@@ -99,6 +104,12 @@ class RuntimeConfig:
     proto_llm_uncontrollability_retries: int
     proto_llm_uncontrollability_cache_enabled: bool
     proto_helplessness_update_mode: str
+    proto_h_update_calibration_mode: str
+    proto_h_update_negative_scale: float
+    proto_h_update_damping_strength: float
+    proto_h_update_damping_power: float
+    proto_h_update_damping_floor: float
+    proto_h_update_daily_harm_cap: float
     proto_scope_spillover_beta: float
     proto_scope_spillover_threshold: float
     proto_scope_spillover_sigma: float
@@ -277,6 +288,36 @@ def load_runtime_config() -> RuntimeConfig:
             "PROTO_HELPLESSNESS_UPDATE_MODE must be one of: "
             + ", ".join(sorted(VALID_HELPLESSNESS_UPDATE_MODES))
         )
+    proto_h_update_calibration_mode = (
+        os.getenv("PROTO_H_UPDATE_CALIBRATION_MODE", "original_v2")
+        .strip()
+        .lower()
+    )
+    if proto_h_update_calibration_mode not in VALID_H_UPDATE_CALIBRATION_MODES:
+        raise ValueError(
+            "PROTO_H_UPDATE_CALIBRATION_MODE must be one of: "
+            + ", ".join(sorted(VALID_H_UPDATE_CALIBRATION_MODES))
+        )
+    proto_h_update_negative_scale = max(
+        0.0,
+        float(os.getenv("PROTO_H_UPDATE_NEGATIVE_SCALE", "0.60")),
+    )
+    proto_h_update_damping_strength = max(
+        0.0,
+        float(os.getenv("PROTO_H_UPDATE_DAMPING_STRENGTH", "0.80")),
+    )
+    proto_h_update_damping_power = max(
+        0.01,
+        float(os.getenv("PROTO_H_UPDATE_DAMPING_POWER", "1.25")),
+    )
+    proto_h_update_damping_floor = max(
+        0.0,
+        min(1.0, float(os.getenv("PROTO_H_UPDATE_DAMPING_FLOOR", "0.20"))),
+    )
+    proto_h_update_daily_harm_cap = max(
+        0.0,
+        float(os.getenv("PROTO_H_UPDATE_DAILY_HARM_CAP", "5.0")),
+    )
     proto_scope_spillover_beta = max(
         0.0,
         float(os.getenv("PROTO_SCOPE_SPILLOVER_BETA", "1.2")),
@@ -680,6 +721,12 @@ def load_runtime_config() -> RuntimeConfig:
         proto_llm_uncontrollability_retries=proto_llm_uncontrollability_retries,
         proto_llm_uncontrollability_cache_enabled=proto_llm_uncontrollability_cache_enabled,
         proto_helplessness_update_mode=proto_helplessness_update_mode,
+        proto_h_update_calibration_mode=proto_h_update_calibration_mode,
+        proto_h_update_negative_scale=proto_h_update_negative_scale,
+        proto_h_update_damping_strength=proto_h_update_damping_strength,
+        proto_h_update_damping_power=proto_h_update_damping_power,
+        proto_h_update_damping_floor=proto_h_update_damping_floor,
+        proto_h_update_daily_harm_cap=proto_h_update_daily_harm_cap,
         proto_scope_spillover_beta=proto_scope_spillover_beta,
         proto_scope_spillover_threshold=proto_scope_spillover_threshold,
         proto_scope_spillover_sigma=proto_scope_spillover_sigma,

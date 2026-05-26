@@ -237,6 +237,10 @@ def test_theory_update_v2_records_mode_and_attribution_terms() -> None:
     assert result.self_efficacy_harm == result.efficacy_loss_term
     assert result.affective_distress_harm == 0.0
     assert result.attribution_multiplier > 1.0
+    assert result.calibration_mode_effective == "original_v2"
+    assert result.negative_scale == 1.0
+    assert result.daily_cap_applied is False
+    assert result.delta_before_daily_cap == result.delta_after_daily_cap == result.delta
 
 
 def test_theory_update_v2_attribution_multiplier_changes_failure_delta() -> None:
@@ -265,6 +269,131 @@ def test_theory_update_v2_attribution_multiplier_changes_failure_delta() -> None
 
     assert harmful.attribution_multiplier > buffered.attribution_multiplier
     assert harmful.delta > buffered.delta
+
+
+def test_rule_v1_ignores_h_update_calibration_mode() -> None:
+    baseline = apply_helplessness_update(
+        make_input(
+            helplessness_update_mode="rule_v1",
+            helplessness_now=85,
+            event_level_uncontrollability=2,
+            task_self_efficacy=30,
+        )
+    )
+    configured = apply_helplessness_update(
+        make_input(
+            helplessness_update_mode="rule_v1",
+            helplessness_now=85,
+            event_level_uncontrollability=2,
+            task_self_efficacy=30,
+            h_update_calibration_mode="scaled_nonlinear_daily_cap",
+            h_update_negative_scale=0.1,
+            h_update_daily_harm_cap=0.1,
+            h_update_daily_harm_used_before=0.1,
+        )
+    )
+
+    assert configured.delta == baseline.delta
+    assert configured.helplessness_after == baseline.helplessness_after
+    assert configured.calibration_mode_effective == "not_applicable"
+
+
+def test_scaled_nonlinear_reduces_negative_delta_and_records_audit() -> None:
+    original = apply_helplessness_update(
+        make_input(
+            helplessness_update_mode="theory_update_v2",
+            helplessness_now=85,
+            event_level_uncontrollability=2,
+            task_self_efficacy=30,
+            h_update_calibration_mode="original_v2",
+        )
+    )
+    scaled = apply_helplessness_update(
+        make_input(
+            helplessness_update_mode="theory_update_v2",
+            helplessness_now=85,
+            event_level_uncontrollability=2,
+            task_self_efficacy=30,
+            h_update_calibration_mode="scaled_nonlinear",
+            h_update_negative_scale=0.60,
+            h_update_damping_strength=0.80,
+            h_update_damping_power=1.25,
+            h_update_damping_floor=0.20,
+        )
+    )
+
+    assert scaled.calibration_mode_effective == "scaled_nonlinear"
+    assert scaled.damping_formula == "nonlinear_v1"
+    assert scaled.negative_scale == 0.60
+    assert scaled.damping_factor < 0.55
+    assert scaled.delta < original.delta
+    assert scaled.delta_before_daily_cap == scaled.delta
+
+
+def test_scaled_nonlinear_does_not_change_success_recovery() -> None:
+    original = apply_helplessness_update(
+        make_input(
+            helplessness_update_mode="theory_update_v2",
+            helplessness_now=85,
+            outcome_type="success_self",
+            consecutive_failures=2,
+            h_update_calibration_mode="original_v2",
+        )
+    )
+    scaled = apply_helplessness_update(
+        make_input(
+            helplessness_update_mode="theory_update_v2",
+            helplessness_now=85,
+            outcome_type="success_self",
+            consecutive_failures=2,
+            h_update_calibration_mode="scaled_nonlinear",
+            h_update_negative_scale=0.1,
+            h_update_damping_floor=0.9,
+        )
+    )
+
+    assert scaled.delta == original.delta
+    assert scaled.helplessness_after == original.helplessness_after
+
+
+def test_daily_cap_is_applied_inside_state_update_result() -> None:
+    result = apply_helplessness_update(
+        make_input(
+            helplessness_update_mode="theory_update_v2",
+            helplessness_now=40,
+            event_level_uncontrollability=2,
+            task_self_efficacy=20,
+            h_update_calibration_mode="scaled_nonlinear_daily_cap",
+            h_update_negative_scale=1.0,
+            h_update_daily_harm_cap=1.0,
+            h_update_daily_harm_used_before=0.8,
+        )
+    )
+
+    assert result.daily_cap_applied is True
+    assert result.daily_harm_remaining_before == pytest.approx(0.2)
+    assert result.delta_after_daily_cap == pytest.approx(0.2)
+    assert result.delta == pytest.approx(0.2)
+    assert result.helplessness_after == pytest.approx(40.2)
+    assert result.daily_harm_used_after == pytest.approx(1.0)
+
+
+def test_success_recovery_does_not_refund_daily_harm_budget() -> None:
+    result = apply_helplessness_update(
+        make_input(
+            helplessness_update_mode="theory_update_v2",
+            helplessness_now=60,
+            outcome_type="success_self",
+            consecutive_failures=2,
+            h_update_calibration_mode="scaled_nonlinear_daily_cap",
+            h_update_daily_harm_cap=5.0,
+            h_update_daily_harm_used_before=4.0,
+        )
+    )
+
+    assert result.delta < 0
+    assert result.daily_cap_applied is False
+    assert result.daily_harm_used_after == pytest.approx(4.0)
 
 
 def test_theory_update_v2_low_attribution_confidence_uses_neutral_multiplier() -> None:

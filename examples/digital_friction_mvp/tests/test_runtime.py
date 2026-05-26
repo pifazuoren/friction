@@ -276,6 +276,63 @@ def test_load_runtime_config_accepts_theory_update_v2(monkeypatch) -> None:
     assert config.proto_helplessness_update_mode == "theory_update_v2"
 
 
+def test_load_runtime_config_exposes_h_update_calibration_defaults(
+    monkeypatch,
+) -> None:
+    for key in (
+        "PROTO_H_UPDATE_CALIBRATION_MODE",
+        "PROTO_H_UPDATE_NEGATIVE_SCALE",
+        "PROTO_H_UPDATE_DAMPING_STRENGTH",
+        "PROTO_H_UPDATE_DAMPING_POWER",
+        "PROTO_H_UPDATE_DAMPING_FLOOR",
+        "PROTO_H_UPDATE_DAILY_HARM_CAP",
+    ):
+        monkeypatch.delenv(key, raising=False)
+
+    config = load_runtime_config()
+
+    assert config.proto_h_update_calibration_mode == "original_v2"
+    assert config.proto_h_update_negative_scale == 0.60
+    assert config.proto_h_update_damping_strength == 0.80
+    assert config.proto_h_update_damping_power == 1.25
+    assert config.proto_h_update_damping_floor == 0.20
+    assert config.proto_h_update_daily_harm_cap == 5.0
+
+
+def test_load_runtime_config_validates_h_update_calibration_mode(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("PROTO_H_UPDATE_CALIBRATION_MODE", "scaled_nonlinear")
+    config = load_runtime_config()
+    assert config.proto_h_update_calibration_mode == "scaled_nonlinear"
+
+    monkeypatch.setenv("PROTO_H_UPDATE_CALIBRATION_MODE", "scaled_nonlinear_daily_cap")
+    config = load_runtime_config()
+    assert config.proto_h_update_calibration_mode == "scaled_nonlinear_daily_cap"
+
+    monkeypatch.setenv("PROTO_H_UPDATE_CALIBRATION_MODE", "magic_budget")
+    with pytest.raises(ValueError, match="PROTO_H_UPDATE_CALIBRATION_MODE"):
+        load_runtime_config()
+
+
+def test_load_runtime_config_clamps_h_update_numeric_parameters(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("PROTO_H_UPDATE_NEGATIVE_SCALE", "-1")
+    monkeypatch.setenv("PROTO_H_UPDATE_DAMPING_STRENGTH", "-2")
+    monkeypatch.setenv("PROTO_H_UPDATE_DAMPING_POWER", "0")
+    monkeypatch.setenv("PROTO_H_UPDATE_DAMPING_FLOOR", "3")
+    monkeypatch.setenv("PROTO_H_UPDATE_DAILY_HARM_CAP", "-5")
+
+    config = load_runtime_config()
+
+    assert config.proto_h_update_negative_scale == 0.0
+    assert config.proto_h_update_damping_strength == 0.0
+    assert config.proto_h_update_damping_power == 0.01
+    assert config.proto_h_update_damping_floor == 1.0
+    assert config.proto_h_update_daily_harm_cap == 0.0
+
+
 def test_load_runtime_config_rejects_invalid_helplessness_update_mode(
     monkeypatch,
 ) -> None:
@@ -494,6 +551,12 @@ def test_world_runner_fingerprint_includes_mobile_entry_env(monkeypatch) -> None
             "PROTO_OUTCOME_TRAJECTORY_STRICT_SCHEMA": "1",
             "PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS": "5",
             "PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY": "fail_run",
+            "PROTO_H_UPDATE_CALIBRATION_MODE": "scaled_nonlinear",
+            "PROTO_H_UPDATE_NEGATIVE_SCALE": "0.60",
+            "PROTO_H_UPDATE_DAMPING_STRENGTH": "0.80",
+            "PROTO_H_UPDATE_DAMPING_POWER": "1.25",
+            "PROTO_H_UPDATE_DAMPING_FLOOR": "0.20",
+            "PROTO_H_UPDATE_DAILY_HARM_CAP": "5.0",
         },
         ["baseline_low_friction"],
     )
@@ -515,6 +578,12 @@ def test_world_runner_fingerprint_includes_mobile_entry_env(monkeypatch) -> None
     assert payload["PROTO_OUTCOME_TRAJECTORY_ALPHA"] == "0.10"
     assert payload["PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS"] == "5"
     assert payload["PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY"] == "fail_run"
+    assert payload["PROTO_H_UPDATE_CALIBRATION_MODE"] == "scaled_nonlinear"
+    assert payload["PROTO_H_UPDATE_NEGATIVE_SCALE"] == "0.60"
+    assert payload["PROTO_H_UPDATE_DAMPING_STRENGTH"] == "0.80"
+    assert payload["PROTO_H_UPDATE_DAMPING_POWER"] == "1.25"
+    assert payload["PROTO_H_UPDATE_DAMPING_FLOOR"] == "0.20"
+    assert payload["PROTO_H_UPDATE_DAILY_HARM_CAP"] == "5.0"
 
 
 def test_load_runtime_config_exposes_huys_dayan_lite_defaults(

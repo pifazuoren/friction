@@ -2838,3 +2838,43 @@
   - 结果：`35 passed in 0.10s`
 - 备注：
   - 本轮没有运行新的 full world smoke；建议下一次重跑 4-world / 7-day 时重点查看 mobile rerank schedule 中 `parse_status`、`json_attempts_used`，以及 world summary 是否不再因 mobile rerank `invalid_schema` 中断。
+
+### Helplessness damping calibration v2
+- 目的：
+  - 修复 7 天实验中 `helplessness_score` 过快撞顶的 ceiling effect，同时避免把 daily cap 写成主心理机制。
+  - 按 rebuttal 要求，主 calibration 只使用 `negative_scale + nonlinear damping`；daily cap 仅作为 optional saturation guard / robustness setting。
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/config_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/world_runner.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/main.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis_parallel_worlds.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/agent.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/models.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_schema.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/proto/state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_runtime.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/test_state_update.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `PROTO_H_UPDATE_CALIBRATION_MODE=original_v2|scaled_nonlinear|scaled_nonlinear_daily_cap`，默认 `original_v2`。
+  - 新增参数：`PROTO_H_UPDATE_NEGATIVE_SCALE`、`PROTO_H_UPDATE_DAMPING_STRENGTH`、`PROTO_H_UPDATE_DAMPING_POWER`、`PROTO_H_UPDATE_DAMPING_FLOOR`、`PROTO_H_UPDATE_DAILY_HARM_CAP`。
+  - `state_update.py` 不读取 runtime；所有 calibration 参数通过 `HelplessnessUpdateInput` 显式传入，保持 `apply_helplessness_update(...)` 纯函数。
+  - `rule_v1` 完全不应用 calibration，audit 中 `calibration_mode_effective="not_applicable"`。
+  - `theory_update_v2` 在 `scaled_nonlinear` 下只缩放负向事件：`negative_scale=0.60`，并使用 nonlinear damping：`clamp(1 - 0.80 * (H / 100) ** 1.25, 0.20, 1.0)`。
+  - `scaled_nonlinear_daily_cap` 在 state update 内完成 daily harm cap，`HelplessnessUpdateResult.helplessness_after` 就是最终写入状态的值。
+  - 新增 `proto_h_update_budget_day` 与 `proto_h_update_daily_harm_used`；`agent.py` 只负责传入 used budget 与写回 `daily_harm_used_after`，不二次截断 delta。
+  - `HelplessnessUpdateResult` 对三组实验输出统一 audit 字段：`delta_before_daily_cap`、`daily_cap_applied`、`delta_after_daily_cap`、`daily_harm_used_after` 等。
+  - `analysis_parallel_worlds.py` 增加 outcome distribution、daily negative episode count、mean raw delta、mean damping、mean delta before cap、mean final delta、cap applied count 等 summary 指标。
+- 核心边界：
+  - daily cap 是 daily saturation guard / robustness setting，不是主心理机制。
+  - 成功恢复可以正常降低 H，但不会返还当天 daily harm budget。
+  - 本轮没有新增 failure streak harm，避免回到 failure-counter 逻辑。
+  - 本轮没有修改 outcome_model 概率机制、FamilyHelperAgent、survey calibration、Bayesian posterior key、Huys-Dayan formula 或 scope spillover。
+  - 文献只支持 bounded / nonlinear / recovery-capable update 的方向和边界，不支持具体参数数值。
+- 验证：
+  - `/opt/anaconda3/envs/agent_env/bin/python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/main.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/analysis_parallel_worlds.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/models.py examples/digital_friction_mvp/proto/state_update.py examples/digital_friction_mvp/proto/state_schema.py`
+  - 结果：通过，无输出
+  - `/opt/anaconda3/envs/agent_env/bin/python -m pytest examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_state_update.py examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py -q`
+  - 结果：`71 passed, 3 warnings in 0.83s`
+- 备注：
+  - 后续正式 calibration 实验应至少跑 `original_v2`、`scaled_nonlinear`、`scaled_nonlinear_daily_cap` 三组，重点检查 ceiling effect、world ordering、high/low friction 差异是否被压平，以及 outcome negative density 是否本身过高。

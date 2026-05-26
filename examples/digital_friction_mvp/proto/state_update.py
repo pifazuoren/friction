@@ -26,6 +26,11 @@ AVOID_REASON_MULTIPLIERS = {
     "rational_security_avoid": 0.0,
 }
 HELPLESSNESS_UPDATE_MODES = {"rule_v1", "theory_update_v2"}
+H_UPDATE_CALIBRATION_MODES = {
+    "original_v2",
+    "scaled_nonlinear",
+    "scaled_nonlinear_daily_cap",
+}
 
 
 def clamp_score(value: float) -> float:
@@ -42,6 +47,52 @@ def efficacy_loss_term(task_self_efficacy: float) -> float:
 
 def damping_factor(helplessness_before: float) -> float:
     return clamp_term(1.0 - 0.45 * float(helplessness_before) / 100.0, 0.55, 1.0)
+
+
+def nonlinear_harm_damping_factor(
+    *,
+    helplessness_before: float,
+    strength: float,
+    power: float,
+    floor: float,
+) -> float:
+    h_ratio = clamp_score(helplessness_before) / 100.0
+    safe_strength = max(0.0, float(strength))
+    safe_power = max(0.01, float(power))
+    safe_floor = clamp_term(float(floor), 0.0, 1.0)
+    return clamp_term(
+        1.0 - safe_strength * (h_ratio ** safe_power),
+        safe_floor,
+        1.0,
+    )
+
+
+def _normalize_calibration_mode(value: str) -> str:
+    mode = str(value or "original_v2").strip().lower()
+    if mode not in H_UPDATE_CALIBRATION_MODES:
+        return "original_v2"
+    return mode
+
+
+def _apply_daily_harm_cap(
+    *,
+    delta_before_cap: float,
+    daily_harm_cap: float,
+    daily_harm_used_before: float,
+) -> tuple[float, float, float, bool]:
+    cap = max(0.0, float(daily_harm_cap))
+    used_before = max(0.0, float(daily_harm_used_before))
+    if cap <= 0.0 or delta_before_cap <= 0.0:
+        return delta_before_cap, used_before, max(0.0, cap - used_before), False
+    remaining = max(0.0, cap - used_before)
+    delta_after_cap = min(float(delta_before_cap), remaining)
+    used_after = used_before + max(0.0, delta_after_cap)
+    return (
+        delta_after_cap,
+        used_after,
+        remaining,
+        delta_after_cap < float(delta_before_cap),
+    )
 
 
 def avoid_reason_multiplier(avoid_reason: str) -> float:
@@ -161,6 +212,20 @@ def apply_helplessness_update_rule_v1(
         avoid_reason_multiplier=avoid_multiplier,
         controllable_success_protection=success_protection,
         next_consecutive_failures=next_failures,
+        calibration_mode_configured=str(payload.h_update_calibration_mode),
+        calibration_mode_effective="not_applicable",
+        negative_scale=1.0,
+        damping_formula="linear_v1",
+        damping_strength=0.45,
+        damping_power=1.0,
+        damping_floor=0.55,
+        delta_before_daily_cap=helplessness_after - helplessness_before,
+        daily_harm_cap=0.0,
+        daily_harm_used_before=0.0,
+        daily_harm_remaining_before=0.0,
+        daily_cap_applied=False,
+        delta_after_daily_cap=helplessness_after - helplessness_before,
+        daily_harm_used_after=max(0.0, float(payload.h_update_daily_harm_used_before)),
     )
 
 
@@ -182,6 +247,19 @@ def apply_helplessness_update_v2(
     attribution_multiplier = 1.0
     attribution_recovery_multiplier = 1.0
     affective_distress_harm = 0.0
+    calibration_mode = _normalize_calibration_mode(payload.h_update_calibration_mode)
+    negative_scale = 1.0
+    damping_formula = "linear_v1"
+    damping_strength = 0.45
+    damping_power = 1.0
+    damping_floor = 0.55
+    daily_harm_cap = 0.0
+    daily_harm_used_before = max(0.0, float(payload.h_update_daily_harm_used_before))
+    daily_harm_remaining_before = 0.0
+    daily_cap_applied = False
+    delta_before_daily_cap = 0.0
+    delta_after_daily_cap = 0.0
+    daily_harm_used_after = daily_harm_used_before
 
     if outcome_type in SUCCESS_TYPES:
         next_failures = 0
@@ -192,6 +270,8 @@ def apply_helplessness_update_v2(
         )
         raw_delta = base - recovery
         helplessness_after = clamp_score(helplessness_before + raw_delta)
+        delta_before_daily_cap = helplessness_after - helplessness_before
+        delta_after_daily_cap = delta_before_daily_cap
     else:
         next_failures = (
             current_failures
@@ -217,8 +297,36 @@ def apply_helplessness_update_v2(
             payload.controllable_success_memory
         )
         raw_delta = max(0.0, raw_delta * (1.0 - success_protection))
-        damping = damping_factor(helplessness_before)
-        helplessness_after = clamp_score(helplessness_before + raw_delta * damping)
+        if calibration_mode in {"scaled_nonlinear", "scaled_nonlinear_daily_cap"}:
+            negative_scale = max(0.0, float(payload.h_update_negative_scale))
+            raw_delta = max(0.0, raw_delta * negative_scale)
+            damping_strength = max(0.0, float(payload.h_update_damping_strength))
+            damping_power = max(0.01, float(payload.h_update_damping_power))
+            damping_floor = clamp_term(float(payload.h_update_damping_floor), 0.0, 1.0)
+            damping = nonlinear_harm_damping_factor(
+                helplessness_before=helplessness_before,
+                strength=damping_strength,
+                power=damping_power,
+                floor=damping_floor,
+            )
+            damping_formula = "nonlinear_v1"
+        else:
+            damping = damping_factor(helplessness_before)
+        delta_before_daily_cap = clamp_score(helplessness_before + raw_delta * damping) - helplessness_before
+        delta_after_daily_cap = delta_before_daily_cap
+        if calibration_mode == "scaled_nonlinear_daily_cap":
+            daily_harm_cap = max(0.0, float(payload.h_update_daily_harm_cap))
+            (
+                delta_after_daily_cap,
+                daily_harm_used_after,
+                daily_harm_remaining_before,
+                daily_cap_applied,
+            ) = _apply_daily_harm_cap(
+                delta_before_cap=delta_before_daily_cap,
+                daily_harm_cap=daily_harm_cap,
+                daily_harm_used_before=daily_harm_used_before,
+            )
+        helplessness_after = clamp_score(helplessness_before + delta_after_daily_cap)
 
     return HelplessnessUpdateResult(
         helplessness_before=helplessness_before,
@@ -242,6 +350,20 @@ def apply_helplessness_update_v2(
         affective_distress_harm=affective_distress_harm,
         attribution_multiplier=attribution_multiplier,
         attribution_recovery_multiplier=attribution_recovery_multiplier,
+        calibration_mode_configured=str(payload.h_update_calibration_mode),
+        calibration_mode_effective=calibration_mode,
+        negative_scale=negative_scale,
+        damping_formula=damping_formula,
+        damping_strength=damping_strength,
+        damping_power=damping_power,
+        damping_floor=damping_floor,
+        delta_before_daily_cap=delta_before_daily_cap,
+        daily_harm_cap=daily_harm_cap,
+        daily_harm_used_before=daily_harm_used_before,
+        daily_harm_remaining_before=daily_harm_remaining_before,
+        daily_cap_applied=daily_cap_applied,
+        delta_after_daily_cap=helplessness_after - helplessness_before,
+        daily_harm_used_after=daily_harm_used_after,
     )
 
 

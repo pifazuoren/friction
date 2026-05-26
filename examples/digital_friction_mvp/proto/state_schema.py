@@ -364,6 +364,18 @@ def build_proto_status_attributes() -> list[MemoryAttribute]:
             description="latest day when proto daily housekeeping ran",
         ),
         MemoryAttribute(
+            name="proto_h_update_budget_day",
+            type=int,
+            default_or_value=-1,
+            description="latest day for helplessness update daily harm budget",
+        ),
+        MemoryAttribute(
+            name="proto_h_update_daily_harm_used",
+            type=float,
+            default_or_value=0.0,
+            description="positive helplessness harm used today by calibration guard",
+        ),
+        MemoryAttribute(
             name="proto_bayesian_control_memory",
             type=dict,
             default_or_value={},
@@ -590,6 +602,8 @@ def build_initial_proto_status(
         "proto_active_stage_key": "",
         "proto_stage_daily_reflection_count": 0,
         "proto_last_housekeeping_day": -1,
+        "proto_h_update_budget_day": -1,
+        "proto_h_update_daily_harm_used": 0.0,
         "proto_bayesian_control_memory": build_initial_bayesian_control_memory(),
         "proto_bayesian_policy_memory": build_initial_bayesian_policy_memory(),
         "proto_bayesian_controllability_lite_memory": (

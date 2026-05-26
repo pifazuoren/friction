@@ -204,6 +204,13 @@ class HelplessnessUpdateInput:
     event_attribution_stability: EventAttributionStability = "not_applicable"
     event_attribution_scope: EventAttributionScope = "not_applicable"
     event_attribution_confidence: float = 0.0
+    h_update_calibration_mode: str = "original_v2"
+    h_update_negative_scale: float = 1.0
+    h_update_damping_strength: float = 0.45
+    h_update_damping_power: float = 1.0
+    h_update_damping_floor: float = 0.55
+    h_update_daily_harm_cap: float = 0.0
+    h_update_daily_harm_used_before: float = 0.0
 
 
 @dataclass(slots=True)
@@ -230,6 +237,20 @@ class HelplessnessUpdateResult:
     attribution_multiplier: float = 1.0
     attribution_recovery_multiplier: float = 1.0
     rule_fallback_reason: str = ""
+    calibration_mode_configured: str = "not_applicable"
+    calibration_mode_effective: str = "not_applicable"
+    negative_scale: float = 1.0
+    damping_formula: str = "linear_v1"
+    damping_strength: float = 0.45
+    damping_power: float = 1.0
+    damping_floor: float = 0.55
+    delta_before_daily_cap: float = 0.0
+    daily_harm_cap: float = 0.0
+    daily_harm_used_before: float = 0.0
+    daily_harm_remaining_before: float = 0.0
+    daily_cap_applied: bool = False
+    delta_after_daily_cap: float = 0.0
+    daily_harm_used_after: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
