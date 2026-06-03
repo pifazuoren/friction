@@ -2878,3 +2878,481 @@
   - 结果：`71 passed, 3 warnings in 0.83s`
 - 备注：
   - 后续正式 calibration 实验应至少跑 `original_v2`、`scaled_nonlinear`、`scaled_nonlinear_daily_cap` 三组，重点检查 ceiling effect、world ordering、high/low friction 差异是否被压平，以及 outcome negative density 是否本身过高。
+
+### TalkingData app-context audit Phase A
+- 日期：
+  - 2026-05-27
+- 目的：
+  - 按 `talkingdata修改todo.md` 的 Phase A 先做审计，不改主仿真入口。
+  - 将 TalkingData 的 `category` 从“直接 digital task 标签”降级为“app/mobile-use context 来源”，先检查 `unknown_or_unmapped` 大桶能否被合理拆分。
+  - 重点避免把金融风险候选、画像标签、娱乐/社交/工具场景直接脑补成 digital friction task。
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/audit_talkingdata_app_context.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/tests/talkingdata_app_context_audit_test.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/category_to_app_context_audit.csv`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/app_context_summary_reference.csv`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/app_context_summary_validation.csv`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/app_context_summary_comparison.csv`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增独立脚本 `audit_talkingdata_app_context.py`，读取：
+    - `elder_reference.csv`
+    - `elder_validation.csv`
+    - 现有 `category_to_mobile_intention_map.csv`
+  - 输出 category-level audit 与 reference/validation split summary。
+  - 新增 app context：
+    - `finance_context`
+    - `finance_candidate_review`
+    - `public_service_context`
+    - `health_service_context`
+    - `shopping_lifestyle_context`
+    - `navigation_transport_context`
+    - `communication_social_context`
+    - `media_entertainment_context`
+    - `device_tool_context`
+    - `education_work_context`
+    - `taxonomy_profile_label`
+    - `unknown_or_unmapped`
+  - `finance_candidate_review` 第一版明确为 audit-only，`task_eligible=false`，用于承接 `P2P`、`loan(s)`、`securities`、`shares`、`stock`、`risk`、`liquidity`、`profitability`、`debit and credit` 等需要人工确认的金融候选。
+  - task-eligible context 仅包括：
+    - `finance_context`
+    - `public_service_context`
+    - `health_service_context`
+    - `shopping_lifestyle_context`
+    - `navigation_transport_context`
+    - `education_work_context`
+  - `communication_social_context`、`media_entertainment_context`、`device_tool_context`、`taxonomy_profile_label`、`unknown_or_unmapped` 均保持 context-only。
+  - 新增测试覆盖：`P2P` 和 `Consumer loans` 不直接进入 task；`Industry tag` 是画像标签；`Calendar` 是工具场景；`80s Japanese comic` 是娱乐场景；`Internet banking` 才是可生成 task opportunity 的 finance context。
+- 审计结果：
+  - `category_to_app_context_audit.csv` 共 368 行。
+  - May 1-3 reference app-context mass：
+    - `taxonomy_profile_label`: 53.194%
+    - `finance_candidate_review`: 12.213%
+    - `communication_social_context`: 9.967%
+    - `finance_context`: 9.628%
+    - `unknown_or_unmapped`: 7.811%
+    - `media_entertainment_context`: 2.842%
+    - `shopping_lifestyle_context`: 1.811%
+    - `navigation_transport_context`: 0.832%
+    - `education_work_context`: 0.796%
+    - `health_service_context`: 0.588%
+    - `public_service_context`: 0.264%
+    - `device_tool_context`: 0.053%
+  - May 4-7 validation app-context mass 与 reference 很接近；最大几个桶基本稳定：
+    - `taxonomy_profile_label`: 53.009%
+    - `finance_candidate_review`: 12.443%
+    - `finance_context`: 9.854%
+    - `communication_social_context`: 9.905%
+    - `unknown_or_unmapped`: 7.756%
+  - 第一版拆桶后，真正仍未解释的 `unknown_or_unmapped` 从旧 mobile-intention prior 中约 75.8% 的大混合桶，下降到 app-context 审计中的约 7.8%。
+  - task-eligible app-context 总量约为：
+    - reference: 13.923%
+    - validation: 14.109%
+- 核心边界：
+  - 本轮没有修改 `build_mobile_intention_artifacts.py` 的正式 artifact 构建流程。
+  - 本轮没有修改 `task_assignment.py`、runtime entry path、LLM rerank prompt、outcome model、helplessness update、Bayesian posterior、Huys-Dayan policy 或 FamilyHelperAgent。
+  - 本轮没有让 `finance_candidate_review` 直接生成 task。
+  - 本轮输出的 app-context CSV 仅用于审计和人工 review，不参与主实验。
+- 验证：
+  - `/opt/anaconda3/envs/agent_env/bin/python -m py_compile examples/digital_friction_mvp/audit_talkingdata_app_context.py examples/digital_friction_mvp/tests/talkingdata_app_context_audit_test.py`
+  - 结果：通过，无输出
+  - `/opt/anaconda3/envs/agent_env/bin/python -m pytest examples/digital_friction_mvp/tests/talkingdata_app_context_audit_test.py -q`
+  - 结果：`5 passed in 0.03s`
+  - `/opt/anaconda3/envs/agent_env/bin/python examples/digital_friction_mvp/audit_talkingdata_app_context.py --reference-csv /Users/pifazuoren/Downloads/SeniorApp/TalkingData/elder_reference.csv --validation-csv /Users/pifazuoren/Downloads/SeniorApp/TalkingData/elder_validation.csv --category-map examples/digital_friction_mvp/mobile_intention_artifacts/category_to_mobile_intention_map.csv --output-dir examples/digital_friction_mvp/analysis`
+  - 结果：成功生成四个审计 CSV。
+- 备注：
+  - Phase A 的结论是：直接 `TalkingData category -> mobile intention -> digital task` 太粗；拆成 `app context -> task opportunity` 更合理。
+  - 下一步 Phase B 应先生成新的 app-context artifact 和 validation 指标，但仍建议先不要直接替换主实验入口。
+
+### TalkingData event-app context cleaning v2
+- 日期：
+  - 2026-05-27
+- 目的：
+  - 按 `/Users/pifazuoren/Downloads/AgentSociety-main/newdata_cleaning_rules.md` 重新清洗 TalkingData。
+  - 修正旧版 `category` 行级统计把同一个 app 的多个 label 当作多次手机行为的问题。
+  - 新版统计单位改为 `event_id + app_id` 的 active app exposure：同一个 active app 不管有多少 label，只贡献一次 app-context exposure。
+- 涉及文件：
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/newdata_cleaning_rules.md`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/clean_talkingdata_event_app_context.py`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/elder_reference_event_app_context.csv`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/elder_validation_event_app_context.csv`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/app_context_prior_by_bucket_hour_reference.json`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/app_context_prior_by_bucket_hour_validation.json`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/app_context_summary_reference.csv`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/app_context_summary_validation.csv`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/app_context_summary_comparison.csv`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/category_label_audit.csv`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/cleaning_manifest.json`
+  - `/Users/pifazuoren/Downloads/AgentSociety-main/frictionchangeLog.md`
+- 核心改动：
+  - 新增 `clean_talkingdata_event_app_context.py`，读取原始 Kaggle 文件：
+    - `gender_age_train.csv`
+    - `events.csv`
+    - `app_events.csv`
+    - `app_labels.csv`
+    - `label_categories.csv`
+    - `phone_brand_device_model.csv`
+  - 保留旧版人群筛选与时间切分：
+    - `age > 45`
+    - 丢弃 2016-04-30
+    - 活跃天数 >= 5
+    - reference / validation 两端均 >= 2 天
+    - `2016-05-04 00:00:00` 作为切分点
+  - 输出粒度改为：
+    - `one row = one active event_id + app_id`
+  - 每行保留：
+    - `event_id`
+    - `app_id`
+    - `label_ids_json`
+    - `categories_json`
+    - `app_context`
+    - `matched_contexts_json`
+    - `context_mapping_basis`
+    - `context_review_status`
+  - app-context 判定规则：
+    - 先用强场景标签判断 `finance_context`、`health_service_context`、`communication_social_context` 等。
+    - 如果只有 `Industry tag`、`Property Industry`、`Custom label` 等标签，则进入 `taxonomy_profile_only`。
+    - 金融风险候选但缺少明确金融 app 场景的进入 `finance_candidate_review`，仍 `task_eligible=false`。
+  - 生成 reference runtime prior 与 validation heldout prior：
+    - `app_context_prior_by_bucket_hour_reference.json` 标记 `uses_validation_data=false`
+    - `app_context_prior_by_bucket_hour_validation.json` 标记 `uses_validation_data=true`
+- 清洗结果：
+  - `eligible_device_count = 1270`
+  - `event_count = 138101`
+  - `reference_event_app_rows = 229204`
+  - `validation_event_app_rows = 312019`
+  - reference app-context mass：
+    - `finance_context`: 25.687%
+    - `taxonomy_profile_only`: 23.864%
+    - `communication_social_context`: 15.457%
+    - `media_entertainment_context`: 6.556%
+    - `unknown_or_unmapped`: 6.166%
+    - `shopping_lifestyle_context`: 5.383%
+    - `education_work_context`: 4.402%
+    - `navigation_transport_context`: 4.325%
+    - `finance_candidate_review`: 4.209%
+    - `health_service_context`: 2.224%
+    - `device_tool_context`: 1.640%
+    - `public_service_context`: 0.088%
+  - validation app-context mass：
+    - `finance_context`: 26.688%
+    - `taxonomy_profile_only`: 23.772%
+    - `communication_social_context`: 15.088%
+    - `media_entertainment_context`: 6.247%
+    - `unknown_or_unmapped`: 6.330%
+    - `shopping_lifestyle_context`: 5.437%
+    - `education_work_context`: 4.183%
+    - `navigation_transport_context`: 3.994%
+    - `finance_candidate_review`: 4.241%
+    - `health_service_context`: 2.351%
+    - `device_tool_context`: 1.572%
+    - `public_service_context`: 0.097%
+  - task-eligible context mass：
+    - reference: 42.108%
+    - validation: 42.750%
+  - 关键变化：
+    - 旧 category-row audit 中 `taxonomy_profile_label` 约 53.19%。
+    - 新 event-app 粒度中 `taxonomy_profile_only` 降至约 23.86%。
+    - 这说明旧版确实存在多标签重复计数导致 taxonomy/profile 标签过度膨胀的问题。
+- 验证：
+  - `/opt/anaconda3/envs/agent_env/bin/python -m py_compile examples/digital_friction_mvp/clean_talkingdata_event_app_context.py examples/digital_friction_mvp/audit_talkingdata_app_context.py`
+  - 结果：通过，无输出
+  - `/opt/anaconda3/envs/agent_env/bin/python examples/digital_friction_mvp/clean_talkingdata_event_app_context.py --raw-dir /Users/pifazuoren/Downloads/talkingdata-mobile-user-demographics --output-dir examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context`
+  - 结果：成功生成 v2 event-app app-context 清洗产物。
+  - `wc -l examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/elder_reference_event_app_context.csv examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/elder_validation_event_app_context.csv examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/category_label_audit.csv`
+  - 结果：
+    - `229205` 行 reference CSV，包括 header
+    - `312020` 行 validation CSV，包括 header
+    - `2431` 行 category label audit，包括 header
+- 核心边界：
+  - 本轮只生成新版数据清洗产物，没有接入 runtime。
+  - 本轮没有修改 `task_assignment.py`、`build_mobile_intention_artifacts.py`、LLM rerank prompt、outcome model、helplessness update、Bayesian posterior、Huys-Dayan policy 或 FamilyHelperAgent。
+  - validation prior 只用于 heldout validation，不能作为 runtime calibration 输入。
+- 备注：
+  - 下一步可以做 artifact-only 接入：把 `app_context_prior_by_bucket_hour_reference.json` 转成新的 entry-layer artifact，但先建议只做 validation 脚本扩展和 1-day smoke，不要直接替换 full 4-world 实验入口。
+
+## 2026-05-27 - TalkingData App-Context Entry Layer 接入最小闭环
+
+- 背景：
+  - 继续执行 `talkingdata修改todo.md`。
+  - 原则：不把 TalkingData app/category 直接当成 app 内部 task label；先进入 `app_context`，再通过 prototype bridge 生成可能的 digital task。
+  - 本轮保持最小修改，没有改 outcome model、helplessness update、Bayesian posterior、Huys-Dayan policy、FamilyHelperAgent 或 support schema。
+- 修改文件：
+  - `examples/digital_friction_mvp/clean_talkingdata_event_app_context.py`
+  - `examples/digital_friction_mvp/validate_mobile_intention_exposure.py`
+  - `examples/digital_friction_mvp/config_runtime.py`
+  - `examples/digital_friction_mvp/world_runner.py`
+  - `examples/digital_friction_mvp/main.py`
+  - `examples/digital_friction_mvp/analysis_parallel_worlds.py`
+  - `examples/digital_friction_mvp/proto/task_assignment.py`
+  - `examples/digital_friction_mvp/proto/runtime.py`
+  - `examples/digital_friction_mvp/proto/agent.py`
+  - `examples/digital_friction_mvp/tests/test_task_assignment.py`
+  - `examples/digital_friction_mvp/tests/test_runtime.py`
+  - `examples/digital_friction_mvp/tests/test_mobile_intention_validation.py`
+- Artifact 修改：
+  - v2 清洗脚本新增输出：
+    - `examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/task_opportunity_prior_by_context.json`
+  - artifact schema:
+    - `schema_version = talkingdata_task_opportunity_by_context_v1`
+    - `uses_validation_data = false`
+    - `source = manual_prototype_bridge_from_app_context`
+  - 明确记录：
+    - TalkingData 只提供 app-use context，不提供 app-internal task ground truth。
+    - `task_opportunity_prior_by_context.json` 是 prototype bridge，不是 TalkingData 真值标签。
+    - `finance_candidate_review` 仍为 audit-only / context-only，不直接 task eligible。
+- Runtime 修改：
+  - 新增 task entry modes：
+    - `app_context_rule`
+    - `app_context_llm_rerank_online_mc`
+  - 新增 runtime env/config：
+    - `PROTO_APP_CONTEXT_PRIOR_PATH`
+    - `PROTO_TASK_OPPORTUNITY_MAPPING_PATH`
+  - 两个新路径继续禁止 validation artifact：
+    - 路径名包含 `validation` 会报错。
+    - artifact 标记 `uses_validation_data=true` 也会被底层 loader 拒绝。
+  - `app_context_rule` 流程：
+    - reference app-context prior
+    - stable sample `selected_app_context`
+    - 如果 context-only，写 audit 且不生成 task
+    - 如果 task-eligible，从 `task_opportunity_by_context` stable sample `mapped_task_family`
+    - 生成原有 `DigitalTask`
+  - `app_context_llm_rerank_online_mc` 流程：
+    - 第一遍先用 `app_context_rule` 产生 top-k candidate contexts。
+    - LLM 只允许从候选 app contexts 中选择 `selected_app_context`。
+    - prompt 明确：TalkingData 是 app-use context，不是 app-internal task；不要把 media/tool/taxonomy/unknown 脑补成 task-eligible context。
+    - 复用现有 rerank schedule/run-id 机制。
+- Audit 字段：
+  - `selected_app_context`
+  - `candidate_app_contexts`
+  - `rule_selected_app_context`
+  - `llm_selected_app_context`
+  - `final_selected_app_context`
+  - `rule_selected_prior`
+  - `llm_selected_prior`
+  - `final_selected_prior`
+  - `rule_task_eligible`
+  - `llm_task_eligible`
+  - `final_task_eligible`
+  - `changed_context_only_to_task_eligible`
+  - `changed_to_lower_prior`
+  - `prior_drop_from_rule_to_llm`
+  - `generated_task_family`
+  - `task_opportunity_distribution_json`
+  - `context_mapping_basis`
+  - `context_review_status`
+- Validation 修改：
+  - `validate_mobile_intention_exposure.py` 新增 app-context heldout 指标：
+    - `app_context_tvd`
+    - `app_context_js`
+    - `hourly_app_context_tvd`
+    - `task_eligible_context_mass_gap`
+    - `context_only_mass_gap`
+  - validation 脚本现在可以只用 v2 app-context validation directory；没有旧 `mobile_intention_prior_by_bucket_hour.json` 时，不再强制失败。
+  - 旧 mobile-intention target 存在时，旧指标仍继续输出，保持兼容。
+- Analysis 修改：
+  - `analysis_parallel_worlds.py` 的 mobile-entry summary 增加：
+    - `mobile_entry_top_app_contexts_json`
+  - run metadata 增加：
+    - `proto_app_context_prior_path`
+    - `proto_task_opportunity_mapping_path`
+  - world-runner config fingerprint 增加 app-context artifact paths。
+- 重新生成 artifact：
+  - 命令：
+    - `/opt/anaconda3/envs/agent_env/bin/python examples/digital_friction_mvp/clean_talkingdata_event_app_context.py --raw-dir /Users/pifazuoren/Downloads/talkingdata-mobile-user-demographics --output-dir examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context`
+  - 结果：成功生成包含 `task_opportunity_prior_by_context.json` 的 v2 event-app app-context artifacts。
+- 验证：
+  - 编译：
+    - `/opt/anaconda3/envs/agent_env/bin/python -m py_compile examples/digital_friction_mvp/clean_talkingdata_event_app_context.py examples/digital_friction_mvp/validate_mobile_intention_exposure.py examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/world_runner.py examples/digital_friction_mvp/main.py examples/digital_friction_mvp/analysis_parallel_worlds.py examples/digital_friction_mvp/proto/task_assignment.py examples/digital_friction_mvp/proto/runtime.py examples/digital_friction_mvp/proto/agent.py`
+    - 结果：通过，无输出
+  - focused tests：
+    - `/opt/anaconda3/envs/agent_env/bin/python -m pytest examples/digital_friction_mvp/tests/test_task_assignment.py examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_mobile_intention_validation.py -q`
+    - 结果：`60 passed`
+  - app-context validation smoke：
+    - 使用 `/private/tmp/app_context_validation_smoke/status.csv` 构造 1 行 simulated app-context entry。
+    - 命令：
+      - `/opt/anaconda3/envs/agent_env/bin/python examples/digital_friction_mvp/validate_mobile_intention_exposure.py --status-csv /private/tmp/app_context_validation_smoke/status.csv --validation-dir examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context --out-csv /private/tmp/app_context_validation_smoke/report.csv`
+    - 结果：成功输出 `app_context_tvd`、`app_context_js`、`hourly_app_context_tvd`、`task_eligible_context_mass_gap`、`context_only_mass_gap`。
+- 核心边界：
+  - 本轮没有把 validation prior 接入 runtime。
+  - 本轮没有让 TalkingData 直接决定 attempt strategy 或 outcome。
+  - 本轮没有让 app-context 影响 helplessness update、Bayesian/Huys update 或 support response。
+  - 新入口只是改变“什么时候生成什么 task family”，后续机制仍走原 pipeline。
+- 下一步建议：
+  - 先跑 1-day / 1-world `app_context_rule` smoke，检查：
+    - `selected_app_context` 分布
+    - `task_generated/evaluated`
+    - `context-only mass`
+    - `task_family` 分布
+  - 再考虑 `app_context_llm_rerank_online_mc` smoke，重点看 LLM 是否过度把 context-only 改成 task-eligible。
+
+## 2026-05-27 - App-Context LLM Rerank Top-K Safety Guard
+
+- 背景：
+  - 7-day / 4-world app-context LLM rerank 实验中，四个 world 都因 `app-context LLM rerank failed: out_of_set_app_context` 中途失败。
+  - 根因是 LLM 返回了一个合法总 app-context 类别，但该类别不在本次 top-k `allowed_app_contexts` 中。
+  - 这说明 LLM rerank 需要 bounded safety guard；LLM 可以建议，但不能越过 TalkingData prior / rule selection 的硬边界。
+- 修改文件：
+  - `examples/digital_friction_mvp/proto/agent.py`
+  - `examples/digital_friction_mvp/proto/task_assignment.py`
+  - `examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py`
+- 修改内容：
+  - 只修改 `app_context_llm_rerank_online_mc` 路径，不修改旧 `mobile_intention_llm_rerank_online_mc`。
+  - 继续复用现有参数：
+    - `PROTO_MOBILE_INTENTION_RERANK_TOP_K`
+    - `PROTO_MOBILE_INTENTION_RERANK_JSON_ATTEMPTS`
+    - `PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY`
+  - 不新增 env var，不新增全局 registry，不改 outcome / helplessness / Bayesian / Huys / FamilyHelperAgent。
+  - 当 `_query_json_payload` 多次尝试后仍返回不合规状态，且 policy 为 `accept_with_audit` 时：
+    - 不再 `raise ValueError`
+    - 回退到 `rule_selected_app_context`
+    - 写入 audit / schedule：
+      - `fallback_to_rule = true`
+      - `fallback_reason = <status>`
+      - `fallback_selected_app_context = rule_selected_app_context`
+      - `llm_drives_real_entry = false`
+      - `rerank_parse_status = <status>_fallback_to_rule`
+  - 当 policy 为 `fail_run` 时，仍保持严格失败。
+  - 保持 low-confidence 语义不变：
+    - `accept_with_audit` 仍接受低置信但候选内的 LLM 选择，并记录 `low_confidence_accepted`。
+    - `fail_run` 仍失败。
+- 重要实现细节：
+  - 实验日志显示 `rule_selected_app_context` 可能不在 top-k 候选里，因为 rule selection 是从完整 app-context distribution stable sample 出来的，而不是只从 top-k sample。
+  - 因此 fallback override 允许：
+    - `override == rule_selected_app_context`
+    - `fallback_to_rule == true`
+  - 这样可以尊重 rule prior，同时避免被 top-k override 校验再次拦住。
+- 运行建议：
+  - 新 app-context LLM rerank 实验建议显式设置：
+    - `PROTO_MOBILE_INTENTION_RERANK_TOP_K=10`
+  - 不改默认 top-k，避免旧实验可比性变化。
+- 验证：
+  - 编译：
+    - `/opt/anaconda3/envs/agent_env/bin/python -m py_compile examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/task_assignment.py examples/digital_friction_mvp/proto/runtime.py examples/digital_friction_mvp/config_runtime.py`
+    - 结果：通过，无输出
+  - focused tests：
+    - `/opt/anaconda3/envs/agent_env/bin/python -m pytest examples/digital_friction_mvp/tests/test_task_assignment.py examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py -q`
+    - 结果：`71 passed, 3 warnings`
+- 新增测试覆盖：
+  - app-context LLM 返回候选外 context，`accept_with_audit` 下 fallback 到 rule prior。
+  - app-context LLM 返回候选外 context，`fail_run` 下仍报错。
+  - `PROTO_MOBILE_INTENTION_RERANK_TOP_K=10` 会真实写入 audit / schedule，并产生 10 个候选。
+- 核心边界：
+  - fallback 是 bounded reranker safety guard，不是心理机制或业务机制。
+  - fallback 不直接影响 strategy、outcome、helplessness、Bayesian/Huys 或 support response。
+  - LLM 仍只是 constrained suggestion layer；TalkingData prior / rule selection 是最终安全边界。
+
+## 2026-05-27 - Trajectory Outcome Invalid Fallback Guard
+
+- 背景：
+  - `exp_20260527_app_context_rerank_1d_4world_smoke_seed101` 中，`app_context_llm_rerank_online_mc` 已不再因 `out_of_set_app_context` 失败。
+  - 但 `high_friction_high_assist` world 因 `trajectory_bounded_online_mc requires valid trajectory appraisal: invalid_schema` 失败。
+  - 根因是 trajectory LLM appraisal 虽已有 `PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS=5` retry/repair，但在严格 `fail_run` 模式下，若 5 次后仍无有效 schema，会杀掉整个 world。
+- 修改文件：
+  - `examples/digital_friction_mvp/config_runtime.py`
+  - `examples/digital_friction_mvp/proto/agent.py`
+  - `examples/digital_friction_mvp/proto/outcome_model.py`
+  - `examples/digital_friction_mvp/analysis_parallel_worlds.py`
+  - `examples/digital_friction_mvp/tests/test_runtime.py`
+  - `examples/digital_friction_mvp/tests/test_outcome_model.py`
+  - `examples/digital_friction_mvp/tests/test_mobile_intention_phase2_analysis.py`
+  - `frictionchangeLog.md`
+- 修改内容：
+  - `PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY` 新增合法值：
+    - `rule_fallback_with_audit`
+  - 默认仍为：
+    - `fail_run`
+  - `fail_run` 保持严格调试语义：invalid / low-confidence trajectory appraisal 继续失败。
+  - `rule_fallback_with_audit` 下：
+    - invalid / parse failed / request error / low-confidence trajectory appraisal 不参与 outcome fusion。
+    - outcome layer 明确回退到 rule-based outcome distribution。
+    - `final_distribution == rule_distribution`。
+    - `trajectory_alpha_effective = 0.0`。
+    - `trajectory_tvd_from_rule = 0.0`。
+    - `trajectory_status = <reason>_rule_fallback`。
+    - `trajectory_invalid_reason = <reason>`。
+    - `probability_audit_json.trajectory_audit.fallback_to_rule_distribution = true`。
+  - `agent.py` 只负责根据 runtime policy 决定是否提前 raise；fallback 的最终 distribution 和 audit 在 `outcome_model.py` 内完成。
+  - attempt row 现在显式写入：
+    - `trajectory_invalid_reason`
+    - `trajectory_json_attempts_configured`
+    - `trajectory_json_attempts_used`
+  - `analysis_parallel_worlds.py` 会把 `*_rule_fallback` trajectory status 计入 `trajectory_invalid_count`，用于长跑后审计 fallback 发生次数。
+- 论文口径：
+  - 这是 bounded outcome safety guard，不是心理机制，也不是 outcome 机制本身。
+  - 无效 trajectory appraisal 不允许改变 outcome distribution；系统退回 rule prior 并记录 incident。
+  - strict `fail_run` 仍可用于 debugging / schema hardening。
+- 验证：
+  - 编译：
+    - `/opt/anaconda3/envs/agent_env/bin/python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/outcome_model.py examples/digital_friction_mvp/analysis_parallel_worlds.py examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_mobile_intention_phase2_analysis.py`
+    - 结果：通过，无输出
+  - focused tests：
+    - `/opt/anaconda3/envs/agent_env/bin/python -m pytest examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_outcome_model.py examples/digital_friction_mvp/tests/test_trajectory_json_retry.py examples/digital_friction_mvp/tests/test_mobile_intention_phase2_analysis.py -q`
+    - 结果：`62 passed`
+- 核心边界：
+  - 本轮不修改 trajectory prompt/schema 本身。
+  - 本轮不修改 app-context entry、H update、Bayesian/Huys、FamilyHelperAgent。
+  - fallback 不生成新的 LLM outcome，只使用既有 rule-based prior。
+
+## 2026-05-28 - App-Context Task Occurrence Gate
+
+- 背景：
+  - `exp_20260527_app_context_rerank_baseline_7d_10agent_seed101` 显示 baseline-only 也生成了过密的 DigitalTask。
+  - 根因是 app-context 入口层把 task-eligible app context 几乎直接转成困难数字任务。
+  - 这会把 TalkingData 的 app-context exposure 误当成 app-internal difficult task occurrence。
+- 修改文件：
+  - `examples/digital_friction_mvp/config_runtime.py`
+  - `examples/digital_friction_mvp/main.py`
+  - `examples/digital_friction_mvp/world_runner.py`
+  - `examples/digital_friction_mvp/analysis_parallel_worlds.py`
+  - `examples/digital_friction_mvp/proto/runtime.py`
+  - `examples/digital_friction_mvp/proto/agent.py`
+  - `examples/digital_friction_mvp/proto/task_assignment.py`
+  - `examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/task_occurrence_prior_by_context.json`
+  - `examples/digital_friction_mvp/tests/test_runtime.py`
+  - `examples/digital_friction_mvp/tests/test_task_assignment.py`
+  - `examples/digital_friction_mvp/tests/test_mobile_intention_phase2_analysis.py`
+  - `frictionchangeLog.md`
+- 修改内容：
+  - 新增默认开启的 app-context Task Occurrence Gate：
+    - `PROTO_TASK_OCCURRENCE_GATE_ENABLED=true`
+    - `PROTO_TASK_OCCURRENCE_PRIOR_PATH=examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context/task_occurrence_prior_by_context.json`
+    - `PROTO_TASK_OCCURRENCE_GATE_MULTIPLIER=1.0`
+  - 新增 occurrence artifact：
+    - `finance_context=0.25`
+    - `public_service_context=0.25`
+    - `health_service_context=0.22`
+    - `shopping_lifestyle_context=0.18`
+    - `navigation_transport_context=0.18`
+    - `education_work_context=0.15`
+  - 在 app-context entry 内插入 gate：
+    - context-only app_context 不生成 DigitalTask。
+    - task-eligible app_context 先经过 deterministic gate。
+    - gate failed 时写 `entry_status=task_eligible_context_no_task`，不生成任务。
+    - gate passed 后才走现有 `task_opportunity_distribution -> DigitalTask`。
+  - gate roll 复用 stable hash，不引入新随机系统。
+  - gate 是 world-neutral；四个 world 的差异仍来自 task occurrence 之后的 friction/support/outcome。
+  - `agent.py` / `runtime.py` 只负责显式传参；`task_assignment.py` 不读取 runtime env。
+  - summary 新增：
+    - `task_eligible_context_exposure_count`
+    - `task_occurrence_gate_pass_count`
+    - `task_occurrence_gate_pass_rate`
+    - `task_eligible_context_no_task_count`
+    - `tasks_per_task_eligible_context_exposure`
+    - `task_occurrence_probability_mean`
+  - run metadata / config fingerprint 记录 gate enabled/path/multiplier。
+- 论文口径：
+  - TalkingData 只锚定 app-context exposure。
+  - Task Occurrence Gate 是 calibrated simulation layer，用来区分普通 app 使用和困难 DigitalTask。
+  - occurrence probability 不是 TalkingData 直接标签，也不是心理机制；必须报告 sensitivity。
+- 验证：
+  - 编译：
+    - `/opt/anaconda3/envs/agent_env/bin/python -m py_compile examples/digital_friction_mvp/config_runtime.py examples/digital_friction_mvp/main.py examples/digital_friction_mvp/analysis_parallel_worlds.py examples/digital_friction_mvp/proto/runtime.py examples/digital_friction_mvp/proto/agent.py examples/digital_friction_mvp/proto/task_assignment.py`
+    - 结果：通过，无输出
+  - focused tests：
+    - `/opt/anaconda3/envs/agent_env/bin/python -m pytest examples/digital_friction_mvp/tests/test_runtime.py examples/digital_friction_mvp/tests/test_task_assignment.py examples/digital_friction_mvp/tests/test_mobile_intention_phase2_analysis.py examples/digital_friction_mvp/tests/test_proto_agent_status_summary.py -q`
+    - 结果：`78 passed, 3 warnings`
+- 核心边界：
+  - 本轮不修改旧 `mobile_intention_*` entry 模式。
+  - 本轮不修改 outcome、helplessness update、Bayesian/Huys、FamilyHelperAgent。
+  - 如需复现旧 app-context 行为，显式设置 `PROTO_TASK_OCCURRENCE_GATE_ENABLED=false`。

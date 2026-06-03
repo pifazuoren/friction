@@ -58,11 +58,13 @@ from .state_update import apply_helplessness_update
 from .support_protocol import SupportRequest, SupportResponse
 from .task_assignment import (
     MobileEntryDecision,
+    app_context_candidate_hash,
     decode_task,
     encode_task,
     is_task_window_tick,
     mobile_intention_candidate_hash,
     skipped_mobile_entry_decision,
+    top_app_context_candidates,
     top_mobile_intention_candidates,
 )
 from .uncontrollability_calibrator import calibrate_uncontrollability
@@ -82,6 +84,11 @@ _SURVEY_SUMMARY_FIELDS = (
 )
 _MOBILE_ENTRY_LLM_SHADOW_KEYS = {
     "selected_mobile_intention",
+    "confidence",
+    "reason",
+}
+_APP_CONTEXT_LLM_RERANK_KEYS = {
+    "selected_app_context",
     "confidence",
     "reason",
 }
@@ -183,6 +190,33 @@ def _sanitize_mobile_entry_shadow(
     return (
         {
             "selected_mobile_intention": selected,
+            "confidence": confidence,
+            "reason": reason,
+        },
+        "ok",
+    )
+
+
+def _sanitize_app_context_rerank(
+    payload: Any,
+    *,
+    allowed_contexts: set[str],
+    min_confidence: float,
+) -> tuple[dict[str, Any] | None, str]:
+    if not isinstance(payload, dict):
+        return None, "invalid_schema"
+    selected = str(payload.get("selected_app_context", "")).strip()
+    if selected not in allowed_contexts:
+        return None, "out_of_set_app_context"
+    confidence = _clamp(
+        _safe_float(payload.get("confidence"), 0.0),
+        0.0,
+        1.0,
+    )
+    reason = _compact_status_note(payload.get("reason", ""), default="", max_chars=120)
+    return (
+        {
+            "selected_app_context": selected,
             "confidence": confidence,
             "reason": reason,
         },
@@ -897,6 +931,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     "selected_mobile_intention": (
                         entry_decision.selected_mobile_intention
                     ),
+                    "selected_app_context": entry_decision.selected_app_context,
                     "mapped_task_family": entry_decision.mapped_task_family,
                     "mapping_confidence": float(entry_decision.mapping_confidence),
                     "task_generated": bool(entry_decision.task_generated),
@@ -1266,6 +1301,180 @@ class DigitalHelplessnessAgent(SocietyAgent):
         )
         return payload
 
+    async def _build_app_context_entry_llm_rerank(
+        self,
+        *,
+        entry_decision: MobileEntryDecision,
+        runtime_config: Any,
+        stable_profile: dict[str, Any] | None,
+        day: int,
+        tick_seconds: float,
+    ) -> dict[str, Any]:
+        candidates = top_app_context_candidates(
+            entry_decision.candidate_app_contexts,
+            top_k=int(runtime_config.proto_mobile_intention_rerank_top_k),
+        )
+        allowed_contexts = set(candidates)
+        prompt_version = str(runtime_config.proto_mobile_intention_llm_prompt_version)
+        candidate_hash = app_context_candidate_hash(candidates)
+        payload = {
+            "rerank_enabled": True,
+            "entry_layer": "app_context",
+            "rerank_run_id": str(
+                getattr(runtime_config, "proto_mobile_intention_rerank_run_id", "")
+            ),
+            "rerank_prompt_version": prompt_version,
+            "rerank_top_k": int(runtime_config.proto_mobile_intention_rerank_top_k),
+            "rerank_json_attempts_configured": int(
+                getattr(runtime_config, "proto_mobile_intention_rerank_json_attempts", 5)
+            ),
+            "rerank_json_attempts_used": 0,
+            "rerank_candidate_app_contexts": dict(candidates),
+            "rerank_candidate_hash": candidate_hash,
+            "rule_selected_app_context": entry_decision.selected_app_context,
+            "rerank_selected_app_context": "",
+            "rerank_parse_status": "not_called",
+            "rerank_confidence": 0.0,
+            "rerank_reason": "",
+            "rerank_response_hash": "",
+            "llm_drives_real_entry": True,
+            "fallback_to_rule": False,
+            "fallback_reason": "",
+            "fallback_selected_app_context": "",
+            "uses_post_outcome_information": False,
+            "does_not_decide_strategy": True,
+            "does_not_decide_outcome": True,
+            "does_not_update_psychology": True,
+        }
+        if not candidates:
+            payload["rerank_parse_status"] = "no_candidates"
+            raise ValueError("app-context LLM rerank has no candidates")
+        if getattr(self, "llm", None) is None:
+            payload["rerank_parse_status"] = "request_error"
+            raise ValueError("app-context LLM rerank requires an LLM client")
+        user_payload = {
+            "prompt_version": prompt_version,
+            "day": int(day),
+            "tick_seconds": float(tick_seconds),
+            "hour": entry_decision.audit.get("hour"),
+            "agent_profile": stable_profile or {},
+            "profile_bucket": entry_decision.audit.get("profile_bucket", ""),
+            "candidate_app_contexts": candidates,
+            "rule_selected_app_context": entry_decision.selected_app_context,
+            "allowed_app_contexts": list(candidates),
+            "context_only_warning": (
+                "media, device-tool, communication, taxonomy-profile, and unknown "
+                "contexts are valid common outcomes. Do not convert them into "
+                "task-eligible contexts unless the candidate context prior and "
+                "profile evidence strongly support it."
+            ),
+            "output_schema_example": {
+                "selected_app_context": "finance_context",
+                "confidence": 0.80,
+                "reason": "Finance context is a high-prior candidate for this slot.",
+            },
+        }
+
+        def _sanitize_for_this_rerank(value: Any) -> tuple[dict[str, Any] | None, str]:
+            return _sanitize_app_context_rerank(
+                value,
+                allowed_contexts=allowed_contexts,
+                min_confidence=runtime_config.proto_mobile_intention_llm_min_confidence,
+            )
+
+        llm_payload, status = await _query_json_payload(
+            llm=getattr(self, "llm"),
+            system_prompt=(
+                "You are a JSON-only reranker for a constrained app-context entry "
+                "layer. Choose exactly one app context from candidate_app_contexts. "
+                "TalkingData indicates app-use context, not app-internal task steps. "
+                "Do not invent tasks, strategies, outcomes, help actions, or "
+                "psychological state updates."
+            ),
+            user_payload=user_payload,
+            output_keys=_APP_CONTEXT_LLM_RERANK_KEYS,
+            repair_schema_text=(
+                "- Return exactly selected_app_context, confidence, and reason\n"
+                "- selected_app_context must be one of allowed_app_contexts\n"
+                "- confidence must be a number in [0,1]\n"
+                "- reason must be short and must not include task outcomes, "
+                "strategies, or psychological state updates"
+            ),
+            sanitize_fn=_sanitize_for_this_rerank,
+            timeout=int(getattr(runtime_config, "proto_llm_psychology_timeout", 30)),
+            retries=int(getattr(runtime_config, "proto_llm_psychology_retries", 0)),
+            max_tokens=260,
+            json_attempts=int(
+                getattr(runtime_config, "proto_mobile_intention_rerank_json_attempts", 5)
+            ),
+            attempt_metadata_key="_rerank_json_attempts_used",
+        )
+        payload["rerank_parse_status"] = status
+        if llm_payload is None:
+            low_confidence_policy = str(
+                getattr(
+                    runtime_config,
+                    "proto_mobile_intention_rerank_low_confidence_policy",
+                    "fail_run",
+                )
+            ).strip().lower()
+            if low_confidence_policy != "accept_with_audit":
+                raise ValueError(f"app-context LLM rerank failed: {status}")
+            fallback_selected = str(entry_decision.selected_app_context or "").strip()
+            payload.update(
+                {
+                    "rerank_parse_status": f"{status}_fallback_to_rule",
+                    "rerank_selected_app_context": fallback_selected,
+                    "rerank_confidence": 0.0,
+                    "rerank_reason": (
+                        "LLM rerank did not return an allowed app_context; "
+                        "falling back to rule prior."
+                    ),
+                    "rerank_json_attempts_used": int(
+                        payload.get("rerank_json_attempts_configured", 1) or 1
+                    ),
+                    "llm_drives_real_entry": False,
+                    "fallback_to_rule": True,
+                    "fallback_reason": str(status),
+                    "fallback_selected_app_context": fallback_selected,
+                }
+            )
+            return payload
+        json_attempts_used = int(llm_payload.pop("_rerank_json_attempts_used", 1) or 1)
+        payload["rerank_json_attempts_used"] = json_attempts_used
+        selected = str(llm_payload.get("selected_app_context", "")).strip()
+        confidence = _clamp(_safe_float(llm_payload.get("confidence"), 0.0), 0.0, 1.0)
+        if confidence < float(runtime_config.proto_mobile_intention_llm_min_confidence):
+            low_confidence_policy = str(
+                getattr(
+                    runtime_config,
+                    "proto_mobile_intention_rerank_low_confidence_policy",
+                    "fail_run",
+                )
+            ).strip().lower()
+            payload["rerank_parse_status"] = (
+                "low_confidence_accepted"
+                if low_confidence_policy == "accept_with_audit"
+                else "low_confidence"
+            )
+            if low_confidence_policy != "accept_with_audit":
+                raise ValueError("app-context LLM rerank confidence below threshold")
+        payload.update(
+            {
+                "rerank_selected_app_context": selected,
+                "rerank_confidence": confidence,
+                "rerank_reason": str(llm_payload.get("reason", ""))[:120],
+                "rerank_response_hash": hashlib.sha256(
+                    json.dumps(
+                        llm_payload,
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    ).encode("utf-8")
+                ).hexdigest()[:16],
+            }
+        )
+        return payload
+
     async def _resolve_mobile_entry_rerank_override(
         self,
         *,
@@ -1306,6 +1515,63 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "selected_mobile_intention": selected,
             "confidence": float(audit.get("rerank_confidence", 0.0)),
             "parse_status": str(audit.get("rerank_parse_status", "")),
+            "json_attempts_configured": int(
+                audit.get("rerank_json_attempts_configured", 1) or 1
+            ),
+            "json_attempts_used": int(audit.get("rerank_json_attempts_used", 1) or 1),
+            "reason": str(audit.get("rerank_reason", ""))[:120],
+            "response_hash": str(audit.get("rerank_response_hash", "")),
+        }
+        _append_mobile_entry_rerank_schedule(schedule_path, row)
+        return selected, audit
+
+    async def _resolve_app_context_entry_rerank_override(
+        self,
+        *,
+        entry_decision: MobileEntryDecision,
+        runtime_config: Any,
+        stable_profile: dict[str, Any] | None,
+        day: int,
+        tick_seconds: float,
+    ) -> tuple[str, dict[str, Any]]:
+        run_id = str(getattr(runtime_config, "proto_mobile_intention_rerank_run_id", ""))
+        schedule_path = str(
+            getattr(runtime_config, "proto_mobile_intention_rerank_schedule_path", "")
+        )
+        candidates = top_app_context_candidates(
+            entry_decision.candidate_app_contexts,
+            top_k=int(runtime_config.proto_mobile_intention_rerank_top_k),
+        )
+        candidate_hash = app_context_candidate_hash(candidates)
+        audit = await DigitalHelplessnessAgent._build_app_context_entry_llm_rerank(
+            self,
+            entry_decision=entry_decision,
+            runtime_config=runtime_config,
+            stable_profile=stable_profile,
+            day=int(day),
+            tick_seconds=float(tick_seconds),
+        )
+        selected = str(audit.get("rerank_selected_app_context", "")).strip()
+        row = {
+            "run_id": run_id,
+            "entry_layer": "app_context",
+            "agent_id": int(self.id),
+            "day": int(day),
+            "tick_seconds": float(tick_seconds),
+            "profile_bucket": entry_decision.audit.get("profile_bucket", ""),
+            "prompt_version": str(runtime_config.proto_mobile_intention_llm_prompt_version),
+            "candidate_hash": candidate_hash,
+            "candidate_app_contexts": dict(candidates),
+            "rule_selected_app_context": entry_decision.selected_app_context,
+            "selected_app_context": selected,
+            "confidence": float(audit.get("rerank_confidence", 0.0)),
+            "parse_status": str(audit.get("rerank_parse_status", "")),
+            "fallback_to_rule": bool(audit.get("fallback_to_rule", False)),
+            "fallback_reason": str(audit.get("fallback_reason", "")),
+            "fallback_selected_app_context": str(
+                audit.get("fallback_selected_app_context", "")
+            ),
+            "llm_drives_real_entry": bool(audit.get("llm_drives_real_entry", True)),
             "json_attempts_configured": int(
                 audit.get("rerank_json_attempts_configured", 1) or 1
             ),
@@ -1879,6 +2145,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 "mobile_intention_rule"
                 if runtime_config.proto_task_entry_mode
                 == "mobile_intention_llm_rerank_online_mc"
+                else "app_context_rule"
+                if runtime_config.proto_task_entry_mode
+                == "app_context_llm_rerank_online_mc"
                 else runtime_config.proto_task_entry_mode
             ),
             stable_profile=entry_profile,
@@ -1886,8 +2155,23 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 runtime_config.proto_mobile_intention_calibration_path
             ),
             mapping_path=runtime_config.proto_mobile_intention_mapping_path,
+            app_context_prior_path=(
+                runtime_config.proto_app_context_prior_path
+            ),
+            task_opportunity_mapping_path=(
+                runtime_config.proto_task_opportunity_mapping_path
+            ),
             confidence_threshold=(
                 runtime_config.proto_mobile_intention_confidence_threshold
+            ),
+            task_occurrence_gate_enabled=(
+                runtime_config.proto_task_occurrence_gate_enabled
+            ),
+            task_occurrence_prior_path=(
+                runtime_config.proto_task_occurrence_prior_path
+            ),
+            task_occurrence_gate_multiplier=(
+                runtime_config.proto_task_occurrence_gate_multiplier
             ),
         )
         if (
@@ -1916,12 +2200,75 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     runtime_config.proto_mobile_intention_calibration_path
                 ),
                 mapping_path=runtime_config.proto_mobile_intention_mapping_path,
+                app_context_prior_path=(
+                    runtime_config.proto_app_context_prior_path
+                ),
+                task_opportunity_mapping_path=(
+                    runtime_config.proto_task_opportunity_mapping_path
+                ),
                 confidence_threshold=(
                     runtime_config.proto_mobile_intention_confidence_threshold
                 ),
                 selected_intention_override=selected_override,
                 rerank_audit_payload=rerank_audit,
                 rerank_top_k=int(runtime_config.proto_mobile_intention_rerank_top_k),
+                task_occurrence_gate_enabled=(
+                    runtime_config.proto_task_occurrence_gate_enabled
+                ),
+                task_occurrence_prior_path=(
+                    runtime_config.proto_task_occurrence_prior_path
+                ),
+                task_occurrence_gate_multiplier=(
+                    runtime_config.proto_task_occurrence_gate_multiplier
+                ),
+            )
+        if (
+            entry_decision is not None
+            and runtime_config.proto_task_entry_mode
+            == "app_context_llm_rerank_online_mc"
+        ):
+            selected_override, rerank_audit = (
+                await self._resolve_app_context_entry_rerank_override(
+                    entry_decision=entry_decision,
+                    runtime_config=runtime_config,
+                    stable_profile=entry_profile,
+                    day=int(day),
+                    tick_seconds=float(t),
+                )
+            )
+            task, task_updates, _, entry_decision = assign_task_with_entry_decision(
+                existing_task=None,
+                agent_id=int(self.id),
+                day=int(day),
+                tick_seconds=float(t),
+                env=env,
+                entry_mode=runtime_config.proto_task_entry_mode,
+                stable_profile=entry_profile,
+                calibration_path=(
+                    runtime_config.proto_mobile_intention_calibration_path
+                ),
+                mapping_path=runtime_config.proto_mobile_intention_mapping_path,
+                app_context_prior_path=(
+                    runtime_config.proto_app_context_prior_path
+                ),
+                task_opportunity_mapping_path=(
+                    runtime_config.proto_task_opportunity_mapping_path
+                ),
+                confidence_threshold=(
+                    runtime_config.proto_mobile_intention_confidence_threshold
+                ),
+                selected_intention_override=selected_override,
+                rerank_audit_payload=rerank_audit,
+                rerank_top_k=int(runtime_config.proto_mobile_intention_rerank_top_k),
+                task_occurrence_gate_enabled=(
+                    runtime_config.proto_task_occurrence_gate_enabled
+                ),
+                task_occurrence_prior_path=(
+                    runtime_config.proto_task_occurrence_prior_path
+                ),
+                task_occurrence_gate_multiplier=(
+                    runtime_config.proto_task_occurrence_gate_multiplier
+                ),
             )
         if entry_decision is not None:
             if runtime_config.proto_task_entry_mode == "mobile_intention_llm_shadow":
@@ -2226,10 +2573,21 @@ class DigitalHelplessnessAgent(SocietyAgent):
             if outcome_model_mode == "trajectory_bounded_online_mc" and str(
                 trajectory_result.get("status", "")
             ) not in {"ok", "ok_repaired"}:
-                raise ValueError(
-                    "trajectory_bounded_online_mc requires valid trajectory appraisal: "
-                    + str(trajectory_result.get("invalid_reason") or trajectory_result.get("status"))
+                invalid_policy = str(
+                    getattr(
+                        runtime_config,
+                        "proto_outcome_trajectory_invalid_policy",
+                        "fail_run",
+                    )
                 )
+                if invalid_policy != "rule_fallback_with_audit":
+                    raise ValueError(
+                        "trajectory_bounded_online_mc requires valid trajectory appraisal: "
+                        + str(
+                            trajectory_result.get("invalid_reason")
+                            or trajectory_result.get("status")
+                        )
+                    )
         outcome = resolve_attempt_outcome(
             task=task,
             strategy=strategy,
@@ -2249,6 +2607,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 "max_tvd": runtime_config.proto_outcome_trajectory_max_tvd,
                 "min_confidence": (
                     runtime_config.proto_outcome_trajectory_min_confidence
+                ),
+                "invalid_policy": (
+                    runtime_config.proto_outcome_trajectory_invalid_policy
                 ),
             },
             support_response=support_response,
@@ -2703,6 +3064,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "trajectory_status": str(outcome.trajectory_status),
             "trajectory_confidence": float(outcome.trajectory_confidence),
             "trajectory_tvd_from_rule": float(outcome.trajectory_tvd_from_rule),
+            "trajectory_invalid_reason": str(outcome.trajectory_invalid_reason),
+            "trajectory_json_attempts_configured": int(
+                outcome.trajectory_json_attempts_configured
+            ),
+            "trajectory_json_attempts_used": int(outcome.trajectory_json_attempts_used),
             "strategy_weights_json": json.dumps(strategy.weights, ensure_ascii=False),
             "payload_json": json.dumps(
                 {

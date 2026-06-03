@@ -752,6 +752,159 @@ def test_mobile_entry_llm_rerank_rejects_invalid_json_before_audit_write(
     assert not schedule.exists()
 
 
+def test_app_context_llm_rerank_falls_back_to_rule_on_out_of_set(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    schedule = tmp_path / "app_context_rerank_fallback.jsonl"
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "app_context_llm_rerank_online_mc")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH", str(schedule))
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_RUN_ID", "app-context-fallback")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_TOP_K", "5")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_JSON_ATTEMPTS", "3")
+    monkeypatch.setenv(
+        "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY",
+        "accept_with_audit",
+    )
+    monkeypatch.setenv("PROTO_LLM_PSYCHOLOGY_RETRIES", "0")
+    config = __import__("config_runtime").load_runtime_config()
+    decision = evaluate_mobile_entry_for_agent(
+        agent_id=7,
+        day=1,
+        tick_seconds=28800.0,
+        env={},
+        entry_mode="app_context_rule",
+        calibration_path="",
+    )
+    agent = _FakeAgent(
+        llm=_DummyLLM(
+            '{"selected_app_context":"public_service_context",'
+            '"confidence":0.95,"reason":"not in top-k candidate set"}'
+        )
+    )
+
+    selected, audit = asyncio.run(
+        DigitalHelplessnessAgent._resolve_app_context_entry_rerank_override(
+            agent,
+            entry_decision=decision,
+            runtime_config=config,
+            stable_profile={"age": 70, "gender": "female"},
+            day=1,
+            tick_seconds=28800.0,
+        )
+    )
+
+    assert selected == decision.selected_app_context
+    assert audit["fallback_to_rule"] is True
+    assert audit["fallback_reason"] == "out_of_set_app_context"
+    assert audit["fallback_selected_app_context"] == decision.selected_app_context
+    assert audit["llm_drives_real_entry"] is False
+    assert audit["rerank_parse_status"] == "out_of_set_app_context_fallback_to_rule"
+    assert audit["rerank_json_attempts_configured"] == 3
+    assert audit["rerank_json_attempts_used"] == 3
+    row = json.loads(schedule.read_text(encoding="utf-8").strip())
+    assert row["fallback_to_rule"] is True
+    assert row["fallback_reason"] == "out_of_set_app_context"
+    assert row["selected_app_context"] == decision.selected_app_context
+    assert row["llm_drives_real_entry"] is False
+
+
+def test_app_context_llm_rerank_strict_mode_still_fails_on_out_of_set(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    schedule = tmp_path / "app_context_strict_missing.jsonl"
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "app_context_llm_rerank_online_mc")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH", str(schedule))
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_RUN_ID", "app-context-strict")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_TOP_K", "5")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_JSON_ATTEMPTS", "3")
+    monkeypatch.setenv(
+        "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY",
+        "fail_run",
+    )
+    monkeypatch.setenv("PROTO_LLM_PSYCHOLOGY_RETRIES", "0")
+    config = __import__("config_runtime").load_runtime_config()
+    decision = evaluate_mobile_entry_for_agent(
+        agent_id=7,
+        day=1,
+        tick_seconds=28800.0,
+        env={},
+        entry_mode="app_context_rule",
+        calibration_path="",
+    )
+    agent = _FakeAgent(
+        llm=_DummyLLM(
+            '{"selected_app_context":"public_service_context",'
+            '"confidence":0.95,"reason":"not in top-k candidate set"}'
+        )
+    )
+
+    try:
+        asyncio.run(
+            DigitalHelplessnessAgent._resolve_app_context_entry_rerank_override(
+                agent,
+                entry_decision=decision,
+                runtime_config=config,
+                stable_profile={"age": 70, "gender": "female"},
+                day=1,
+                tick_seconds=28800.0,
+            )
+        )
+    except ValueError as exc:
+        assert "out_of_set_app_context" in str(exc)
+    else:
+        raise AssertionError("strict app-context rerank should fail on out-of-set")
+    assert not schedule.exists()
+
+
+def test_app_context_llm_rerank_top_k_ten_is_recorded(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    schedule = tmp_path / "app_context_top10.jsonl"
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "app_context_llm_rerank_online_mc")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH", str(schedule))
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_RUN_ID", "app-context-top10")
+    monkeypatch.setenv("PROTO_MOBILE_INTENTION_RERANK_TOP_K", "10")
+    monkeypatch.setenv("PROTO_LLM_PSYCHOLOGY_RETRIES", "0")
+    config = __import__("config_runtime").load_runtime_config()
+    decision = evaluate_mobile_entry_for_agent(
+        agent_id=7,
+        day=1,
+        tick_seconds=28800.0,
+        env={},
+        entry_mode="app_context_rule",
+        calibration_path="",
+    )
+    selected_context = next(iter(decision.candidate_app_contexts))
+    agent = _FakeAgent(
+        llm=_DummyLLM(
+            '{"selected_app_context":"'
+            + selected_context
+            + '","confidence":0.95,"reason":"top-k candidate"}'
+        )
+    )
+
+    selected, audit = asyncio.run(
+        DigitalHelplessnessAgent._resolve_app_context_entry_rerank_override(
+            agent,
+            entry_decision=decision,
+            runtime_config=config,
+            stable_profile={"age": 70, "gender": "female"},
+            day=1,
+            tick_seconds=28800.0,
+        )
+    )
+
+    assert selected == selected_context
+    assert audit["rerank_top_k"] == 10
+    assert len(audit["rerank_candidate_app_contexts"]) == 10
+    row = json.loads(schedule.read_text(encoding="utf-8").strip())
+    assert len(row["candidate_app_contexts"]) == 10
+    assert row["fallback_to_rule"] is False
+
+
 def test_before_forward_keeps_minimal_motion_sync_when_logical_clock_enabled() -> None:
     agent = _FakeAgent()
 

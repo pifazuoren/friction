@@ -489,6 +489,88 @@ def test_trajectory_bounded_online_mc_rejects_low_confidence() -> None:
         raise AssertionError("low-confidence trajectory should fail run")
 
 
+def test_trajectory_bounded_online_mc_invalid_falls_back_to_rule_with_audit() -> None:
+    rule_outcome = resolve_attempt_outcome(
+        task=_payment_task(),
+        strategy=AttemptStrategy("attempt_self"),
+        helplessness=61,
+        env={"risk_level": 2},
+        consecutive_failures=1,
+        rng=random.Random(11),
+        outcome_model_mode="appraisal_rule_v2",
+        task_appraisal=_task_appraisal(),
+        memory_features=_memory_features(),
+    )
+    fallback_outcome = resolve_attempt_outcome(
+        task=_payment_task(),
+        strategy=AttemptStrategy("attempt_self"),
+        helplessness=61,
+        env={"risk_level": 2},
+        consecutive_failures=1,
+        rng=random.Random(11),
+        outcome_model_mode="trajectory_bounded_online_mc",
+        task_appraisal=_task_appraisal(),
+        memory_features=_memory_features(),
+        trajectory_result={
+            "status": "invalid_schema",
+            "invalid_reason": "invalid_schema",
+            "trajectory_confidence": 0.0,
+            "trajectory_json_attempts_configured": 5,
+            "trajectory_json_attempts_used": 5,
+        },
+        trajectory_config={
+            "alpha": 0.5,
+            "max_outcome_shift": 0.08,
+            "max_tvd": 0.10,
+            "min_confidence": 0.65,
+            "invalid_policy": "rule_fallback_with_audit",
+        },
+    )
+
+    assert fallback_outcome.outcome_model_mode == "trajectory_bounded_online_mc"
+    assert fallback_outcome.outcome_type == rule_outcome.outcome_type
+    assert fallback_outcome.final_distribution_json == rule_outcome.final_distribution_json
+    assert fallback_outcome.rule_distribution_json == rule_outcome.rule_distribution_json
+    assert fallback_outcome.trajectory_status == "invalid_schema_rule_fallback"
+    assert fallback_outcome.trajectory_invalid_reason == "invalid_schema"
+    assert fallback_outcome.trajectory_alpha_effective == 0.0
+    assert fallback_outcome.trajectory_tvd_from_rule == 0.0
+    assert fallback_outcome.trajectory_json_attempts_used == 5
+    assert "trajectory_bounded_online_mc_rule_fallback" in fallback_outcome.note
+
+
+def test_trajectory_bounded_online_mc_low_confidence_fallback_is_explicit() -> None:
+    outcome = resolve_attempt_outcome(
+        task=_payment_task(),
+        strategy=AttemptStrategy("attempt_self"),
+        helplessness=61,
+        env={"risk_level": 2},
+        consecutive_failures=1,
+        rng=random.Random(11),
+        outcome_model_mode="trajectory_bounded_online_mc",
+        task_appraisal=_task_appraisal(),
+        memory_features=_memory_features(),
+        trajectory_result={
+            "status": "low_confidence",
+            "invalid_reason": "low_confidence",
+            "trajectory_confidence": 0.2,
+            "trajectory_outcome_tendency": {
+                "success_self": 0.4,
+                "failure_after_attempt": 0.4,
+                "abandon_midway": 0.2,
+            },
+        },
+        trajectory_config={
+            "min_confidence": 0.65,
+            "invalid_policy": "rule_fallback_with_audit",
+        },
+    )
+
+    assert outcome.trajectory_status == "low_confidence_rule_fallback"
+    assert outcome.trajectory_invalid_reason == "low_confidence"
+    assert outcome.trajectory_alpha_effective == 0.0
+
+
 def test_support_quality_mapping() -> None:
     assert support_quality_from_env(
         {"assist_level": 0, "human_support_level": 0, "accessibility_level": 0}

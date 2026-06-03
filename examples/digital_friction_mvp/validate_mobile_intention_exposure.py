@@ -30,6 +30,30 @@ TASK_FAMILIES = (
     "profile_form_upload",
     "navigation_service_location",
 )
+APP_CONTEXTS = (
+    "finance_context",
+    "finance_candidate_review",
+    "public_service_context",
+    "health_service_context",
+    "shopping_lifestyle_context",
+    "navigation_transport_context",
+    "communication_social_context",
+    "media_entertainment_context",
+    "device_tool_context",
+    "education_work_context",
+    "taxonomy_profile_only",
+    "unknown_or_unmapped",
+)
+TASK_ELIGIBLE_APP_CONTEXTS = frozenset(
+    {
+        "finance_context",
+        "public_service_context",
+        "health_service_context",
+        "shopping_lifestyle_context",
+        "navigation_transport_context",
+        "education_work_context",
+    }
+)
 
 
 def _load_json(raw_value: Any) -> Any:
@@ -87,6 +111,15 @@ def _target_task_distribution(targets: dict[str, Any]) -> dict[str, float]:
     return {key: float(values.get(key, 0.0)) for key in TASK_FAMILIES}
 
 
+def _target_app_context_distribution(targets: dict[str, Any]) -> dict[str, float]:
+    global_prior = targets.get("global_prior", {})
+    if isinstance(global_prior, dict):
+        values = global_prior.get("p_app_context", global_prior)
+        if isinstance(values, dict):
+            return {key: float(values.get(key, 0.0)) for key in APP_CONTEXTS}
+    return {key: 0.0 for key in APP_CONTEXTS}
+
+
 def _load_task_targets(validation_dir: Path) -> dict[str, Any]:
     path = validation_dir / "task_family_opportunity_prior.json"
     if not path.exists():
@@ -95,9 +128,25 @@ def _load_task_targets(validation_dir: Path) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def _load_intention_targets(validation_dir: Path) -> dict[str, Any]:
+def _load_app_context_targets(validation_dir: Path) -> dict[str, Any]:
+    path = validation_dir / "app_context_prior_by_bucket_hour_validation.json"
+    if not path.exists():
+        path = validation_dir / "app_context_prior_by_bucket_hour.json"
+    if not path.exists():
+        return {}
+    payload = _load_json(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"app-context validation target must be a JSON object: {path}")
+    if not bool(payload.get("uses_validation_data", False)):
+        raise ValueError("held-out app-context target must be marked uses_validation_data=true")
+    return payload
+
+
+def _load_intention_targets(validation_dir: Path, *, required: bool = True) -> dict[str, Any]:
     path = validation_dir / "mobile_intention_prior_by_bucket_hour.json"
     if not path.exists():
+        if not required:
+            return {}
         raise FileNotFoundError(f"validation target not found: {path}")
     payload = _load_json(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
@@ -114,6 +163,8 @@ def _load_simulated_distributions(
     dict[str, float],
     dict[str, float],
     dict[str, float],
+    dict[str, float],
+    dict[str, float],
     int,
     int,
 ]:
@@ -121,6 +172,8 @@ def _load_simulated_distributions(
     task_counts: Counter[str] = Counter()
     hour_counts: Counter[str] = Counter()
     entry_hour_counts: Counter[str] = Counter()
+    app_context_counts: Counter[str] = Counter()
+    app_context_hour_counts: Counter[str] = Counter()
     evaluated_count = 0
     task_generated_count = 0
     with status_csv.open("r", encoding="utf-8", newline="") as handle:
@@ -141,6 +194,12 @@ def _load_simulated_distributions(
             if bool(decision.get("task_generated", False)):
                 task_generated_count += 1
                 entry_hour_counts[hour] += 1
+            app_context = str(decision.get("selected_app_context", "") or "").strip()
+            if not app_context and isinstance(audit, dict):
+                app_context = str(audit.get("final_selected_app_context", "") or "").strip()
+            if app_context in APP_CONTEXTS:
+                app_context_counts[app_context] += 1
+                app_context_hour_counts[hour] += 1
             intention = str(decision.get("selected_mobile_intention", "")).strip()
             if intention in MOBILE_INTENTIONS:
                 intention_counts[intention] += 1
@@ -157,24 +216,33 @@ def _load_simulated_distributions(
         _normalize(task_counts, TASK_FAMILIES),
         _normalize(hour_counts, hours),
         _normalize(entry_hour_counts, hours),
+        _normalize(app_context_counts, APP_CONTEXTS),
+        _normalize(app_context_hour_counts, hours),
         evaluated_count,
         task_generated_count,
     )
 
 
 def write_validation_report(status_csv: Path, validation_dir: Path, out_csv: Path) -> None:
-    intention_targets = _load_intention_targets(validation_dir)
+    app_context_targets = _load_app_context_targets(validation_dir)
+    intention_targets = _load_intention_targets(
+        validation_dir,
+        required=not bool(app_context_targets),
+    )
     task_targets = _load_task_targets(validation_dir)
     (
         sim_intentions,
         sim_tasks,
         _sim_hours,
         sim_entry_hours,
+        sim_app_contexts,
+        sim_app_context_hours,
         evaluated_count,
         task_generated_count,
     ) = _load_simulated_distributions(status_csv)
     target_intentions = _target_intention_distribution(intention_targets)
     target_tasks = _target_task_distribution(task_targets)
+    target_app_contexts = _target_app_context_distribution(app_context_targets)
     target_hours = {
         str(hour): float(
             intention_targets.get("global_hourly_prior", {})
@@ -188,53 +256,67 @@ def write_validation_report(status_csv: Path, validation_dir: Path, out_csv: Pat
         key: max(0.0, 1.0 - float(value)) for key, value in target_hours.items()
     }
     target_mobile_hours = _normalize(Counter(target_mobile_hours), tuple(str(hour) for hour in range(24)))
+    target_app_context_hours: dict[str, float] = {}
+    if app_context_targets:
+        for hour in range(24):
+            row = app_context_targets.get("global_hourly_prior", {}).get(str(hour), {})
+            if isinstance(row, dict):
+                target_app_context_hours[str(hour)] = float(row.get("context_count", 0.0))
+            else:
+                target_app_context_hours[str(hour)] = 0.0
+        target_app_context_hours = _normalize(
+            Counter(target_app_context_hours),
+            tuple(str(hour) for hour in range(24)),
+        )
     hours = tuple(str(hour) for hour in range(24))
     out_csv.parent.mkdir(parents=True, exist_ok=True)
     with out_csv.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=["metric", "value"])
         writer.writeheader()
-        writer.writerow(
-            {
-                "metric": "mobile_intention_tvd",
-                "value": f"{_tvd(sim_intentions, target_intentions, MOBILE_INTENTIONS):.6f}",
-            }
-        )
-        writer.writerow(
-            {
-                "metric": "mobile_intention_js",
-                "value": f"{_js(sim_intentions, target_intentions, MOBILE_INTENTIONS):.6f}",
-            }
-        )
-        writer.writerow(
-            {
-                "metric": "task_family_opportunity_tvd",
-                "value": f"{_tvd(sim_tasks, target_tasks, TASK_FAMILIES):.6f}",
-            }
-        )
-        writer.writerow(
-            {
-                "metric": "task_family_opportunity_js",
-                "value": f"{_js(sim_tasks, target_tasks, TASK_FAMILIES):.6f}",
-            }
-        )
-        writer.writerow(
-            {
-                "metric": "hourly_mobile_activity_tvd",
-                "value": f"{_tvd(sim_entry_hours, target_mobile_hours, hours):.6f}",
-            }
-        )
-        writer.writerow(
-            {
-                "metric": "sim_unknown_or_unmapped_mass",
-                "value": f"{sim_intentions.get('unknown_or_unmapped', 0.0):.6f}",
-            }
-        )
-        writer.writerow(
-            {
-                "metric": "target_unknown_or_unmapped_mass",
-                "value": f"{target_intentions.get('unknown_or_unmapped', 0.0):.6f}",
-            }
-        )
+        if intention_targets:
+            writer.writerow(
+                {
+                    "metric": "mobile_intention_tvd",
+                    "value": f"{_tvd(sim_intentions, target_intentions, MOBILE_INTENTIONS):.6f}",
+                }
+            )
+            writer.writerow(
+                {
+                    "metric": "mobile_intention_js",
+                    "value": f"{_js(sim_intentions, target_intentions, MOBILE_INTENTIONS):.6f}",
+                }
+            )
+            writer.writerow(
+                {
+                    "metric": "hourly_mobile_activity_tvd",
+                    "value": f"{_tvd(sim_entry_hours, target_mobile_hours, hours):.6f}",
+                }
+            )
+            writer.writerow(
+                {
+                    "metric": "sim_unknown_or_unmapped_mass",
+                    "value": f"{sim_intentions.get('unknown_or_unmapped', 0.0):.6f}",
+                }
+            )
+            writer.writerow(
+                {
+                    "metric": "target_unknown_or_unmapped_mass",
+                    "value": f"{target_intentions.get('unknown_or_unmapped', 0.0):.6f}",
+                }
+            )
+        if task_targets:
+            writer.writerow(
+                {
+                    "metric": "task_family_opportunity_tvd",
+                    "value": f"{_tvd(sim_tasks, target_tasks, TASK_FAMILIES):.6f}",
+                }
+            )
+            writer.writerow(
+                {
+                    "metric": "task_family_opportunity_js",
+                    "value": f"{_js(sim_tasks, target_tasks, TASK_FAMILIES):.6f}",
+                }
+            )
         writer.writerow(
             {
                 "metric": "sim_task_generated_per_evaluated_entry",
@@ -245,6 +327,45 @@ def write_validation_report(status_csv: Path, validation_dir: Path, out_csv: Pat
                 ),
             }
         )
+        if app_context_targets:
+            writer.writerow(
+                {
+                    "metric": "app_context_tvd",
+                    "value": f"{_tvd(sim_app_contexts, target_app_contexts, APP_CONTEXTS):.6f}",
+                }
+            )
+            writer.writerow(
+                {
+                    "metric": "app_context_js",
+                    "value": f"{_js(sim_app_contexts, target_app_contexts, APP_CONTEXTS):.6f}",
+                }
+            )
+            writer.writerow(
+                {
+                    "metric": "hourly_app_context_tvd",
+                    "value": f"{_tvd(sim_app_context_hours, target_app_context_hours, hours):.6f}",
+                }
+            )
+            sim_task_eligible_mass = sum(
+                float(sim_app_contexts.get(context, 0.0))
+                for context in TASK_ELIGIBLE_APP_CONTEXTS
+            )
+            target_task_eligible_mass = sum(
+                float(target_app_contexts.get(context, 0.0))
+                for context in TASK_ELIGIBLE_APP_CONTEXTS
+            )
+            writer.writerow(
+                {
+                    "metric": "task_eligible_context_mass_gap",
+                    "value": f"{(sim_task_eligible_mass - target_task_eligible_mass):.6f}",
+                }
+            )
+            writer.writerow(
+                {
+                    "metric": "context_only_mass_gap",
+                    "value": f"{((1.0 - sim_task_eligible_mass) - (1.0 - target_task_eligible_mass)):.6f}",
+                }
+            )
 
 
 def main() -> None:

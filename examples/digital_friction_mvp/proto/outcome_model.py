@@ -907,6 +907,19 @@ def _trajectory_config_value(
     return trajectory_config.get(key, default)
 
 
+def _trajectory_invalid_fallback_enabled(
+    trajectory_config: dict[str, Any] | None,
+) -> bool:
+    return (
+        str(_trajectory_config_value(trajectory_config, "invalid_policy", "fail_run"))
+        == "rule_fallback_with_audit"
+    )
+
+
+def _is_valid_trajectory_status(status: str) -> bool:
+    return str(status) in {"ok", "ok_repaired"}
+
+
 def _outcome_from_distribution(
     *,
     task: DigitalTask,
@@ -1127,12 +1140,6 @@ def _resolve_attempt_outcome_trajectory_bounded_online_mc(
         )
     if not isinstance(trajectory_result, dict):
         raise ValueError("trajectory_bounded_online_mc requires trajectory_result")
-    min_confidence = float(
-        _trajectory_config_value(trajectory_config, "min_confidence", 0.65)
-    )
-    confidence = float(trajectory_result.get("trajectory_confidence", 0.0) or 0.0)
-    if confidence < min_confidence:
-        raise ValueError("trajectory confidence below configured threshold")
     outcome_appraisal, rule_distribution = build_rule_outcome_distribution_v2(
         task=task,
         strategy=strategy,
@@ -1143,6 +1150,52 @@ def _resolve_attempt_outcome_trajectory_bounded_online_mc(
         memory_features=memory_features,
         support_response=support_response,
     )
+    status = str(trajectory_result.get("status", "") or "")
+    min_confidence = float(
+        _trajectory_config_value(trajectory_config, "min_confidence", 0.65)
+    )
+    confidence = float(trajectory_result.get("trajectory_confidence", 0.0) or 0.0)
+    if not _is_valid_trajectory_status(status) or confidence < min_confidence:
+        if not _trajectory_invalid_fallback_enabled(trajectory_config):
+            if confidence < min_confidence:
+                raise ValueError("trajectory confidence below configured threshold")
+            raise ValueError("trajectory_bounded_online_mc requires valid trajectory_result")
+        fallback_reason = str(
+            trajectory_result.get("invalid_reason")
+            or status
+            or ("low_confidence" if confidence < min_confidence else "invalid_schema")
+        )
+        trajectory_result = {
+            **trajectory_result,
+            "status": f"{fallback_reason}_rule_fallback",
+            "invalid_reason": fallback_reason,
+            "trajectory_invalid_fallback_used": True,
+            "trajectory_invalid_fallback_reason": fallback_reason,
+        }
+        trajectory_audit = {
+            "alpha_requested": float(
+                _trajectory_config_value(trajectory_config, "alpha", 0.10)
+            ),
+            "alpha_effective": 0.0,
+            "tvd_from_rule": 0.0,
+            "fallback_to_rule_distribution": True,
+            "fallback_reason": fallback_reason,
+        }
+        return _outcome_from_distribution(
+            task=task,
+            strategy=strategy,
+            env=env,
+            consecutive_failures=consecutive_failures,
+            distribution=rule_distribution,
+            rule_distribution=rule_distribution,
+            rng=rng,
+            outcome_model_mode="trajectory_bounded_online_mc",
+            note_prefix="trajectory_bounded_online_mc_rule_fallback",
+            outcome_appraisal=outcome_appraisal,
+            trajectory_result=trajectory_result,
+            trajectory_audit=trajectory_audit,
+            support_response=support_response,
+        )
     allowed_keys = allowed_outcome_keys_for_strategy(strategy)
     trajectory_distribution = trajectory_result.get("trajectory_outcome_tendency")
     if not isinstance(trajectory_distribution, dict):

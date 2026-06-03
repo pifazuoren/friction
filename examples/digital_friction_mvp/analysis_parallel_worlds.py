@@ -296,7 +296,7 @@ def _compute_world_proto_metrics(
             "invalid_probability_sum",
             "invalid_outcome_keys",
             "banned_phrase",
-        }:
+        } or trajectory_status.endswith("_rule_fallback"):
             trajectory_invalid_count += 1
         if trajectory_status == "low_confidence":
             trajectory_low_confidence_count += 1
@@ -422,7 +422,14 @@ def _compute_mobile_entry_metrics(
             "mobile_entry_noop_count": 0,
             "mobile_entry_context_count": 0,
             "mobile_entry_task_generated_rate": 0.0,
+            "task_eligible_context_exposure_count": 0,
+            "task_occurrence_gate_pass_count": 0,
+            "task_occurrence_gate_pass_rate": 0.0,
+            "task_eligible_context_no_task_count": 0,
+            "tasks_per_task_eligible_context_exposure": 0.0,
+            "task_occurrence_probability_mean": 0.0,
             "mobile_entry_top_intentions_json": "{}",
+            "mobile_entry_top_app_contexts_json": "{}",
             "mobile_entry_mapped_task_families_json": "{}",
         }
     rows = cur.execute(
@@ -434,11 +441,16 @@ def _compute_mobile_entry_metrics(
     ).fetchall()
     seen: set[tuple[int, int, int]] = set()
     intention_counts: Counter[str] = Counter()
+    app_context_counts: Counter[str] = Counter()
     task_family_counts: Counter[str] = Counter()
     eval_count = 0
     task_generated_count = 0
     noop_count = 0
     context_count = 0
+    task_eligible_context_exposure_count = 0
+    task_occurrence_gate_pass_count = 0
+    task_eligible_context_no_task_count = 0
+    task_occurrence_probability_values: list[float] = []
     for agent_id, row_day, row_t, raw_status in rows:
         try:
             status = json.loads(raw_status or "{}")
@@ -466,6 +478,11 @@ def _compute_mobile_entry_metrics(
         selected = str(decision.get("selected_mobile_intention", "")).strip()
         if selected:
             intention_counts[selected] += 1
+        selected_context = str(decision.get("selected_app_context", "") or "").strip()
+        if not selected_context:
+            selected_context = str(audit.get("final_selected_app_context", "") or "").strip()
+        if selected_context:
+            app_context_counts[selected_context] += 1
         mapped_family = str(decision.get("mapped_task_family", "") or "").strip()
         if mapped_family:
             task_family_counts[mapped_family] += 1
@@ -476,15 +493,49 @@ def _compute_mobile_entry_metrics(
         entry_status = str(decision.get("entry_status", "")).strip()
         if entry_status.endswith("_context_only"):
             context_count += 1
+        if bool(audit.get("task_eligible_context_exposure", False)):
+            task_eligible_context_exposure_count += 1
+            task_occurrence_probability_values.append(
+                _safe_float(audit.get("task_occurrence_probability"), 0.0)
+            )
+        if bool(audit.get("task_occurrence_gate_passed", False)):
+            task_occurrence_gate_pass_count += 1
+        if entry_status == "task_eligible_context_no_task":
+            task_eligible_context_no_task_count += 1
     denominator = max(1, eval_count)
+    task_eligible_denominator = max(1, task_eligible_context_exposure_count)
     return {
         "mobile_entry_eval_count": int(eval_count),
         "mobile_entry_task_generated_count": int(task_generated_count),
         "mobile_entry_noop_count": int(noop_count),
         "mobile_entry_context_count": int(context_count),
         "mobile_entry_task_generated_rate": float(task_generated_count / denominator),
+        "task_eligible_context_exposure_count": int(
+            task_eligible_context_exposure_count
+        ),
+        "task_occurrence_gate_pass_count": int(task_occurrence_gate_pass_count),
+        "task_occurrence_gate_pass_rate": float(
+            task_occurrence_gate_pass_count / task_eligible_denominator
+        ),
+        "task_eligible_context_no_task_count": int(
+            task_eligible_context_no_task_count
+        ),
+        "tasks_per_task_eligible_context_exposure": float(
+            task_generated_count / task_eligible_denominator
+        ),
+        "task_occurrence_probability_mean": float(
+            sum(task_occurrence_probability_values)
+            / len(task_occurrence_probability_values)
+            if task_occurrence_probability_values
+            else 0.0
+        ),
         "mobile_entry_top_intentions_json": json.dumps(
             dict(sorted(intention_counts.items())),
+            ensure_ascii=False,
+            sort_keys=True,
+        ),
+        "mobile_entry_top_app_contexts_json": json.dumps(
+            dict(sorted(app_context_counts.items())),
             ensure_ascii=False,
             sort_keys=True,
         ),
@@ -779,8 +830,40 @@ def main() -> None:
                     ),
                     6,
                 ),
+                "task_eligible_context_exposure_count": _safe_int(
+                    mobile_entry_metrics["task_eligible_context_exposure_count"], 0
+                ),
+                "task_occurrence_gate_pass_count": _safe_int(
+                    mobile_entry_metrics["task_occurrence_gate_pass_count"], 0
+                ),
+                "task_occurrence_gate_pass_rate": round(
+                    _safe_float(
+                        mobile_entry_metrics["task_occurrence_gate_pass_rate"]
+                    ),
+                    6,
+                ),
+                "task_eligible_context_no_task_count": _safe_int(
+                    mobile_entry_metrics["task_eligible_context_no_task_count"], 0
+                ),
+                "tasks_per_task_eligible_context_exposure": round(
+                    _safe_float(
+                        mobile_entry_metrics[
+                            "tasks_per_task_eligible_context_exposure"
+                        ]
+                    ),
+                    6,
+                ),
+                "task_occurrence_probability_mean": round(
+                    _safe_float(
+                        mobile_entry_metrics["task_occurrence_probability_mean"]
+                    ),
+                    6,
+                ),
                 "mobile_entry_top_intentions_json": str(
                     mobile_entry_metrics["mobile_entry_top_intentions_json"]
+                ),
+                "mobile_entry_top_app_contexts_json": str(
+                    mobile_entry_metrics["mobile_entry_top_app_contexts_json"]
                 ),
                 "mobile_entry_mapped_task_families_json": str(
                     mobile_entry_metrics["mobile_entry_mapped_task_families_json"]
@@ -883,7 +966,14 @@ def main() -> None:
         "mobile_entry_noop_count",
         "mobile_entry_context_count",
         "mobile_entry_task_generated_rate",
+        "task_eligible_context_exposure_count",
+        "task_occurrence_gate_pass_count",
+        "task_occurrence_gate_pass_rate",
+        "task_eligible_context_no_task_count",
+        "tasks_per_task_eligible_context_exposure",
+        "task_occurrence_probability_mean",
         "mobile_entry_top_intentions_json",
+        "mobile_entry_top_app_contexts_json",
         "mobile_entry_mapped_task_families_json",
         "trajectory_call_count",
         "trajectory_invalid_count",

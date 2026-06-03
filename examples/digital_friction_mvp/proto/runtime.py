@@ -69,10 +69,15 @@ def assign_task_with_entry_decision(
     stable_profile: dict[str, Any] | None = None,
     calibration_path: str = "",
     mapping_path: str = "",
+    app_context_prior_path: str = "",
+    task_opportunity_mapping_path: str = "",
     confidence_threshold: float = 0.70,
     selected_intention_override: str | None = None,
     rerank_audit_payload: dict[str, Any] | None = None,
     rerank_top_k: int = 5,
+    task_occurrence_gate_enabled: bool = False,
+    task_occurrence_prior_path: str = "",
+    task_occurrence_gate_multiplier: float = 1.0,
 ) -> tuple[DigitalTask | None, dict[str, Any], bool, MobileEntryDecision | None]:
     if existing_task is not None:
         return existing_task, {}, False, None
@@ -93,13 +98,24 @@ def assign_task_with_entry_decision(
         env=env,
         stable_profile=stable_profile,
         entry_mode=normalized_mode,
-        calibration_path=calibration_path,
-        mapping_path=mapping_path,
+        calibration_path=(
+            app_context_prior_path
+            if normalized_mode.startswith("app_context")
+            else calibration_path
+        ),
+        mapping_path=(
+            task_opportunity_mapping_path
+            if normalized_mode.startswith("app_context")
+            else mapping_path
+        ),
         confidence_threshold=float(confidence_threshold),
         llm_shadow_enabled=normalized_mode == "mobile_intention_llm_shadow",
         selected_intention_override=selected_intention_override,
         rerank_audit_payload=rerank_audit_payload,
         rerank_top_k=int(rerank_top_k),
+        task_occurrence_gate_enabled=bool(task_occurrence_gate_enabled),
+        task_occurrence_prior_path=task_occurrence_prior_path,
+        task_occurrence_gate_multiplier=float(task_occurrence_gate_multiplier),
     )
     if decision.task is None:
         return None, {}, False, decision

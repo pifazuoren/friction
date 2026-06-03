@@ -1,3 +1,4 @@
+import json
 from collections import Counter
 
 from proto.task_assignment import (
@@ -13,6 +14,27 @@ TASK_WINDOW_MORNING = 9 * 60 * 60
 TASK_WINDOW_AFTERNOON = 14 * 60 * 60
 TASK_WINDOW_EVENING = 19 * 60 * 60
 NON_WINDOW_TICK = 8 * 60 * 60
+
+
+def _write_task_occurrence_artifact(path, *, probability: float) -> None:
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": "task_occurrence_prior_by_context_v1",
+                "uses_validation_data": False,
+                "task_occurrence_by_context": {
+                    "finance_context": probability,
+                    "public_service_context": probability,
+                    "health_service_context": probability,
+                    "shopping_lifestyle_context": probability,
+                    "navigation_transport_context": probability,
+                    "education_work_context": probability,
+                },
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
 
 
 def test_task_assignment_only_uses_fixed_pool(monkeypatch) -> None:
@@ -395,3 +417,239 @@ def test_mobile_entry_rerank_override_must_be_top_k(monkeypatch, tmp_path) -> No
         assert "top-k" in str(exc)
     else:
         raise AssertionError("rerank override outside top-k should be rejected")
+
+
+def test_app_context_entry_context_only_noops(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("PARALLEL_PAIR_SEED", "101")
+    context_prior = tmp_path / "app_context_reference.json"
+    occurrence = tmp_path / "task_occurrence.json"
+    context_prior.write_text(
+        '{"global_prior":{"p_app_context":{"media_entertainment_context":1.0}},'
+        '"uses_validation_data":false}',
+        encoding="utf-8",
+    )
+    _write_task_occurrence_artifact(occurrence, probability=1.0)
+
+    decision = evaluate_mobile_entry_for_agent(
+        agent_id=1,
+        day=0,
+        tick_seconds=3600.0,
+        env={},
+        entry_mode="app_context_rule",
+        calibration_path=str(context_prior),
+        task_occurrence_gate_enabled=True,
+        task_occurrence_prior_path=str(occurrence),
+    )
+
+    assert decision.selected_app_context == "media_entertainment_context"
+    assert decision.selected_mobile_intention == ""
+    assert decision.task is None
+    assert decision.entry_status == "media_entertainment_context_context_only"
+    assert decision.audit["final_task_eligible"] is False
+    assert decision.audit["task_eligible_context_exposure"] is False
+    assert decision.audit["task_occurrence_gate_source"] == "not_applicable_context_only"
+    assert decision.audit["context_review_status"] == "context_only_auto"
+
+
+def test_app_context_entry_generates_task_from_opportunity_mapping(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setenv("PARALLEL_PAIR_SEED", "101")
+    context_prior = tmp_path / "app_context_reference.json"
+    mapping = tmp_path / "task_opportunity.json"
+    context_prior.write_text(
+        '{"global_prior":{"p_app_context":{"finance_context":1.0}},'
+        '"uses_validation_data":false}',
+        encoding="utf-8",
+    )
+    mapping.write_text(
+        '{"uses_validation_data":false,'
+        '"task_opportunity_by_context":{'
+        '"finance_context":{"payment_risk_confirmation":1.0}}}',
+        encoding="utf-8",
+    )
+
+    decision = evaluate_mobile_entry_for_agent(
+        agent_id=1,
+        day=0,
+        tick_seconds=3600.0,
+        env={"risk_level": 2, "malicious_friction_level": 2},
+        entry_mode="app_context_rule",
+        calibration_path=str(context_prior),
+        mapping_path=str(mapping),
+    )
+
+    assert decision.selected_app_context == "finance_context"
+    assert decision.task is not None
+    assert decision.task.task_family == "payment_risk_confirmation"
+    assert decision.mapped_task_family == "payment_risk_confirmation"
+    assert decision.audit["final_task_eligible"] is True
+    assert decision.audit["generated_task_family"] == "payment_risk_confirmation"
+    assert decision.audit["task_occurrence_gate_enabled"] is False
+    assert decision.audit["task_occurrence_gate_passed"] is True
+    assert decision.audit["task_occurrence_probability"] == 1.0
+    assert "payment_risk_confirmation" in decision.audit["task_opportunity_distribution_json"]
+
+
+def test_app_context_task_occurrence_gate_blocks_task(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setenv("PARALLEL_PAIR_SEED", "101")
+    context_prior = tmp_path / "app_context_reference.json"
+    mapping = tmp_path / "task_opportunity.json"
+    occurrence = tmp_path / "task_occurrence.json"
+    context_prior.write_text(
+        '{"global_prior":{"p_app_context":{"finance_context":1.0}},'
+        '"uses_validation_data":false}',
+        encoding="utf-8",
+    )
+    mapping.write_text(
+        '{"uses_validation_data":false,'
+        '"task_opportunity_by_context":{'
+        '"finance_context":{"payment_risk_confirmation":1.0}}}',
+        encoding="utf-8",
+    )
+    _write_task_occurrence_artifact(occurrence, probability=0.0)
+
+    decision = evaluate_mobile_entry_for_agent(
+        agent_id=1,
+        day=0,
+        tick_seconds=3600.0,
+        env={"risk_level": 2, "malicious_friction_level": 2},
+        entry_mode="app_context_rule",
+        calibration_path=str(context_prior),
+        mapping_path=str(mapping),
+        task_occurrence_gate_enabled=True,
+        task_occurrence_prior_path=str(occurrence),
+    )
+
+    assert decision.selected_app_context == "finance_context"
+    assert decision.task is None
+    assert decision.mapped_task_family is None
+    assert decision.entry_status == "task_eligible_context_no_task"
+    assert decision.audit["task_eligible_context_exposure"] is True
+    assert decision.audit["task_occurrence_gate_passed"] is False
+    assert decision.audit["context_only_reason"] == "task_occurrence_gate_not_passed"
+    assert decision.audit["generated_task_family"] == ""
+
+
+def test_app_context_task_occurrence_gate_passes_and_is_stable(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setenv("PARALLEL_PAIR_SEED", "101")
+    context_prior = tmp_path / "app_context_reference.json"
+    mapping = tmp_path / "task_opportunity.json"
+    occurrence = tmp_path / "task_occurrence.json"
+    context_prior.write_text(
+        '{"global_prior":{"p_app_context":{"finance_context":1.0}},'
+        '"uses_validation_data":false}',
+        encoding="utf-8",
+    )
+    mapping.write_text(
+        '{"uses_validation_data":false,'
+        '"task_opportunity_by_context":{'
+        '"finance_context":{"payment_risk_confirmation":1.0}}}',
+        encoding="utf-8",
+    )
+    _write_task_occurrence_artifact(occurrence, probability=1.0)
+
+    kwargs = {
+        "agent_id": 1,
+        "day": 0,
+        "tick_seconds": 3600.0,
+        "env": {"risk_level": 2, "malicious_friction_level": 2},
+        "entry_mode": "app_context_rule",
+        "calibration_path": str(context_prior),
+        "mapping_path": str(mapping),
+        "task_occurrence_gate_enabled": True,
+        "task_occurrence_prior_path": str(occurrence),
+    }
+    first = evaluate_mobile_entry_for_agent(**kwargs)
+    second = evaluate_mobile_entry_for_agent(**kwargs)
+
+    assert first.task is not None
+    assert first.task.task_family == "payment_risk_confirmation"
+    assert first.audit["task_occurrence_gate_passed"] is True
+    assert first.audit["task_occurrence_gate_roll"] == second.audit[
+        "task_occurrence_gate_roll"
+    ]
+    assert first.audit["task_occurrence_artifact_hash"]
+
+
+def test_app_context_task_occurrence_gate_rejects_invalid_artifact(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setenv("PARALLEL_PAIR_SEED", "101")
+    context_prior = tmp_path / "app_context_reference.json"
+    occurrence = tmp_path / "task_occurrence.json"
+    context_prior.write_text(
+        '{"global_prior":{"p_app_context":{"finance_context":1.0}},'
+        '"uses_validation_data":false}',
+        encoding="utf-8",
+    )
+    occurrence.write_text(
+        '{"schema_version":"wrong","uses_validation_data":false,'
+        '"task_occurrence_by_context":{"finance_context":0.5}}',
+        encoding="utf-8",
+    )
+
+    try:
+        evaluate_mobile_entry_for_agent(
+            agent_id=1,
+            day=0,
+            tick_seconds=3600.0,
+            env={},
+            entry_mode="app_context_rule",
+            calibration_path=str(context_prior),
+            task_occurrence_gate_enabled=True,
+            task_occurrence_prior_path=str(occurrence),
+        )
+    except ValueError as exc:
+        assert "task occurrence artifact schema_version" in str(exc)
+    else:
+        raise AssertionError("invalid task occurrence artifact should fail")
+
+
+def test_app_context_rerank_audit_tracks_context_only_to_task_eligible(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setenv("PARALLEL_PAIR_SEED", "101")
+    context_prior = tmp_path / "app_context_reference.json"
+    context_prior.write_text(
+        '{"global_prior":{"p_app_context":{'
+        '"media_entertainment_context":0.6,'
+        '"finance_context":0.4'
+        '}}, "uses_validation_data":false}',
+        encoding="utf-8",
+    )
+
+    decision = evaluate_mobile_entry_for_agent(
+        agent_id=1,
+        day=0,
+        tick_seconds=3600.0,
+        env={},
+        entry_mode="app_context_llm_rerank_online_mc",
+        calibration_path=str(context_prior),
+        selected_intention_override="finance_context",
+        rerank_audit_payload={
+            "rerank_parse_status": "ok",
+            "rerank_confidence": 0.9,
+            "rerank_selected_app_context": "finance_context",
+        },
+        rerank_top_k=2,
+    )
+
+    assert decision.selected_app_context == "finance_context"
+    assert decision.task is not None
+    assert decision.audit["rule_selected_app_context"] in {
+        "media_entertainment_context",
+        "finance_context",
+    }
+    if decision.audit["rule_selected_app_context"] == "media_entertainment_context":
+        assert decision.audit["changed_context_only_to_task_eligible"] is True
+        assert decision.audit["changed_to_lower_prior"] is True

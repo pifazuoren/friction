@@ -90,6 +90,11 @@ FINGERPRINT_ENV_KEYS = (
     "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY",
     "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH",
     "PROTO_MOBILE_INTENTION_RERANK_RUN_ID",
+    "PROTO_APP_CONTEXT_PRIOR_PATH",
+    "PROTO_TASK_OPPORTUNITY_MAPPING_PATH",
+    "PROTO_TASK_OCCURRENCE_GATE_ENABLED",
+    "PROTO_TASK_OCCURRENCE_PRIOR_PATH",
+    "PROTO_TASK_OCCURRENCE_GATE_MULTIPLIER",
     "PROTO_OUTCOME_MODEL_MODE",
     "PROTO_OUTCOME_TRAJECTORY_PROMPT_VERSION",
     "PROTO_OUTCOME_TRAJECTORY_TAXONOMY_VERSION",
@@ -376,7 +381,7 @@ def main() -> None:
     base_env.setdefault("STAGE_SINGLE_NAME", "steady")
     if (
         base_env.get("PROTO_TASK_ENTRY_MODE", "").strip().lower()
-        == "mobile_intention_llm_rerank_online_mc"
+        in {"mobile_intention_llm_rerank_online_mc", "app_context_llm_rerank_online_mc"}
     ):
         base_env.setdefault(
             "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH",
@@ -432,7 +437,10 @@ def main() -> None:
             env["RUN_METADATA_PATH"] = str(metadata_path)
             if (
                 env.get("PROTO_TASK_ENTRY_MODE", "").strip().lower()
-                == "mobile_intention_llm_rerank_online_mc"
+                in {
+                    "mobile_intention_llm_rerank_online_mc",
+                    "app_context_llm_rerank_online_mc",
+                }
             ):
                 world_schedule_path = (
                     analysis_dir

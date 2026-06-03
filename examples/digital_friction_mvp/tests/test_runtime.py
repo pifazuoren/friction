@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from config_runtime import load_runtime_config
+from config_runtime import DEFAULT_TASK_OCCURRENCE_PRIOR_PATH, load_runtime_config
 
 from proto.runtime import (
     assign_task_with_entry_decision,
@@ -107,6 +107,39 @@ def test_assign_task_with_mobile_mapped_task_writes_surface(monkeypatch, tmp_pat
     assert updates["proto_assigned_task_json"]
     assert updates["digital_todo_pending"] == 1
     assert updates["digital_task_hint"] == "payment_risk_confirmation"
+
+
+def test_assign_task_with_app_context_uses_context_paths(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("PARALLEL_PAIR_SEED", "101")
+    context_prior = tmp_path / "app_context_reference.json"
+    mapping = tmp_path / "task_opportunity.json"
+    context_prior.write_text(
+        '{"global_prior":{"p_app_context":{"public_service_context":1.0}},'
+        '"uses_validation_data":false}',
+        encoding="utf-8",
+    )
+    mapping.write_text(
+        '{"uses_validation_data":false,'
+        '"task_opportunity_by_context":{'
+        '"public_service_context":{"service_application_submission":1.0}}}',
+        encoding="utf-8",
+    )
+    task, updates, seeded, decision = assign_task_with_entry_decision(
+        existing_task=None,
+        agent_id=7,
+        day=1,
+        tick_seconds=float(NON_WINDOW_TICK),
+        env={"friction_level": 2, "complexity_level": 2},
+        entry_mode="app_context_rule",
+        app_context_prior_path=str(context_prior),
+        task_opportunity_mapping_path=str(mapping),
+    )
+    assert seeded is True
+    assert task is not None
+    assert decision is not None
+    assert decision.selected_app_context == "public_service_context"
+    assert task.task_family == "service_application_submission"
+    assert updates["digital_task_hint"] == "service_application_submission"
 
 
 def test_assign_task_if_missing_keeps_existing_task_and_skips_new_window(monkeypatch) -> None:
@@ -432,6 +465,11 @@ def test_load_runtime_config_exposes_mobile_entry_defaults(monkeypatch) -> None:
         "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY",
         "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH",
         "PROTO_MOBILE_INTENTION_RERANK_RUN_ID",
+        "PROTO_APP_CONTEXT_PRIOR_PATH",
+        "PROTO_TASK_OPPORTUNITY_MAPPING_PATH",
+        "PROTO_TASK_OCCURRENCE_GATE_ENABLED",
+        "PROTO_TASK_OCCURRENCE_PRIOR_PATH",
+        "PROTO_TASK_OCCURRENCE_GATE_MULTIPLIER",
         "PROTO_OUTCOME_MODEL_MODE",
         "PROTO_OUTCOME_TRAJECTORY_PROMPT_VERSION",
         "PROTO_OUTCOME_TRAJECTORY_TAXONOMY_VERSION",
@@ -460,6 +498,11 @@ def test_load_runtime_config_exposes_mobile_entry_defaults(monkeypatch) -> None:
     assert config.proto_mobile_intention_rerank_low_confidence_policy == "fail_run"
     assert config.proto_mobile_intention_rerank_schedule_path == ""
     assert config.proto_mobile_intention_rerank_run_id == ""
+    assert config.proto_app_context_prior_path == ""
+    assert config.proto_task_opportunity_mapping_path == ""
+    assert config.proto_task_occurrence_gate_enabled is True
+    assert config.proto_task_occurrence_prior_path == DEFAULT_TASK_OCCURRENCE_PRIOR_PATH
+    assert config.proto_task_occurrence_gate_multiplier == 1.0
     assert config.proto_outcome_model_mode == "rule_v1"
     assert config.proto_outcome_trajectory_prompt_version == "trajectory_v1"
     assert config.proto_outcome_trajectory_taxonomy_version == "friction_taxonomy_v1"
@@ -486,6 +529,16 @@ def test_load_runtime_config_validates_outcome_modes(monkeypatch) -> None:
     monkeypatch.setenv("PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY", "rule_only")
     with pytest.raises(ValueError, match="INVALID_POLICY"):
         load_runtime_config()
+
+    monkeypatch.setenv(
+        "PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY",
+        "rule_fallback_with_audit",
+    )
+    config = load_runtime_config()
+    assert (
+        config.proto_outcome_trajectory_invalid_policy
+        == "rule_fallback_with_audit"
+    )
 
     monkeypatch.setenv("PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY", "fail_run")
     monkeypatch.setenv("PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS", "9")
@@ -517,11 +570,74 @@ def test_load_runtime_config_mobile_rerank_low_confidence_policy(monkeypatch) ->
     assert config.proto_mobile_intention_rerank_json_attempts == 5
 
 
+def test_load_runtime_config_accepts_app_context_entry_mode(monkeypatch) -> None:
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "app_context_llm_rerank_online_mc")
+    monkeypatch.setenv(
+        "PROTO_APP_CONTEXT_PRIOR_PATH",
+        "/tmp/app_context_prior_by_bucket_hour_reference.json",
+    )
+    monkeypatch.setenv(
+        "PROTO_TASK_OPPORTUNITY_MAPPING_PATH",
+        "/tmp/task_opportunity_prior_by_context.json",
+    )
+
+    config = load_runtime_config()
+
+    assert config.proto_task_entry_mode == "app_context_llm_rerank_online_mc"
+    assert (
+        config.proto_app_context_prior_path
+        == "/tmp/app_context_prior_by_bucket_hour_reference.json"
+    )
+    assert (
+        config.proto_task_opportunity_mapping_path
+        == "/tmp/task_opportunity_prior_by_context.json"
+    )
+    assert config.proto_task_occurrence_gate_enabled is True
+    assert config.proto_task_occurrence_prior_path == DEFAULT_TASK_OCCURRENCE_PRIOR_PATH
+
+
+def test_load_runtime_config_validates_task_occurrence_gate(monkeypatch) -> None:
+    monkeypatch.setenv("PROTO_TASK_OCCURRENCE_GATE_ENABLED", "true")
+    monkeypatch.setenv("PROTO_TASK_OCCURRENCE_PRIOR_PATH", "")
+    with pytest.raises(ValueError, match="PROTO_TASK_OCCURRENCE_PRIOR_PATH"):
+        load_runtime_config()
+
+    monkeypatch.setenv("PROTO_TASK_OCCURRENCE_GATE_ENABLED", "false")
+    config = load_runtime_config()
+    assert config.proto_task_occurrence_gate_enabled is False
+    assert config.proto_task_occurrence_prior_path == ""
+
+    monkeypatch.setenv("PROTO_TASK_OCCURRENCE_GATE_ENABLED", "true")
+    monkeypatch.setenv(
+        "PROTO_TASK_OCCURRENCE_PRIOR_PATH",
+        "/tmp/task_occurrence_prior_by_context_validation.json",
+    )
+    with pytest.raises(ValueError, match="validation"):
+        load_runtime_config()
+
+    monkeypatch.setenv(
+        "PROTO_TASK_OCCURRENCE_PRIOR_PATH",
+        "/tmp/task_occurrence_prior_by_context_reference.json",
+    )
+    monkeypatch.setenv("PROTO_TASK_OCCURRENCE_GATE_MULTIPLIER", "-0.1")
+    with pytest.raises(ValueError, match="GATE_MULTIPLIER"):
+        load_runtime_config()
+
+
 def test_load_runtime_config_rejects_validation_artifact_paths(monkeypatch) -> None:
     monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "mobile_intention_rule")
     monkeypatch.setenv(
         "PROTO_MOBILE_INTENTION_CALIBRATION_PATH",
         "/tmp/elder_validation_targets.json",
+    )
+    with pytest.raises(ValueError, match="validation"):
+        load_runtime_config()
+
+    monkeypatch.delenv("PROTO_MOBILE_INTENTION_CALIBRATION_PATH", raising=False)
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "app_context_rule")
+    monkeypatch.setenv(
+        "PROTO_APP_CONTEXT_PRIOR_PATH",
+        "/tmp/app_context_prior_by_bucket_hour_validation.json",
     )
     with pytest.raises(ValueError, match="validation"):
         load_runtime_config()
@@ -541,6 +657,9 @@ def test_world_runner_fingerprint_includes_mobile_entry_env(monkeypatch) -> None
             "PROTO_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICY": "accept_with_audit",
             "PROTO_MOBILE_INTENTION_RERANK_RUN_ID": "run-1",
             "PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH": "/tmp/schedule.jsonl",
+            "PROTO_TASK_OCCURRENCE_GATE_ENABLED": "true",
+            "PROTO_TASK_OCCURRENCE_PRIOR_PATH": "/tmp/task_occurrence.json",
+            "PROTO_TASK_OCCURRENCE_GATE_MULTIPLIER": "1.0",
             "PROTO_OUTCOME_MODEL_MODE": "trajectory_bounded_online_mc",
             "PROTO_OUTCOME_TRAJECTORY_PROMPT_VERSION": "trajectory_v1",
             "PROTO_OUTCOME_TRAJECTORY_TAXONOMY_VERSION": "friction_taxonomy_v1",
@@ -550,7 +669,7 @@ def test_world_runner_fingerprint_includes_mobile_entry_env(monkeypatch) -> None
             "PROTO_OUTCOME_TRAJECTORY_MIN_CONFIDENCE": "0.65",
             "PROTO_OUTCOME_TRAJECTORY_STRICT_SCHEMA": "1",
             "PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS": "5",
-            "PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY": "fail_run",
+            "PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY": "rule_fallback_with_audit",
             "PROTO_H_UPDATE_CALIBRATION_MODE": "scaled_nonlinear",
             "PROTO_H_UPDATE_NEGATIVE_SCALE": "0.60",
             "PROTO_H_UPDATE_DAMPING_STRENGTH": "0.80",
@@ -574,10 +693,16 @@ def test_world_runner_fingerprint_includes_mobile_entry_env(monkeypatch) -> None
     )
     assert payload["PROTO_MOBILE_INTENTION_RERANK_RUN_ID"] == "run-1"
     assert payload["PROTO_MOBILE_INTENTION_RERANK_SCHEDULE_PATH"] == "/tmp/schedule.jsonl"
+    assert payload["PROTO_TASK_OCCURRENCE_GATE_ENABLED"] == "true"
+    assert payload["PROTO_TASK_OCCURRENCE_PRIOR_PATH"] == "/tmp/task_occurrence.json"
+    assert payload["PROTO_TASK_OCCURRENCE_GATE_MULTIPLIER"] == "1.0"
     assert payload["PROTO_OUTCOME_MODEL_MODE"] == "trajectory_bounded_online_mc"
     assert payload["PROTO_OUTCOME_TRAJECTORY_ALPHA"] == "0.10"
     assert payload["PROTO_OUTCOME_TRAJECTORY_JSON_ATTEMPTS"] == "5"
-    assert payload["PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY"] == "fail_run"
+    assert (
+        payload["PROTO_OUTCOME_TRAJECTORY_INVALID_POLICY"]
+        == "rule_fallback_with_audit"
+    )
     assert payload["PROTO_H_UPDATE_CALIBRATION_MODE"] == "scaled_nonlinear"
     assert payload["PROTO_H_UPDATE_NEGATIVE_SCALE"] == "0.60"
     assert payload["PROTO_H_UPDATE_DAMPING_STRENGTH"] == "0.80"

@@ -37,6 +37,15 @@ agentsociety-ui
 agentsociety_data/
 .agentsociety-benchmark/
 
+# Local generated experiment/report artifacts
+outputs/
+examples/digital_friction_mvp/analysis/
+paper/mineruex/
+paper/**/*.pdf
+.~*.pptx
+report/**/.$*
+report/**/.~*
+
 # LaTeX build artifacts
 *.aux
 *.bbl

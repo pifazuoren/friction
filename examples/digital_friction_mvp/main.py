@@ -2691,6 +2691,19 @@ def _write_run_metadata(
         "proto_mobile_intention_rerank_run_id": (
             RUNTIME_CONFIG.proto_mobile_intention_rerank_run_id
         ),
+        "proto_app_context_prior_path": RUNTIME_CONFIG.proto_app_context_prior_path,
+        "proto_task_opportunity_mapping_path": (
+            RUNTIME_CONFIG.proto_task_opportunity_mapping_path
+        ),
+        "proto_task_occurrence_gate_enabled": (
+            RUNTIME_CONFIG.proto_task_occurrence_gate_enabled
+        ),
+        "proto_task_occurrence_prior_path": (
+            RUNTIME_CONFIG.proto_task_occurrence_prior_path
+        ),
+        "proto_task_occurrence_gate_multiplier": (
+            RUNTIME_CONFIG.proto_task_occurrence_gate_multiplier
+        ),
         "proto_outcome_model_mode": RUNTIME_CONFIG.proto_outcome_model_mode,
         "proto_outcome_trajectory_prompt_version": (
             RUNTIME_CONFIG.proto_outcome_trajectory_prompt_version

@@ -32,6 +32,9 @@ def test_mobile_entry_metrics_parse_status_json_once_per_entry() -> None:
             "agent_id": 7,
             "day": 1,
             "tick_seconds": 3600.0,
+            "task_eligible_context_exposure": True,
+            "task_occurrence_gate_passed": True,
+            "task_occurrence_probability": 0.25,
         },
     }
     cur.executemany(
@@ -69,6 +72,12 @@ def test_mobile_entry_metrics_parse_status_json_once_per_entry() -> None:
     assert metrics["mobile_entry_task_generated_count"] == 1
     assert metrics["mobile_entry_context_count"] == 1
     assert metrics["mobile_entry_task_generated_rate"] == 0.5
+    assert metrics["task_eligible_context_exposure_count"] == 1
+    assert metrics["task_occurrence_gate_pass_count"] == 1
+    assert metrics["task_occurrence_gate_pass_rate"] == 1.0
+    assert metrics["task_eligible_context_no_task_count"] == 0
+    assert metrics["tasks_per_task_eligible_context_exposure"] == 1.0
+    assert metrics["task_occurrence_probability_mean"] == 0.25
     assert json.loads(metrics["mobile_entry_top_intentions_json"]) == {
         "browse_entertainment": 1,
         "use_payment_or_finance": 1,
@@ -78,12 +87,59 @@ def test_mobile_entry_metrics_parse_status_json_once_per_entry() -> None:
     }
 
 
+def test_mobile_entry_metrics_counts_task_occurrence_gate_no_task() -> None:
+    conn = sqlite3.connect(":memory:")
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE status_rows (
+            agent_id INTEGER,
+            day INTEGER,
+            t REAL,
+            status_json TEXT
+        )
+        """
+    )
+    decision = {
+        "entry_evaluated": True,
+        "selected_app_context": "finance_context",
+        "mapped_task_family": None,
+        "task_generated": False,
+        "entry_status": "task_eligible_context_no_task",
+        "audit": {
+            "agent_id": 7,
+            "day": 1,
+            "tick_seconds": 3600.0,
+            "final_selected_app_context": "finance_context",
+            "task_eligible_context_exposure": True,
+            "task_occurrence_gate_passed": False,
+            "task_occurrence_probability": 0.25,
+        },
+    }
+    cur.execute(
+        "INSERT INTO status_rows VALUES (?, ?, ?, ?)",
+        (7, 1, 3600.0, json.dumps({"proto_mobile_entry_decision": decision})),
+    )
+
+    metrics = _compute_mobile_entry_metrics(cur, "status_rows")
+
+    assert metrics["mobile_entry_eval_count"] == 1
+    assert metrics["mobile_entry_task_generated_count"] == 0
+    assert metrics["task_eligible_context_exposure_count"] == 1
+    assert metrics["task_occurrence_gate_pass_count"] == 0
+    assert metrics["task_occurrence_gate_pass_rate"] == 0.0
+    assert metrics["task_eligible_context_no_task_count"] == 1
+    assert metrics["tasks_per_task_eligible_context_exposure"] == 0.0
+    assert metrics["task_occurrence_probability_mean"] == 0.25
+
+
 def test_world_proto_metrics_parse_trajectory_audit_from_payload_json() -> None:
     conn = sqlite3.connect(":memory:")
     cur = conn.cursor()
     cur.execute(
         """
         CREATE TABLE attempt_rows (
+            day INTEGER,
             strategy_type TEXT,
             outcome_type TEXT,
             payload_json TEXT
@@ -91,9 +147,10 @@ def test_world_proto_metrics_parse_trajectory_audit_from_payload_json() -> None:
         """
     )
     cur.executemany(
-        "INSERT INTO attempt_rows VALUES (?, ?, ?)",
+        "INSERT INTO attempt_rows VALUES (?, ?, ?, ?)",
         [
             (
+                0,
                 "attempt_self",
                 "failure_after_attempt",
                 json.dumps(
@@ -107,6 +164,7 @@ def test_world_proto_metrics_parse_trajectory_audit_from_payload_json() -> None:
                 ),
             ),
             (
+                0,
                 "attempt_self",
                 "success_self",
                 json.dumps(

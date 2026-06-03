@@ -22,6 +22,8 @@ VALID_TASK_ENTRY_MODES = {
     "mobile_intention_rule",
     "mobile_intention_llm_shadow",
     "mobile_intention_llm_rerank_online_mc",
+    "app_context_rule",
+    "app_context_llm_rerank_online_mc",
 }
 VALID_OUTCOME_MODEL_MODES = {
     "rule_v1",
@@ -29,7 +31,10 @@ VALID_OUTCOME_MODEL_MODES = {
     "trajectory_shadow",
     "trajectory_bounded_online_mc",
 }
-VALID_OUTCOME_TRAJECTORY_INVALID_POLICIES = {"fail_run"}
+VALID_OUTCOME_TRAJECTORY_INVALID_POLICIES = {
+    "fail_run",
+    "rule_fallback_with_audit",
+}
 VALID_MOBILE_INTENTION_RERANK_LOW_CONFIDENCE_POLICIES = {
     "fail_run",
     "accept_with_audit",
@@ -47,6 +52,10 @@ VALID_H_UPDATE_CALIBRATION_MODES = {
     "scaled_nonlinear",
     "scaled_nonlinear_daily_cap",
 }
+DEFAULT_TASK_OCCURRENCE_PRIOR_PATH = (
+    "examples/digital_friction_mvp/analysis/"
+    "talkingdata_v2_event_app_context/task_occurrence_prior_by_context.json"
+)
 
 
 def _parse_bool_env(name: str, default: bool = False) -> bool:
@@ -145,6 +154,11 @@ class RuntimeConfig:
     proto_mobile_intention_rerank_low_confidence_policy: str
     proto_mobile_intention_rerank_schedule_path: str
     proto_mobile_intention_rerank_run_id: str
+    proto_app_context_prior_path: str
+    proto_task_opportunity_mapping_path: str
+    proto_task_occurrence_gate_enabled: bool
+    proto_task_occurrence_prior_path: str
+    proto_task_occurrence_gate_multiplier: float
     proto_outcome_model_mode: str
     proto_outcome_trajectory_prompt_version: str
     proto_outcome_trajectory_taxonomy_version: str
@@ -533,6 +547,44 @@ def load_runtime_config() -> RuntimeConfig:
         "PROTO_MOBILE_INTENTION_RERANK_RUN_ID",
         "",
     ).strip()
+    proto_app_context_prior_path = os.getenv(
+        "PROTO_APP_CONTEXT_PRIOR_PATH",
+        "",
+    ).strip()
+    proto_task_opportunity_mapping_path = os.getenv(
+        "PROTO_TASK_OPPORTUNITY_MAPPING_PATH",
+        "",
+    ).strip()
+    proto_task_occurrence_gate_enabled = _parse_bool_env(
+        "PROTO_TASK_OCCURRENCE_GATE_ENABLED",
+        True,
+    )
+    proto_task_occurrence_prior_path = os.getenv(
+        "PROTO_TASK_OCCURRENCE_PRIOR_PATH",
+        DEFAULT_TASK_OCCURRENCE_PRIOR_PATH,
+    ).strip()
+    if proto_task_occurrence_gate_enabled and not proto_task_occurrence_prior_path:
+        raise ValueError(
+            "PROTO_TASK_OCCURRENCE_PRIOR_PATH is required when "
+            "PROTO_TASK_OCCURRENCE_GATE_ENABLED=true"
+        )
+    proto_task_occurrence_gate_multiplier = float(
+        os.getenv("PROTO_TASK_OCCURRENCE_GATE_MULTIPLIER", "1.0")
+    )
+    if proto_task_occurrence_gate_multiplier < 0.0:
+        raise ValueError("PROTO_TASK_OCCURRENCE_GATE_MULTIPLIER must be >= 0")
+    for artifact_name, artifact_path in (
+        ("PROTO_APP_CONTEXT_PRIOR_PATH", proto_app_context_prior_path),
+        ("PROTO_TASK_OPPORTUNITY_MAPPING_PATH", proto_task_opportunity_mapping_path),
+    ):
+        if artifact_path and "validation" in artifact_path.lower():
+            raise ValueError(f"{artifact_name} must not point to validation data")
+    if (
+        proto_task_occurrence_gate_enabled
+        and proto_task_occurrence_prior_path
+        and "validation" in proto_task_occurrence_prior_path.lower()
+    ):
+        raise ValueError("PROTO_TASK_OCCURRENCE_PRIOR_PATH must not point to validation data")
     proto_outcome_model_mode = (
         os.getenv("PROTO_OUTCOME_MODEL_MODE", "rule_v1").strip().lower()
     )
@@ -790,6 +842,11 @@ def load_runtime_config() -> RuntimeConfig:
         proto_mobile_intention_rerank_run_id=(
             proto_mobile_intention_rerank_run_id
         ),
+        proto_app_context_prior_path=proto_app_context_prior_path,
+        proto_task_opportunity_mapping_path=proto_task_opportunity_mapping_path,
+        proto_task_occurrence_gate_enabled=proto_task_occurrence_gate_enabled,
+        proto_task_occurrence_prior_path=proto_task_occurrence_prior_path,
+        proto_task_occurrence_gate_multiplier=proto_task_occurrence_gate_multiplier,
         proto_outcome_model_mode=proto_outcome_model_mode,
         proto_outcome_trajectory_prompt_version=(
             proto_outcome_trajectory_prompt_version
