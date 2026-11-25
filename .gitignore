@@ -12,6 +12,8 @@ docs/_build/
 .tmp_prompt_extracts/
 *.mo
 .env
+.env.*
+!.env.example
 .python-version
 .venv/
 wheelhouse/
@@ -19,6 +21,8 @@ build/
 .python-version
 log/
 test*
+!examples/digital_friction_mvp/tests/
+!examples/digital_friction_mvp/tests/*.py
 cache/
 ignore/
 *.ipynb*
@@ -45,6 +49,9 @@ paper/**/*.pdf
 .~*.pptx
 report/**/.$*
 report/**/.~*
+report/2026结项/*
+!report/2026结项/仓库发布/
+/[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-*.pdf
 
 # LaTeX build artifacts
 *.aux

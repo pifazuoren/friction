@@ -3,6 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from .models import DigitalTask
+from .app_entry.bundle_loader import (
+    get_replay_source,
+    simulation_day_to_talkingdata_day,
+)
+from .app_entry.replay import evaluate_replay_bundle_for_agent
+from .app_entry.types import _hour_for_tick
 from .task_assignment import (
     MobileEntryDecision,
     encode_task,
@@ -78,10 +84,15 @@ def assign_task_with_entry_decision(
     task_occurrence_gate_enabled: bool = False,
     task_occurrence_prior_path: str = "",
     task_occurrence_gate_multiplier: float = 1.0,
+    replay_bundle_path: str = "",
+    replay_device_path: str = "",
+    replay_days: tuple[int, ...] | str = (1, 2, 3),
+    replay_device_id: str = "",
+    replay_selected_rank: int = 0,
 ) -> tuple[DigitalTask | None, dict[str, Any], bool, MobileEntryDecision | None]:
-    if existing_task is not None:
-        return existing_task, {}, False, None
     normalized_mode = str(entry_mode or "fixed_assignment").strip().lower()
+    if existing_task is not None and normalized_mode != "app_context_replay_bundle":
+        return existing_task, {}, False, None
     if normalized_mode == "fixed_assignment":
         task, updates, seeded = assign_task_if_missing(
             existing_task=None,
@@ -91,6 +102,53 @@ def assign_task_with_entry_decision(
             env=env,
         )
         return task, updates, seeded, None
+    if normalized_mode == "app_context_replay_bundle":
+        device_id = str(replay_device_id or "").strip()
+        if not device_id:
+            raise ValueError(
+                "replay_device_id is required for app_context_replay_bundle"
+            )
+        source = get_replay_source(
+            bundle_path=replay_bundle_path,
+            device_mapping_path=replay_device_path,
+            replay_days=replay_days,
+        )
+        hour = _hour_for_tick(float(tick_seconds))
+        bundle = source.bundle_for_device(
+            device_id=device_id,
+            talkingdata_day=simulation_day_to_talkingdata_day(int(day)),
+            hour=hour,
+        )
+        decision = evaluate_replay_bundle_for_agent(
+            agent_id=int(agent_id),
+            day=int(day),
+            tick_seconds=float(tick_seconds),
+            env=env,
+            stable_profile=stable_profile,
+            bundle=bundle,
+            selected_rank=int(replay_selected_rank),
+            bundle_hash=source.bundle_hash,
+            device_mapping_hash=source.device_mapping_hash,
+            task_opportunity_mapping_path=task_opportunity_mapping_path,
+            task_occurrence_gate_enabled=bool(task_occurrence_gate_enabled),
+            task_occurrence_prior_path=task_occurrence_prior_path,
+            task_occurrence_gate_multiplier=float(task_occurrence_gate_multiplier),
+            existing_task_pending=existing_task is not None,
+        )
+        if existing_task is not None:
+            return existing_task, {}, False, decision
+        if decision.task is None:
+            return None, {}, False, decision
+        return (
+            decision.task,
+            build_task_surface_updates(
+                task=decision.task,
+                day=int(day),
+                tick_seconds=float(tick_seconds),
+            ),
+            True,
+            decision,
+        )
     decision = evaluate_mobile_entry_for_agent(
         agent_id=int(agent_id),
         day=int(day),

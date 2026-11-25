@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 from typing import Any, Callable
 
@@ -505,8 +506,17 @@ async def _query_json_payload(
     max_tokens: int = 260,
     json_attempts: int = 1,
     attempt_metadata_key: str | None = None,
+    audit: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any] | None, str]:
+    if audit is not None:
+        audit.setdefault("json_attempts_configured", max(1, int(json_attempts)))
+        audit.setdefault("json_attempts_used", 0)
+        audit.setdefault("actual_requests", 0)
+        audit.setdefault("repair_requests", 0)
+        audit.setdefault("response_hash", "")
     if llm is None:
+        if audit is not None:
+            audit["parse_status"] = "request_error"
         return None, "request_error"
 
     dialog = [
@@ -524,6 +534,9 @@ async def _query_json_payload(
     last_error = "parse_failed"
     for attempt_index in range(attempts):
         first_error = "parse_failed"
+        if audit is not None:
+            audit["json_attempts_used"] = attempt_index + 1
+            audit["actual_requests"] = int(audit.get("actual_requests", 0)) + 1
         try:
             raw = await llm.atext_request(
                 dialog=dialog,
@@ -535,6 +548,10 @@ async def _query_json_payload(
         except Exception:
             last_error = "request_error"
             continue
+        if audit is not None:
+            audit["last_raw_response_hash"] = hashlib.sha256(
+                str(raw).encode("utf-8")
+            ).hexdigest()[:16]
 
         parsed = _extract_json_object(str(raw))
         if parsed is not None:
@@ -542,6 +559,8 @@ async def _query_json_payload(
             if sanitized is not None:
                 if attempt_metadata_key:
                     sanitized[attempt_metadata_key] = attempt_index + 1
+                if audit is not None:
+                    audit["parse_status"] = "ok"
                 return sanitized, "ok"
             first_error = status
             last_error = status
@@ -568,6 +587,9 @@ async def _query_json_payload(
                 ),
             },
         ]
+        if audit is not None:
+            audit["repair_requests"] = int(audit.get("repair_requests", 0)) + 1
+            audit["actual_requests"] = int(audit.get("actual_requests", 0)) + 1
         try:
             repaired = await llm.atext_request(
                 dialog=repair_dialog,
@@ -581,6 +603,10 @@ async def _query_json_payload(
             continue
 
         repaired_payload = _extract_json_object(str(repaired))
+        if audit is not None:
+            audit["last_repair_response_hash"] = hashlib.sha256(
+                str(repaired).encode("utf-8")
+            ).hexdigest()[:16]
         if repaired_payload is None:
             last_error = (
                 first_error if first_error == "invalid_schema" else "parse_failed"
@@ -592,7 +618,11 @@ async def _query_json_payload(
             continue
         if attempt_metadata_key:
             sanitized[attempt_metadata_key] = attempt_index + 1
+        if audit is not None:
+            audit["parse_status"] = "ok_repaired"
         return sanitized, "ok_repaired"
+    if audit is not None:
+        audit["parse_status"] = last_error
     return None, last_error
 
 

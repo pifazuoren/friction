@@ -418,7 +418,10 @@ def test_status_summary_falls_back_safely_when_fields_are_missing() -> None:
     )
 
 
-def test_forward_returns_early_for_non_window_idle_step_and_marks_housekeeping() -> None:
+def test_forward_returns_early_for_non_window_idle_step_and_marks_housekeeping(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "fixed_assignment")
     agent = _FakeAgent(
         status={
             "proto_assigned_task_json": "",

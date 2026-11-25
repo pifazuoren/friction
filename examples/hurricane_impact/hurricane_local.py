@@ -1,4 +1,5 @@
 import asyncio
+import os
 from pathlib import Path
 
 from agentsociety.cityagent import default
@@ -27,7 +28,7 @@ config = Config(
         LLMConfig(
             provider=LLMProviderType.ZhipuAI,
             base_url=None,
-            api_key="4d963afd591d4c93940b08b06d766e91.bWaMIWJnuKhOUo7y",
+            api_key=os.getenv("ZHIPUAI_API_KEY") or os.getenv("LLM_API_KEY"),
             model="glm-4-flashx",
             concurrency=20,
             timeout=60,

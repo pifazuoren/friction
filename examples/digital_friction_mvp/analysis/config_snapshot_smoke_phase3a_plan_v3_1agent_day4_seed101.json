@@ -1,0 +1,21 @@
+{
+  "group_id": "smoke_phase3a_plan_v3_1agent_day4_seed101",
+  "config_fingerprint": "f0c1c88e7a2b35cf",
+  "config_payload": {
+    "world_batch": [
+      "baseline_low_friction"
+    ],
+    "AGENT_COUNT": "1",
+    "EVENT_DECISION_INTERVAL_MINUTES": "60",
+    "LLM_CONCURRENCY": "5",
+    "LLM_MODEL": "glm-4-flashx",
+    "PROTO_APP_ENTRY_PLAN_PROMPT_VERSION": "app_entry_plan_v3",
+    "PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH": "agentsociety_data/elderly/10person_v3/talkingdata_elderly_10_reference_hourly_bundle_day1_3.csv",
+    "PROTO_APP_ENTRY_REPLAY_DAYS": "1,2,3",
+    "PROTO_APP_ENTRY_REPLAY_DEVICE_PATH": "agentsociety_data/elderly/10person_v3/talkingdata_elderly_10_selected_devices.csv",
+    "PROTO_TASK_ENTRY_MODE": "app_context_replay_then_llm_rollout",
+    "STAGE_DAYS": "4",
+    "STAGE_MODE": "single",
+    "STAGE_SINGLE_NAME": "steady"
+  }
+}

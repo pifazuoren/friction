@@ -127,8 +127,6 @@ CONTEXT_KEYWORDS: dict[str, tuple[str, ...]] = {
         "government",
         "public",
         "utility",
-        "convenience services",
-        "life service",
         "administrative",
         "social security",
         "provident",
@@ -146,7 +144,6 @@ CONTEXT_KEYWORDS: dict[str, tuple[str, ...]] = {
         "aeronautical",
         "train",
         "bus",
-        "weather",
         "location",
     ),
     "shopping_lifestyle_context": (
@@ -171,18 +168,14 @@ CONTEXT_KEYWORDS: dict[str, tuple[str, ...]] = {
         "learning",
         "school",
         "exam",
-        "technology information",
-        "technology",
-        "science",
         "office",
         "work",
         "recruit",
         "job",
+        "jobs",
+        "professional skills",
         "accounting",
         "business",
-        "productivity",
-        "information",
-        "search",
     ),
     "communication_social_context": (
         "im",
@@ -194,8 +187,6 @@ CONTEXT_KEYWORDS: dict[str, tuple[str, ...]] = {
         "social",
         "chat",
         "contacts",
-        "relatives",
-        "church",
         "forum",
     ),
     "media_entertainment_context": (
@@ -296,11 +287,27 @@ TAXONOMY_PROFILE_KEYWORDS: tuple[str, ...] = (
     "noble",
     "classical",
     "comfortable",
+    "and the church",
+    "church",
 )
 
-DEFAULT_RAW_DIR = Path("/Users/pifazuoren/Downloads/talkingdata-mobile-user-demographics")
+WEAK_CONTEXT_ONLY_KEYWORDS: tuple[str, ...] = (
+    "technology information",
+    "science and technology",
+    "science and technology 1",
+    "financial information",
+    "information",
+    "technology",
+    "science",
+    "search",
+    "weather",
+    "convenience services",
+    "life service",
+)
+
+DEFAULT_RAW_DIR = Path.home() / "Downloads" / "talkingdata-mobile-user-demographics"
 DEFAULT_OUTPUT_DIR = Path(
-    "examples/digital_friction_mvp/analysis/talkingdata_v2_event_app_context"
+    "examples/digital_friction_mvp/analysis/talkingdata_v3_event_app_context"
 )
 REFERENCE_START = "2016-05-01"
 VALIDATION_START = "2016-05-04"
@@ -380,6 +387,21 @@ def _contains_phrase(text: str, phrase: str) -> bool:
 
 def _matches_any(text: str, keywords: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(keyword for keyword in keywords if _contains_phrase(text, keyword))
+
+
+def _review_status_for_strong_match(
+    *,
+    selected: str,
+    matched_contexts: list[str],
+    weak_matches: tuple[str, ...],
+) -> str:
+    if selected in TASK_ELIGIBLE_CONTEXTS:
+        if len(matched_contexts) > 1 or weak_matches:
+            return "mixed_evidence_task_context"
+        return "task_context_auto"
+    if len(matched_contexts) > 1 or weak_matches:
+        return "mixed_evidence_context_only"
+    return "context_only_auto"
 
 
 def _load_profiles(path: Path) -> dict[str, tuple[str, str]]:
@@ -517,6 +539,16 @@ def classify_categories(categories: tuple[str, ...] | list[str]) -> AppContextRe
         )
 
     joined = " ".join(normalized_categories)
+    weak_matches = _matches_any(joined, WEAK_CONTEXT_ONLY_KEYWORDS)
+    if _contains_phrase(joined, "online shopping navigation"):
+        return AppContextResult(
+            app_context="shopping_lifestyle_context",
+            task_eligible=True,
+            matched_contexts=("shopping_lifestyle_context",),
+            mapping_basis="strict_special_case:online_shopping_navigation",
+            review_status="task_context_auto",
+        )
+
     matched_contexts: list[str] = []
     matched_terms: dict[str, tuple[str, ...]] = {}
     for context, keywords in CONTEXT_KEYWORDS.items():
@@ -537,7 +569,11 @@ def classify_categories(categories: tuple[str, ...] | list[str]) -> AppContextRe
             task_eligible=selected in TASK_ELIGIBLE_CONTEXTS,
             matched_contexts=tuple(matched_contexts),
             mapping_basis=f"strong_context_keywords:{selected}:{','.join(matched_terms[selected])}",
-            review_status="task_context_auto" if selected in TASK_ELIGIBLE_CONTEXTS else "context_only_auto",
+            review_status=_review_status_for_strong_match(
+                selected=selected,
+                matched_contexts=matched_contexts,
+                weak_matches=weak_matches,
+            ),
         )
 
     finance_matches = _matches_any(joined, FINANCE_REVIEW_KEYWORDS)
@@ -558,6 +594,15 @@ def classify_categories(categories: tuple[str, ...] | list[str]) -> AppContextRe
             matched_contexts=("taxonomy_profile_only",),
             mapping_basis=f"taxonomy_profile_only:{','.join(taxonomy_matches)}",
             review_status="taxonomy_profile_only",
+        )
+
+    if weak_matches:
+        return AppContextResult(
+            app_context="unknown_or_unmapped",
+            task_eligible=False,
+            matched_contexts=("unknown_or_unmapped",),
+            mapping_basis=f"weak_context_only_keywords:{','.join(weak_matches)}",
+            review_status="ambiguous_context_only",
         )
 
     return AppContextResult(
@@ -589,7 +634,7 @@ def _write_context_prior(
     uses_validation_data: bool,
 ) -> None:
     prior: dict[str, Any] = {
-        "schema_version": "talkingdata_app_context_prior_v2",
+        "schema_version": "talkingdata_app_context_prior_v3",
         "source_split": split,
         "uses_validation_data": bool(uses_validation_data),
         "raw_hashes": raw_hashes,
@@ -651,6 +696,7 @@ def _write_task_opportunity_prior(
         "notes": [
             "TalkingData provides app-level context, not app-internal task labels.",
             "This artifact is a conservative prototype bridge from app context to possible digital friction task family.",
+            "v3 strict cleaning does not promote ambiguous taxonomy/profile/content labels to task-eligible contexts.",
             "finance_candidate_review is audit-only and not task-eligible in this version.",
         ],
     }
@@ -988,7 +1034,7 @@ def clean_talkingdata_event_app_context(raw_dir: Path, output_dir: Path) -> dict
     manifest.write_text(
         json.dumps(
             {
-                "schema_version": "talkingdata_event_app_context_cleaning_v2",
+                "schema_version": "talkingdata_event_app_context_cleaning_v3",
                 "raw_dir": str(raw_dir),
                 "raw_hashes": raw_hashes,
                 "eligible_device_count": len(eligible_devices),
@@ -1003,6 +1049,9 @@ def clean_talkingdata_event_app_context(raw_dir: Path, output_dir: Path) -> dict
                 "notes": [
                     "Labels are aggregated at event-app granularity before app_context classification.",
                     "taxonomy/profile labels alone do not generate task-eligible context.",
+                    "v3 strict cleaning downgrades broad content labels such as technology/information/science/weather/convenience services to context-only unless stronger scene evidence exists.",
+                    "online shopping navigation is treated as shopping/lifestyle, not transport navigation.",
+                    "Relatives 1 and church labels do not independently create communication/social context.",
                     "validation prior is marked uses_validation_data=true and must not be used at runtime.",
                     "task_opportunity_prior_by_context is a prototype bridge, not a TalkingData ground-truth label.",
                 ],

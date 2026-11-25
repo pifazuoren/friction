@@ -1,0 +1,18 @@
+{
+  "schema_version": "task_occurrence_prior_by_context_v1",
+  "source": "calibrated_simulation_layer",
+  "uses_validation_data": false,
+  "notes": [
+    "TalkingData anchors app-context exposure, not app-internal difficult tasks.",
+    "Occurrence probabilities are calibrated assumptions, not direct labels from TalkingData.",
+    "The gate is world-neutral; world presets affect friction and support after a task occurs."
+  ],
+  "task_occurrence_by_context": {
+    "finance_context": 0.25,
+    "public_service_context": 0.25,
+    "health_service_context": 0.22,
+    "shopping_lifestyle_context": 0.18,
+    "navigation_transport_context": 0.18,
+    "education_work_context": 0.15
+  }
+}

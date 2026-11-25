@@ -7,6 +7,7 @@ import pytest
 from proto.llm_psychology import (
     _STRATEGY_DELIBERATION_PROMPT_VERSION,
     _build_strategy_deliberation_cache_key,
+    _query_json_payload,
     _sanitize_trajectory_appraisal_for_context,
     clear_llm_psychology_caches,
     maybe_generate_daily_reflection,
@@ -39,6 +40,39 @@ class _DummyLLM:
         if not self._responses:
             return "{}"
         return self._responses.pop(0)
+
+
+def test_query_json_payload_audits_bounded_attempts_and_repairs() -> None:
+    llm = _DummyLLM(["not json", "still not json"] * 2)
+    audit: dict[str, object] = {}
+
+    def sanitize(payload: object) -> tuple[dict[str, object] | None, str]:
+        if payload == {"value": 1}:
+            return {"value": 1}, "ok"
+        return None, "invalid_schema"
+
+    payload, status = asyncio.run(
+        _query_json_payload(
+            llm=llm,
+            system_prompt="test",
+            user_payload={"input": "test"},
+            output_keys={"value"},
+            repair_schema_text="value must equal 1",
+            sanitize_fn=sanitize,
+            timeout=1,
+            retries=0,
+            json_attempts=2,
+            audit=audit,
+        )
+    )
+
+    assert payload is None
+    assert status == "parse_failed"
+    assert audit["json_attempts_configured"] == 2
+    assert audit["json_attempts_used"] == 2
+    assert audit["actual_requests"] == 4
+    assert audit["repair_requests"] == 2
+    assert audit["parse_status"] == "parse_failed"
 
 
 def _set_hybrid_env(monkeypatch) -> None:

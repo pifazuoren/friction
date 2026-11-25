@@ -27,6 +27,17 @@ from .bayesian_policy_lite import (
     update_bayesian_policy_memory,
 )
 from .compat import apply_compatibility_updates
+from .app_entry.bundle import HourlyAppEntryBundle
+from .app_entry.bundle_loader import simulation_day_to_talkingdata_day
+from .app_entry.habit_memory import (
+    append_context_only_row,
+    update_habit_memory_from_bundle,
+)
+from .app_entry.rollout import AppEntryRolloutResult, run_app_entry_rollout_hour
+from .app_entry.snapshot import (
+    build_day4_replay_snapshot,
+    should_create_day4_replay_snapshot,
+)
 from .experience_memory import (
     extract_memory_features,
     update_experience_memory,
@@ -45,22 +56,35 @@ from .llm_psychology import (
     resolve_trajectory_appraisal,
 )
 from .logical_clock import is_proto_logical_clock_enabled
-from .outcome_model import (
+from .memory.packet import (
+    build_relevant_mastery_summary as _build_relevant_mastery_summary,
+    build_task_relevant_memory_packet as _build_task_relevant_memory_packet,
+    compact_support_context as _compact_support_context,
+    extract_cross_task_event_tail as _extract_cross_task_event_tail,
+    extract_same_task_event_tail as _extract_same_task_event_tail,
+    support_snapshot_for_task as _support_snapshot_for_task,
+)
+from .psychology.helplessness import apply_helplessness_update
+from .support.protocol import SupportRequest, SupportResponse
+from .task_flow.outcome import (
     infer_avoid_reason,
     infer_support_mode,
     resolve_attempt_outcome,
     support_quality_from_env,
 )
 from .profile_buckets import age_bucket, persona_bucket
-from .runtime import assign_task_with_entry_decision, build_stage_transition_updates
+from .runtime import (
+    assign_task_with_entry_decision,
+    build_stage_transition_updates,
+    build_task_surface_updates,
+)
 from .state_schema import build_proto_status_attributes
-from .state_update import apply_helplessness_update
-from .support_protocol import SupportRequest, SupportResponse
 from .task_assignment import (
     MobileEntryDecision,
     app_context_candidate_hash,
     decode_task,
     encode_task,
+    failed_rollout_entry_decision,
     is_task_window_tick,
     mobile_intention_candidate_hash,
     skipped_mobile_entry_decision,
@@ -292,38 +316,6 @@ def _decode_json_list(raw_value: Any) -> list[dict[str, Any]]:
     return []
 
 
-def _support_snapshot_for_task(
-    help_effect_memory: Any,
-    task_family: str,
-) -> dict[str, Any]:
-    if not isinstance(help_effect_memory, dict):
-        return {}
-    by_task_family = help_effect_memory.get("by_task_family", {})
-    by_source = help_effect_memory.get("by_source", {})
-    return {
-        "overall": (
-            help_effect_memory.get("overall", {})
-            if isinstance(help_effect_memory.get("overall"), dict)
-            else {}
-        ),
-        "task_family": (
-            by_task_family.get(task_family, {})
-            if isinstance(by_task_family, dict)
-            else {}
-        ),
-        "source": (
-            by_source.get("generic", {})
-            if isinstance(by_source, dict)
-            else {}
-        ),
-        "support_response_audit": (
-            help_effect_memory.get("support_response_audit", {})
-            if isinstance(help_effect_memory.get("support_response_audit"), dict)
-            else {}
-        ),
-    }
-
-
 def _summarize_event_log_for_interview(event_log: list[dict[str, Any]]) -> dict[str, Any]:
     summary = {
         "event_count": 0,
@@ -483,113 +475,6 @@ def _compress_background_story(background_story: Any, max_chars: int = 120) -> s
     return summary
 
 
-def _extract_same_task_event_tail(
-    *,
-    task_family: str,
-    event_log: Any,
-    limit: int = 3,
-) -> list[dict[str, Any]]:
-    if not isinstance(event_log, list):
-        return []
-    tail: list[dict[str, Any]] = []
-    for item in reversed(event_log):
-        if not isinstance(item, dict):
-            continue
-        decision = item.get("decision", {})
-        if not isinstance(decision, dict):
-            decision = {}
-        current_task_family = str(
-            item.get("scenario") or decision.get("task_family") or ""
-        ).strip()
-        if current_task_family != str(task_family):
-            continue
-        tail.append(
-            {
-                "day": _safe_int(item.get("day"), 0),
-                "outcome_type": str(decision.get("primary_reason", "")).strip(),
-                "strategy_type": str(decision.get("strategy_type", "")).strip(),
-                "avoid_reason": str(decision.get("avoid_reason", "")).strip(),
-                "support_quality": _safe_int(decision.get("support_quality"), 0),
-                "event_level_uncontrollability": _safe_int(
-                    decision.get("event_level_uncontrollability"),
-                    0,
-                ),
-            }
-        )
-        if len(tail) >= int(limit):
-            break
-    return list(reversed(tail))
-
-
-def _extract_cross_task_event_tail(
-    *,
-    task_family: str,
-    event_log: Any,
-    limit: int = 4,
-) -> list[dict[str, Any]]:
-    if not isinstance(event_log, list):
-        return []
-    tail: list[dict[str, Any]] = []
-    for item in reversed(event_log):
-        if not isinstance(item, dict):
-            continue
-        decision = item.get("decision", {})
-        if not isinstance(decision, dict):
-            decision = {}
-        current_task_family = str(
-            item.get("scenario") or decision.get("task_family") or ""
-        ).strip()
-        if not current_task_family or current_task_family == str(task_family):
-            continue
-        tail.append(
-            {
-                "task_family": current_task_family,
-                "day": _safe_int(item.get("day"), 0),
-                "outcome_type": str(decision.get("primary_reason", "")).strip(),
-                "avoid_reason": str(decision.get("avoid_reason", "")).strip(),
-                "support_mode": str(decision.get("support_mode", "")).strip(),
-                "event_level_uncontrollability": _safe_int(
-                    decision.get("event_level_uncontrollability"),
-                    0,
-                ),
-            }
-        )
-        if len(tail) >= int(limit):
-            break
-    return list(reversed(tail))
-
-
-def _build_relevant_mastery_summary(
-    task_relevant_memory_packet: dict[str, Any],
-) -> dict[str, Any]:
-    return {
-        "same_task_controllable_success_memory": round(
-            _safe_float(
-                task_relevant_memory_packet.get(
-                    "same_task_controllable_success_memory",
-                    0.0,
-                )
-            ),
-            4,
-        ),
-        "has_controllable_success_evidence": bool(
-            task_relevant_memory_packet.get("has_controllable_success_evidence", False)
-        ),
-        "help_success_rate_same_task": round(
-            _safe_float(
-                task_relevant_memory_packet.get("help_success_rate_same_task", 0.5)
-            ),
-            4,
-        ),
-        "recent_same_task_outcomes_tail": list(
-            task_relevant_memory_packet.get("recent_same_task_outcomes_tail", [])
-        ),
-        "same_task_attribution_summary": str(
-            task_relevant_memory_packet.get("same_task_attribution_summary", "")
-        ).strip(),
-    }
-
-
 def _latest_stage_quote(stage_interview_history: Any) -> str:
     if not isinstance(stage_interview_history, list):
         return ""
@@ -600,148 +485,6 @@ def _latest_stage_quote(stage_interview_history: Any) -> str:
         if quote:
             return quote[:120]
     return ""
-
-
-def _build_task_relevant_memory_packet(
-    *,
-    task: Any,
-    task_domain_memory: Any,
-    help_effect_memory: Any,
-    recent_episode_summary: Any,
-    event_log: Any,
-) -> dict[str, Any]:
-    task_state = {}
-    if isinstance(task_domain_memory, dict):
-        raw_state = task_domain_memory.get(task.task_family)
-        if isinstance(raw_state, dict):
-            task_state = raw_state
-    help_snapshot = _support_snapshot_for_task(help_effect_memory, task.task_family)
-    family_help = (
-        help_snapshot.get("task_family", {})
-        if isinstance(help_snapshot.get("task_family"), dict)
-        else {}
-    )
-    recent = recent_episode_summary if isinstance(recent_episode_summary, dict) else {}
-    event_tail = _extract_same_task_event_tail(
-        task_family=task.task_family,
-        event_log=event_log,
-        limit=3,
-    )
-    controllable_success_memory = _safe_float(
-        task_state.get("controllable_success_memory", 0.0)
-    )
-    return {
-        "task_family": str(task.task_family),
-        "same_task_attempt_count": _safe_int(task_state.get("attempt_count"), 0),
-        "same_task_success_count": _safe_int(task_state.get("success_count"), 0),
-        "same_task_failure_count": _safe_int(task_state.get("failure_count"), 0),
-        "same_task_avoid_count": _safe_int(task_state.get("avoid_count"), 0),
-        "same_task_failure_streak": _safe_int(
-            task_state.get("same_task_failure_streak"),
-            0,
-        ),
-        "same_task_recent_negative_feedback_ema": round(
-            _safe_float(task_state.get("recent_negative_feedback_ema", 0.0)),
-            4,
-        ),
-        "same_task_last_outcome": str(task_state.get("last_outcome", "")).strip(),
-        "same_task_task_self_efficacy": round(
-            _safe_float(task_state.get("task_self_efficacy", 50.0)),
-            4,
-        ),
-        "same_task_controllable_success_memory": round(
-            controllable_success_memory,
-            4,
-        ),
-        "same_task_dominant_attribution_stability": str(
-            task_state.get("dominant_attribution_stability", "mixed")
-        ),
-        "same_task_dominant_attribution_scope": str(
-            task_state.get("dominant_attribution_scope", "task_specific")
-        ),
-        "same_task_recent_stable_attribution_ratio": round(
-            _safe_float(task_state.get("recent_stable_attribution_ratio", 0.0)),
-            4,
-        ),
-        "same_task_recent_scope_amplitude_ema": round(
-            _safe_float(
-                task_state.get("recent_scope_amplitude_ema", 0.0)
-            ),
-            4,
-        ),
-        "same_task_attribution_summary": str(
-            task_state.get("attribution_summary", "")
-        ).strip(),
-        "same_task_help_attempt_count": _safe_int(
-            family_help.get("help_attempt_count"),
-            0,
-        ),
-        "same_task_help_success_count": _safe_int(
-            family_help.get("help_success_count"),
-            0,
-        ),
-        "same_task_help_failure_count": _safe_int(
-            family_help.get("help_failure_count"),
-            0,
-        ),
-        "help_success_rate_same_task": round(
-            _safe_float(family_help.get("help_success_rate_smoothed", 0.5)),
-            4,
-        ),
-        "recent_negative_feedback_ratio": round(
-            _safe_float(recent.get("recent_negative_feedback_ratio", 0.0)),
-            4,
-        ),
-        "recent_avoid_ratio": round(
-            _safe_float(recent.get("recent_avoid_ratio", 0.0)),
-            4,
-        ),
-        "recent_help_seek_ratio": round(
-            _safe_float(recent.get("recent_help_seek_ratio", 0.0)),
-            4,
-        ),
-        "recent_same_task_failure_count": _safe_int(
-            recent.get("recent_same_task_failure_count"),
-            0,
-        ),
-        "recent_failure_pressure": round(
-            _safe_float(recent.get("recent_failure_pressure", 0.0)),
-            4,
-        ),
-        "recent_same_task_outcomes_tail": [
-            str(item.get("outcome_type", "")).strip() for item in event_tail
-        ],
-        "recent_same_task_events_tail": event_tail,
-        "has_controllable_success_evidence": controllable_success_memory > 0.05,
-    }
-
-
-def _compact_support_context(payload: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "same_task_attempt_count": _safe_int(payload.get("same_task_attempt_count"), 0),
-        "same_task_failure_count": _safe_int(payload.get("same_task_failure_count"), 0),
-        "same_task_failure_streak": _safe_int(
-            payload.get("same_task_failure_streak"),
-            0,
-        ),
-        "same_task_last_outcome": _compact_status_text(
-            payload.get("same_task_last_outcome"),
-            default="",
-        ),
-        "help_success_rate_same_task": _safe_float(
-            payload.get("help_success_rate_same_task"),
-            0.5,
-        ),
-        "same_task_attribution_summary": _compact_status_note(
-            payload.get("same_task_attribution_summary"),
-            default="",
-            max_chars=220,
-        ),
-        "recent_same_task_outcomes_tail": payload.get(
-            "recent_same_task_outcomes_tail",
-            [],
-        ),
-    }
 
 
 class DigitalHelplessnessAgent(SocietyAgent):
@@ -946,6 +689,199 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "current_intention", status_text
         )
         await self.memory.status.update("friction_step_signal", payload)
+
+    async def _persist_replay_entry_state(
+        self,
+        entry_decision: MobileEntryDecision,
+    ) -> None:
+        decision_payload = entry_decision.to_dict()
+        audit = decision_payload.get("audit", {})
+        if not isinstance(audit, dict):
+            return
+        if str(audit.get("entry_mode", "")).strip() != "app_context_replay_bundle":
+            return
+        bundle = HourlyAppEntryBundle.from_dict(
+            {
+                "device_id": audit.get("device_id", ""),
+                "day": audit.get("talkingdata_day"),
+                "hour": audit.get("hour"),
+                "active": audit.get("active", False),
+                "active_event_app_exposures": audit.get(
+                    "active_event_app_exposures",
+                    0,
+                ),
+                "app_context_counts": audit.get("app_context_counts", {}),
+                "primary_context": (
+                    audit.get("primary_context")
+                    or decision_payload.get("selected_app_context")
+                    or ""
+                ),
+                "source": audit.get("source", "talkingdata_replay"),
+            }
+        )
+        habit_memory = update_habit_memory_from_bundle(
+            await self.memory.status.get("proto_app_entry_habit_memory", {}),
+            bundle,
+        )
+        await self.memory.status.update(
+            "proto_app_entry_habit_memory",
+            habit_memory,
+        )
+        if not bool(decision_payload.get("task_generated", False)):
+            context_only_rows = append_context_only_row(
+                await self.memory.status.get(
+                    "proto_app_entry_context_only_rows_json",
+                    [],
+                ),
+                decision=decision_payload,
+            )
+            await self.memory.status.update(
+                "proto_app_entry_context_only_rows_json",
+                context_only_rows,
+            )
+        if should_create_day4_replay_snapshot(decision_payload):
+            env = getattr(self.environment, "environment", {})
+            if not isinstance(env, dict):
+                env = {}
+            snapshot = build_day4_replay_snapshot(
+                agent_id=int(self.id),
+                world_name=str(env.get("world_name") or os.getenv("WORLD_NAME", "")),
+                decision=decision_payload,
+                app_entry_habit_memory=habit_memory,
+                helplessness_score=_clamp(
+                    _safe_float(
+                        await self.memory.status.get("helplessness_score", 0.0)
+                    )
+                ),
+                trust_in_apps=_clamp(
+                    _safe_float(await self.memory.status.get("trust_in_apps", 0.0))
+                ),
+                avoidance_tendency=_clamp(
+                    _safe_float(
+                        await self.memory.status.get("avoidance_tendency", 0.0)
+                    )
+                ),
+                task_domain_memory=await self.memory.status.get(
+                    "task_domain_memory",
+                    {},
+                ),
+                help_effect_memory=await self.memory.status.get(
+                    "help_effect_memory",
+                    {},
+                ),
+                recent_episode_buffer=await self.memory.status.get(
+                    "recent_episode_buffer",
+                    [],
+                ),
+                bayesian_control_memory=await self.memory.status.get(
+                    "proto_bayesian_control_memory",
+                    {},
+                ),
+                bayesian_policy_memory=await self.memory.status.get(
+                    "proto_bayesian_policy_memory",
+                    {},
+                ),
+                bayesian_controllability_lite_memory=await self.memory.status.get(
+                    "proto_bayesian_controllability_lite_memory",
+                    {},
+                ),
+            )
+            await self.memory.status.update("proto_day4_replay_snapshot", snapshot)
+
+    async def _persist_rollout_entry_state(
+        self,
+        rollout_result: AppEntryRolloutResult,
+    ) -> None:
+        decision_payload = rollout_result.decision.to_dict()
+        audit = decision_payload.get("audit", {})
+        if not isinstance(audit, dict):
+            raise ValueError("rollout decision audit must be a dictionary")
+        if str(audit.get("entry_phase", "")) != "llm_rollout":
+            raise ValueError("rollout decision is missing llm_rollout phase audit")
+        row = {
+            "agent_id": int(self.id),
+            "device_id": rollout_result.bundle.device_id,
+            "simulation_day": int(audit.get("simulation_day", 0)),
+            "talkingdata_day": int(rollout_result.bundle.day),
+            "hour": int(rollout_result.bundle.hour),
+            "active": bool(rollout_result.bundle.active),
+            "active_event_app_exposures": int(
+                rollout_result.bundle.active_event_app_exposures
+            ),
+            "app_context_counts": dict(rollout_result.bundle.app_context_counts),
+            "primary_context": rollout_result.bundle.primary_context,
+            "source": rollout_result.bundle.source,
+            "dominant_need": rollout_result.needs.dominant_need,
+            "need_pressures": dict(rollout_result.needs.need_pressures),
+            "attitude": float(rollout_result.plan.attitude),
+            "subjective_norm": float(rollout_result.plan.subjective_norm),
+            "perceived_control": float(rollout_result.plan.perceived_control),
+            "plan_confidence": float(rollout_result.plan.confidence),
+            "task_generated": bool(rollout_result.decision.task_generated),
+            "entry_status": rollout_result.decision.entry_status,
+            "needs_prompt_version": str(audit.get("needs_prompt_version", "")),
+            "needs_prompt_hash": str(audit.get("needs_prompt_hash", "")),
+            "needs_json_attempts_used": int(
+                audit.get("needs_json_attempts_used", 0)
+            ),
+            "needs_actual_requests": int(audit.get("needs_actual_requests", 0)),
+            "needs_repair_requests": int(audit.get("needs_repair_requests", 0)),
+            "plan_prompt_version": str(audit.get("plan_prompt_version", "")),
+            "plan_prompt_hash": str(audit.get("plan_prompt_hash", "")),
+            "plan_json_attempts_used": int(audit.get("plan_json_attempts_used", 0)),
+            "plan_actual_requests": int(audit.get("plan_actual_requests", 0)),
+            "plan_repair_requests": int(audit.get("plan_repair_requests", 0)),
+            "input_packet_hash": str(audit.get("input_packet_hash", "")),
+            "uses_validation_data": False,
+        }
+        raw_rows = await self.memory.status.get(
+            "proto_app_entry_rollout_rows_json", []
+        )
+        rows = list(raw_rows) if isinstance(raw_rows, list) else []
+        rows.append(row)
+        await self.memory.status.update(
+            "proto_app_entry_rollout_rows_json",
+            rows[-96:],
+        )
+        await self.memory.status.update(
+            "proto_latest_digital_need",
+            rollout_result.needs.to_dict(),
+        )
+        await self.memory.status.update(
+            "proto_latest_app_entry_plan",
+            rollout_result.plan.to_dict(),
+        )
+
+    async def _persist_rollout_error_state(
+        self,
+        entry_decision: MobileEntryDecision,
+    ) -> None:
+        audit = entry_decision.audit
+        if str(audit.get("entry_status", "")) != "llm_rollout_error":
+            raise ValueError("rollout error audit has an invalid entry_status")
+        row = {
+            "agent_id": int(self.id),
+            "device_id": str(audit.get("device_id", "")),
+            "simulation_day": int(audit.get("simulation_day", 0)),
+            "talkingdata_day": int(audit.get("talkingdata_day", 0)),
+            "hour": int(audit.get("hour", 0)),
+            "entry_status": "llm_rollout_error",
+            "bundle_generated": False,
+            "task_generated": False,
+            "error_type": str(audit.get("error_type", "")),
+            "error_message": str(audit.get("error_message", ""))[:2000],
+            "error_hash": str(audit.get("error_hash", "")),
+            "uses_validation_data": False,
+        }
+        raw_rows = await self.memory.status.get(
+            "proto_app_entry_rollout_error_rows_json", []
+        )
+        rows = list(raw_rows) if isinstance(raw_rows, list) else []
+        rows.append(row)
+        await self.memory.status.update(
+            "proto_app_entry_rollout_error_rows_json",
+            rows[-96:],
+        )
 
     async def status_summary(self) -> None:
         try:
@@ -2135,45 +2071,172 @@ class DigitalHelplessnessAgent(SocietyAgent):
             if runtime_config.proto_task_entry_mode != "fixed_assignment"
             else None
         )
-        task, task_updates, _, entry_decision = assign_task_with_entry_decision(
-            existing_task=task,
-            agent_id=int(self.id),
-            day=int(day),
-            tick_seconds=float(t),
-            env=env,
-            entry_mode=(
-                "mobile_intention_rule"
+        replay_device_id = ""
+        replay_selected_rank = 0
+        if runtime_config.proto_task_entry_mode in {
+            "app_context_replay_bundle",
+            "app_context_replay_then_llm_rollout",
+        }:
+            replay_device_id = str(
+                await self.memory.status.get(
+                    "proto_app_entry_replay_device_id",
+                    "",
+                )
+                or ""
+            ).strip()
+            replay_selected_rank = _safe_int(
+                await self.memory.status.get(
+                    "proto_app_entry_replay_selected_rank",
+                    0,
+                ),
+                0,
+            )
+        rollout_result: AppEntryRolloutResult | None = None
+        talkingdata_day = simulation_day_to_talkingdata_day(int(day))
+        if (
+            runtime_config.proto_task_entry_mode
+            == "app_context_replay_then_llm_rollout"
+            and 4 <= talkingdata_day <= 7
+        ):
+            try:
+                rollout_result = await run_app_entry_rollout_hour(
+                    llm=getattr(self, "llm", None),
+                    agent_id=int(self.id),
+                    simulation_day=int(day),
+                    tick_seconds=float(t),
+                    environment=env,
+                    stable_profile=entry_profile,
+                    device_id=replay_device_id,
+                    selected_rank=replay_selected_rank,
+                    habit_memory=await self.memory.status.get(
+                        "proto_app_entry_habit_memory", {}
+                    ),
+                    day4_snapshot=await self.memory.status.get(
+                        "proto_day4_replay_snapshot", {}
+                    ),
+                    recent_rollout_rows=await self.memory.status.get(
+                        "proto_app_entry_rollout_rows_json", []
+                    ),
+                    recent_task_episodes=recent_episode_buffer,
+                    latest_reflection=current_daily_reflection,
+                    helplessness=helplessness,
+                    trust=trust,
+                    avoidance=avoidance,
+                    needs_prompt_version=(
+                        runtime_config.proto_app_entry_needs_prompt_version
+                    ),
+                    plan_prompt_version=(
+                        runtime_config.proto_app_entry_plan_prompt_version
+                    ),
+                    json_attempts=(
+                        runtime_config.proto_app_entry_rollout_json_attempts
+                    ),
+                    min_confidence=(
+                        runtime_config.proto_app_entry_rollout_min_confidence
+                    ),
+                    top_k=runtime_config.proto_app_entry_rollout_top_k,
+                    absolute_exposure_cap=(
+                        runtime_config.proto_app_entry_rollout_max_exposures
+                    ),
+                    timeout=runtime_config.proto_llm_psychology_timeout,
+                    retries=runtime_config.proto_llm_psychology_retries,
+                    task_opportunity_mapping_path=(
+                        runtime_config.proto_task_opportunity_mapping_path
+                    ),
+                    task_occurrence_gate_enabled=(
+                        runtime_config.proto_task_occurrence_gate_enabled
+                    ),
+                    task_occurrence_prior_path=(
+                        runtime_config.proto_task_occurrence_prior_path
+                    ),
+                    task_occurrence_gate_multiplier=(
+                        runtime_config.proto_task_occurrence_gate_multiplier
+                    ),
+                    existing_task_pending=task is not None,
+                )
+            except Exception as exc:
+                entry_decision = failed_rollout_entry_decision(
+                    agent_id=int(self.id),
+                    device_id=replay_device_id,
+                    simulation_day=int(day),
+                    talkingdata_day=talkingdata_day,
+                    tick_seconds=float(t),
+                    entry_mode=runtime_config.proto_task_entry_mode,
+                    error=exc,
+                )
+                task_updates = {}
+            else:
+                entry_decision = rollout_result.decision
+                if task is None:
+                    task = entry_decision.task
+                    task_updates = (
+                        build_task_surface_updates(
+                            task=task,
+                            day=int(day),
+                            tick_seconds=float(t),
+                        )
+                        if task is not None
+                        else {}
+                    )
+                else:
+                    task_updates = {}
+        else:
+            if (
+                runtime_config.proto_task_entry_mode
+                == "app_context_replay_then_llm_rollout"
+                and talkingdata_day not in runtime_config.proto_app_entry_replay_days
+            ):
+                raise ValueError(
+                    "combined app-entry mode only supports TalkingData days 1..7"
+                )
+            effective_entry_mode = (
+                "app_context_replay_bundle"
+                if runtime_config.proto_task_entry_mode
+                == "app_context_replay_then_llm_rollout"
+                else "mobile_intention_rule"
                 if runtime_config.proto_task_entry_mode
                 == "mobile_intention_llm_rerank_online_mc"
                 else "app_context_rule"
                 if runtime_config.proto_task_entry_mode
                 == "app_context_llm_rerank_online_mc"
                 else runtime_config.proto_task_entry_mode
-            ),
-            stable_profile=entry_profile,
-            calibration_path=(
-                runtime_config.proto_mobile_intention_calibration_path
-            ),
-            mapping_path=runtime_config.proto_mobile_intention_mapping_path,
-            app_context_prior_path=(
-                runtime_config.proto_app_context_prior_path
-            ),
-            task_opportunity_mapping_path=(
-                runtime_config.proto_task_opportunity_mapping_path
-            ),
-            confidence_threshold=(
-                runtime_config.proto_mobile_intention_confidence_threshold
-            ),
-            task_occurrence_gate_enabled=(
-                runtime_config.proto_task_occurrence_gate_enabled
-            ),
-            task_occurrence_prior_path=(
-                runtime_config.proto_task_occurrence_prior_path
-            ),
-            task_occurrence_gate_multiplier=(
-                runtime_config.proto_task_occurrence_gate_multiplier
-            ),
-        )
+            )
+            task, task_updates, _, entry_decision = assign_task_with_entry_decision(
+                existing_task=task,
+                agent_id=int(self.id),
+                day=int(day),
+                tick_seconds=float(t),
+                env=env,
+                entry_mode=effective_entry_mode,
+                stable_profile=entry_profile,
+                calibration_path=(
+                    runtime_config.proto_mobile_intention_calibration_path
+                ),
+                mapping_path=runtime_config.proto_mobile_intention_mapping_path,
+                app_context_prior_path=(
+                    runtime_config.proto_app_context_prior_path
+                ),
+                task_opportunity_mapping_path=(
+                    runtime_config.proto_task_opportunity_mapping_path
+                ),
+                confidence_threshold=(
+                    runtime_config.proto_mobile_intention_confidence_threshold
+                ),
+                task_occurrence_gate_enabled=(
+                    runtime_config.proto_task_occurrence_gate_enabled
+                ),
+                task_occurrence_prior_path=(
+                    runtime_config.proto_task_occurrence_prior_path
+                ),
+                task_occurrence_gate_multiplier=(
+                    runtime_config.proto_task_occurrence_gate_multiplier
+                ),
+                replay_bundle_path=runtime_config.proto_app_entry_replay_bundle_path,
+                replay_device_path=runtime_config.proto_app_entry_replay_device_path,
+                replay_days=runtime_config.proto_app_entry_replay_days,
+                replay_device_id=replay_device_id,
+                replay_selected_rank=replay_selected_rank,
+            )
         if (
             entry_decision is not None
             and runtime_config.proto_task_entry_mode
@@ -2284,6 +2347,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
             entry_decision.audit["entry_eval_interval_minutes"] = (
                 runtime_config.proto_mobile_intention_eval_interval_minutes
             )
+            await self._persist_replay_entry_state(entry_decision)
+            if rollout_result is not None:
+                await self._persist_rollout_entry_state(rollout_result)
+            elif entry_decision.entry_status == "llm_rollout_error":
+                await self._persist_rollout_error_state(entry_decision)
             await self.memory.status.update(
                 "proto_mobile_entry_decision",
                 entry_decision.to_dict(),

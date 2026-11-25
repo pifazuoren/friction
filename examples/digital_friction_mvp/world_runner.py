@@ -78,6 +78,15 @@ FINGERPRINT_ENV_KEYS = (
     "PROTO_BAYESIAN_POLICY_LITE_LAMBDA_LLM",
     "PROTO_BAYESIAN_POLICY_LITE_MIN_LLM_CONFIDENCE",
     "PROTO_TASK_ENTRY_MODE",
+    "PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH",
+    "PROTO_APP_ENTRY_REPLAY_DEVICE_PATH",
+    "PROTO_APP_ENTRY_REPLAY_DAYS",
+    "PROTO_APP_ENTRY_NEEDS_PROMPT_VERSION",
+    "PROTO_APP_ENTRY_PLAN_PROMPT_VERSION",
+    "PROTO_APP_ENTRY_ROLLOUT_JSON_ATTEMPTS",
+    "PROTO_APP_ENTRY_ROLLOUT_MIN_CONFIDENCE",
+    "PROTO_APP_ENTRY_ROLLOUT_TOP_K",
+    "PROTO_APP_ENTRY_ROLLOUT_MAX_EXPOSURES",
     "PROTO_MOBILE_INTENTION_CALIBRATION_PATH",
     "PROTO_MOBILE_INTENTION_MAPPING_PATH",
     "PROTO_MOBILE_INTENTION_CONFIDENCE_THRESHOLD",
@@ -259,6 +268,14 @@ def _write_manifest_csv(rows: list[dict[str, Any]], output_path: Path) -> None:
         "stage_count",
         "decision_interval_minutes",
         "decision_intervals_per_day",
+        "proto_task_entry_mode",
+        "entry_path_family",
+        "legacy_entry_path",
+        "uses_hourly_bundle",
+        "uses_forced_replay",
+        "proto_app_entry_replay_bundle_path",
+        "proto_app_entry_replay_device_path",
+        "proto_app_entry_replay_days",
         "total_days",
         "opportunities_per_agent",
         "opportunities_total",
@@ -379,6 +396,23 @@ def main() -> None:
     base_env = os.environ.copy()
     base_env.setdefault("STAGE_MODE", "single")
     base_env.setdefault("STAGE_SINGLE_NAME", "steady")
+    base_env.setdefault("EVENT_DECISION_INTERVAL_MINUTES", "60")
+    base_env.setdefault("PROTO_TASK_ENTRY_MODE", "app_context_replay_bundle")
+    base_env.setdefault(
+        "PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH",
+        (
+            "agentsociety_data/elderly/10person_v3/"
+            "talkingdata_elderly_10_reference_hourly_bundle_day1_3.csv"
+        ),
+    )
+    base_env.setdefault(
+        "PROTO_APP_ENTRY_REPLAY_DEVICE_PATH",
+        (
+            "agentsociety_data/elderly/10person_v3/"
+            "talkingdata_elderly_10_selected_devices.csv"
+        ),
+    )
+    base_env.setdefault("PROTO_APP_ENTRY_REPLAY_DAYS", "1,2,3")
     if (
         base_env.get("PROTO_TASK_ENTRY_MODE", "").strip().lower()
         in {"mobile_intention_llm_rerank_online_mc", "app_context_llm_rerank_online_mc"}
@@ -503,6 +537,32 @@ def main() -> None:
                     "decision_intervals_per_day": _safe_int(
                         metadata.get("decision_intervals_per_day"), 0
                     ),
+                    "proto_task_entry_mode": str(
+                        metadata.get("proto_task_entry_mode", "")
+                    ),
+                    "entry_path_family": str(metadata.get("entry_path_family", "")),
+                    "legacy_entry_path": int(bool(metadata.get("legacy_entry_path", False))),
+                    "uses_hourly_bundle": int(
+                        bool(metadata.get("uses_hourly_bundle", False))
+                    ),
+                    "uses_forced_replay": int(
+                        bool(metadata.get("uses_forced_replay", False))
+                    ),
+                    "proto_app_entry_replay_bundle_path": str(
+                        metadata.get("proto_app_entry_replay_bundle_path", "")
+                    ),
+                    "proto_app_entry_replay_device_path": str(
+                        metadata.get("proto_app_entry_replay_device_path", "")
+                    ),
+                    "proto_app_entry_replay_days": ",".join(
+                        str(day)
+                        for day in metadata.get("proto_app_entry_replay_days", [])
+                    )
+                    if isinstance(
+                        metadata.get("proto_app_entry_replay_days", []),
+                        list,
+                    )
+                    else str(metadata.get("proto_app_entry_replay_days", "")),
                     "total_days": _safe_int(metadata.get("total_days"), 0),
                     "opportunities_per_agent": _safe_int(
                         metadata.get("opportunities_per_agent"), 0
@@ -533,6 +593,11 @@ def main() -> None:
             raise FileNotFoundError(f"summary_script_path not found: {summary_script}")
         world_summary_csv = analysis_dir / f"parallel_world_summary_{group_id}.csv"
         stage_summary_csv = analysis_dir / f"parallel_stage_summary_{group_id}.csv"
+        app_entry_replay_csv = analysis_dir / f"app_entry_replay_summary_{group_id}.csv"
+        app_entry_rollout_csv = analysis_dir / f"app_entry_rollout_hourly_{group_id}.csv"
+        app_entry_rollout_error_csv = (
+            analysis_dir / f"app_entry_rollout_errors_{group_id}.csv"
+        )
         plot_dir = analysis_dir / f"parallel_world_plots_{group_id}"
         summary_cmd = [
             args.python_bin,
@@ -546,6 +611,17 @@ def main() -> None:
             "--plot-dir",
             str(plot_dir),
         ]
+        if summary_script.name == "analysis_parallel_worlds.py":
+            summary_cmd.extend(
+                [
+                    "--out-app-entry-replay-csv",
+                    str(app_entry_replay_csv),
+                    "--out-app-entry-rollout-csv",
+                    str(app_entry_rollout_csv),
+                    "--out-app-entry-rollout-error-csv",
+                    str(app_entry_rollout_error_csv),
+                ]
+            )
         summary_proc = subprocess.run(
             summary_cmd,
             cwd=str(cwd),
@@ -559,6 +635,9 @@ def main() -> None:
             )
         print(str(world_summary_csv))
         print(str(stage_summary_csv))
+        if summary_script.name == "analysis_parallel_worlds.py":
+            print(str(app_entry_replay_csv))
+            print(str(app_entry_rollout_csv))
         print(str(plot_dir))
 
         if args.summarize_paired:

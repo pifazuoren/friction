@@ -24,6 +24,8 @@ VALID_TASK_ENTRY_MODES = {
     "mobile_intention_llm_rerank_online_mc",
     "app_context_rule",
     "app_context_llm_rerank_online_mc",
+    "app_context_replay_bundle",
+    "app_context_replay_then_llm_rollout",
 }
 VALID_OUTCOME_MODEL_MODES = {
     "rule_v1",
@@ -56,6 +58,15 @@ DEFAULT_TASK_OCCURRENCE_PRIOR_PATH = (
     "examples/digital_friction_mvp/analysis/"
     "talkingdata_v2_event_app_context/task_occurrence_prior_by_context.json"
 )
+DEFAULT_APP_ENTRY_REPLAY_BUNDLE_PATH = (
+    "agentsociety_data/elderly/10person_v3/"
+    "talkingdata_elderly_10_reference_hourly_bundle_day1_3.csv"
+)
+DEFAULT_APP_ENTRY_REPLAY_DEVICE_PATH = (
+    "agentsociety_data/elderly/10person_v3/"
+    "talkingdata_elderly_10_selected_devices.csv"
+)
+DEFAULT_APP_ENTRY_REPLAY_DAYS = (1, 2, 3)
 
 
 def _parse_bool_env(name: str, default: bool = False) -> bool:
@@ -64,6 +75,23 @@ def _parse_bool_env(name: str, default: bool = False) -> bool:
         return default
     lowered = value.strip().lower()
     return lowered not in {"0", "false", "no", "off"}
+
+
+def _parse_replay_days_env(name: str, default: tuple[int, ...]) -> tuple[int, ...]:
+    raw_value = os.getenv(name)
+    if raw_value is None or not raw_value.strip():
+        return default
+    values = tuple(
+        int(token.strip())
+        for token in raw_value.split(",")
+        if token.strip()
+    )
+    if not values:
+        raise ValueError(f"{name} must not be empty")
+    for day in values:
+        if day < 1 or day > 7:
+            raise ValueError(f"{name} values must be in TalkingData day range 1..7")
+    return values
 
 
 def _normalize_bayesian_policy_lite_utility_profile(value: str | None) -> str:
@@ -142,6 +170,15 @@ class RuntimeConfig:
     proto_bayesian_policy_lite_lambda_llm: float
     proto_bayesian_policy_lite_min_llm_confidence: float
     proto_task_entry_mode: str
+    proto_app_entry_replay_bundle_path: str
+    proto_app_entry_replay_device_path: str
+    proto_app_entry_replay_days: tuple[int, ...]
+    proto_app_entry_needs_prompt_version: str
+    proto_app_entry_plan_prompt_version: str
+    proto_app_entry_rollout_json_attempts: int
+    proto_app_entry_rollout_min_confidence: float
+    proto_app_entry_rollout_top_k: int
+    proto_app_entry_rollout_max_exposures: int
     proto_mobile_intention_calibration_path: str
     proto_mobile_intention_mapping_path: str
     proto_mobile_intention_confidence_threshold: float
@@ -462,13 +499,88 @@ def load_runtime_config() -> RuntimeConfig:
         ),
     )
     proto_task_entry_mode = (
-        os.getenv("PROTO_TASK_ENTRY_MODE", "fixed_assignment").strip().lower()
+        os.getenv("PROTO_TASK_ENTRY_MODE", "app_context_replay_bundle").strip().lower()
     )
     if proto_task_entry_mode not in VALID_TASK_ENTRY_MODES:
         raise ValueError(
             "PROTO_TASK_ENTRY_MODE must be one of: "
             + ", ".join(sorted(VALID_TASK_ENTRY_MODES))
         )
+    proto_app_entry_replay_bundle_path = os.getenv(
+        "PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH",
+        DEFAULT_APP_ENTRY_REPLAY_BUNDLE_PATH,
+    ).strip()
+    proto_app_entry_replay_device_path = os.getenv(
+        "PROTO_APP_ENTRY_REPLAY_DEVICE_PATH",
+        DEFAULT_APP_ENTRY_REPLAY_DEVICE_PATH,
+    ).strip()
+    proto_app_entry_replay_days = _parse_replay_days_env(
+        "PROTO_APP_ENTRY_REPLAY_DAYS",
+        DEFAULT_APP_ENTRY_REPLAY_DAYS,
+    )
+    proto_app_entry_needs_prompt_version = os.getenv(
+        "PROTO_APP_ENTRY_NEEDS_PROMPT_VERSION",
+        "digital_needs_v1",
+    ).strip()
+    proto_app_entry_plan_prompt_version = os.getenv(
+        "PROTO_APP_ENTRY_PLAN_PROMPT_VERSION",
+        "app_entry_plan_v3",
+    ).strip()
+    if not proto_app_entry_needs_prompt_version:
+        raise ValueError("PROTO_APP_ENTRY_NEEDS_PROMPT_VERSION must not be empty")
+    if not proto_app_entry_plan_prompt_version:
+        raise ValueError("PROTO_APP_ENTRY_PLAN_PROMPT_VERSION must not be empty")
+    proto_app_entry_rollout_json_attempts = max(
+        1,
+        min(
+            5,
+            int(float(os.getenv("PROTO_APP_ENTRY_ROLLOUT_JSON_ATTEMPTS", "5"))),
+        ),
+    )
+    proto_app_entry_rollout_min_confidence = max(
+        0.0,
+        min(
+            1.0,
+            float(os.getenv("PROTO_APP_ENTRY_ROLLOUT_MIN_CONFIDENCE", "0.50")),
+        ),
+    )
+    proto_app_entry_rollout_top_k = max(
+        1,
+        min(
+            12,
+            int(float(os.getenv("PROTO_APP_ENTRY_ROLLOUT_TOP_K", "5"))),
+        ),
+    )
+    proto_app_entry_rollout_max_exposures = max(
+        1,
+        int(float(os.getenv("PROTO_APP_ENTRY_ROLLOUT_MAX_EXPOSURES", "12"))),
+    )
+    replay_modes = {
+        "app_context_replay_bundle",
+        "app_context_replay_then_llm_rollout",
+    }
+    if proto_task_entry_mode in replay_modes:
+        for artifact_name, artifact_path in (
+            (
+                "PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH",
+                proto_app_entry_replay_bundle_path,
+            ),
+            (
+                "PROTO_APP_ENTRY_REPLAY_DEVICE_PATH",
+                proto_app_entry_replay_device_path,
+            ),
+        ):
+            if not artifact_path:
+                raise ValueError(f"{artifact_name} is required in replay bundle mode")
+            if "validation" in artifact_path.lower():
+                raise ValueError(f"{artifact_name} must not point to validation data")
+    if proto_task_entry_mode == "app_context_replay_then_llm_rollout":
+        if tuple(proto_app_entry_replay_days) != (1, 2, 3):
+            raise ValueError(
+                "combined app-entry mode requires PROTO_APP_ENTRY_REPLAY_DAYS=1,2,3"
+            )
+        if os.getenv("STAGE_MODE", "full").strip().lower() != "single":
+            raise ValueError("combined app-entry mode requires STAGE_MODE=single")
     proto_mobile_intention_calibration_path = os.getenv(
         "PROTO_MOBILE_INTENTION_CALIBRATION_PATH",
         "",
@@ -812,6 +924,15 @@ def load_runtime_config() -> RuntimeConfig:
             proto_bayesian_policy_lite_min_llm_confidence
         ),
         proto_task_entry_mode=proto_task_entry_mode,
+        proto_app_entry_replay_bundle_path=proto_app_entry_replay_bundle_path,
+        proto_app_entry_replay_device_path=proto_app_entry_replay_device_path,
+        proto_app_entry_replay_days=proto_app_entry_replay_days,
+        proto_app_entry_needs_prompt_version=proto_app_entry_needs_prompt_version,
+        proto_app_entry_plan_prompt_version=proto_app_entry_plan_prompt_version,
+        proto_app_entry_rollout_json_attempts=proto_app_entry_rollout_json_attempts,
+        proto_app_entry_rollout_min_confidence=proto_app_entry_rollout_min_confidence,
+        proto_app_entry_rollout_top_k=proto_app_entry_rollout_top_k,
+        proto_app_entry_rollout_max_exposures=proto_app_entry_rollout_max_exposures,
         proto_mobile_intention_calibration_path=(
             proto_mobile_intention_calibration_path
         ),

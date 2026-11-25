@@ -70,8 +70,8 @@ TASK_OPPORTUNITY_BY_CONTEXT: dict[str, dict[str, float]] = {
 
 TASK_ELIGIBLE_CONTEXTS: frozenset[str] = frozenset(TASK_OPPORTUNITY_BY_CONTEXT)
 
-DEFAULT_REFERENCE_CSV = Path("/Users/pifazuoren/Downloads/SeniorApp/TalkingData/elder_reference.csv")
-DEFAULT_VALIDATION_CSV = Path("/Users/pifazuoren/Downloads/SeniorApp/TalkingData/elder_validation.csv")
+DEFAULT_REFERENCE_CSV = Path.home() / "Downloads/SeniorApp/TalkingData/elder_reference.csv"
+DEFAULT_VALIDATION_CSV = Path.home() / "Downloads/SeniorApp/TalkingData/elder_validation.csv"
 DEFAULT_CATEGORY_MAP = Path(
     "examples/digital_friction_mvp/mobile_intention_artifacts/category_to_mobile_intention_map.csv"
 )

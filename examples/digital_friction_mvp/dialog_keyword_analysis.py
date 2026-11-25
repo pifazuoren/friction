@@ -158,13 +158,14 @@ def analyze_artifacts_events(artifacts_path: Path, out_dir: Path) -> None:
 
 
 def main() -> None:
+    data_dir = Path(__file__).resolve().parents[2] / "agentsociety_data"
     parser = argparse.ArgumentParser(
         description="Keyword-based dialog analysis for process indicators."
     )
     parser.add_argument("--exp-id", required=True, help="Experiment ID")
     parser.add_argument(
         "--db-path",
-        default="/Users/pifazuoren/Downloads/AgentSociety-main/agentsociety_data/sqlite.db",
+        default=str(data_dir / "sqlite.db"),
         help="Path to sqlite.db",
     )
     parser.add_argument(
@@ -178,17 +179,10 @@ def main() -> None:
     if args.out_dir:
         out_dir = Path(args.out_dir)
     else:
-        out_dir = (
-            Path("/Users/pifazuoren/Downloads/AgentSociety-main/agentsociety_data/exps")
-            / args.exp_id
-        )
+        out_dir = data_dir / "exps" / args.exp_id
 
     analyze_dialogs(db_path, args.exp_id, out_dir)
-    artifacts_path = (
-        Path("/Users/pifazuoren/Downloads/AgentSociety-main/agentsociety_data/exps")
-        / args.exp_id
-        / "artifacts.json"
-    )
+    artifacts_path = data_dir / "exps" / args.exp_id / "artifacts.json"
     analyze_artifacts_events(artifacts_path, out_dir)
     print("exported", str(out_dir / "dialog_keyword_counts_by_day.csv"))
     print("exported", str(out_dir / "dialog_keyword_top.csv"))

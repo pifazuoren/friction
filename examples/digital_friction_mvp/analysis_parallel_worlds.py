@@ -596,6 +596,339 @@ def _load_stage_summary_rows(
     return stage_rows
 
 
+def _compute_app_entry_replay_summary_rows(
+    cur: sqlite3.Cursor,
+    status_table: str,
+    *,
+    manifest_row: dict[str, Any],
+) -> list[dict[str, Any]]:
+    if not status_table or not _table_exists(cur, status_table):
+        return []
+    if "status_json" not in _table_columns(cur, status_table):
+        return []
+    rows = cur.execute(
+        f"""
+        SELECT agent_id, day, t, status_json
+        FROM {status_table}
+        ORDER BY day, t, agent_id
+        """
+    ).fetchall()
+    by_agent: dict[int, dict[str, Any]] = {}
+    seen: set[tuple[int, int, int]] = set()
+    latest_status: dict[int, dict[str, Any]] = {}
+    for agent_id_raw, row_day, row_t, raw_status in rows:
+        agent_id = _safe_int(agent_id_raw, 0)
+        try:
+            status = json.loads(raw_status or "{}")
+        except Exception:
+            continue
+        if not isinstance(status, dict):
+            continue
+        latest_status[agent_id] = status
+        decision = status.get("proto_mobile_entry_decision", {})
+        if not isinstance(decision, dict):
+            continue
+        audit = decision.get("audit", {})
+        if not isinstance(audit, dict):
+            continue
+        if str(audit.get("entry_mode", "")).strip() != "app_context_replay_bundle":
+            continue
+        talkingdata_day = _safe_int(audit.get("talkingdata_day"), 0)
+        hour = _safe_int(audit.get("hour"), _safe_int(row_t, 0) // 3600)
+        key = (agent_id, talkingdata_day, hour)
+        if key in seen:
+            continue
+        seen.add(key)
+        summary = by_agent.setdefault(
+            agent_id,
+            {
+                "group_id": str(manifest_row.get("group_id", "")).strip(),
+                "pair_index": _safe_int(manifest_row.get("pair_index"), -1),
+                "pair_seed": _safe_int(
+                    manifest_row.get("pair_seed"),
+                    _safe_int(manifest_row.get("seed"), 0),
+                ),
+                "world_order": _safe_int(manifest_row.get("world_order"), -1),
+                "world_name": str(manifest_row.get("world_name", "")).strip(),
+                "exp_id": str(manifest_row.get("exp_id", "")).strip(),
+                "status": str(manifest_row.get("status", "")).strip(),
+                "agent_id": agent_id,
+                "device_id": str(audit.get("device_id", "")),
+                "selected_rank": _safe_int(audit.get("selected_rank"), 0),
+                "replay_hours_seen": 0,
+                "active_hours": 0,
+                "inactive_hours": 0,
+                "active_event_app_exposures": 0,
+                "context_only_hours": 0,
+                "task_eligible_primary_hours": 0,
+                "task_gate_pass_hours": 0,
+                "task_generated_count": 0,
+                "pending_task_blocked_hours": 0,
+                "uses_validation_data_any": False,
+                "replay_bundle_hash": str(audit.get("bundle_hash", "")),
+                "device_mapping_hash": str(audit.get("device_mapping_hash", "")),
+                "talkingdata_days_json": set(),
+            },
+        )
+        summary["replay_hours_seen"] += 1
+        if bool(audit.get("active", False)):
+            summary["active_hours"] += 1
+        else:
+            summary["inactive_hours"] += 1
+        summary["active_event_app_exposures"] += _safe_int(
+            audit.get("active_event_app_exposures"),
+            0,
+        )
+        if not bool(decision.get("task_generated", False)):
+            summary["context_only_hours"] += 1
+        if bool(audit.get("task_eligible_context_exposure", False)):
+            summary["task_eligible_primary_hours"] += 1
+        if bool(audit.get("task_occurrence_gate_passed", False)):
+            summary["task_gate_pass_hours"] += 1
+        if bool(decision.get("task_generated", False)):
+            summary["task_generated_count"] += 1
+        if str(audit.get("context_only_reason", "")) == "existing_task_pending":
+            summary["pending_task_blocked_hours"] += 1
+        if bool(audit.get("uses_validation_data", False)):
+            summary["uses_validation_data_any"] = True
+        if talkingdata_day > 0:
+            summary["talkingdata_days_json"].add(talkingdata_day)
+
+    output_rows: list[dict[str, Any]] = []
+    for agent_id, summary in sorted(by_agent.items()):
+        status = latest_status.get(agent_id, {})
+        habit = status.get("proto_app_entry_habit_memory", {})
+        if not isinstance(habit, dict):
+            habit = {}
+        context_rows = status.get("proto_app_entry_context_only_rows_json", [])
+        if not isinstance(context_rows, list):
+            context_rows = []
+        snapshot = status.get("proto_day4_replay_snapshot", {})
+        if not isinstance(snapshot, dict):
+            snapshot = {}
+        replay_hours_seen = _safe_int(
+            habit.get("total_hours_seen"),
+            _safe_int(summary.get("replay_hours_seen"), 0),
+        )
+        output_rows.append(
+            {
+                **summary,
+                "replay_hours_seen": replay_hours_seen,
+                "habit_memory_present": int(bool(habit)),
+                "habit_total_hours_seen": _safe_int(habit.get("total_hours_seen"), 0),
+                "habit_active_hours": _safe_int(habit.get("active_hours"), 0),
+                "habit_inactive_hours": _safe_int(habit.get("inactive_hours"), 0),
+                "habit_context_total_counts_json": json.dumps(
+                    habit.get("context_total_counts", {}),
+                    ensure_ascii=False,
+                    sort_keys=True,
+                ),
+                "context_only_rows_count": len(context_rows),
+                "day4_snapshot_created": int(bool(snapshot)),
+                "day4_snapshot_world": str(snapshot.get("world", "")),
+                "final_helplessness_score": round(
+                    _safe_float(status.get("helplessness_score"), 0.0),
+                    6,
+                ),
+                "final_trust_in_apps": round(
+                    _safe_float(status.get("trust_in_apps"), 0.0),
+                    6,
+                ),
+                "final_avoidance_tendency": round(
+                    _safe_float(status.get("avoidance_tendency"), 0.0),
+                    6,
+                ),
+                "uses_validation_data_any": int(
+                    bool(summary.get("uses_validation_data_any", False))
+                ),
+                "talkingdata_days_json": json.dumps(
+                    sorted(summary.get("talkingdata_days_json", set())),
+                    ensure_ascii=False,
+                ),
+            }
+        )
+    return output_rows
+
+
+def _compute_app_entry_rollout_hourly_rows(
+    cur: sqlite3.Cursor,
+    status_table: str,
+    *,
+    manifest_row: dict[str, Any],
+) -> list[dict[str, Any]]:
+    if not status_table or not _table_exists(cur, status_table):
+        return []
+    if "status_json" not in _table_columns(cur, status_table):
+        return []
+    db_rows = cur.execute(
+        f"""
+        SELECT agent_id, status_json
+        FROM {status_table}
+        ORDER BY day, t, agent_id
+        """
+    ).fetchall()
+    unique: dict[tuple[int, int, int], dict[str, Any]] = {}
+    for agent_id_raw, raw_status in db_rows:
+        agent_id = _safe_int(agent_id_raw, 0)
+        try:
+            status = json.loads(raw_status or "{}")
+        except Exception:
+            continue
+        if not isinstance(status, dict):
+            continue
+        rollout_rows = status.get("proto_app_entry_rollout_rows_json", [])
+        if not isinstance(rollout_rows, list):
+            continue
+        for raw_row in rollout_rows:
+            if not isinstance(raw_row, dict):
+                continue
+            talkingdata_day = _safe_int(raw_row.get("talkingdata_day"), 0)
+            hour = _safe_int(raw_row.get("hour"), -1)
+            if talkingdata_day < 4 or talkingdata_day > 7 or hour < 0 or hour > 23:
+                continue
+            key = (agent_id, talkingdata_day, hour)
+            unique[key] = {
+                "group_id": str(manifest_row.get("group_id", "")).strip(),
+                "pair_index": _safe_int(manifest_row.get("pair_index"), -1),
+                "pair_seed": _safe_int(
+                    manifest_row.get("pair_seed"),
+                    _safe_int(manifest_row.get("seed"), 0),
+                ),
+                "world_order": _safe_int(manifest_row.get("world_order"), -1),
+                "world_name": str(manifest_row.get("world_name", "")).strip(),
+                "exp_id": str(manifest_row.get("exp_id", "")).strip(),
+                "status": str(manifest_row.get("status", "")).strip(),
+                "config_fingerprint": str(
+                    manifest_row.get("config_fingerprint", "")
+                ).strip(),
+                "agent_id": agent_id,
+                "device_id": str(raw_row.get("device_id", "")),
+                "simulation_day": _safe_int(raw_row.get("simulation_day"), 0),
+                "talkingdata_day": talkingdata_day,
+                "hour": hour,
+                "active": int(bool(raw_row.get("active", False))),
+                "active_event_app_exposures": _safe_int(
+                    raw_row.get("active_event_app_exposures"), 0
+                ),
+                "app_context_counts_json": json.dumps(
+                    raw_row.get("app_context_counts", {}),
+                    ensure_ascii=False,
+                    sort_keys=True,
+                ),
+                "primary_context": str(raw_row.get("primary_context", "")),
+                "source": str(raw_row.get("source", "")),
+                "dominant_need": str(raw_row.get("dominant_need", "")),
+                "need_pressures_json": json.dumps(
+                    raw_row.get("need_pressures", {}),
+                    ensure_ascii=False,
+                    sort_keys=True,
+                ),
+                "attitude": _safe_float(raw_row.get("attitude"), 0.0),
+                "subjective_norm": _safe_float(
+                    raw_row.get("subjective_norm"), 0.0
+                ),
+                "perceived_control": _safe_float(
+                    raw_row.get("perceived_control"), 0.0
+                ),
+                "plan_confidence": _safe_float(
+                    raw_row.get("plan_confidence"), 0.0
+                ),
+                "entry_status": str(raw_row.get("entry_status", "")),
+                "task_generated": int(bool(raw_row.get("task_generated", False))),
+                "needs_prompt_version": str(
+                    raw_row.get("needs_prompt_version", "")
+                ),
+                "needs_prompt_hash": str(raw_row.get("needs_prompt_hash", "")),
+                "needs_json_attempts_used": _safe_int(
+                    raw_row.get("needs_json_attempts_used"), 0
+                ),
+                "needs_actual_requests": _safe_int(
+                    raw_row.get("needs_actual_requests"), 0
+                ),
+                "needs_repair_requests": _safe_int(
+                    raw_row.get("needs_repair_requests"), 0
+                ),
+                "plan_prompt_version": str(raw_row.get("plan_prompt_version", "")),
+                "plan_prompt_hash": str(raw_row.get("plan_prompt_hash", "")),
+                "plan_json_attempts_used": _safe_int(
+                    raw_row.get("plan_json_attempts_used"), 0
+                ),
+                "plan_actual_requests": _safe_int(
+                    raw_row.get("plan_actual_requests"), 0
+                ),
+                "plan_repair_requests": _safe_int(
+                    raw_row.get("plan_repair_requests"), 0
+                ),
+                "input_packet_hash": str(raw_row.get("input_packet_hash", "")),
+                "uses_validation_data": int(
+                    bool(raw_row.get("uses_validation_data", False))
+                ),
+            }
+    return [unique[key] for key in sorted(unique)]
+
+
+def _compute_app_entry_rollout_error_rows(
+    cur: sqlite3.Cursor,
+    status_table: str,
+    *,
+    manifest_row: dict[str, Any],
+) -> list[dict[str, Any]]:
+    if not status_table or not _table_exists(cur, status_table):
+        return []
+    if "status_json" not in _table_columns(cur, status_table):
+        return []
+    db_rows = cur.execute(
+        f"""
+        SELECT agent_id, status_json
+        FROM {status_table}
+        ORDER BY day, t, agent_id
+        """
+    ).fetchall()
+    unique: dict[tuple[int, int, int], dict[str, Any]] = {}
+    for agent_id_raw, raw_status in db_rows:
+        agent_id = _safe_int(agent_id_raw, 0)
+        try:
+            status = json.loads(raw_status or "{}")
+        except Exception:
+            continue
+        if not isinstance(status, dict):
+            continue
+        error_rows = status.get("proto_app_entry_rollout_error_rows_json", [])
+        if not isinstance(error_rows, list):
+            continue
+        for raw_row in error_rows:
+            if not isinstance(raw_row, dict):
+                continue
+            talkingdata_day = _safe_int(raw_row.get("talkingdata_day"), 0)
+            hour = _safe_int(raw_row.get("hour"), -1)
+            if talkingdata_day < 4 or talkingdata_day > 7 or hour < 0 or hour > 23:
+                continue
+            unique[(agent_id, talkingdata_day, hour)] = {
+                "group_id": str(manifest_row.get("group_id", "")).strip(),
+                "world_name": str(manifest_row.get("world_name", "")).strip(),
+                "exp_id": str(manifest_row.get("exp_id", "")).strip(),
+                "status": str(manifest_row.get("status", "")).strip(),
+                "config_fingerprint": str(
+                    manifest_row.get("config_fingerprint", "")
+                ).strip(),
+                "agent_id": agent_id,
+                "device_id": str(raw_row.get("device_id", "")),
+                "simulation_day": _safe_int(raw_row.get("simulation_day"), 0),
+                "talkingdata_day": talkingdata_day,
+                "hour": hour,
+                "entry_status": "llm_rollout_error",
+                "bundle_generated": 0,
+                "task_generated": 0,
+                "error_type": str(raw_row.get("error_type", "")),
+                "error_message": str(raw_row.get("error_message", ""))[:2000],
+                "error_hash": str(raw_row.get("error_hash", "")),
+                "uses_validation_data": int(
+                    bool(raw_row.get("uses_validation_data", False))
+                ),
+            }
+    return [unique[key] for key in sorted(unique)]
+
+
 def _write_csv(path: Path, rows: list[dict[str, Any]], fieldnames: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
@@ -683,6 +1016,21 @@ def main() -> None:
         help="Output CSV path for stage-level summary",
     )
     parser.add_argument(
+        "--out-app-entry-replay-csv",
+        default="",
+        help="Output CSV path for app-entry replay summary",
+    )
+    parser.add_argument(
+        "--out-app-entry-rollout-csv",
+        default="",
+        help="Output CSV path for Day4-7 generated hourly app-entry bundles",
+    )
+    parser.add_argument(
+        "--out-app-entry-rollout-error-csv",
+        default="",
+        help="Output CSV path for Day4-7 missing hours caused by LLM errors",
+    )
+    parser.add_argument(
         "--plot-dir",
         default="",
         help="Output directory for world-level metric plots",
@@ -720,6 +1068,9 @@ def main() -> None:
 
     world_summary_rows: list[dict[str, Any]] = []
     stage_summary_rows: list[dict[str, Any]] = []
+    app_entry_replay_rows: list[dict[str, Any]] = []
+    app_entry_rollout_rows: list[dict[str, Any]] = []
+    app_entry_rollout_error_rows: list[dict[str, Any]] = []
     for row in manifest_rows:
         exp_id = str(row.get("exp_id", "")).strip()
         world_name = str(row.get("world_name", "")).strip()
@@ -927,6 +1278,28 @@ def main() -> None:
             stage_summary_rows.extend(
                 _load_stage_summary_rows(cur, stage_table, manifest_row=row)
             )
+        if exp_id and status_table:
+            app_entry_replay_rows.extend(
+                _compute_app_entry_replay_summary_rows(
+                    cur,
+                    status_table,
+                    manifest_row=row,
+                )
+            )
+            app_entry_rollout_rows.extend(
+                _compute_app_entry_rollout_hourly_rows(
+                    cur,
+                    status_table,
+                    manifest_row=row,
+                )
+            )
+            app_entry_rollout_error_rows.extend(
+                _compute_app_entry_rollout_error_rows(
+                    cur,
+                    status_table,
+                    manifest_row=row,
+                )
+            )
 
     conn.close()
 
@@ -1016,6 +1389,119 @@ def main() -> None:
 
     _write_csv(out_csv, world_summary_rows, world_fieldnames)
     _write_csv(out_stage_csv, stage_summary_rows, stage_fieldnames)
+    if args.out_app_entry_replay_csv:
+        replay_fieldnames = [
+            "group_id",
+            "pair_index",
+            "pair_seed",
+            "world_order",
+            "world_name",
+            "exp_id",
+            "status",
+            "agent_id",
+            "device_id",
+            "selected_rank",
+            "replay_hours_seen",
+            "active_hours",
+            "inactive_hours",
+            "active_event_app_exposures",
+            "context_only_hours",
+            "task_eligible_primary_hours",
+            "task_gate_pass_hours",
+            "task_generated_count",
+            "pending_task_blocked_hours",
+            "uses_validation_data_any",
+            "replay_bundle_hash",
+            "device_mapping_hash",
+            "talkingdata_days_json",
+            "habit_memory_present",
+            "habit_total_hours_seen",
+            "habit_active_hours",
+            "habit_inactive_hours",
+            "habit_context_total_counts_json",
+            "context_only_rows_count",
+            "day4_snapshot_created",
+            "day4_snapshot_world",
+            "final_helplessness_score",
+            "final_trust_in_apps",
+            "final_avoidance_tendency",
+        ]
+        _write_csv(
+            Path(args.out_app_entry_replay_csv),
+            app_entry_replay_rows,
+            replay_fieldnames,
+        )
+    if args.out_app_entry_rollout_csv:
+        rollout_fieldnames = [
+            "group_id",
+            "pair_index",
+            "pair_seed",
+            "world_order",
+            "world_name",
+            "exp_id",
+            "status",
+            "config_fingerprint",
+            "agent_id",
+            "device_id",
+            "simulation_day",
+            "talkingdata_day",
+            "hour",
+            "active",
+            "active_event_app_exposures",
+            "app_context_counts_json",
+            "primary_context",
+            "source",
+            "dominant_need",
+            "need_pressures_json",
+            "attitude",
+            "subjective_norm",
+            "perceived_control",
+            "plan_confidence",
+            "entry_status",
+            "task_generated",
+            "needs_prompt_version",
+            "needs_prompt_hash",
+            "needs_json_attempts_used",
+            "needs_actual_requests",
+            "needs_repair_requests",
+            "plan_prompt_version",
+            "plan_prompt_hash",
+            "plan_json_attempts_used",
+            "plan_actual_requests",
+            "plan_repair_requests",
+            "input_packet_hash",
+            "uses_validation_data",
+        ]
+        _write_csv(
+            Path(args.out_app_entry_rollout_csv),
+            app_entry_rollout_rows,
+            rollout_fieldnames,
+        )
+    if args.out_app_entry_rollout_error_csv:
+        rollout_error_fieldnames = [
+            "group_id",
+            "world_name",
+            "exp_id",
+            "status",
+            "config_fingerprint",
+            "agent_id",
+            "device_id",
+            "simulation_day",
+            "talkingdata_day",
+            "hour",
+            "entry_status",
+            "bundle_generated",
+            "task_generated",
+            "error_type",
+            "error_message",
+            "error_hash",
+            "uses_validation_data",
+        ]
+        _write_csv(
+            Path(args.out_app_entry_rollout_error_csv),
+            app_entry_rollout_error_rows,
+            rollout_error_fieldnames,
+        )
     _plot_world_metrics(world_summary_rows, world_order=world_order, output_dir=plot_dir)
 
     print(out_csv)

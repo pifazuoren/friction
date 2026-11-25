@@ -1,0 +1,75 @@
+{
+  "context_only_contexts": [
+    "communication_social_context",
+    "device_tool_context",
+    "finance_candidate_review",
+    "media_entertainment_context",
+    "taxonomy_profile_only",
+    "unknown_or_unmapped"
+  ],
+  "notes": [
+    "TalkingData provides app-level context, not app-internal task labels.",
+    "This artifact is a conservative prototype bridge from app context to possible digital friction task family.",
+    "finance_candidate_review is audit-only and not task-eligible in this version."
+  ],
+  "raw_hashes": {
+    "app_events.csv": "7d4d661dea464a3a",
+    "app_labels.csv": "3a91359a90d040f8",
+    "events.csv": "e51b7ca946cb517f",
+    "gender_age_train.csv": "4c147c991b81cfe7",
+    "label_categories.csv": "9442c56662705444",
+    "phone_brand_device_model.csv": "f1053b1b11cf80c4"
+  },
+  "schema_version": "talkingdata_task_opportunity_by_context_v1",
+  "source": "manual_prototype_bridge_from_app_context",
+  "task_eligible_contexts": [
+    "education_work_context",
+    "finance_context",
+    "health_service_context",
+    "navigation_transport_context",
+    "public_service_context",
+    "shopping_lifestyle_context"
+  ],
+  "task_opportunity_by_context": {
+    "education_work_context": {
+      "account_login_verification": 0.1,
+      "information_search_judgment": 0.5,
+      "navigation_service_location": 0.15,
+      "profile_form_upload": 0.15,
+      "service_application_submission": 0.1
+    },
+    "finance_context": {
+      "account_login_verification": 0.25,
+      "information_search_judgment": 0.2,
+      "payment_risk_confirmation": 0.4,
+      "service_application_submission": 0.15
+    },
+    "health_service_context": {
+      "account_login_verification": 0.15,
+      "information_search_judgment": 0.2,
+      "navigation_service_location": 0.2,
+      "profile_form_upload": 0.2,
+      "service_application_submission": 0.25
+    },
+    "navigation_transport_context": {
+      "account_login_verification": 0.1,
+      "information_search_judgment": 0.2,
+      "navigation_service_location": 0.55,
+      "payment_risk_confirmation": 0.15
+    },
+    "public_service_context": {
+      "account_login_verification": 0.2,
+      "navigation_service_location": 0.25,
+      "profile_form_upload": 0.25,
+      "service_application_submission": 0.3
+    },
+    "shopping_lifestyle_context": {
+      "account_login_verification": 0.15,
+      "information_search_judgment": 0.2,
+      "navigation_service_location": 0.15,
+      "payment_risk_confirmation": 0.3,
+      "service_application_submission": 0.2
+    }
+  },
+  "uses_validation_data": false
+}

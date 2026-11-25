@@ -50,12 +50,13 @@ from persistence import (
     write_stage_explanation_rows,
 )
 from proto.agent import DigitalHelplessnessAgent, SUPPORT_HELPER_REGISTRY_ATTRIBUTE
-from proto.family_helper_agent import FamilyHelperAgent
-from proto.support_response_block import SupportResponseBlock
+from proto.app_entry.bundle_loader import get_replay_source
 from proto.logical_clock import (
     enable_proto_logical_clock,
     is_proto_logical_clock_enabled,
 )
+from proto.support.family_helper import FamilyHelperAgent
+from proto.support.support_response import SupportResponseBlock
 from proto.metrics import (
     attempt_rows_table_name,
     ensure_attempt_rows_table,
@@ -175,6 +176,10 @@ elif STAGE_MODE == "full":
     STAGE_PLAN = copy.deepcopy(DEFAULT_STAGE_PLAN)
 else:
     raise ValueError("STAGE_MODE must be one of: full, single")
+RUNTIME_CONFIG = load_runtime_config()
+EXPERIMENT_MODE = RUNTIME_CONFIG.experiment_mode
+WORLD_BATCH = RUNTIME_CONFIG.world_batch
+PARALLEL_GROUP_NAME = RUNTIME_CONFIG.parallel_group_name
 
 STAGE_DAYS = int(os.getenv("STAGE_DAYS", "4"))
 _STAGE_NAME_TO_INDEX = {
@@ -182,13 +187,27 @@ _STAGE_NAME_TO_INDEX = {
     for idx, stage_cfg in enumerate(STAGE_PLAN)
 }
 EVENT_DECISION_INTERVAL_MINUTES = max(
-    1, int(os.getenv("EVENT_DECISION_INTERVAL_MINUTES", "15"))
+    1, int(os.getenv("EVENT_DECISION_INTERVAL_MINUTES", "60"))
 )
 if (24 * 60) % EVENT_DECISION_INTERVAL_MINUTES != 0:
     raise ValueError(
         "EVENT_DECISION_INTERVAL_MINUTES must divide 1440 exactly "
         "(e.g., 5, 10, 15, 20, 30, 60)"
     )
+if (
+    RUNTIME_CONFIG.proto_task_entry_mode
+    in {"app_context_replay_bundle", "app_context_replay_then_llm_rollout"}
+    and EVENT_DECISION_INTERVAL_MINUTES != 60
+):
+    raise ValueError(
+        "hourly app-entry bundle modes require EVENT_DECISION_INTERVAL_MINUTES=60"
+    )
+if (
+    RUNTIME_CONFIG.proto_task_entry_mode
+    == "app_context_replay_then_llm_rollout"
+    and (STAGE_DAYS < 4 or STAGE_DAYS > 7)
+):
+    raise ValueError("combined app-entry mode requires STAGE_DAYS in range 4..7")
 EVENT_DECISION_INTERVAL_TICKS = EVENT_DECISION_INTERVAL_MINUTES * 60
 DECISION_INTERVALS_PER_DAY = int((24 * 60) / EVENT_DECISION_INTERVAL_MINUTES)
 
@@ -208,10 +227,6 @@ EXP_MODE = os.getenv("EXP_MODE", "normal").strip().lower()
 EXPERIMENT_ENGINE = os.getenv("EXPERIMENT_ENGINE", "proto").strip().lower()
 if EXPERIMENT_ENGINE not in {"proto", "legacy"}:
     raise ValueError("EXPERIMENT_ENGINE must be one of: proto, legacy")
-RUNTIME_CONFIG = load_runtime_config()
-EXPERIMENT_MODE = RUNTIME_CONFIG.experiment_mode
-WORLD_BATCH = RUNTIME_CONFIG.world_batch
-PARALLEL_GROUP_NAME = RUNTIME_CONFIG.parallel_group_name
 RUN_METADATA_PATH = os.getenv("RUN_METADATA_PATH", "").strip()
 CLOSE_TIMEOUT_SECONDS = max(0, int(os.getenv("CLOSE_TIMEOUT_SECONDS", "90")))
 CLOSE_TIMEOUT_CANCEL_WAIT_SECONDS = max(
@@ -1013,6 +1028,30 @@ async def log_step_status(simulation: AgentSociety):
     mobile_entry_decision_map = await _safe_gather_status(
         simulation, "proto_mobile_entry_decision", citizen_ids
     )
+    app_entry_habit_memory_map = await _safe_gather_status(
+        simulation, "proto_app_entry_habit_memory", citizen_ids
+    )
+    app_entry_context_only_rows_map = await _safe_gather_status(
+        simulation, "proto_app_entry_context_only_rows_json", citizen_ids
+    )
+    day4_replay_snapshot_map = await _safe_gather_status(
+        simulation, "proto_day4_replay_snapshot", citizen_ids
+    )
+    replay_mapping_audit_map = await _safe_gather_status(
+        simulation, "proto_app_entry_replay_mapping_audit", citizen_ids
+    )
+    latest_digital_need_map = await _safe_gather_status(
+        simulation, "proto_latest_digital_need", citizen_ids
+    )
+    latest_app_entry_plan_map = await _safe_gather_status(
+        simulation, "proto_latest_app_entry_plan", citizen_ids
+    )
+    app_entry_rollout_rows_map = await _safe_gather_status(
+        simulation, "proto_app_entry_rollout_rows_json", citizen_ids
+    )
+    app_entry_rollout_error_rows_map = await _safe_gather_status(
+        simulation, "proto_app_entry_rollout_error_rows_json", citizen_ids
+    )
     logical_clock_enabled = is_proto_logical_clock_enabled(simulation.environment)
     if logical_clock_enabled:
         trip_count_map = {}
@@ -1153,6 +1192,30 @@ async def log_step_status(simulation: AgentSociety):
             "intention": intention,
             "friction_step_signal": friction_step_signal_map.get(agent_id, {}),
             "proto_mobile_entry_decision": mobile_entry_decision_map.get(agent_id, {}),
+            "proto_app_entry_habit_memory": app_entry_habit_memory_map.get(
+                agent_id,
+                {},
+            ),
+            "proto_app_entry_context_only_rows_json": (
+                app_entry_context_only_rows_map.get(agent_id, [])
+            ),
+            "proto_day4_replay_snapshot": day4_replay_snapshot_map.get(
+                agent_id,
+                {},
+            ),
+            "proto_app_entry_replay_mapping_audit": replay_mapping_audit_map.get(
+                agent_id,
+                {},
+            ),
+            "proto_latest_digital_need": latest_digital_need_map.get(agent_id, {}),
+            "proto_latest_app_entry_plan": latest_app_entry_plan_map.get(agent_id, {}),
+            "proto_app_entry_rollout_rows_json": app_entry_rollout_rows_map.get(
+                agent_id,
+                [],
+            ),
+            "proto_app_entry_rollout_error_rows_json": (
+                app_entry_rollout_error_rows_map.get(agent_id, [])
+            ),
             "helplessness_score": float(helplessness_map.get(agent_id, 0)),
             "trust_in_apps": float(trust_map.get(agent_id, 0)),
             "avoidance_tendency": float(avoidance_map.get(agent_id, 0)),
@@ -1526,6 +1589,17 @@ async def sync_interview_feedback(simulation: AgentSociety):
 async def init_status(simulation: AgentSociety):
     citizen_ids = await simulation.filter(types=EXPERIMENT_AGENT_CLASSES)
     citizen_ids = sorted(citizen_ids)
+    replay_assignments = {}
+    if RUNTIME_CONFIG.proto_task_entry_mode in {
+        "app_context_replay_bundle",
+        "app_context_replay_then_llm_rollout",
+    }:
+        replay_source = get_replay_source(
+            bundle_path=RUNTIME_CONFIG.proto_app_entry_replay_bundle_path,
+            device_mapping_path=RUNTIME_CONFIG.proto_app_entry_replay_device_path,
+            replay_days=RUNTIME_CONFIG.proto_app_entry_replay_days,
+        )
+        replay_assignments = replay_source.assignments_for_agent_ids(citizen_ids)
     _load_profile_index()
     name_map = await _safe_gather_status(simulation, "name", citizen_ids)
     home_map = await _safe_gather_status(simulation, "home", citizen_ids)
@@ -1572,6 +1646,21 @@ async def init_status(simulation: AgentSociety):
                 "current_intention": "Planning",
             }
         )
+        replay_assignment = replay_assignments.get(int(agent_id))
+        if replay_assignment is not None:
+            initial_status.update(
+                {
+                    "proto_app_entry_replay_device_id": (
+                        replay_assignment.device_id
+                    ),
+                    "proto_app_entry_replay_selected_rank": int(
+                        replay_assignment.selected_rank
+                    ),
+                    "proto_app_entry_replay_mapping_audit": (
+                        replay_assignment.to_dict()
+                    ),
+                }
+            )
         for key, value in initial_status.items():
             await simulation.update([agent_id], key, value)
 
@@ -2605,7 +2694,12 @@ config = Config(
         name=EXP_NAME,
         workflow=workflow_steps,
         environment=EnvironmentConfig(
-            start_tick=6 * 60 * 60,
+            start_tick=(
+                0
+                if RUNTIME_CONFIG.proto_task_entry_mode
+                in {"app_context_replay_bundle", "app_context_replay_then_llm_rollout"}
+                else 6 * 60 * 60
+            ),
         ),
     ),
 )
@@ -2645,6 +2739,21 @@ def _write_run_metadata(
     total_days = int(STAGE_DAYS * stage_count)
     opportunities_per_agent = int(total_days * DECISION_INTERVALS_PER_DAY)
     opportunities_total = int(opportunities_per_agent * AGENT_COUNT)
+    uses_replay_bundle = RUNTIME_CONFIG.proto_task_entry_mode in {
+        "app_context_replay_bundle",
+        "app_context_replay_then_llm_rollout",
+    }
+    uses_llm_rollout = (
+        RUNTIME_CONFIG.proto_task_entry_mode
+        == "app_context_replay_then_llm_rollout"
+    )
+    entry_path_family = (
+        "hourly_bundle_replay_then_llm_rollout"
+        if uses_llm_rollout
+        else "hourly_bundle_forced_replay"
+        if uses_replay_bundle
+        else "legacy"
+    )
     payload = {
         "status": _clean_intention(status),
         "error_message": _clean_intention(error_message)[:500],
@@ -2676,6 +2785,38 @@ def _write_run_metadata(
         "proto_logical_clock_enabled": bool(proto_logical_clock_enabled),
         "agent_plan_prompt_profile": AGENT_PLAN_PROMPT_PROFILE,
         "proto_task_entry_mode": RUNTIME_CONFIG.proto_task_entry_mode,
+        "entry_path_family": entry_path_family,
+        "legacy_entry_path": not uses_replay_bundle,
+        "uses_hourly_bundle": bool(uses_replay_bundle),
+        "uses_forced_replay": bool(uses_replay_bundle),
+        "uses_llm_rollout": bool(uses_llm_rollout),
+        "proto_app_entry_replay_bundle_path": (
+            RUNTIME_CONFIG.proto_app_entry_replay_bundle_path
+        ),
+        "proto_app_entry_replay_device_path": (
+            RUNTIME_CONFIG.proto_app_entry_replay_device_path
+        ),
+        "proto_app_entry_replay_days": list(
+            RUNTIME_CONFIG.proto_app_entry_replay_days
+        ),
+        "proto_app_entry_needs_prompt_version": (
+            RUNTIME_CONFIG.proto_app_entry_needs_prompt_version
+        ),
+        "proto_app_entry_plan_prompt_version": (
+            RUNTIME_CONFIG.proto_app_entry_plan_prompt_version
+        ),
+        "proto_app_entry_rollout_json_attempts": (
+            RUNTIME_CONFIG.proto_app_entry_rollout_json_attempts
+        ),
+        "proto_app_entry_rollout_min_confidence": (
+            RUNTIME_CONFIG.proto_app_entry_rollout_min_confidence
+        ),
+        "proto_app_entry_rollout_top_k": (
+            RUNTIME_CONFIG.proto_app_entry_rollout_top_k
+        ),
+        "proto_app_entry_rollout_max_exposures": (
+            RUNTIME_CONFIG.proto_app_entry_rollout_max_exposures
+        ),
         "proto_mobile_intention_rerank_top_k": (
             RUNTIME_CONFIG.proto_mobile_intention_rerank_top_k
         ),

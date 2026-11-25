@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from config_runtime import DEFAULT_TASK_OCCURRENCE_PRIOR_PATH, load_runtime_config
+from config_runtime import (
+    DEFAULT_APP_ENTRY_REPLAY_BUNDLE_PATH,
+    DEFAULT_APP_ENTRY_REPLAY_DEVICE_PATH,
+    DEFAULT_TASK_OCCURRENCE_PRIOR_PATH,
+    load_runtime_config,
+)
 
 from proto.runtime import (
     assign_task_with_entry_decision,
@@ -453,6 +458,9 @@ def test_load_runtime_config_exposes_bayesian_policy_lite_defaults(
 def test_load_runtime_config_exposes_mobile_entry_defaults(monkeypatch) -> None:
     for key in (
         "PROTO_TASK_ENTRY_MODE",
+        "PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH",
+        "PROTO_APP_ENTRY_REPLAY_DEVICE_PATH",
+        "PROTO_APP_ENTRY_REPLAY_DAYS",
         "PROTO_MOBILE_INTENTION_CALIBRATION_PATH",
         "PROTO_MOBILE_INTENTION_MAPPING_PATH",
         "PROTO_MOBILE_INTENTION_CONFIDENCE_THRESHOLD",
@@ -485,7 +493,14 @@ def test_load_runtime_config_exposes_mobile_entry_defaults(monkeypatch) -> None:
 
     config = load_runtime_config()
 
-    assert config.proto_task_entry_mode == "fixed_assignment"
+    assert config.proto_task_entry_mode == "app_context_replay_bundle"
+    assert config.proto_app_entry_replay_bundle_path == (
+        DEFAULT_APP_ENTRY_REPLAY_BUNDLE_PATH
+    )
+    assert config.proto_app_entry_replay_device_path == (
+        DEFAULT_APP_ENTRY_REPLAY_DEVICE_PATH
+    )
+    assert config.proto_app_entry_replay_days == (1, 2, 3)
     assert config.proto_mobile_intention_calibration_path == ""
     assert config.proto_mobile_intention_mapping_path == ""
     assert config.proto_mobile_intention_confidence_threshold == 0.70

@@ -5,6 +5,7 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -24,7 +25,9 @@ from clean_talkingdata_event_app_context import (  # noqa: E402
 )
 
 
-DEFAULT_RAW_DIR = Path("/Users/pifazuoren/Downloads/talkingdata-mobile-user-demographics")
+DEFAULT_RAW_DIR = Path(
+    os.environ.get("TALKINGDATA_RAW_DIR") or REPO_ROOT.parent / "talkingdata-mobile-user-demographics"
+)
 DEFAULT_SELECTION_CSV = (
     REPO_ROOT
     / "outputs"
@@ -336,6 +339,17 @@ def _write_device_summary(
 
 
 def run_cleaning(raw_dir: Path, selection_csv: Path, output_dir: Path) -> dict[str, Any]:
+    missing = [
+        name for name in ("events.csv", "app_events.csv", "app_labels.csv", "label_categories.csv")
+        if not (raw_dir / name).is_file()
+    ]
+    if missing:
+        raise FileNotFoundError(
+            "Set --raw-dir or TALKINGDATA_RAW_DIR to the local TalkingData dataset; "
+            f"missing files: {', '.join(missing)}"
+        )
+    if not selection_csv.is_file():
+        raise FileNotFoundError("Provide the local 59-device cohort metadata using --selection-csv")
     output_dir.mkdir(parents=True, exist_ok=True)
     people = _load_selected_people(selection_csv)
     selected_ids = set(people)
@@ -520,7 +534,7 @@ def run_cleaning(raw_dir: Path, selection_csv: Path, output_dir: Path) -> dict[s
         if (raw_dir / name).exists()
     }
     manifest = {
-        "schema_version": "talkingdata_elderly_59_event_app_context_v1",
+        "schema_version": "talkingdata_elderly_59_event_app_context_v3",
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "raw_dir": str(raw_dir),
         "selection_csv": str(selection_csv),
@@ -553,6 +567,7 @@ def run_cleaning(raw_dir: Path, selection_csv: Path, output_dir: Path) -> dict[s
             "The 59 selected device_id values are preserved from the existing phone-price device summary.",
             "Rows are regenerated from raw TalkingData CSV files at active event-app granularity.",
             "Category labels are aggregated into JSON arrays and are not counted as separate app entries.",
+            "v3 strict app-context cleaning does not promote broad taxonomy/profile/content labels to task-eligible contexts.",
             "Day 1-3 is intended for replay calibration; Day 4-7 is held out for baseline app-entry validation.",
         ],
     }
