@@ -8,6 +8,7 @@ from .app_entry.bundle_loader import (
     simulation_day_to_talkingdata_day,
 )
 from .app_entry.replay import evaluate_replay_bundle_for_agent
+from .app_entry.task_templates import _build_task_from_template
 from .app_entry.types import _hour_for_tick
 from .task_assignment import (
     MobileEntryDecision,
@@ -33,6 +34,30 @@ def build_task_surface_updates(
         "digital_task_hint_need": task.need_type,
         "digital_task_hint_pending": 1,
     }
+
+
+def scheduled_login_difficulty_delta(difficulty_arm: str | None, talkingdata_day: int) -> float:
+    """Only the exposure days of the elevated arm receive a harder login."""
+    return 0.20 if difficulty_arm == "elevated" and talkingdata_day in (4, 5, 6) else 0.0
+
+
+def scheduled_login_for_day(
+    *, hour: int, agent_id: int, day: int, tick_seconds: float, env: dict[str, Any],
+    existing_task: DigitalTask | None, last_scheduled_day: int, difficulty_arm: str | None = None,
+) -> DigitalTask | None:
+    """Offer the first free slot after the scheduled hour; the two-arm study runs through day 7."""
+    talkingdata_day = simulation_day_to_talkingdata_day(day)
+    scheduled_days = (4, 5) if difficulty_arm is None else (4, 5, 6, 7)
+    if (talkingdata_day not in scheduled_days or _hour_for_tick(tick_seconds) < hour
+            or existing_task is not None or last_scheduled_day == day):
+        return None
+    task = _build_task_from_template(
+        normalized_mode="scheduled_login", mapped_task_family="account_login_verification",
+        agent_id=agent_id, day=day, tick_seconds=tick_seconds, env=env,
+    )
+    if task is not None and difficulty_arm is not None:
+        task.difficulty = min(1.0, task.difficulty + scheduled_login_difficulty_delta(difficulty_arm, talkingdata_day))
+    return task
 
 
 def assign_task_if_missing(

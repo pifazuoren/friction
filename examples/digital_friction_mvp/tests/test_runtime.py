@@ -14,6 +14,7 @@ from proto.runtime import (
     assign_task_if_missing,
     build_stage_transition_updates,
     build_task_surface_updates,
+    scheduled_login_for_day,
 )
 from proto.task_assignment import TASK_LIBRARY, select_task_for_agent
 from world_runner import _build_config_payload
@@ -21,6 +22,75 @@ from world_runner import _build_config_payload
 TASK_WINDOW_MORNING = 9 * 60 * 60
 TASK_WINDOW_AFTERNOON = 14 * 60 * 60
 NON_WINDOW_TICK = 8 * 60 * 60
+
+
+def test_scheduled_login_offers_one_task_per_target_day_at_first_free_hour():
+    last_day = -1
+    issued = []
+    for day in range(7):
+        for hour in range(24):
+            pending = issued[0] if day == 4 and hour == 9 else None
+            task = scheduled_login_for_day(
+                hour=9, agent_id=1, day=day, tick_seconds=hour * 3600 + 1,
+                env={}, existing_task=pending, last_scheduled_day=last_day,
+            )
+            if task is not None:
+                assert task.task_family == "account_login_verification"
+                assert task.task_id.startswith("scheduled_login_")
+                assert (day, hour) == [(3, 9), (4, 10)][len(issued)]
+                issued.append(task)
+                last_day = day
+    assert len({t.task_id for t in issued}) == 2
+
+
+def test_scheduled_login_is_opt_in_and_only_uses_rollout(monkeypatch):
+    monkeypatch.delenv("PROTO_SCHEDULED_LOGIN_HOUR", raising=False)
+    assert load_runtime_config().proto_scheduled_login_hour is None
+    monkeypatch.setenv("PROTO_SCHEDULED_LOGIN_HOUR", "9")
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "fixed_assignment")
+    with pytest.raises(ValueError, match="scheduled logins require"):
+        load_runtime_config()
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "app_context_replay_then_llm_rollout")
+    monkeypatch.setenv("STAGE_MODE", "single")
+    assert load_runtime_config().proto_scheduled_login_hour == 9
+
+
+def test_matched_login_difficulty_changes_only_on_exposure_days():
+    env = {"friction_level": 1, "malicious_friction_level": 1, "accessibility_level": 1}
+    for day in range(7):
+        args = dict(hour=9, agent_id=2, day=day, tick_seconds=9 * 3600 + 1, env=env,
+                    existing_task=None, last_scheduled_day=-1)
+        standard = scheduled_login_for_day(**args, difficulty_arm="standard")
+        elevated = scheduled_login_for_day(**args, difficulty_arm="elevated")
+        if day < 3:
+            assert standard is elevated is None
+            continue
+        assert standard is not None and elevated is not None
+        assert standard.difficulty == pytest.approx(0.69)
+        expected_difficulty = standard.difficulty + (0.20 if day < 6 else 0.0)
+        assert elevated.difficulty == pytest.approx(expected_difficulty)
+        assert elevated.to_dict() == {**standard.to_dict(), "difficulty": elevated.difficulty}
+        assert scheduled_login_for_day(**{**args, "existing_task": standard}, difficulty_arm="elevated") is None
+        assert scheduled_login_for_day(**{**args, "last_scheduled_day": day}, difficulty_arm="elevated") is None
+    capped = scheduled_login_for_day(
+        **{**args, "day": 3, "env": {"friction_level": 3, "malicious_friction_level": 3}},
+        difficulty_arm="elevated",
+    )
+    assert capped is not None and capped.difficulty == 1.0
+
+
+def test_login_difficulty_arm_requires_a_matched_schedule(monkeypatch):
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "app_context_replay_then_llm_rollout")
+    monkeypatch.setenv("STAGE_MODE", "single")
+    monkeypatch.setenv("PROTO_LOGIN_DIFFICULTY_ARM", "standard")
+    monkeypatch.delenv("PROTO_SCHEDULED_LOGIN_HOUR", raising=False)
+    with pytest.raises(ValueError, match="PROTO_SCHEDULED_LOGIN_HOUR=9"):
+        load_runtime_config()
+    monkeypatch.setenv("PROTO_SCHEDULED_LOGIN_HOUR", "9")
+    assert load_runtime_config().proto_login_difficulty_arm == "standard"
+    monkeypatch.setenv("PROTO_LOGIN_DIFFICULTY_ARM", "unsupported")
+    with pytest.raises(ValueError, match="standard or elevated"):
+        load_runtime_config()
 
 
 def test_assign_task_if_missing_seeds_task_and_updates(monkeypatch) -> None:

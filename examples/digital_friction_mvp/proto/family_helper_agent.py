@@ -53,7 +53,7 @@ except Exception:  # pragma: no cover - lightweight local-test fallback
         async def update_motion(self) -> None:
             return None
 
-from .support_protocol import SupportRequest, SupportResponse
+from .support_protocol import SupportRequest, SupportResponse, classify_support_delivery
 from .support_response_block import SupportResponseBlock
 
 
@@ -97,7 +97,8 @@ class FamilyHelperAgent(CitizenAgentBase):
     async def provide_support(self, request: SupportRequest) -> SupportResponse:
         response_block = self._support_response_block()
         response = await response_block.generate_response(request)
-        await self._record_support_exchange(request=request, response=response)
+        if classify_support_delivery(response) != "technical_failure":
+            await self._record_support_exchange(request=request, response=response)
         return response
 
     async def do_chat(self, message: Any) -> str:

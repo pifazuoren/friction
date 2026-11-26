@@ -8,6 +8,7 @@ from proto.llm_psychology import (
     _STRATEGY_DELIBERATION_PROMPT_VERSION,
     _build_strategy_deliberation_cache_key,
     _query_json_payload,
+    _sanitize_strategy_deliberation,
     _sanitize_trajectory_appraisal_for_context,
     clear_llm_psychology_caches,
     maybe_generate_daily_reflection,
@@ -635,6 +636,30 @@ def test_daily_reflection_skips_when_previous_day_has_no_events(monkeypatch) -> 
     )
     assert updates == {"proto_last_reflection_day": 2}
     assert reflection is None
+
+
+@pytest.mark.parametrize(
+    ("scores", "declared", "valid"),
+    [
+        ((0.5, 0.5, 0.0), "attempt_self", True),
+        ((0.5, 0.5, 0.0), "seek_help_then_attempt", True),
+        ((0.4, 0.4, 0.4), "avoid", True),
+        ((0.5, 0.5, 0.0), "avoid", False),
+        ((0.499999, 0.5, 0.0), "attempt_self", False),
+        ((0.5, 0.5, 0.0), "unknown", False),
+    ],
+)
+def test_strategy_dominant_must_be_one_of_the_highest_scores(scores, declared, valid) -> None:
+    payload = {
+        "attempt_self_score": scores[0],
+        "seek_help_score": scores[1],
+        "avoid_score": scores[2],
+        "dominant_strategy": declared,
+        "judge_confidence": 1.0,
+        "reason": "Task appraisal and past experience.",
+    }
+    expected = (payload, "ok") if valid else (None, "invalid_schema")
+    assert _sanitize_strategy_deliberation(payload) == expected
 
 
 def test_strategy_deliberation_parses_json_and_blends_weights(monkeypatch) -> None:

@@ -239,9 +239,7 @@ def _compute_world_proto_metrics(
         for _, _, outcome, _ in rows
         if outcome in {"success_self", "success_with_help"}
     )
-    help_seek_count = sum(
-        1 for _, strategy, _, _ in rows if strategy == "seek_help_then_attempt"
-    )
+    help_seek_count = 0
     abandon_count = sum(
         1 for _, _, outcome, _ in rows if outcome == "abandon_midway"
     )
@@ -265,13 +263,15 @@ def _compute_world_proto_metrics(
     final_delta_values: list[float] = []
     daily_harm_used_after_values: list[float] = []
     daily_cap_applied_count = 0
-    for day_value_raw, _, outcome, raw_payload in rows:
+    for day_value_raw, strategy, outcome, raw_payload in rows:
         try:
             payload = json.loads(raw_payload or "{}")
         except Exception:
             payload = {}
         if not isinstance(payload, dict):
-            continue
+            payload = {}
+        if payload.get("requested_strategy_type", strategy) == "seek_help_then_attempt":
+            help_seek_count += 1
         if outcome in {
             "failure_after_attempt",
             "failure_even_with_help",

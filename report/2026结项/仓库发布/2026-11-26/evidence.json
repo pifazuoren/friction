@@ -1,0 +1,320 @@
+{
+  "snapshot": "2026-11-26",
+  "natural_run": {
+    "run_id": "social_memory_20261126_010423_9d0f19",
+    "model": "glm-4-flashx",
+    "world": "baseline_low_friction",
+    "persons": 1,
+    "seed": 101,
+    "reference_replay_hours": 72,
+    "day4_to_7_expected_hours": 96,
+    "valid_hours": 95,
+    "invalid_day_hour": [
+      [
+        4,
+        19
+      ]
+    ],
+    "scheduled_login": false,
+    "day4_to_7_completed_task_decisions": 0,
+    "cross_day_status": "no_natural_opportunity",
+    "entry_prediction": {
+      "glm-4-flashx": {
+        "common_valid_hours": 95,
+        "primary_context_hits": 83,
+        "inactive_hours_observed": 8,
+        "inactive_hours_correctly_predicted": 0,
+        "active_hours_predicted": 95,
+        "predicted_communication_social_hours": 94,
+        "exposure_count_mae": 3.29473684
+      },
+      "personal_history": {
+        "common_valid_hours": 95,
+        "primary_context_hits": 84,
+        "inactive_hours_observed": 8,
+        "inactive_hours_correctly_predicted": 2,
+        "active_hours_predicted": 91,
+        "predicted_communication_social_hours": 91,
+        "exposure_count_mae": 1.29473684
+      }
+    },
+    "constant_communication_baseline_hits": 84,
+    "app_needs_parse": {
+      "initial_invalid": 96,
+      "valid_after_repair": 96,
+      "accepted_distinct_values": {
+        "active_intent": {
+          "0.5": 95,
+          "0.8": 1
+        },
+        "intensity_hint": {
+          "0.7": 96
+        },
+        "confidence": {
+          "0.8": 95,
+          "0.9": 1
+        }
+      }
+    }
+  },
+  "scheduled_run": {
+    "run_id": "scheduled_login_20261126_190411_c99dc1",
+    "model": "glm-4-flashx",
+    "persons": 1,
+    "seed": 101,
+    "world": "baseline_low_friction",
+    "scheduled_login": true,
+    "reference_replay_hours": 72,
+    "valid_rollout_hours": 48,
+    "cross_day_status": "verified",
+    "scheduled_login_hours_local_simulation": [
+      [
+        4,
+        9
+      ],
+      [
+        5,
+        9
+      ]
+    ],
+    "decisions": [
+      {
+        "simulation_day_1_based": 4,
+        "hour": 9,
+        "sampled_choice": "avoid",
+        "executed_choice": "avoid",
+        "outcome": "avoid_without_attempt",
+        "delivery": "not_requested",
+        "final_sampling_probabilities": {
+          "attempt_self": 0.39666667,
+          "seek_help_then_attempt": 0.34333333,
+          "avoid": 0.26
+        }
+      },
+      {
+        "simulation_day_1_based": 4,
+        "hour": 10,
+        "sampled_choice": "seek_help_then_attempt",
+        "executed_choice": "seek_help_then_attempt",
+        "outcome": "abandon_midway",
+        "delivery": "delivered",
+        "final_sampling_probabilities": {
+          "attempt_self": 0.11666667,
+          "seek_help_then_attempt": 0.13333333,
+          "avoid": 0.75
+        }
+      },
+      {
+        "simulation_day_1_based": 5,
+        "hour": 9,
+        "sampled_choice": "avoid",
+        "executed_choice": "avoid",
+        "outcome": "avoid_without_attempt",
+        "delivery": "not_requested",
+        "final_sampling_probabilities": {
+          "attempt_self": 0.46775701,
+          "seek_help_then_attempt": 0.29971963,
+          "avoid": 0.23252336
+        }
+      },
+      {
+        "simulation_day_1_based": 5,
+        "hour": 10,
+        "sampled_choice": "avoid",
+        "executed_choice": "avoid",
+        "outcome": "avoid_without_attempt",
+        "delivery": "not_requested",
+        "final_sampling_probabilities": {
+          "attempt_self": 0.12115385,
+          "seek_help_then_attempt": 0.09230769,
+          "avoid": 0.78653846
+        }
+      }
+    ],
+    "day5_first_raw_model_scores": {
+      "attempt_self": 0.5,
+      "seek_help_then_attempt": 0.3,
+      "avoid": 0.2
+    },
+    "day4_episodes_found_in_actual_day5_first_prompt": 2,
+    "denominators": {
+      "unique_scheduled_tasks": 2,
+      "decision_rows": 4,
+      "tasks_attempted_at_first_opportunity": 0,
+      "tasks_ever_attempted": 1,
+      "decisions_resulting_in_an_attempt": 1
+    },
+    "exported_model_and_survey_fields": [
+      {
+        "export_day": 1,
+        "model": 46.0,
+        "survey_field": 52.5
+      },
+      {
+        "export_day": 2,
+        "model": 46.0,
+        "survey_field": 52.5
+      },
+      {
+        "export_day": 3,
+        "model": 46.0,
+        "survey_field": 52.5
+      },
+      {
+        "export_day": 4,
+        "model": 47.975627,
+        "survey_field": 47.975627
+      },
+      {
+        "export_day": 5,
+        "model": 50.120306,
+        "survey_field": 50.120306
+      }
+    ],
+    "app_needs_parse": {
+      "initial_invalid": 48,
+      "valid_after_repair": 48,
+      "accepted_distinct_values": {
+        "active_intent": {
+          "0.5": 48
+        },
+        "intensity_hint": {
+          "0.7": 48
+        },
+        "confidence": {
+          "0.8": 48
+        }
+      }
+    }
+  },
+  "previous_failed_scheduled_run": {
+    "run_id": "scheduled_login_20261126_150614_e46e8a",
+    "completed": false,
+    "last_observed_day": 4,
+    "stop": "The helper repair echoed the matching task_id alongside the reply fields. The original strict validator rejected it."
+  },
+  "paired_experiment": {
+    "model": "glm-4-flashx",
+    "simulated_profiles": 1,
+    "task_family": "account_login_verification",
+    "weight_units": "fractions; contrast means failure minus success for final sampling weights",
+    "online_runs": [
+      {
+        "run_id": "strategy_pairs_20261126_140333_276d13",
+        "prompt_format": "scored_example",
+        "pair_order_seed": 101,
+        "contrast_pairs": 10,
+        "identical_input_pairs": 3,
+        "online_decisions": 26,
+        "actual_online_requests": 26,
+        "model_scores_used": 26,
+        "rule_fallbacks": 0,
+        "contrast": {
+          "attempt_self": 0.0,
+          "seek_help_then_attempt": 0.0,
+          "avoid": 0.0
+        },
+        "identical_input_mean_absolute_weight_difference": {
+          "attempt_self": 0.0,
+          "seek_help_then_attempt": 0.0,
+          "avoid": 0.0
+        },
+        "contrast_action_flips": 0,
+        "identical_input_action_flips": 0,
+        "matches_visible_score_example": 26
+      },
+      {
+        "run_id": "strategy_pairs_20261126_141327_78e236",
+        "prompt_format": "field_rules",
+        "pair_order_seed": 101,
+        "contrast_pairs": 10,
+        "identical_input_pairs": 3,
+        "online_decisions": 26,
+        "actual_online_requests": 26,
+        "model_scores_used": 26,
+        "rule_fallbacks": 0,
+        "contrast": {
+          "attempt_self": 0.0,
+          "seek_help_then_attempt": 0.0,
+          "avoid": 0.0
+        },
+        "identical_input_mean_absolute_weight_difference": {
+          "attempt_self": 0.0,
+          "seek_help_then_attempt": 0.0,
+          "avoid": 0.0
+        },
+        "contrast_action_flips": 0,
+        "identical_input_action_flips": 0,
+        "matches_visible_rule_weights": 26
+      },
+      {
+        "run_id": "strategy_pairs_20261126_144152_83628a",
+        "prompt_format": "field_rules_no_priors",
+        "pair_order_seed": 101,
+        "contrast_pairs": 10,
+        "identical_input_pairs": 3,
+        "online_decisions": 26,
+        "actual_online_requests": 51,
+        "model_scores_used": 1,
+        "rule_fallbacks": 25,
+        "contrast": {
+          "attempt_self": 0.0035,
+          "seek_help_then_attempt": -0.007,
+          "avoid": 0.0035
+        },
+        "identical_input_mean_absolute_weight_difference": {
+          "attempt_self": 0.0,
+          "seek_help_then_attempt": 0.0,
+          "avoid": 0.0
+        },
+        "contrast_action_flips": 0,
+        "identical_input_action_flips": 0
+      }
+    ],
+    "offline_replay_after_tie_fix": {
+      "archived_run": "strategy_pairs_20261126_144152_83628a",
+      "online_calls": 0,
+      "accepted_initial_responses": 26,
+      "tie_rejections_recovered": 25,
+      "contrast_pairs_with_different_raw_scores": 1,
+      "contrast_mean_difference": {
+        "attempt_self": 0.0002412935,
+        "seek_help_then_attempt": -0.0137661692,
+        "avoid": 0.0135248756
+      },
+      "contrast_action_flips": 0,
+      "identical_input_mean_absolute_weight_difference": {
+        "attempt_self": 0.0,
+        "seek_help_then_attempt": 0.0,
+        "avoid": 0.0
+      },
+      "identical_input_action_flips": 0
+    }
+  },
+  "reference_data": {
+    "old_selected_devices": 10,
+    "old_age_60_plus": 2,
+    "wider_preselected_devices": 59,
+    "wider_age_60_plus": 6,
+    "upstream_selection_uses_full_week_activity": true
+  },
+  "new_study_draft": {
+    "run_id": "login_difficulty_20261126_194807_42d14e",
+    "model_calls": 0,
+    "planned_profiles": 2,
+    "seeds": [
+      101
+    ],
+    "arms": [
+      "standard",
+      "elevated"
+    ],
+    "days_of_difficulty_manipulation": [
+      4,
+      5,
+      6
+    ],
+    "common_probe_day": 7,
+    "status": "prepared_offline_no_online_result"
+  }
+}

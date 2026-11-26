@@ -328,6 +328,12 @@ def build_proto_status_attributes() -> list[MemoryAttribute]:
             description="serialized assigned proto task",
         ),
         MemoryAttribute(
+            name="proto_last_scheduled_login_day",
+            type=int,
+            default_or_value=-1,
+            description="simulation day of the last scheduled login opportunity",
+        ),
+        MemoryAttribute(
             name="proto_stage_attempt_rows_json",
             type=str,
             default_or_value="[]",
@@ -656,6 +662,7 @@ def build_initial_proto_status(
         "digital_task_hint_need": "",
         "digital_task_hint_pending": 0,
         "proto_assigned_task_json": "",
+        "proto_last_scheduled_login_day": -1,
         "proto_stage_attempt_rows_json": "[]",
         "proto_app_entry_replay_device_id": "",
         "proto_app_entry_replay_selected_rank": 0,

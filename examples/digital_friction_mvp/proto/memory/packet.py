@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 from typing import Any
 
@@ -39,6 +40,76 @@ def _compact_status_note(
     return text or default
 
 
+def _known_number(value: Any) -> float | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def is_prior_episode(row: dict[str, Any], simulation_day: int | None, tick_seconds: float | None) -> bool:
+    """Compare known timestamps only; undated legacy rows retain their append order."""
+    if simulation_day is None or row.get("day") is None:
+        return True
+    day = _known_number(row["day"])
+    if day is None:
+        return False
+    if day != simulation_day:
+        return day < simulation_day
+    if tick_seconds is None:
+        return True
+    if row.get("tick_seconds") is not None:
+        tick = _known_number(row["tick_seconds"])
+        return tick is not None and tick < tick_seconds
+    if row.get("hour") is not None:
+        hour = _known_number(row["hour"])
+        return hour is not None and hour < int(tick_seconds // 3600) % 24
+    return False
+
+
+def compact_recent_episodes(
+    episodes: Any, *, limit: int = 5, simulation_day: int | None = None,
+    tick_seconds: float | None = None,
+) -> list[dict[str, Any]]:
+    """Keep the most recent completed attempts in their original append order."""
+    if not isinstance(episodes, list):
+        return []
+    fields = (
+        "episode_id", "task_id", "day", "tick_seconds", "hour", "task_family",
+        "requested_strategy_type", "strategy_type", "outcome_type", "avoid_reason",
+        "help_used", "help_source", "support_request_id", "support_delivery_status", "support_mode",
+        "support_style", "autonomy_preservation", "proxy_completion_level",
+        "instruction_quality", "negative_feedback", "event_level_uncontrollability",
+        "helplessness_delta", "support_quality", "feedback_valence",
+    )
+    compact = []
+    if limit <= 0:
+        return []
+    for row in reversed(episodes):
+        if not isinstance(row, dict) or not is_prior_episode(row, simulation_day, tick_seconds):
+            continue
+        record = {}
+        for field in fields:
+            value = row.get(field)
+            # Historical app packets used short keys, older stored episodes the full names.
+            if field == "strategy_type" and value is None:
+                value = row.get("strategy")
+            if field == "outcome_type" and value is None:
+                value = row.get("outcome")
+            if field == "outcome_type" and value in ("positive", "negative", "neutral"):
+                record["feedback_valence"] = value
+            elif isinstance(value, str) and value:
+                record[field] = value[:160]
+            elif isinstance(value, (bool, int, float)):
+                record[field] = value
+        if record:
+            compact.append(record)
+            if len(compact) == limit:
+                break
+    return list(reversed(compact))
+
+
 def support_snapshot_for_task(
     help_effect_memory: Any,
     task_family: str,
@@ -71,42 +142,54 @@ def support_snapshot_for_task(
     }
 
 
-def extract_same_task_event_tail(
-    *,
-    task_family: str,
-    event_log: Any,
-    limit: int = 3,
+def extract_event_log_episodes(
+    event_log: Any, *, task_family: str | None = None, limit: int = 5,
+    simulation_day: int | None = None, tick_seconds: float | None = None,
 ) -> list[dict[str, Any]]:
-    if not isinstance(event_log, list):
+    """Recover documented fields from completed legacy log events without inferring outcomes."""
+    if not isinstance(event_log, list) or limit <= 0:
         return []
-    tail: list[dict[str, Any]] = []
+    tail = []
     for item in reversed(event_log):
         if not isinstance(item, dict):
             continue
-        decision = item.get("decision", {})
+        decision = item.get("decision")
         if not isinstance(decision, dict):
             decision = {}
-        current_task_family = str(
-            item.get("scenario") or decision.get("task_family") or ""
-        ).strip()
-        if current_task_family != str(task_family):
+        family = item.get("scenario") or decision.get("task_family")
+        if not family or (task_family is not None and family != task_family):
             continue
-        tail.append(
-            {
-                "day": _safe_int(item.get("day"), 0),
-                "outcome_type": str(decision.get("primary_reason", "")).strip(),
-                "strategy_type": str(decision.get("strategy_type", "")).strip(),
-                "avoid_reason": str(decision.get("avoid_reason", "")).strip(),
-                "support_quality": _safe_int(decision.get("support_quality"), 0),
-                "event_level_uncontrollability": _safe_int(
-                    decision.get("event_level_uncontrollability"),
-                    0,
-                ),
-            }
-        )
-        if len(tail) >= int(limit):
+        row = {
+            **decision, "task_id": item.get("attempt_uid") or decision.get("task_id"),
+            "task_family": family, "day": item.get("day"),
+            "tick_seconds": item.get("t", decision.get("tick_seconds")),
+        }
+        if row["tick_seconds"] is not None:
+            tick = _known_number(row["tick_seconds"])
+            if tick is None:
+                continue
+            row["tick_seconds"] = tick
+            row["hour"] = int(tick // 3600) % 24
+        if not is_prior_episode(row, simulation_day, tick_seconds):
+            continue
+        # A historical positive/negative tag alone cannot distinguish success with help from success alone.
+        if item.get("outcome") in ("positive", "negative", "neutral"):
+            row["feedback_valence"] = item["outcome"]
+        detail = decision.get("outcome_type") or decision.get("primary_reason")
+        if detail in ("success_self", "success_with_help", "failure_after_attempt",
+                      "failure_even_with_help", "abandon_midway", "avoid_without_attempt"):
+            row["outcome_type"] = detail
+        else:
+            row.pop("outcome_type", None)
+            row.pop("outcome", None)
+        tail.append(row)
+        if len(tail) >= limit:
             break
-    return list(reversed(tail))
+    return compact_recent_episodes(list(reversed(tail)), limit=limit)
+
+
+def extract_same_task_event_tail(*, task_family: str, event_log: Any, limit: int = 3) -> list[dict[str, Any]]:
+    return extract_event_log_episodes(event_log, task_family=task_family, limit=limit)
 
 
 def extract_cross_task_event_tail(
@@ -185,6 +268,9 @@ def build_task_relevant_memory_packet(
     help_effect_memory: Any,
     recent_episode_summary: Any,
     event_log: Any,
+    recent_episode_buffer: Any = None,
+    simulation_day: int | None = None,
+    tick_seconds: float | None = None,
 ) -> dict[str, Any]:
     task_state = {}
     if isinstance(task_domain_memory, dict):
@@ -198,11 +284,13 @@ def build_task_relevant_memory_packet(
         else {}
     )
     recent = recent_episode_summary if isinstance(recent_episode_summary, dict) else {}
-    event_tail = extract_same_task_event_tail(
-        task_family=task.task_family,
-        event_log=event_log,
-        limit=3,
+    event_tail = extract_event_log_episodes(
+        event_log, task_family=task.task_family, limit=3, simulation_day=simulation_day,
+        tick_seconds=tick_seconds,
     )
+    recent_events = compact_recent_episodes(
+        recent_episode_buffer, simulation_day=simulation_day, tick_seconds=tick_seconds,
+    ) or extract_event_log_episodes(event_log, simulation_day=simulation_day, tick_seconds=tick_seconds)
     controllable_success_memory = _safe_float(
         task_state.get("controllable_success_memory", 0.0)
     )
@@ -285,9 +373,10 @@ def build_task_relevant_memory_packet(
             4,
         ),
         "recent_same_task_outcomes_tail": [
-            str(item.get("outcome_type", "")).strip() for item in event_tail
+            item["outcome_type"] for item in event_tail if item.get("outcome_type")
         ],
         "recent_same_task_events_tail": event_tail,
+        "recent_task_episodes": recent_events,
         "has_controllable_success_evidence": controllable_success_memory > 0.05,
     }
 

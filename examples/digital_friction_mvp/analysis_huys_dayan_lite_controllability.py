@@ -166,6 +166,7 @@ def _extract_records(
                 "day": _safe_int(day, 0),
                 "task_family": str(task_family or ""),
                 "actual_strategy": str(strategy_type or ""),
+                "requested_strategy": payload.get("requested_strategy_type", strategy_type),
                 "has_huys_payload": bool(huys),
                 "mode": str(huys.get("mode", "")).strip(),
                 "status": str(huys.get("status", "")).strip(),
@@ -411,7 +412,10 @@ def _lagged_prediction(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         ).append(record)
     day_rows: dict[tuple[str, str, int], dict[str, Any]] = {}
     for key, group in grouped.items():
-        strategies = [str(record.get("actual_strategy", "")) for record in group]
+        strategies = [
+            record.get("requested_strategy", record.get("actual_strategy", ""))
+            for record in group
+        ]
         total = len(strategies)
         day_rows[key] = {
             "world_name": key[0],

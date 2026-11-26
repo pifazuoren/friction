@@ -13,7 +13,12 @@ from .models import (
     OutcomeAppraisalResult,
     TaskAppraisalResult,
 )
-from .support_protocol import SupportResponse, support_style_to_support_mode
+from .support_protocol import (
+    SupportResponse,
+    SupportTechnicalError,
+    classify_support_delivery,
+    support_style_to_support_mode,
+)
 
 
 OUTCOME_MODEL_MODES = {
@@ -203,14 +208,33 @@ def support_quality_from_env(env: dict[str, Any]) -> int:
 def _support_response_from_any(value: Any) -> SupportResponse | None:
     if value is None:
         return None
-    if isinstance(value, SupportResponse):
-        return value
     if isinstance(value, dict):
         try:
-            return SupportResponse.from_dict(value)
-        except ValueError:
-            return None
-    return None
+            value = SupportResponse.from_dict(value)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise SupportTechnicalError("invalid helper response") from exc
+    if not isinstance(value, SupportResponse):
+        raise SupportTechnicalError("invalid helper response")
+    if classify_support_delivery(value) == "technical_failure":
+        raise SupportTechnicalError(f"family_helper_generation_failed: {value.audit_status}")
+    return value
+
+
+def execution_strategy_for_support(
+    strategy: AttemptStrategy,
+    support_response: SupportResponse | dict[str, Any] | None,
+) -> AttemptStrategy:
+    """Keep the original choice available to the caller while resolving the executed action."""
+    response = _support_response_from_any(support_response)
+    delivery = classify_support_delivery(response)
+    if delivery == "not_delivered" and strategy.strategy_type == "seek_help_then_attempt":
+        return AttemptStrategy(
+            "attempt_self",
+            support_requested=True,
+            rationale="support_unavailable_fallback",
+            weights={"attempt_self": 1.0, "seek_help_then_attempt": 0.0, "avoid": 0.0},
+        )
+    return strategy
 
 
 def derive_effective_support_features(
@@ -225,6 +249,14 @@ def derive_effective_support_features(
             "support_unavailability": 0.0,
             "support_style": "none",
             "source": "none",
+        }
+    if classify_support_delivery(response) == "not_delivered":
+        return {
+            "effective_support_quality": 0.0,
+            "substitution_pressure": 0.0,
+            "support_unavailability": 1.0,
+            "support_style": response.support_style,
+            "source": response.source,
         }
 
     style = response.support_style
@@ -589,6 +621,7 @@ def build_rule_outcome_distribution_v2(
     memory_features: Any,
     support_response: Any = None,
 ) -> tuple[OutcomeAppraisalResult, dict[str, float]]:
+    strategy = execution_strategy_for_support(strategy, support_response)
     appraisal = build_outcome_appraisal_rule_v2(
         task=task,
         strategy=strategy,
@@ -670,6 +703,8 @@ def build_rule_outcome_distribution_v2(
             + 0.15 * substitution_pressure
             - 0.20 * support_unavailability
         )
+        if classify_support_delivery(support_response) == "delivered":
+            effective_help_share = 1.0
         distribution = {
             "success_with_help": p_success,
             "failure_even_with_help": p_failure * effective_help_share,
@@ -695,6 +730,7 @@ def fuse_rule_and_trajectory_distribution(
     alpha: float,
     max_outcome_shift: float,
     max_tvd: float,
+    delivered_help: bool = False,
 ) -> tuple[dict[str, float], dict[str, Any]]:
     p_rule = validate_outcome_distribution(
         rule_distribution,
@@ -706,6 +742,12 @@ def fuse_rule_and_trajectory_distribution(
         allowed_keys=allowed_keys,
         tolerance=0.02,
     )
+    if delivered_help:
+        # The model can estimate failure likelihood, but the completed helper exchange
+        # already determines whether that failure took place with assistance.
+        unassisted_failure_mass = p_traj["failure_after_attempt"]
+        p_traj["failure_even_with_help"] += unassisted_failure_mass
+        p_traj["failure_after_attempt"] = 0.0
     alpha_effective = _clamp_unit(float(alpha))
     candidate = {
         key: float(p_rule[key]) + alpha_effective * (float(p_traj[key]) - float(p_rule[key]))
@@ -734,6 +776,8 @@ def fuse_rule_and_trajectory_distribution(
         "max_abs_shift_from_rule": round(float(max_abs_shift), 6),
         "tvd_from_rule": round(float(tvd), 6),
     }
+    if delivered_help:
+        audit["trajectory_unassisted_failure_mass_reassigned"] = round(unassisted_failure_mass, 6)
     if max_abs_shift > float(max_outcome_shift) + 0.000001:
         raise ValueError("bounded fusion exceeded max outcome shift")
     if tvd > float(max_tvd) + 0.000001:
@@ -987,10 +1031,16 @@ def _outcome_from_distribution(
             env,
         ),
     }
+    help_used = outcome_type in {"success_with_help", "failure_even_with_help"}
+    if response is not None:
+        help_used = (
+            strategy.strategy_type == "seek_help_then_attempt"
+            and classify_support_delivery(response) == "delivered"
+        )
     return AttemptOutcome(
         outcome_type=outcome_type,  # type: ignore[arg-type]
         success=outcome_type in {"success_self", "success_with_help"},
-        help_used=outcome_type in {"success_with_help", "failure_even_with_help"},
+        help_used=help_used,
         negative_feedback=outcome_type
         in {"failure_after_attempt", "failure_even_with_help", "abandon_midway"},
         support_quality=support_quality,
@@ -998,7 +1048,9 @@ def _outcome_from_distribution(
         support_ecology_status=(
             str(response.audit_status) if response is not None else "not_called"
         ),
-        helper_agent_id=int(response.helper_agent_id or -1) if response else -1,
+        helper_agent_id=(
+            response.helper_agent_id if response and response.helper_agent_id is not None else -1
+        ),
         event_level_uncontrollability=event_level_uncontrollability,
         friction_tier=friction_tier,
         success_probability=float(success_probability),
@@ -1071,7 +1123,9 @@ def _resolve_attempt_outcome_appraisal_rule_v2(
             support_ecology_status=(
                 str(response.audit_status) if response is not None else "not_called"
             ),
-            helper_agent_id=int(response.helper_agent_id or -1) if response else -1,
+            helper_agent_id=(
+                response.helper_agent_id if response and response.helper_agent_id is not None else -1
+            ),
             event_level_uncontrollability=event_level_uncontrollability,
             friction_tier=friction_tier,
             success_probability=0.0,
@@ -1210,6 +1264,10 @@ def _resolve_attempt_outcome_trajectory_bounded_online_mc(
             _trajectory_config_value(trajectory_config, "max_outcome_shift", 0.08)
         ),
         max_tvd=float(_trajectory_config_value(trajectory_config, "max_tvd", 0.10)),
+        delivered_help=(
+            strategy.strategy_type == "seek_help_then_attempt"
+            and classify_support_delivery(support_response) == "delivered"
+        ),
     )
     trajectory_result = {
         **trajectory_result,
@@ -1254,8 +1312,10 @@ def resolve_attempt_outcome(
             "outcome_model_mode must be one of: "
             + ", ".join(sorted(OUTCOME_MODEL_MODES))
         )
+    response = _support_response_from_any(support_response)
+    strategy = execution_strategy_for_support(strategy, response)
     if mode == "rule_v1":
-        return _resolve_attempt_outcome_rule_v1(
+        outcome = _resolve_attempt_outcome_rule_v1(
             task=task,
             strategy=strategy,
             helplessness=helplessness,
@@ -1263,6 +1323,13 @@ def resolve_attempt_outcome(
             consecutive_failures=consecutive_failures,
             rng=rng,
         )
+        if response is not None:
+            outcome.support_response_json = _json_dumps(response.to_dict())
+            outcome.support_ecology_status = response.audit_status
+            outcome.helper_agent_id = (
+                response.helper_agent_id if response.helper_agent_id is not None else -1
+            )
+        return outcome
     if mode in {"appraisal_rule_v2", "trajectory_shadow"}:
         return _resolve_attempt_outcome_appraisal_rule_v2(
             task=task,
@@ -1275,7 +1342,7 @@ def resolve_attempt_outcome(
             rng=rng,
             outcome_model_mode=mode,
             trajectory_result=trajectory_result if mode == "trajectory_shadow" else None,
-            support_response=support_response,
+            support_response=response,
         )
     return _resolve_attempt_outcome_trajectory_bounded_online_mc(
         task=task,
@@ -1288,5 +1355,5 @@ def resolve_attempt_outcome(
         trajectory_result=trajectory_result,
         trajectory_config=trajectory_config,
         rng=rng,
-        support_response=support_response,
+        support_response=response,
     )

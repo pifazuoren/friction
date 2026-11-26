@@ -35,6 +35,7 @@ def apply_compatibility_updates(
     avoidance_now: float,
     outcome_type: str,
     help_used: bool,
+    help_requested: bool | None = None,
     avoid_reason: str = "not_applicable",
 ) -> CompatibilityUpdate:
     if outcome_type in {"success_self", "success_with_help"}:
@@ -61,7 +62,7 @@ def apply_compatibility_updates(
         if outcome_type
         in {"failure_after_attempt", "failure_even_with_help", "abandon_midway"}
         else 0,
-        help_request_increment=1 if help_used else 0,
+        help_request_increment=int(help_used if help_requested is None else help_requested),
         success_increment=1 if outcome_type in {"success_self", "success_with_help"} else 0,
         failure_increment=1
         if outcome_type

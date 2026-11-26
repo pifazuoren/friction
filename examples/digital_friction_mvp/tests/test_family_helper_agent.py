@@ -109,6 +109,19 @@ def test_provide_support_returns_structured_response_and_updates_history() -> No
     assert "outcome_type" not in histories["10"][0]["response"]
 
 
+def test_technical_error_is_returned_without_becoming_a_family_exchange(monkeypatch):
+    agent = _agent()
+
+    async def fail(request):
+        return SupportResponse.unavailable(request=request, audit_status="request_error")
+
+    monkeypatch.setattr(_Helper, "_support_response_block", lambda self: SimpleNamespace(generate_response=fail))
+    response = asyncio.run(agent.provide_support(_request()))
+    assert response.audit_status == "request_error"
+    assert agent.memory.status.data["support_histories"] == {}
+    assert agent.memory.status.data["chat_histories"] == {}
+
+
 def test_do_chat_reuses_support_generation_logic() -> None:
     agent = _agent()
     message = SimpleNamespace(

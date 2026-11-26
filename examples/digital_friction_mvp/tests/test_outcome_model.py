@@ -1,10 +1,14 @@
+import json
 import random
+
+import pytest
 
 from proto.attempt_strategy import choose_attempt_strategy
 from proto.outcome_model import (
     _resolve_attempt_outcome_rule_v1,
     build_rule_outcome_distribution_v2,
     derive_effective_support_features,
+    execution_strategy_for_support,
     fuse_rule_and_trajectory_distribution,
     infer_avoid_reason,
     infer_support_mode,
@@ -12,7 +16,7 @@ from proto.outcome_model import (
     support_quality_from_env,
 )
 from proto.models import AttemptStrategy, DigitalTask, MemoryFeatures, TaskAppraisalResult
-from proto.support_protocol import SupportResponse
+from proto.support_protocol import SupportResponse, SupportTechnicalError
 from proto.task_assignment import select_task_for_agent
 
 TASK_WINDOW_MORNING = 9 * 60 * 60
@@ -59,6 +63,12 @@ def _memory_features() -> MemoryFeatures:
         recent_help_seek_ratio=0.2,
         recent_same_task_failure_count=1,
         recent_failure_pressure=0.25,
+    )
+
+
+def _no_reply() -> SupportResponse:
+    return SupportResponse(
+        confidence=0.9, source="llm_family_helper", audit_status="ok", helper_agent_id=0,
     )
 
 
@@ -149,7 +159,7 @@ def test_structured_support_features_are_bounded_and_ordered() -> None:
         source="llm_family_helper",
         audit_status="ok",
     )
-    unavailable = SupportResponse.unavailable(audit_status="request_error")
+    unavailable = _no_reply()
     env = {"assist_level": 1, "human_support_level": 1, "accessibility_level": 1}
 
     enabling_features = derive_effective_support_features(enabling, env)
@@ -165,9 +175,10 @@ def test_structured_support_features_are_bounded_and_ordered() -> None:
         > enabling_features["substitution_pressure"]
     )
     assert unavailable_features["support_unavailability"] == 1.0
+    assert unavailable_features["effective_support_quality"] == 0.0
 
 
-def test_support_response_lightly_modulates_help_distribution() -> None:
+def test_support_delivery_changes_allowed_outcomes() -> None:
     task = _payment_task()
     strategy = AttemptStrategy("seek_help_then_attempt", support_requested=True)
     env = {
@@ -217,7 +228,7 @@ def test_support_response_lightly_modulates_help_distribution() -> None:
         source="llm_family_helper",
         audit_status="ok",
     )
-    unavailable = SupportResponse.unavailable(audit_status="request_error")
+    unavailable = _no_reply()
 
     _, dist_enabling = build_rule_outcome_distribution_v2(
         task=task,
@@ -240,8 +251,78 @@ def test_support_response_lightly_modulates_help_distribution() -> None:
         support_response=unavailable,
     )
 
-    assert dist_enabling["success_with_help"] > dist_unavailable["success_with_help"]
+    assert "success_with_help" in dist_enabling
+    assert set(dist_unavailable) == {"success_self", "failure_after_attempt", "abandon_midway"}
     assert dist_unavailable["abandon_midway"] > dist_enabling["abandon_midway"]
+
+
+@pytest.mark.parametrize("mode", [
+    "rule_v1", "appraisal_rule_v2", "trajectory_shadow", "trajectory_bounded_online_mc",
+])
+def test_social_non_delivery_executes_unassisted_and_technical_failure_aborts(mode: str) -> None:
+    requested = AttemptStrategy("seek_help_then_attempt", support_requested=True)
+    response = _no_reply()
+    executed = execution_strategy_for_support(requested, response)
+    assert requested.strategy_type == "seek_help_then_attempt"
+    assert executed.strategy_type == "attempt_self" and executed.support_requested
+    assert execution_strategy_for_support(executed, response) is executed
+    kwargs = dict(
+        task=_payment_task(), strategy=requested, helplessness=61, env={},
+        consecutive_failures=1, task_appraisal=_task_appraisal(), memory_features=_memory_features(),
+        outcome_model_mode=mode,
+        trajectory_result={
+            "status": "ok", "trajectory_confidence": 0.9,
+            "trajectory_outcome_tendency": {
+                "success_self": 0.6, "failure_after_attempt": 0.3, "abandon_midway": 0.1,
+            },
+        },
+    )
+    for seed in range(20):
+        outcome = resolve_attempt_outcome(**kwargs, rng=random.Random(seed), support_response=response)
+        assert outcome.help_used is False
+        assert outcome.outcome_type in {"success_self", "failure_after_attempt", "abandon_midway"}
+        assert outcome.helper_agent_id == 0 and outcome.support_ecology_status == "ok"
+    error = SupportResponse.unavailable(audit_status="helper_not_found")
+    with pytest.raises(SupportTechnicalError, match="helper_not_found"):
+        resolve_attempt_outcome(**kwargs, support_response=error)
+    with pytest.raises(SupportTechnicalError):
+        resolve_attempt_outcome(**kwargs, support_response={"responded": "false"})
+
+
+@pytest.mark.parametrize("mode", [
+    "rule_v1", "appraisal_rule_v2", "trajectory_shadow", "trajectory_bounded_online_mc",
+])
+def test_delivered_help_is_recorded_even_when_the_recipient_abandons(mode: str) -> None:
+    response = SupportResponse(
+        support_style="enabling", responded=True, response_delay="immediate",
+        instruction_quality="medium", confidence=0.9, audit_status="ok", source="llm_family_helper",
+    )
+    tendency = {
+        "success_with_help": 0.25, "failure_even_with_help": 0.1,
+        "failure_after_attempt": 0.4, "abandon_midway": 0.25,
+    }
+    observed = set()
+    for seed in range(40):
+        outcome = resolve_attempt_outcome(
+            task=_payment_task(), strategy=AttemptStrategy("seek_help_then_attempt", True),
+            helplessness=61, env={}, consecutive_failures=1, task_appraisal=_task_appraisal(),
+            memory_features=_memory_features(), outcome_model_mode=mode, rng=random.Random(seed),
+            support_response=response,
+            trajectory_result={
+                "status": "ok", "trajectory_confidence": 0.9, "trajectory_outcome_tendency": tendency,
+            },
+            trajectory_config={"alpha": 1.0, "max_outcome_shift": 1.0, "max_tvd": 1.0},
+        )
+        observed.add(outcome.outcome_type)
+        assert outcome.help_used
+        assert outcome.success == (outcome.outcome_type == "success_with_help")
+    assert observed == {"success_with_help", "failure_even_with_help", "abandon_midway"}
+    if mode == "trajectory_bounded_online_mc":
+        assert json.loads(outcome.final_distribution_json) == {
+            "success_with_help": 0.25, "failure_even_with_help": 0.5,
+            "failure_after_attempt": 0.0, "abandon_midway": 0.25,
+        }
+        assert json.loads(outcome.trajectory_tendency_json) == tendency
 
 
 def test_infer_support_mode_prioritizes_structured_response() -> None:

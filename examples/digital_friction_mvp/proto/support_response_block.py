@@ -43,6 +43,8 @@ from .support_protocol import (
     INSTRUCTION_QUALITIES,
     PROXY_COMPLETION_LEVELS,
     RESPONSE_DELAYS,
+    SUPPORT_RESPONSE_KEYS,
+    SUPPORT_RESPONSE_MIN_CONFIDENCE,
     SUPPORT_STYLES,
     SupportRequest,
     SupportResponse,
@@ -50,19 +52,6 @@ from .support_protocol import (
 
 
 SUPPORT_RESPONSE_PROMPT_VERSION = "support_response_v1_family_helper"
-SUPPORT_RESPONSE_KEYS = {
-    "support_style",
-    "instruction_quality",
-    "autonomy_preservation",
-    "proxy_completion_level",
-    "emotional_tone",
-    "response_delay",
-    "confidence",
-    "responded",
-    "response_text",
-    "rationale",
-}
-SUPPORT_RESPONSE_MIN_CONFIDENCE = 0.55
 SUPPORT_RESPONSE_TIMEOUT_SECONDS = 45
 SUPPORT_RESPONSE_RETRIES = 1
 
@@ -80,12 +69,13 @@ class SupportResponseBlock(Block):
 
     async def generate_response(self, request: SupportRequest) -> SupportResponse:
         payload, status = await _query_json_payload(
+            trace_module="helper",
             llm=getattr(self, "llm", None),
             system_prompt=_build_support_system_prompt(),
             user_payload=_build_support_user_payload(request),
             output_keys=SUPPORT_RESPONSE_KEYS,
             repair_schema_text=_support_repair_schema_text(),
-            sanitize_fn=lambda value: _sanitize_support_payload(value),
+            sanitize_fn=lambda value: _sanitize_support_payload(value, request.task_id),
             timeout=SUPPORT_RESPONSE_TIMEOUT_SECONDS,
             retries=SUPPORT_RESPONSE_RETRIES,
             max_tokens=320,
@@ -132,6 +122,9 @@ class SupportResponseBlock(Block):
 def _build_support_system_prompt() -> str:
     return """You generate one structured family helper response for a simulated older adult digital task.
 You may decide whether help is enabling, substituting, dismissive, or unavailable.
+For unavailable help use responded=false, no_response, no instructions, and no proxy action.
+For a reply use responded=true and immediate or delayed. Report concrete guidance and proxy actions accurately.
+An enabling or substituting reply must provide guidance or take some proxy action.
 You must not decide the task outcome, success, helplessness, posterior belief, or scope spillover.
 Return exactly one JSON object with the requested keys and no extra text."""
 
@@ -194,55 +187,25 @@ def _support_repair_schema_text() -> str:
         "Allowed proxy_completion_level values: none, partial, full, not_applicable.\n"
         "Allowed emotional_tone values: patient, neutral, dismissive, not_applicable.\n"
         "Allowed response_delay values: immediate, delayed, no_response.\n"
+        "Use a JSON boolean for responded and a finite number from 0 to 1 for confidence. "
+        "Unavailable requires responded=false, no_response, no instructions, no proxy action, "
+        "and not_applicable autonomy. Other styles require responded=true and immediate or delayed. "
+        "Enabling or substituting requires actual guidance or proxy action.\n"
         "Do not include outcome_type, success, helplessness_delta, helplessness_after, posterior, C_family, or scope_spillover_total."
     )
 
 
-def _sanitize_support_payload(payload: Any) -> tuple[dict[str, Any] | None, str]:
+def _sanitize_support_payload(payload: Any, task_id: str) -> tuple[dict[str, Any] | None, str]:
     if not isinstance(payload, dict):
         return None, "invalid_schema"
-    forbidden = {
-        "outcome_type",
-        "success",
-        "success_label",
-        "helplessness_delta",
-        "helplessness_after",
-        "final_helplessness_score",
-        "posterior",
-        "posterior_update_weight",
-        "C_family",
-        "scope_spillover_total",
-    }
-    if any(key in payload for key in forbidden):
-        return None, "invalid_schema"
-    if set(payload) - SUPPORT_RESPONSE_KEYS:
-        return None, "invalid_schema"
-    if not SUPPORT_RESPONSE_KEYS.issubset(set(payload)):
+    if task_id and payload.get("task_id") == task_id:
+        payload = payload.copy()
+        del payload["task_id"]
+    if set(payload) != SUPPORT_RESPONSE_KEYS:
         return None, "invalid_schema"
     try:
-        response = SupportResponse(
-            support_style=str(payload.get("support_style", "unavailable")),
-            instruction_quality=str(payload.get("instruction_quality", "none")),
-            autonomy_preservation=str(
-                payload.get("autonomy_preservation", "not_applicable")
-            ),
-            proxy_completion_level=str(
-                payload.get("proxy_completion_level", "not_applicable")
-            ),
-            emotional_tone=str(payload.get("emotional_tone", "not_applicable")),
-            response_delay=str(payload.get("response_delay", "no_response")),
-            confidence=float(payload.get("confidence", 0.0)),
-            responded=bool(payload.get("responded", False)),
-            response_text=str(payload.get("response_text", ""))[:800],
-            rationale=str(payload.get("rationale", ""))[:300],
-            source="llm_family_helper",
-            audit_status="ok",
-        )
+        response = SupportResponse.from_dict(payload)
     except (TypeError, ValueError):
         return None, "invalid_schema"
-    sanitized = {
-        key: response.to_dict()[key]
-        for key in SUPPORT_RESPONSE_KEYS
-        if key in response.to_dict()
-    }
-    return sanitized, "ok"
+    values = response.to_dict()
+    return {key: values[key] for key in SUPPORT_RESPONSE_KEYS}, "ok"

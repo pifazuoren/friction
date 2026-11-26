@@ -1,0 +1,173 @@
+"""Run the single-device, seven-day social-memory experiment from a terminal."""
+
+import argparse
+from dataclasses import asdict
+from datetime import datetime
+from getpass import getpass
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+from uuid import uuid4
+from zipfile import ZIP_DEFLATED, ZipFile
+
+from config_runtime import load_runtime_config
+from proto.app_entry.bundle_loader import get_replay_source
+
+
+EXAMPLE = Path(__file__).resolve().parent
+ROOT = EXAMPLE.parents[1]
+DATA = ROOT / "agentsociety_data"
+REFERENCE_DIR = DATA / "elderly/10person_v3"
+PREFIX = "talkingdata_elderly_10_"
+WORLD = "baseline_low_friction"
+SEED = "101"
+SETTINGS = {
+    "AGENT_COUNT": "1", "STAGE_MODE": "single", "STAGE_SINGLE_NAME": "steady",
+    "STAGE_DAYS": "7", "EVENT_DECISION_INTERVAL_MINUTES": "60",
+    "EXPERIMENT_ENGINE": "proto", "EXPERIMENT_MODE": "parallel_worlds",
+    "WORLD_BATCH": WORLD, "WORLD_NAME": WORLD, "EXP_SEED": SEED,
+    "PROTO_LOGICAL_CLOCK_ENABLED": "true",
+    "PROTO_TASK_ENTRY_MODE": "app_context_replay_then_llm_rollout",
+    "PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH": str(REFERENCE_DIR / f"{PREFIX}reference_hourly_bundle_day1_3.csv"),
+    "PROTO_APP_ENTRY_REPLAY_DEVICE_PATH": str(REFERENCE_DIR / f"{PREFIX}selected_devices.csv"),
+    "PROTO_APP_ENTRY_REPLAY_DAYS": "1,2,3",
+    "PROTO_APP_ENTRY_PLAN_PROMPT_VERSION": "app_entry_plan_v3",
+    "PROTO_TASK_OCCURRENCE_GATE_ENABLED": "true",
+    "PROTO_LLM_PSYCHOLOGY_MODE": "hybrid",
+    "PROTO_LLM_TASK_APPRAISAL_ENABLED": "true",
+    "PROTO_LLM_STRATEGY_DELIBERATION_ENABLED": "true",
+    "PROTO_LLM_PSYCHOLOGY_CACHE_ENABLED": "false",
+    "PROTO_LLM_UNCONTROLLABILITY_MODE": "off",
+    "PROTO_LLM_EVENT_APPRAISAL_ENABLED": "false",
+    "PROTO_LLM_DAILY_REFLECTION_ENABLED": "false",
+    "PROTO_LLM_STAGE_INTERVIEW_ENABLED": "false",
+    "PROTO_LLM_FINAL_INTERVIEW_ENABLED": "false",
+    "PROTO_BAYESIAN_POLICY_LITE_MODE": "off",
+    "PROTO_HUYS_DAYAN_LITE_CONTROLLABILITY_MODE": "off",
+    "PROTO_SUPPORT_ECOLOGY_MODE": "family_helper_llm",
+    "PROTO_OUTCOME_MODEL_MODE": "appraisal_rule_v2",
+    "LLM_MODEL": "glm-4-flashx", "LLM_CONCURRENCY": "1",
+    "MAP_FILE_PATH": str(DATA / "beijing.pb"),
+    "DIGITAL_FRICTION_PROFILES_PATH": str(EXAMPLE / "profiles.json"),
+}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="Verify local resources without making model requests")
+    parser.add_argument("--scheduled-login", action="store_true",
+                        help="Run five days with a 09:00 login opportunity on days four and five")
+    args = parser.parse_args()
+    os.chdir(ROOT)
+    os.umask(0o077)
+    for key in list(os.environ):
+        if key.startswith(("PROTO_", "PARALLEL_")) or key.lower() in {"http_proxy", "https_proxy", "all_proxy"}:
+            del os.environ[key]
+    settings = SETTINGS.copy()
+    if args.scheduled_login:
+        settings.update(STAGE_DAYS="5", PROTO_SCHEDULED_LOGIN_HOUR="9",
+                        PROTO_LLM_STRATEGY_PROMPT_FORMAT="field_rules_no_priors")
+    days = int(settings["STAGE_DAYS"])
+    os.environ.update(settings)
+    os.environ["PATH"] = str(Path(sys.executable).parent) + os.pathsep + os.environ.get("PATH", "")
+    os.environ["PYTHONUNBUFFERED"] = "1"
+    label = "scheduled_login" if args.scheduled_login else "social_memory"
+    group = label + "_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid4().hex[:6]
+    folder = DATA / "runs" / ("scheduled_login" if args.scheduled_login else "social_memory_7d") / group
+    os.environ["PARALLEL_GROUP_NAME"] = group
+    os.environ["PROTO_LLM_TRACE_DIR"] = str(folder / "trace")
+    config = load_runtime_config()
+    heldout = REFERENCE_DIR / f"{PREFIX}validation_hourly_bundle_day4_7.csv"
+    required_files = [Path(settings["MAP_FILE_PATH"]), Path(settings["DIGITAL_FRICTION_PROFILES_PATH"]),
+                      Path(config.proto_task_occurrence_prior_path), EXAMPLE / "check_social_memory_run.py"]
+    required_files.append(EXAMPLE / "check_scheduled_login.py" if args.scheduled_login else heldout)
+    for required in required_files:
+        if not required.is_file():
+            parser.exit(2, f"缺少实验文件 {required}\n")
+    if not os.access(DATA / "agentsociety-sim-oss", os.X_OK):
+        parser.exit(2, "本地模拟器不存在或不能执行。\n")
+    replay = get_replay_source(bundle_path=config.proto_app_entry_replay_bundle_path,
+                               device_mapping_path=config.proto_app_entry_replay_device_path,
+                               replay_days=config.proto_app_entry_replay_days)
+    device = replay.selected_devices[0][1]
+    for day in (1, 2, 3):
+        for hour in range(24):
+            replay.bundle_for_device(device_id=device, talkingdata_day=day, hour=hour)
+    print(f"已核对第 1 台设备的 72 个回放小时。glm-4-flashx，1 个基线世界，{days} 个模拟日。", flush=True)
+    if args.scheduled_login:
+        print("第 4、5 天 09:00 各安排一次登录机会，模型评分、求助和任务结果按模拟流程执行。", flush=True)
+    if args.check:
+        return
+    key = os.environ.get("LLM_API_KEY") or os.environ.get("ZHIPUAI_API_KEY")
+    if not key or not key.strip() or key.strip() == "<YOUR-API-KEY>":
+        key = getpass("智谱 API Key（输入隐藏，回车开始实验）：").strip()
+    if not key or key == "<YOUR-API-KEY>":
+        parser.exit(2, "未输入有效密钥，实验未启动。\n")
+    os.environ["LLM_API_KEY"] = key.strip()
+    folder.mkdir(parents=True)
+    print(f"本次结果目录：{folder}", flush=True)
+    code_archive = folder / "experiment_source.zip"
+    sources = [
+        EXAMPLE / name for name in (
+            "main.py", "world_runner.py", "persistence.py", "config_runtime.py",
+            "analysis_parallel_worlds.py", "analysis_entry_calibration_comparison.py",
+            "run_social_memory_week.py", "check_social_memory_run.py",
+        )
+    ]
+    sources.extend((EXAMPLE / "proto").rglob("*.py"))
+    if args.scheduled_login:
+        sources.append(EXAMPLE / "check_scheduled_login.py")
+    with ZipFile(code_archive, "w", compression=ZIP_DEFLATED) as archive:
+        for path in sorted(sources):
+            archive.write(path, path.relative_to(ROOT))
+    snapshot = {
+        "settings": settings, "runtime": asdict(config),
+        "reference_hash": replay.bundle_hash, "device_mapping_hash": replay.device_mapping_hash,
+        "profiles_sha256": hashlib.sha256(Path(SETTINGS["DIGITAL_FRICTION_PROFILES_PATH"]).read_bytes()).hexdigest(),
+        "task_priors_sha256": hashlib.sha256(Path(config.proto_task_occurrence_prior_path).read_bytes()).hexdigest(),
+        "source_sha256": hashlib.sha256(code_archive.read_bytes()).hexdigest(),
+    }
+    (folder / "resolved_config.json").write_text(json.dumps(snapshot, indent=2, ensure_ascii=False))
+    runner = [sys.executable, str(EXAMPLE / "world_runner.py"), "--group-id", group,
+              "--seed-list", SEED, "--world-batch", WORLD, "--analysis-dir", str(folder), "--summarize"]
+    with (folder / "run.log").open("w") as log, subprocess.Popen(
+        runner, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace",
+    ) as run:
+        for line in run.stdout:
+            line = line.replace(key.strip(), "[redacted]")
+            sys.stdout.write(line)
+            log.write(line)
+            log.flush()
+        runner_status = run.wait()
+    manifest_path = folder / f"exp_group_manifest_{group}.json"
+    if not manifest_path.is_file():
+        parser.exit(1, f"仿真未写出运行清单，请查看 {folder / 'run.log'}\n")
+    report = folder / "acceptance.json"
+    check = subprocess.run([sys.executable, str(EXAMPLE / "check_social_memory_run.py"),
+                            "--run-dir", str(folder), "--group-id", group, "--db", str(DATA / "sqlite.db"),
+                            "--trace", str(folder / "trace"), "--output", str(report), "--expected-days", str(days)])
+    evidence_status = 0
+    if args.scheduled_login:
+        evidence_status = subprocess.run([sys.executable, str(EXAMPLE / "check_scheduled_login.py"),
+                                          "--run-dir", str(folder), "--db", str(DATA / "sqlite.db")]).returncode
+    rollout = folder / f"app_entry_rollout_hourly_{group}.csv"
+    errors = folder / f"app_entry_rollout_errors_{group}.csv"
+    if rollout.is_file() and not args.scheduled_login:
+        from analysis_entry_calibration_comparison import compare, write_csv
+        for day in range(4, 8):
+            day_dir = folder / f"scores/day{day}"
+            day_dir.mkdir(parents=True)
+            summary, hourly = compare(Path(config.proto_app_entry_replay_bundle_path), heldout,
+                                      [("glm-4-flashx", rollout, errors if errors.is_file() else None)], [device], day)
+            write_csv(day_dir / "summary.csv", summary)
+            write_csv(day_dir / "hourly.csv", hourly)
+    print(f"实验验收与日志：{folder}", flush=True)
+    if runner_status or check.returncode or evidence_status:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

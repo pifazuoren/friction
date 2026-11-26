@@ -7,6 +7,35 @@ import subprocess
 import sys
 from pathlib import Path
 
+from analysis_parallel_worlds import _compute_world_proto_metrics
+from proto.metrics import summarize_stage_attempts
+
+
+def test_undelivered_request_counts_as_seeking_help_in_stage_and_world_metrics():
+    request = {
+        "requested_strategy_type": "seek_help_then_attempt",
+        "strategy_type": "attempt_self",
+        "outcome_type": "success_self",
+        "help_used": False,
+    }
+    old_independent = {"strategy_type": "attempt_self", "outcome_type": "success_self", "help_used": False}
+    old_helped = {"strategy_type": "seek_help_then_attempt", "outcome_type": "success_with_help", "help_used": True}
+    rows = [request, old_independent, old_helped]
+    stage = summarize_stage_attempts(
+        rows=rows, helplessness_start_avg=40, helplessness_end_avg=40,
+        day=4, t=0, step=1, stage_name="steady", stage_index=0, agent_count=1,
+    )
+    assert stage["help_seek_rate"] == 2 / 3
+    with sqlite3.connect(":memory:") as db:
+        db.execute("CREATE TABLE attempts(day INT, strategy_type TEXT, outcome_type TEXT, payload_json TEXT)")
+        db.executemany(
+            "INSERT INTO attempts VALUES (4, ?, ?, ?)",
+            [(r["strategy_type"], r["outcome_type"], json.dumps(r)) for r in rows],
+        )
+        world = _compute_world_proto_metrics(db.cursor(), "attempts")
+    assert world["help_seek_count"] == 2
+    assert world["help_seek_rate"] == stage["help_seek_rate"]
+
 
 def _table_name(exp_id: str, suffix: str) -> str:
     return f"as_{exp_id.replace('-', '_')}_{suffix}"

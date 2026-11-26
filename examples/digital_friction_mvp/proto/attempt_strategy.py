@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import random
 
+from .llm_trace import trace_record
 from .models import AttemptStrategy, StrategyDeliberationResult
 
 _STRATEGY_KEYS = (
@@ -177,6 +178,7 @@ def choose_attempt_strategy(
             selected = key
             break
 
+    trace_record("sample", module="strategy", final_weights=weights, draw=roll, action=selected)
     if strategy_deliberation_result is not None:
         rationale = (
             "weighted_strategy_sampling:"

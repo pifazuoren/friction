@@ -5,6 +5,7 @@ import pytest
 from proto.support_protocol import (
     SupportRequest,
     SupportResponse,
+    classify_support_delivery,
     support_style_to_support_mode,
 )
 
@@ -105,3 +106,17 @@ def test_unavailable_fallback_contains_no_outcome_or_helplessness_keys() -> None
     assert not {"outcome_type", "success", "helplessness_delta"} & set(
         response.to_dict()
     )
+    assert classify_support_delivery(response) == "technical_failure"
+    assert classify_support_delivery(None) == "generic"
+
+
+def test_received_dismissive_reply_only_counts_as_help_when_it_contains_help() -> None:
+    values = dict(
+        support_style="dismissive", responded=True, confidence=0.9,
+        response_delay="immediate", source="llm_family_helper", audit_status="ok_repaired",
+    )
+    refusal = SupportResponse(**values)
+    minimal_guidance = SupportResponse(**values, instruction_quality="low")
+    assert classify_support_delivery(refusal) == "not_delivered"
+    assert classify_support_delivery(minimal_guidance.to_dict()) == "delivered"
+    assert classify_support_delivery({**minimal_guidance.to_dict(), "confidence": 0.1}) == "technical_failure"

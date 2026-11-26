@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from ..memory.packet import compact_recent_episodes, is_prior_episode
 from .bundle import HourlyAppEntryBundle
 from .bundle_loader import simulation_day_to_talkingdata_day
 from .candidate import build_rollout_app_context_candidates
@@ -38,14 +39,6 @@ _ENVIRONMENT_CUE_KEYS = (
     "assist_level",
     "accessibility_level",
     "human_support_level",
-)
-_EPISODE_KEYS = (
-    "day",
-    "hour",
-    "task_family",
-    "strategy",
-    "support_mode",
-    "outcome",
 )
 _REFLECTION_KEYS = (
     "day",
@@ -104,10 +97,10 @@ def _assert_no_forbidden_evidence(value: Any, *, path: str = "input") -> None:
             _assert_no_forbidden_evidence(item, path=f"{path}[{index}]")
 
 
-def _compact_recent_rollout_rows(value: Any) -> list[dict[str, Any]]:
+def _compact_recent_rollout_rows(value: Any, day: int, hour: int) -> list[dict[str, Any]]:
     rows = list(value) if isinstance(value, list) else []
     compacted: list[dict[str, Any]] = []
-    for index, row in enumerate(rows[-6:]):
+    for index, row in enumerate(reversed(rows)):
         if not isinstance(row, dict):
             continue
         if bool(row.get("uses_validation_data", False)):
@@ -122,10 +115,12 @@ def _compact_recent_rollout_rows(value: Any) -> list[dict[str, Any]]:
             non_audit_row,
             path=f"recent_rollout_rows[{index}]",
         )
-        compacted.append(
-            _compact_mapping(row, allowed_keys=_RECENT_ROLLOUT_KEYS)
-        )
-    return compacted
+        if not is_prior_episode({"day": row.get("talkingdata_day"), "hour": row.get("hour")}, day, hour * 3600):
+            continue
+        compacted.append(_compact_mapping(row, allowed_keys=_RECENT_ROLLOUT_KEYS))
+        if len(compacted) == 6:
+            break
+    return list(reversed(compacted))
 
 
 def build_rollout_input_packet(
@@ -150,9 +145,6 @@ def build_rollout_input_packet(
     primary_by_hour = habit_memory.get("primary_context_by_hour", {}).get(
         hour_key, {}
     )
-    episodes = (
-        list(recent_task_episodes) if isinstance(recent_task_episodes, list) else []
-    )
     packet = {
         "simulation_day": int(simulation_day),
         "talkingdata_day": int(talkingdata_day),
@@ -176,12 +168,11 @@ def build_rollout_input_packet(
             "intensity_profile": dict(intensity_profile),
         },
         "recent_simulated_bundles": _compact_recent_rollout_rows(
-            recent_rollout_rows
+            recent_rollout_rows, talkingdata_day, hour
         ),
-        "recent_task_episodes": [
-            _compact_mapping(item, allowed_keys=_EPISODE_KEYS)
-            for item in episodes[-5:]
-        ],
+        "recent_task_episodes": compact_recent_episodes(
+            recent_task_episodes, simulation_day=simulation_day, tick_seconds=hour * 3600,
+        ),
         "latest_reflection": _compact_mapping(
             latest_reflection,
             allowed_keys=_REFLECTION_KEYS,

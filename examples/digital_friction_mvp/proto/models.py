@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
@@ -356,7 +357,7 @@ class HelpEffectState:
 
 @dataclass(slots=True)
 class RecentEpisode:
-    day: int
+    day: int | None
     task_family: TaskFamily
     strategy_type: AttemptStrategyType
     outcome_type: OutcomeType
@@ -366,18 +367,36 @@ class RecentEpisode:
     negative_feedback: bool
     event_level_uncontrollability: int
     helplessness_delta: float
+    episode_id: str = ""
+    task_id: str = ""
+    tick_seconds: float | None = None
+    hour: int | None = None
+    requested_strategy_type: str = ""
+    support_mode: str = ""
+    support_request_id: str = ""
+    support_delivery_status: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
+    @staticmethod
+    def known_time(value: Any) -> float | None:
+        try:
+            number = float(value)
+        except (TypeError, ValueError, OverflowError):
+            return None
+        return number if math.isfinite(number) and number >= 0 else None
+
     @classmethod
     def from_dict(cls, payload: dict[str, Any] | None) -> "RecentEpisode":
         payload = payload or {}
+        day = cls.known_time(payload.get("day"))
+        hour = cls.known_time(payload.get("hour"))
         return cls(
-            day=int(payload.get("day", 0)),
-            task_family=str(payload.get("task_family", "navigation_service_location")),  # type: ignore[arg-type]
-            strategy_type=str(payload.get("strategy_type", "avoid")),  # type: ignore[arg-type]
-            outcome_type=str(payload.get("outcome_type", "avoid_without_attempt")),  # type: ignore[arg-type]
+            day=int(day) if day is not None and day.is_integer() else None,
+            task_family=str(payload.get("task_family") or ""),  # type: ignore[arg-type]
+            strategy_type=str(payload.get("strategy_type") or payload.get("strategy") or ""),  # type: ignore[arg-type]
+            outcome_type=str(payload.get("outcome_type") or payload.get("outcome") or ""),  # type: ignore[arg-type]
             avoid_reason=str(payload.get("avoid_reason", "not_applicable")),
             help_used=bool(payload.get("help_used", False)),
             help_source=str(payload.get("help_source", "none")),
@@ -386,6 +405,14 @@ class RecentEpisode:
                 payload.get("event_level_uncontrollability", 0)
             ),
             helplessness_delta=float(payload.get("helplessness_delta", 0.0)),
+            episode_id=str(payload.get("episode_id") or ""),
+            task_id=str(payload.get("task_id") or ""),
+            tick_seconds=cls.known_time(payload.get("tick_seconds")),
+            hour=int(hour) if hour is not None and hour.is_integer() and hour < 24 else None,
+            requested_strategy_type=str(payload.get("requested_strategy_type") or ""),
+            support_mode=str(payload.get("support_mode") or ""),
+            support_request_id=str(payload.get("support_request_id") or ""),
+            support_delivery_status=str(payload.get("support_delivery_status") or ""),
         )
 
 

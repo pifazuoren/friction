@@ -6,6 +6,7 @@ from typing import Any
 
 from config_runtime import load_runtime_config
 
+from .llm_trace import LLMQueryTrace, TraceWriteError
 from .models import AttemptOutcome, DigitalTask, EventAttributionResult
 
 ATTRIBUTABLE_OUTCOMES = {
@@ -597,21 +598,27 @@ async def _query_llm_payload(
             "content": json.dumps(payload, ensure_ascii=False),
         },
     ]
+    trace = LLMQueryTrace("attribution", llm)
     try:
-        raw = await llm.atext_request(
+        raw = await trace.request("initial", 1,
             dialog=dialog,
             temperature=0.1,
             timeout=timeout,
             retries=retries,
             max_tokens=220,
         )
+    except TraceWriteError:
+        raise
     except Exception:
         return None
 
     parsed = _extract_json_object(str(raw))
     if parsed is None:
+        trace.parsed("parse_failed")
         return None
-    return _sanitize_payload(parsed)
+    sanitized = _sanitize_payload(parsed)
+    trace.parsed("ok" if sanitized is not None else "invalid_schema", sanitized)
+    return sanitized
 
 
 async def infer_event_attribution(

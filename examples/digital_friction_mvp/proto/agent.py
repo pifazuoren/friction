@@ -13,6 +13,7 @@ from config_runtime import load_runtime_config
 
 from .attempt_strategy import choose_attempt_strategy, compute_rule_strategy_weights
 from .attribution_inference import infer_event_attribution
+from .llm_trace import TraceWriteError, bind_trace_context, trace_record, traced_agent_tick
 from .bayesian_control import update_bayesian_control_memory
 from .bayesian_controllability_lite import (
     apply_controllability_gated_modulation,
@@ -61,12 +62,19 @@ from .memory.packet import (
     build_task_relevant_memory_packet as _build_task_relevant_memory_packet,
     compact_support_context as _compact_support_context,
     extract_cross_task_event_tail as _extract_cross_task_event_tail,
+    extract_event_log_episodes,
     extract_same_task_event_tail as _extract_same_task_event_tail,
     support_snapshot_for_task as _support_snapshot_for_task,
 )
 from .psychology.helplessness import apply_helplessness_update
-from .support.protocol import SupportRequest, SupportResponse
+from .support.protocol import (
+    SupportRequest,
+    SupportResponse,
+    SupportTechnicalError,
+    classify_support_delivery,
+)
 from .task_flow.outcome import (
+    execution_strategy_for_support,
     infer_avoid_reason,
     infer_support_mode,
     resolve_attempt_outcome,
@@ -77,6 +85,8 @@ from .runtime import (
     assign_task_with_entry_decision,
     build_stage_transition_updates,
     build_task_surface_updates,
+    scheduled_login_difficulty_delta,
+    scheduled_login_for_day,
 )
 from .state_schema import build_proto_status_attributes
 from .task_assignment import (
@@ -394,7 +404,7 @@ def _summarize_event_log_for_interview(event_log: list[dict[str, Any]]) -> dict[
             "abandon_midway",
         }:
             summary["negative_count"] += 1
-        if str(decision.get("strategy_type", "")).strip() == "seek_help_then_attempt":
+        if decision.get("help_used", decision.get("strategy_type") == "seek_help_then_attempt"):
             summary["help_used_count"] += 1
     if task_counts:
         summary["top_task_family"] = max(
@@ -637,6 +647,8 @@ class DigitalHelplessnessAgent(SocietyAgent):
             )
         try:
             response = await helper.provide_support(request)
+        except TraceWriteError:
+            raise
         except Exception as exc:
             return (
                 request,
@@ -647,6 +659,15 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     rationale=str(exc)[:300],
                 ),
                 "request_error",
+            )
+        if (
+            not isinstance(response, SupportResponse)
+            or response.request_id != request.request_id
+            or response.requester_agent_id != request.requester_agent_id
+            or response.helper_agent_id != request.helper_agent_id
+        ):
+            response = SupportResponse.unavailable(
+                request=request, source="helper_unavailable", audit_status="invalid_response",
             )
         return request, response, str(response.audit_status)
 
@@ -690,10 +711,13 @@ class DigitalHelplessnessAgent(SocietyAgent):
         )
         await self.memory.status.update("friction_step_signal", payload)
 
-    async def _persist_replay_entry_state(
+    async def _persist_completed_replay_hour(
         self,
-        entry_decision: MobileEntryDecision,
+        entry_decision: MobileEntryDecision | None,
     ) -> None:
+        """Count a completed replay hour and freeze the final state at Day 3 close."""
+        if entry_decision is None:
+            return
         decision_payload = entry_decision.to_dict()
         audit = decision_payload.get("audit", {})
         if not isinstance(audit, dict):
@@ -739,54 +763,55 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 "proto_app_entry_context_only_rows_json",
                 context_only_rows,
             )
-        if should_create_day4_replay_snapshot(decision_payload):
-            env = getattr(self.environment, "environment", {})
-            if not isinstance(env, dict):
-                env = {}
-            snapshot = build_day4_replay_snapshot(
-                agent_id=int(self.id),
-                world_name=str(env.get("world_name") or os.getenv("WORLD_NAME", "")),
-                decision=decision_payload,
-                app_entry_habit_memory=habit_memory,
-                helplessness_score=_clamp(
-                    _safe_float(
-                        await self.memory.status.get("helplessness_score", 0.0)
-                    )
-                ),
-                trust_in_apps=_clamp(
-                    _safe_float(await self.memory.status.get("trust_in_apps", 0.0))
-                ),
-                avoidance_tendency=_clamp(
-                    _safe_float(
-                        await self.memory.status.get("avoidance_tendency", 0.0)
-                    )
-                ),
-                task_domain_memory=await self.memory.status.get(
-                    "task_domain_memory",
-                    {},
-                ),
-                help_effect_memory=await self.memory.status.get(
-                    "help_effect_memory",
-                    {},
-                ),
-                recent_episode_buffer=await self.memory.status.get(
-                    "recent_episode_buffer",
-                    [],
-                ),
-                bayesian_control_memory=await self.memory.status.get(
-                    "proto_bayesian_control_memory",
-                    {},
-                ),
-                bayesian_policy_memory=await self.memory.status.get(
-                    "proto_bayesian_policy_memory",
-                    {},
-                ),
-                bayesian_controllability_lite_memory=await self.memory.status.get(
-                    "proto_bayesian_controllability_lite_memory",
-                    {},
-                ),
-            )
-            await self.memory.status.update("proto_day4_replay_snapshot", snapshot)
+        if not should_create_day4_replay_snapshot(decision_payload):
+            return
+        env = getattr(self.environment, "environment", {})
+        if not isinstance(env, dict):
+            env = {}
+        snapshot = build_day4_replay_snapshot(
+            agent_id=int(self.id),
+            world_name=str(env.get("world_name") or os.getenv("WORLD_NAME", "")),
+            decision=decision_payload,
+            app_entry_habit_memory=habit_memory,
+            helplessness_score=_clamp(
+                _safe_float(
+                    await self.memory.status.get("helplessness_score", 0.0)
+                )
+            ),
+            trust_in_apps=_clamp(
+                _safe_float(await self.memory.status.get("trust_in_apps", 0.0))
+            ),
+            avoidance_tendency=_clamp(
+                _safe_float(
+                    await self.memory.status.get("avoidance_tendency", 0.0)
+                )
+            ),
+            task_domain_memory=await self.memory.status.get(
+                "task_domain_memory",
+                {},
+            ),
+            help_effect_memory=await self.memory.status.get(
+                "help_effect_memory",
+                {},
+            ),
+            recent_episode_buffer=await self.memory.status.get(
+                "recent_episode_buffer",
+                [],
+            ),
+            bayesian_control_memory=await self.memory.status.get(
+                "proto_bayesian_control_memory",
+                {},
+            ),
+            bayesian_policy_memory=await self.memory.status.get(
+                "proto_bayesian_policy_memory",
+                {},
+            ),
+            bayesian_controllability_lite_memory=await self.memory.status.get(
+                "proto_bayesian_controllability_lite_memory",
+                {},
+            ),
+        )
+        await self.memory.status.update("proto_day4_replay_snapshot", snapshot)
 
     async def _persist_rollout_entry_state(
         self,
@@ -1027,6 +1052,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             payload["llm_parse_status"] = "request_error"
             return payload
         llm_payload, status = await _query_json_payload(
+            trace_module="mobile_shadow",
             llm=getattr(self, "llm", None),
             system_prompt=(
                 "You are a JSON-only shadow evaluator for a constrained mobile "
@@ -1172,6 +1198,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             )
 
         llm_payload, status = await _query_json_payload(
+            trace_module="mobile_rerank",
             llm=getattr(self, "llm"),
             system_prompt=(
                 "You are a JSON-only reranker for a constrained mobile intention "
@@ -1319,6 +1346,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             )
 
         llm_payload, status = await _query_json_payload(
+            trace_module="app_rerank",
             llm=getattr(self, "llm"),
             system_prompt=(
                 "You are a JSON-only reranker for a constrained app-context entry "
@@ -1942,9 +1970,18 @@ class DigitalHelplessnessAgent(SocietyAgent):
 
         return await super().do_interview(question)
 
+    @traced_agent_tick
     async def forward(self):
         self.step_count += 1
         day, t = self.environment.get_datetime()
+        if os.environ.get("PROTO_LLM_TRACE_DIR"):
+            bind_trace_context(
+                agent_id=int(self.id), simulation_day=int(day),
+                talkingdata_day=simulation_day_to_talkingdata_day(int(day)),
+                hour=int(round(float(t))) // 3600 % 24, tick_seconds=float(t),
+                world=os.environ.get("WORLD_NAME", ""),
+                _device_id=await self.memory.status.get("proto_app_entry_replay_device_id", ""),
+            )
         env = dict(self.environment.environment)
         current_day = int(day)
         existing_task_raw = await self.memory.status.get("proto_assigned_task_json", "")
@@ -2098,6 +2135,26 @@ class DigitalHelplessnessAgent(SocietyAgent):
             == "app_context_replay_then_llm_rollout"
             and 4 <= talkingdata_day <= 7
         ):
+            if runtime_config.proto_scheduled_login_hour is not None:
+                login = scheduled_login_for_day(
+                    hour=runtime_config.proto_scheduled_login_hour, agent_id=int(self.id),
+                    day=current_day, tick_seconds=float(t), env=env, existing_task=task,
+                    last_scheduled_day=await self.memory.status.get("proto_last_scheduled_login_day", -1),
+                    difficulty_arm=runtime_config.proto_login_difficulty_arm,
+                )
+                if login is not None:
+                    task = login
+                    updates = build_task_surface_updates(task=task, day=current_day, tick_seconds=float(t))
+                    for key, value in updates.items():
+                        await self.memory.status.update(key, value)
+                    await self.memory.status.update("proto_last_scheduled_login_day", current_day)
+                    trace_record(
+                        "scheduled_login", module="task_schedule", task_id=task.task_id,
+                        task_family=task.task_family, scheduled_hour=runtime_config.proto_scheduled_login_hour,
+                        difficulty_arm=runtime_config.proto_login_difficulty_arm, assigned_difficulty=task.difficulty,
+                        nominal_difficulty_delta=scheduled_login_difficulty_delta(
+                            runtime_config.proto_login_difficulty_arm, talkingdata_day),
+                    )
             try:
                 rollout_result = await run_app_entry_rollout_hour(
                     llm=getattr(self, "llm", None),
@@ -2117,7 +2174,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     recent_rollout_rows=await self.memory.status.get(
                         "proto_app_entry_rollout_rows_json", []
                     ),
-                    recent_task_episodes=recent_episode_buffer,
+                    recent_task_episodes=recent_episode_buffer or extract_event_log_episodes(
+                        event_log, simulation_day=int(day), tick_seconds=float(t),
+                    ),
                     latest_reflection=current_daily_reflection,
                     helplessness=helplessness,
                     trust=trust,
@@ -2154,6 +2213,8 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     ),
                     existing_task_pending=task is not None,
                 )
+            except TraceWriteError:
+                raise
             except Exception as exc:
                 entry_decision = failed_rollout_entry_decision(
                     agent_id=int(self.id),
@@ -2347,11 +2408,14 @@ class DigitalHelplessnessAgent(SocietyAgent):
             entry_decision.audit["entry_eval_interval_minutes"] = (
                 runtime_config.proto_mobile_intention_eval_interval_minutes
             )
-            await self._persist_replay_entry_state(entry_decision)
             if rollout_result is not None:
                 await self._persist_rollout_entry_state(rollout_result)
+                trace_record("entry", module="app_entry", status="ok",
+                             primary_context=rollout_result.bundle.primary_context,
+                             task_generated=rollout_result.decision.task_generated)
             elif entry_decision.entry_status == "llm_rollout_error":
                 await self._persist_rollout_error_state(entry_decision)
+                trace_record("entry", module="app_entry", status="llm_rollout_error")
             await self.memory.status.update(
                 "proto_mobile_entry_decision",
                 entry_decision.to_dict(),
@@ -2360,8 +2424,10 @@ class DigitalHelplessnessAgent(SocietyAgent):
             await self.memory.status.update(key, value)
         if task is None:
             await self._write_mobile_entry_idle_state(entry_decision)
+            await self._persist_completed_replay_hour(entry_decision)
             return 0.0
 
+        bind_trace_context(task_id=task.task_id, task_family=task.task_family)
         consecutive_failures = _safe_int(
             await self.memory.status.get("proto_consecutive_failures", 0)
         )
@@ -2389,6 +2455,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
             help_effect_memory=help_effect_memory,
             recent_episode_summary=recent_episode_summary,
             event_log=event_log,
+            recent_episode_buffer=recent_episode_buffer,
+            simulation_day=int(day),
+            tick_seconds=float(t),
         )
         cross_task_recent_context = {
             "recent_cross_task_events_tail": _extract_cross_task_event_tail(
@@ -2456,6 +2525,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             recent_same_task_failure_count=memory_features.recent_same_task_failure_count,
         )
         strategy_deliberation = await resolve_strategy_deliberation(
+            prompt_format=runtime_config.proto_llm_strategy_prompt_format,
             llm=getattr(self, "llm", None),
             task=task,
             task_appraisal=task_appraisal.to_dict(),
@@ -2585,7 +2655,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
         )
         if huys_dayan_final_weights is not None:
             gated_lite_final_weights = huys_dayan_final_weights
-        strategy = choose_attempt_strategy(
+        requested_strategy = choose_attempt_strategy(
             effective_helplessness=memory_features.effective_helplessness,
             support_quality=support_quality,
             task_difficulty=task.difficulty,
@@ -2601,7 +2671,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
         support_request, support_response, support_ecology_status = (
             await self._resolve_family_support_response(
                 task=task,
-                strategy=strategy,
+                strategy=requested_strategy,
                 task_appraisal=task_appraisal,
                 task_relevant_memory_packet=task_relevant_memory_packet,
                 env=env,
@@ -2610,6 +2680,34 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 tick=float(t),
             )
         )
+        support_delivery_status = (
+            classify_support_delivery(support_response)
+            if requested_strategy.strategy_type == "seek_help_then_attempt"
+            else "not_requested"
+        )
+        support_request_id = support_request.request_id if support_request is not None else ""
+        if support_delivery_status == "technical_failure":
+            trace_record("decision", module="task", status="technical_failure",
+                         requested_action=requested_strategy.strategy_type, action=None,
+                         outcome=None, support_request_id=support_request_id,
+                         support_status=support_ecology_status)
+            await self.memory.status.update(
+                "friction_step_signal",
+                {
+                    "step_type": "technical_failure",
+                    "day": int(day),
+                    "tick_seconds": float(t),
+                    "task_id": task.task_id,
+                    "requested_strategy_type": requested_strategy.strategy_type,
+                    "support_request_id": support_request_id,
+                    "support_delivery_status": support_delivery_status,
+                    "support_ecology_status": support_ecology_status,
+                },
+            )
+            raise SupportTechnicalError(
+                f"Family support request {support_request_id} failed: {support_ecology_status}"
+            )
+        strategy = execution_strategy_for_support(requested_strategy, support_response)
         trajectory_result: dict[str, Any] | None = None
         outcome_model_mode = str(runtime_config.proto_outcome_model_mode)
         if (
@@ -2689,7 +2787,8 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 ensure_ascii=False,
                 sort_keys=True,
             )
-            outcome.helper_agent_id = int(support_response.helper_agent_id or -1)
+            if support_response.helper_agent_id is not None:
+                outcome.helper_agent_id = support_response.helper_agent_id
         calibration = await calibrate_uncontrollability(
             llm=getattr(self, "llm", None),
             task=task,
@@ -2886,6 +2985,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             avoidance_now=avoidance,
             outcome_type=outcome.outcome_type,
             help_used=outcome.help_used,
+            help_requested=requested_strategy.strategy_type == "seek_help_then_attempt",
             avoid_reason=outcome.avoid_reason,
         )
         memory_update = update_experience_memory(
@@ -2900,6 +3000,10 @@ class DigitalHelplessnessAgent(SocietyAgent):
             rationale_memory=rationale_memory,
             task_appraisal_result=task_appraisal.to_dict(),
             support_response=support_response,
+            tick_seconds=float(t),
+            requested_strategy_type=requested_strategy.strategy_type,
+            support_request_id=support_request_id,
+            support_delivery_status=support_delivery_status,
         )
         bayesian_control_memory, bayesian_control_audit = (
             update_bayesian_control_memory(
@@ -2986,7 +3090,14 @@ class DigitalHelplessnessAgent(SocietyAgent):
         )
         stage_name = str(env.get("digital_stage") or env.get("stage_name") or "stage")
         positive_event = outcome.outcome_type in {"success_self", "success_with_help"}
+        episode_trace = {
+            "episode_id": memory_update["recent_episode_buffer"][-1]["episode_id"],
+            "requested_strategy_type": requested_strategy.strategy_type,
+            "support_request_id": support_request_id,
+            "support_delivery_status": support_delivery_status,
+        }
         decision = {
+            **episode_trace,
             "primary_reason": outcome.outcome_type,
             "reason_tags": (
                 ["success_experience"]
@@ -2998,6 +3109,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "task_family": task.task_family,
             "friction_type": task.friction_type,
             "strategy_type": strategy.strategy_type,
+            "help_used": bool(outcome.help_used),
             "support_quality": outcome.support_quality,
             "event_level_uncontrollability": outcome.event_level_uncontrollability,
             "rule_event_level_uncontrollability": (
@@ -3097,6 +3209,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             await self.memory.status.get("proto_stage_attempt_rows_json", "[]")
         )
         attempt_row = {
+            **episode_trace,
             "agent_id": int(self.id),
             "day": int(day),
             "t": float(t),
@@ -3140,7 +3253,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "strategy_weights_json": json.dumps(strategy.weights, ensure_ascii=False),
             "payload_json": json.dumps(
                 {
+                    **episode_trace,
                     "task": task.to_dict(),
+                    "requested_strategy": requested_strategy.to_dict(),
                     "strategy": strategy.to_dict(),
                     "outcome": outcome.to_dict(),
                     "support_request": (
@@ -3561,4 +3676,18 @@ class DigitalHelplessnessAgent(SocietyAgent):
             await self.memory.status.update("digital_task_hint", "")
             await self.memory.status.update("digital_task_hint_need", "")
             await self.memory.status.update("digital_task_hint_pending", 0)
+        await self._persist_completed_replay_hour(entry_decision)
+        trace_record("decision", module="task", status="completed", **episode_trace,
+                     action=strategy.strategy_type, outcome=outcome.outcome_type,
+                     requested_weights=requested_strategy.weights, help_used=outcome.help_used,
+                     strategy_source=strategy_deliberation.source,
+                     strategy_status=strategy_deliberation.status,
+                     rule_weights=strategy_deliberation.rule_weights,
+                     llm_weights=strategy_deliberation.llm_weights,
+                     blended_weights=strategy_deliberation.final_weights,
+                     outcome_model=outcome.outcome_model_mode, outcome_sampling=outcome.note,
+                     success_probability=outcome.success_probability,
+                     abandon_probability=outcome.abandon_probability,
+                     final_outcome_distribution=outcome.final_distribution_json,
+                     helplessness_delta=float(update_result.delta))
         return float(update_result.delta)

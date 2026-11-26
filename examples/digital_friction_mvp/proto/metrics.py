@@ -201,7 +201,11 @@ def summarize_stage_attempts(
         for row in rows
         if row.get("outcome_type") in {"success_self", "success_with_help"}
     )
-    help_used = sum(1 for row in rows if bool(row.get("help_used")))
+    help_requests = sum(
+        row["requested_strategy_type"] == "seek_help_then_attempt"
+        if "requested_strategy_type" in row else bool(row.get("help_used"))
+        for row in rows
+    )
     abandons = sum(1 for row in rows if row.get("outcome_type") == "abandon_midway")
     negative_feedbacks = sum(1 for row in rows if bool(row.get("negative_feedback")))
     denominator = float(total) if total else 1.0
@@ -215,7 +219,7 @@ def summarize_stage_attempts(
         "task_count": int(total),
         "attempt_rate": float(attempts / denominator),
         "success_rate": float(successes / denominator),
-        "help_seek_rate": float(help_used / denominator),
+        "help_seek_rate": float(help_requests / denominator),
         "abandon_rate": float(abandons / denominator),
         "negative_feedback_rate": float(negative_feedbacks / denominator),
         "helplessness_delta": float(helplessness_end_avg - helplessness_start_avg),

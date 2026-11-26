@@ -5,6 +5,13 @@ from typing import Any, Literal
 
 
 SupportStyle = Literal["enabling", "substituting", "dismissive", "unavailable"]
+SupportDelivery = Literal["generic", "delivered", "not_delivered", "technical_failure"]
+SUPPORT_RESPONSE_MIN_CONFIDENCE = 0.55
+
+
+class SupportTechnicalError(ValueError):
+    """An invalid or failed helper exchange cannot produce a task outcome."""
+
 
 SUPPORT_STYLES = {"enabling", "substituting", "dismissive", "unavailable"}
 INSTRUCTION_QUALITIES = {"none", "low", "medium", "high"}
@@ -64,13 +71,15 @@ SUPPORT_RESPONSE_FIELDS = {
     "source",
     "audit_status",
 }
+SUPPORT_RESPONSE_KEYS = SUPPORT_RESPONSE_FIELDS - {
+    "request_id", "requester_agent_id", "helper_agent_id", "source", "audit_status",
+}
 
 
-def _clamp_unit(value: Any) -> float:
-    try:
-        return max(0.0, min(1.0, float(value)))
-    except (TypeError, ValueError) as exc:
-        raise ValueError("confidence must be numeric") from exc
+def _validate_confidence(value: Any) -> float:
+    if type(value) not in (int, float) or not 0 <= value <= 1:
+        raise ValueError("confidence must be a finite JSON number in [0, 1]")
+    return float(value)
 
 
 def _assert_no_forbidden_keys(payload: Any, *, path: str = "") -> None:
@@ -225,13 +234,25 @@ class SupportResponse:
             RESPONSE_DELAYS,
             "response_delay",
         )
-        self.confidence = _clamp_unit(self.confidence)
+        self.confidence = _validate_confidence(self.confidence)
+        if type(self.responded) is not bool:
+            raise ValueError("responded must be a JSON boolean")
         if self.support_style == "unavailable":
-            self.responded = False
-            self.instruction_quality = "none"
-            self.autonomy_preservation = "not_applicable"
-            self.proxy_completion_level = "not_applicable"
-            self.response_delay = "no_response"
+            if (
+                self.responded or self.response_delay != "no_response"
+                or self.instruction_quality != "none"
+                or self.proxy_completion_level not in {"none", "not_applicable"}
+                or self.autonomy_preservation != "not_applicable"
+            ):
+                raise ValueError("unavailable help cannot have a reply, guidance or proxy action")
+        elif not self.responded or self.response_delay == "no_response":
+            raise ValueError("a helper reply requires responded=true and a response delay")
+        elif (
+            self.support_style in {"enabling", "substituting"}
+            and self.instruction_quality == "none"
+            and self.proxy_completion_level in {"none", "not_applicable"}
+        ):
+            raise ValueError("enabling or substituting help requires guidance or proxy action")
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -260,8 +281,8 @@ class SupportResponse:
             ),
             emotional_tone=str(payload.get("emotional_tone", "not_applicable")),
             response_delay=str(payload.get("response_delay", "no_response")),
-            confidence=float(payload.get("confidence", 0.0)),
-            responded=bool(payload.get("responded", False)),
+            confidence=payload.get("confidence", 0.0),
+            responded=payload.get("responded", False),
             response_text=str(payload.get("response_text", ""))[:800],
             rationale=str(payload.get("rationale", ""))[:300],
             source=str(payload.get("source", "unknown")),
@@ -277,6 +298,8 @@ class SupportResponse:
         source: str,
         audit_status: str,
     ) -> "SupportResponse":
+        if not isinstance(payload, dict) or set(payload) != SUPPORT_RESPONSE_KEYS:
+            raise ValueError("expected exactly the helper reply fields")
         merged = {
             "request_id": request.request_id,
             "requester_agent_id": request.requester_agent_id,
@@ -324,3 +347,30 @@ def support_style_to_support_mode(style: str) -> str:
     if style in {"substituting", "dismissive"}:
         return "substituting_support"
     return "not_applicable"
+
+
+def classify_support_delivery(
+    response: SupportResponse | dict[str, Any] | None,
+) -> SupportDelivery:
+    if response is None:
+        return "generic"
+    if isinstance(response, dict):
+        try:
+            response = SupportResponse.from_dict(response)
+        except (TypeError, ValueError, OverflowError):
+            return "technical_failure"
+    if (
+        not isinstance(response, SupportResponse)
+        or response.audit_status not in {"ok", "ok_repaired"}
+        or response.confidence < SUPPORT_RESPONSE_MIN_CONFIDENCE
+    ):
+        return "technical_failure"
+    if not response.responded:
+        return "not_delivered"
+    if (
+        response.support_style == "dismissive"
+        and response.instruction_quality == "none"
+        and response.proxy_completion_level in {"none", "not_applicable"}
+    ):
+        return "not_delivered"
+    return "delivered"

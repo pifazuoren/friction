@@ -226,6 +226,7 @@ class DigitalNeedsBlock:
             min(MAX_DIGITAL_NEEDS_JSON_ATTEMPTS, int(json_attempts)),
         )
         payload, status = await _query_json_payload(
+            trace_module="app_needs",
             llm=llm,
             system_prompt=system_prompt,
             user_payload=user_payload,

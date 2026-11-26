@@ -7,6 +7,8 @@ from typing import Any, Callable
 
 from config_runtime import load_runtime_config
 
+from .memory.packet import compact_recent_episodes
+from .llm_trace import LLMQueryTrace, TraceWriteError
 from .models import (
     AttemptOutcome,
     AttemptStrategy,
@@ -61,6 +63,28 @@ _STRATEGY_DELIBERATION_KEYS = {
     "dominant_strategy",
     "judge_confidence",
     "reason",
+}
+_STRATEGY_OUTPUT_FORMATS = {
+    "scored_example": {
+        "output_schema_example": {
+            "attempt_self_score": 0.18,
+            "seek_help_score": 0.57,
+            "avoid_score": 0.25,
+            "dominant_strategy": "seek_help_then_attempt",
+            "judge_confidence": 0.80,
+            "reason": "Low control and decent support history make help-seeking the most acceptable option.",
+        }
+    },
+    "field_rules": {
+        "output_field_rules": {
+            "attempt_self_score": "number in [0, 1]",
+            "seek_help_score": "number in [0, 1]",
+            "avoid_score": "number in [0, 1]",
+            "dominant_strategy": "string from allowed_strategies matching the highest score",
+            "judge_confidence": "number in [0, 1]",
+            "reason": "string of at most 120 characters",
+        }
+    },
 }
 _TRAJECTORY_APPRAISAL_KEYS = {
     "planned_steps",
@@ -120,7 +144,7 @@ _TASK_APPRAISAL_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
 _STRATEGY_DELIBERATION_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
 _RULE_TEXT_MIXED = "昨天有顺也有卡，我还在慢慢摸索"
 _TASK_APPRAISAL_PROMPT_VERSION = "v3_profile_memory_packet_20260406"
-_STRATEGY_DELIBERATION_PROMPT_VERSION = "v2_profile_memory_strategy_context_20260518"
+_STRATEGY_DELIBERATION_PROMPT_VERSION = "v3_ordered_task_episodes"
 _TRAJECTORY_PROMPT_VERSION = "trajectory_v1"
 _TRAJECTORY_TAXONOMY_VERSION = "friction_taxonomy_v1"
 _CROSS_CUTTING_FRICTION_POINTS = {
@@ -394,8 +418,12 @@ def _strategy_task_memory_context(task_relevant_memory: Any) -> dict[str, Any]:
     context: dict[str, Any] = {}
     for key, value in task_relevant_memory.items():
         if key == "recent_same_task_events_tail":
-            continue
-        if key == "same_task_attribution_summary":
+            same_family = compact_recent_episodes(value, limit=3)
+            if same_family:
+                context[key] = same_family
+        elif key == "recent_task_episodes":
+            context[key] = compact_recent_episodes(value)
+        elif key == "same_task_attribution_summary":
             context[key] = _truncate_text(value, 300)
         elif isinstance(value, str):
             context[str(key)] = _truncate_text(value, 240)
@@ -507,6 +535,7 @@ async def _query_json_payload(
     json_attempts: int = 1,
     attempt_metadata_key: str | None = None,
     audit: dict[str, Any] | None = None,
+    trace_module: str = "psychology",
 ) -> tuple[dict[str, Any] | None, str]:
     if audit is not None:
         audit.setdefault("json_attempts_configured", max(1, int(json_attempts)))
@@ -532,19 +561,22 @@ async def _query_json_payload(
 
     attempts = max(1, int(json_attempts))
     last_error = "parse_failed"
+    trace = LLMQueryTrace(trace_module, llm)
     for attempt_index in range(attempts):
         first_error = "parse_failed"
         if audit is not None:
             audit["json_attempts_used"] = attempt_index + 1
             audit["actual_requests"] = int(audit.get("actual_requests", 0)) + 1
         try:
-            raw = await llm.atext_request(
+            raw = await trace.request("initial", attempt_index + 1,
                 dialog=dialog,
                 temperature=0.1,
                 timeout=timeout,
                 retries=retries,
                 max_tokens=max_tokens,
             )
+        except TraceWriteError:
+            raise
         except Exception:
             last_error = "request_error"
             continue
@@ -557,6 +589,7 @@ async def _query_json_payload(
         if parsed is not None:
             sanitized, status = sanitize_fn(parsed)
             if sanitized is not None:
+                trace.parsed("ok", sanitized)
                 if attempt_metadata_key:
                     sanitized[attempt_metadata_key] = attempt_index + 1
                 if audit is not None:
@@ -567,6 +600,7 @@ async def _query_json_payload(
         else:
             last_error = "parse_failed"
 
+        trace.parsed(first_error)
         repair_dialog = [
             {
                 "role": "system",
@@ -591,13 +625,15 @@ async def _query_json_payload(
             audit["repair_requests"] = int(audit.get("repair_requests", 0)) + 1
             audit["actual_requests"] = int(audit.get("actual_requests", 0)) + 1
         try:
-            repaired = await llm.atext_request(
+            repaired = await trace.request("repair", attempt_index + 1,
                 dialog=repair_dialog,
                 temperature=0.0,
                 timeout=timeout,
                 retries=1,
                 max_tokens=max(220, int(max_tokens)),
             )
+        except TraceWriteError:
+            raise
         except Exception:
             last_error = "request_error"
             continue
@@ -608,16 +644,19 @@ async def _query_json_payload(
                 str(repaired).encode("utf-8")
             ).hexdigest()[:16]
         if repaired_payload is None:
+            trace.parsed("parse_failed")
             last_error = (
                 first_error if first_error == "invalid_schema" else "parse_failed"
             )
             continue
         sanitized, status = sanitize_fn(repaired_payload)
         if sanitized is None:
+            trace.parsed(status)
             last_error = status
             continue
         if attempt_metadata_key:
             sanitized[attempt_metadata_key] = attempt_index + 1
+        trace.parsed("ok_repaired", sanitized)
         if audit is not None:
             audit["parse_status"] = "ok_repaired"
         return sanitized, "ok_repaired"
@@ -983,21 +1022,12 @@ def _sanitize_strategy_deliberation(payload: Any) -> tuple[dict[str, Any] | None
             return None, "invalid_schema"
 
     dominant_strategy = str(payload.get("dominant_strategy", "")).strip()
-    if dominant_strategy not in {
-        "attempt_self",
-        "seek_help_then_attempt",
-        "avoid",
-    }:
-        return None, "invalid_schema"
-    dominant_by_argmax = max(
-        (
-            ("attempt_self", float(result["attempt_self_score"])),
-            ("seek_help_then_attempt", float(result["seek_help_score"])),
-            ("avoid", float(result["avoid_score"])),
-        ),
-        key=lambda item: (item[1], item[0]),
-    )[0]
-    if dominant_strategy != dominant_by_argmax:
+    scores_by_strategy = {
+        "attempt_self": result["attempt_self_score"],
+        "seek_help_then_attempt": result["seek_help_score"],
+        "avoid": result["avoid_score"],
+    }
+    if scores_by_strategy.get(dominant_strategy) != max(scores_by_strategy.values()):
         return None, "invalid_schema"
     result["dominant_strategy"] = dominant_strategy
 
@@ -1592,6 +1622,8 @@ def _build_strategy_deliberation_cache_key(
         _profile_bucket(_safe_float(profile.get("digital_experience", 0.5), 0.5)),
         _profile_bucket(_safe_float(profile.get("past_fraud_experience", 0.2), 0.2)),
         _same_task_history_bucket(task_memory),
+        json.dumps(compact_recent_episodes(task_memory.get("recent_task_episodes")), sort_keys=True),
+        json.dumps(compact_recent_episodes(task_memory.get("recent_same_task_events_tail"), limit=3), sort_keys=True),
         _profile_bucket(
             _safe_float(task_memory.get("same_task_controllable_success_memory", 0.0), 0.0)
         ),
@@ -1663,6 +1695,7 @@ async def resolve_task_appraisal(
     status = "ok"
     if payload is None:
         llm_payload, status = await _query_json_payload(
+            trace_module="task_appraisal",
             llm=llm,
             system_prompt=_task_appraisal_system_prompt(),
             user_payload=_build_task_appraisal_user_payload(
@@ -1792,6 +1825,7 @@ async def resolve_event_appraisal(
     status = "ok"
     if payload is None:
         llm_payload, status = await _query_json_payload(
+            trace_module="event_appraisal",
             llm=llm,
             system_prompt=(
                 "You are a strict JSON-only calibrator for post-event psychological "
@@ -2060,6 +2094,7 @@ async def maybe_generate_daily_reflection(
         )
     else:
         payload, status = await _query_json_payload(
+            trace_module="daily_reflection",
             llm=llm,
             system_prompt=(
                 "You are a strict JSON-only daily reflection summarizer for a digital "
@@ -2151,7 +2186,12 @@ async def resolve_strategy_deliberation(
     task_relevant_memory: Any = None,
     recent_episode_summary: Any = None,
     retrieved_episodic_memory: Any = None,
+    prompt_format: str = "scored_example",
 ) -> StrategyDeliberationResult:
+    show_rule_weights = prompt_format != "field_rules_no_priors"
+    output_format = prompt_format if show_rule_weights else "field_rules"
+    if output_format not in _STRATEGY_OUTPUT_FORMATS:
+        raise ValueError(f"Unknown strategy prompt format: {prompt_format!r}")
     config = load_runtime_config()
     mode = str(config.proto_llm_psychology_mode)
     normalized_emotion = normalize_digital_emotion_state(digital_emotion_state)
@@ -2200,6 +2240,8 @@ async def resolve_strategy_deliberation(
         recent_episode_summary=recent_episode_summary,
         retrieved_episodic_memory=retrieved_episodic_memory,
     )
+    if prompt_format != "scored_example":
+        cache_key = (*cache_key, prompt_format)
     if bool(config.proto_llm_psychology_cache_enabled):
         payload = _STRATEGY_DELIBERATION_CACHE.get(cache_key)
         cache_hit = payload is not None
@@ -2207,6 +2249,7 @@ async def resolve_strategy_deliberation(
     status = "ok"
     if payload is None:
         llm_payload, status = await _query_json_payload(
+            trace_module="strategy",
             llm=llm,
             system_prompt=(
                 "You are a strict JSON-only bounded strategy deliberation module. "
@@ -2239,7 +2282,7 @@ async def resolve_strategy_deliberation(
                 ),
                 "digital_emotion_state": _emotion_dict(normalized_emotion),
                 "daily_reflection": reflection.to_dict(),
-                "rule_weights": normalized_rule_weights,
+                **({"rule_weights": normalized_rule_weights} if show_rule_weights else {}),
                 "allowed_strategies": [
                     "attempt_self",
                     "seek_help_then_attempt",
@@ -2262,14 +2305,7 @@ async def resolve_strategy_deliberation(
                     "emotional state and daily reflection",
                     "rule weights as baseline, not as a command",
                 ],
-                "output_schema_example": {
-                    "attempt_self_score": 0.18,
-                    "seek_help_score": 0.57,
-                    "avoid_score": 0.25,
-                    "dominant_strategy": "seek_help_then_attempt",
-                    "judge_confidence": 0.80,
-                    "reason": "Low control and decent support history make help-seeking the most acceptable option.",
-                },
+                **_STRATEGY_OUTPUT_FORMATS[output_format],
             },
             output_keys=_STRATEGY_DELIBERATION_KEYS,
             repair_schema_text=(
@@ -2475,6 +2511,7 @@ async def resolve_trajectory_appraisal(
         )
 
     payload, status = await _query_json_payload(
+        trace_module="trajectory",
         llm=llm,
         system_prompt=(
             "You are a strict JSON-only constrained cognitive walkthrough module "
@@ -2631,6 +2668,7 @@ async def resolve_stage_interview(
         return fallback
 
     payload, status = await _query_json_payload(
+        trace_module="stage_interview",
         llm=llm,
         system_prompt=(
             "You are a strict JSON-only stage-end interview summarizer for a "
@@ -2742,6 +2780,7 @@ async def resolve_final_interview(
         return fallback
 
     payload, status = await _query_json_payload(
+        trace_module="final_interview",
         llm=llm,
         system_prompt=(
             "You are a strict JSON-only final interview summarizer for a digital-friction "

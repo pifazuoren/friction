@@ -128,6 +128,7 @@ class RuntimeConfig:
     proto_llm_event_appraisal_enabled: bool
     proto_llm_daily_reflection_enabled: bool
     proto_llm_strategy_deliberation_enabled: bool
+    proto_llm_strategy_prompt_format: str
     proto_llm_stage_interview_enabled: bool
     proto_llm_final_interview_enabled: bool
     proto_llm_psychology_min_confidence: float
@@ -170,6 +171,8 @@ class RuntimeConfig:
     proto_bayesian_policy_lite_lambda_llm: float
     proto_bayesian_policy_lite_min_llm_confidence: float
     proto_task_entry_mode: str
+    proto_scheduled_login_hour: int | None
+    proto_login_difficulty_arm: str | None
     proto_app_entry_replay_bundle_path: str
     proto_app_entry_replay_device_path: str
     proto_app_entry_replay_days: tuple[int, ...]
@@ -506,6 +509,19 @@ def load_runtime_config() -> RuntimeConfig:
             "PROTO_TASK_ENTRY_MODE must be one of: "
             + ", ".join(sorted(VALID_TASK_ENTRY_MODES))
         )
+    login_hour_setting = os.getenv("PROTO_SCHEDULED_LOGIN_HOUR", "").strip()
+    proto_scheduled_login_hour = int(login_hour_setting) if login_hour_setting else None
+    if proto_scheduled_login_hour is not None:
+        if not 0 <= proto_scheduled_login_hour <= 23:
+            raise ValueError("PROTO_SCHEDULED_LOGIN_HOUR must be an hour from 0 to 23")
+        if proto_task_entry_mode != "app_context_replay_then_llm_rollout":
+            raise ValueError("scheduled logins require app_context_replay_then_llm_rollout")
+    login_difficulty_arm = os.getenv("PROTO_LOGIN_DIFFICULTY_ARM", "").strip().lower() or None
+    if login_difficulty_arm is not None:
+        if login_difficulty_arm not in {"standard", "elevated"}:
+            raise ValueError("PROTO_LOGIN_DIFFICULTY_ARM must be standard or elevated")
+        if proto_scheduled_login_hour != 9:
+            raise ValueError("the login difficulty study requires PROTO_SCHEDULED_LOGIN_HOUR=9")
     proto_app_entry_replay_bundle_path = os.getenv(
         "PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH",
         DEFAULT_APP_ENTRY_REPLAY_BUNDLE_PATH,
@@ -863,6 +879,9 @@ def load_runtime_config() -> RuntimeConfig:
             + ", ".join(sorted(VALID_SUPPORT_ECOLOGY_MODES))
         )
 
+    strategy_format = os.environ.get("PROTO_LLM_STRATEGY_PROMPT_FORMAT", "scored_example").strip()
+    if strategy_format not in {"scored_example", "field_rules", "field_rules_no_priors"}:
+        raise ValueError(f"Unknown strategy prompt format: {strategy_format!r}")
     return RuntimeConfig(
         experiment_mode=experiment_mode,
         world_batch=world_batch,
@@ -872,6 +891,7 @@ def load_runtime_config() -> RuntimeConfig:
         proto_llm_event_appraisal_enabled=proto_llm_event_appraisal_enabled,
         proto_llm_daily_reflection_enabled=proto_llm_daily_reflection_enabled,
         proto_llm_strategy_deliberation_enabled=proto_llm_strategy_deliberation_enabled,
+        proto_llm_strategy_prompt_format=strategy_format,
         proto_llm_stage_interview_enabled=proto_llm_stage_interview_enabled,
         proto_llm_final_interview_enabled=proto_llm_final_interview_enabled,
         proto_llm_psychology_min_confidence=proto_llm_psychology_min_confidence,
@@ -924,6 +944,8 @@ def load_runtime_config() -> RuntimeConfig:
             proto_bayesian_policy_lite_min_llm_confidence
         ),
         proto_task_entry_mode=proto_task_entry_mode,
+        proto_scheduled_login_hour=proto_scheduled_login_hour,
+        proto_login_difficulty_arm=login_difficulty_arm,
         proto_app_entry_replay_bundle_path=proto_app_entry_replay_bundle_path,
         proto_app_entry_replay_device_path=proto_app_entry_replay_device_path,
         proto_app_entry_replay_days=proto_app_entry_replay_days,

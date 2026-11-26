@@ -388,6 +388,7 @@ class DigitalAppEntryPlanBlock:
         }
 
         payload, status = await _query_json_payload(
+            trace_module="app_plan",
             llm=llm,
             system_prompt=system_prompt,
             user_payload=user_payload,

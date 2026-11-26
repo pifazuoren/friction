@@ -6,6 +6,7 @@ from typing import Any
 
 from config_runtime import load_runtime_config
 
+from .llm_trace import LLMQueryTrace, TraceWriteError
 from .models import AttemptOutcome, AttemptStrategy, DigitalTask
 
 CALIBRATABLE_OUTCOMES = {
@@ -414,14 +415,17 @@ async def _query_llm_payload(
     ]
 
     first_error = "parse_failed"
+    trace = LLMQueryTrace("uncontrollability", llm)
     try:
-        raw = await llm.atext_request(
+        raw = await trace.request("initial", 1,
             dialog=dialog,
             temperature=0.1,
             timeout=timeout,
             retries=retries,
             max_tokens=220,
         )
+    except TraceWriteError:
+        raise
     except Exception:
         return None, "request_error"
 
@@ -429,9 +433,11 @@ async def _query_llm_payload(
     if parsed is not None:
         sanitized, status = _sanitize_payload(parsed)
         if sanitized is not None:
+            trace.parsed("ok", sanitized)
             return sanitized, "ok"
         first_error = status
 
+    trace.parsed(first_error)
     repair_dialog = [
         {
             "role": "system",
@@ -456,22 +462,27 @@ async def _query_llm_payload(
         },
     ]
     try:
-        repaired = await llm.atext_request(
+        repaired = await trace.request("repair", 1,
             dialog=repair_dialog,
             temperature=0.0,
             timeout=timeout,
             retries=1,
             max_tokens=160,
         )
+    except TraceWriteError:
+        raise
     except Exception:
         return None, "request_error"
 
     repaired_payload = _extract_json_object(str(repaired))
     if repaired_payload is None:
+        trace.parsed("parse_failed")
         return None, first_error if first_error == "invalid_schema" else "parse_failed"
     sanitized, status = _sanitize_payload(repaired_payload)
     if sanitized is None:
+        trace.parsed(status)
         return None, status
+    trace.parsed("ok_repaired", sanitized)
     return sanitized, "ok_repaired"
 
 

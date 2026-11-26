@@ -18,7 +18,7 @@ from .models import (
     TaskAppraisalResult,
     TaskDomainState,
 )
-from .support_protocol import SupportResponse
+from .support_protocol import SupportResponse, classify_support_delivery
 from .llm_psychology import normalize_digital_emotion_state
 from .task_assignment import TASK_LIBRARY
 
@@ -475,7 +475,7 @@ def _support_response_from_any(value: Any) -> SupportResponse | None:
     if isinstance(value, dict):
         try:
             return SupportResponse.from_dict(value)
-        except ValueError:
+        except (TypeError, ValueError, OverflowError):
             return None
     return None
 
@@ -488,7 +488,25 @@ def _normalize_recent_episode_buffer(raw_value: Any) -> list[dict[str, Any]]:
         if not isinstance(item, dict):
             continue
         normalized_item = RecentEpisode.from_dict(item).to_dict()
+        # Use model defaults for calculations, never as new facts in an old event.
+        known = set(item)
+        if "strategy" in item:
+            known.add("strategy_type")
+        if "outcome" in item:
+            known.add("outcome_type")
+        normalized_item = {
+            key: value for key, value in normalized_item.items()
+            if key in known and value is not None and value != ""
+        }
+        for key in ("help_used", "negative_feedback"):
+            if key in item and not isinstance(item[key], bool):
+                text = str(item[key]).strip().lower()
+                if text in {"true", "1", "false", "0"}:
+                    normalized_item[key] = text in {"true", "1"}
+                else:
+                    normalized_item.pop(key, None)
         for key in (
+            "feedback_valence",
             "support_style",
             "autonomy_preservation",
             "proxy_completion_level",
@@ -558,7 +576,8 @@ def _summarize_recent_episode_buffer(
         )
     ) / float(total)
     recent_help_seek_ratio = sum(
-        1 for episode in episodes if episode.strategy_type == "seek_help_then_attempt"
+        (episode.requested_strategy_type or episode.strategy_type) == "seek_help_then_attempt"
+        for episode in episodes
     ) / float(total)
     same_task_episodes = [
         episode
@@ -740,11 +759,18 @@ def update_help_effect_memory(
     outcome: AttemptOutcome,
     help_effect_memory: Any,
     support_response: Any = None,
+    support_delivery_status: str | None = None,
 ) -> dict[str, Any]:
     normalized = _normalize_help_effect_memory(help_effect_memory)
     if strategy.strategy_type != "seek_help_then_attempt":
         return normalized
 
+    response = _support_response_from_any(support_response)
+    if (
+        support_delivery_status in {"not_delivered", "technical_failure"}
+        or classify_support_delivery(support_response) in {"not_delivered", "technical_failure"}
+    ):
+        return normalized
     success = outcome.outcome_type == "success_with_help"
     failure = outcome.outcome_type in {"failure_even_with_help", "abandon_midway"}
     if not success and not failure:
@@ -761,7 +787,6 @@ def update_help_effect_memory(
         normalized["by_source"]["generic"],
         success=success,
     )
-    response = _support_response_from_any(support_response)
     if response is not None:
         audit = normalized.setdefault(
             "support_response_audit",
@@ -803,6 +828,22 @@ def update_help_effect_memory(
     return normalized
 
 
+def _episode_delivery_status(
+    outcome: AttemptOutcome, response: Any, explicit_status: str | None,
+) -> str:
+    observed = classify_support_delivery(response)
+    statuses = {observed, explicit_status}
+    if "technical_failure" in statuses:
+        raise ValueError("A technical support failure cannot produce a completed task episode")
+    if "not_delivered" in statuses and (
+        outcome.help_used or outcome.outcome_type in {"success_with_help", "failure_even_with_help"}
+    ):
+        raise ValueError("An assisted task outcome requires delivery of the requested help")
+    if response is not None and explicit_status is not None and explicit_status != observed:
+        raise ValueError("Recorded support delivery status disagrees with the response")
+    return explicit_status or observed
+
+
 def update_recent_episode_buffer(
     *,
     task: DigitalTask,
@@ -812,23 +853,43 @@ def update_recent_episode_buffer(
     helplessness_delta: float,
     recent_episode_buffer: Any,
     support_response: Any = None,
+    tick_seconds: float | None = None,
+    requested_strategy_type: str | None = None,
+    support_request_id: str = "",
+    support_delivery_status: str | None = None,
 ) -> list[dict[str, Any]]:
     normalized = _normalize_recent_episode_buffer(recent_episode_buffer)
+    response = _support_response_from_any(support_response)
+    delivery = _episode_delivery_status(outcome, support_response, support_delivery_status)
+    if response is not None and delivery == "delivered":
+        help_source = "family_helper"
+    else:
+        help_source = "generic" if outcome.help_used else "none"
+    tick = RecentEpisode.known_time(tick_seconds)
+    if tick_seconds is not None and tick is None:
+        raise ValueError("Episode tick_seconds must be a finite nonnegative simulation time")
     episode = (
         RecentEpisode(
             day=int(day),
+            episode_id=f"{task.task_id}@{int(day)}/{tick}" if tick is not None else "",
+            task_id=task.task_id,
+            tick_seconds=tick,
+            hour=int(tick // 3600) % 24 if tick is not None else None,
+            requested_strategy_type=requested_strategy_type or strategy.strategy_type,
+            support_mode=outcome.support_mode,
+            support_request_id=support_request_id or (response.request_id if response else ""),
+            support_delivery_status=delivery,
             task_family=task.task_family,
             strategy_type=strategy.strategy_type,
             outcome_type=outcome.outcome_type,
             avoid_reason=str(getattr(outcome, "avoid_reason", "not_applicable")),
             help_used=outcome.help_used,
-            help_source="generic" if outcome.help_used else "none",
+            help_source=help_source,
             negative_feedback=outcome.negative_feedback,
             event_level_uncontrollability=outcome.event_level_uncontrollability,
             helplessness_delta=float(helplessness_delta),
         ).to_dict()
     )
-    response = _support_response_from_any(support_response)
     if response is not None:
         episode.update(
             {
@@ -909,7 +970,12 @@ def update_experience_memory(
     rationale_memory: Any,
     task_appraisal_result: Any = None,
     support_response: Any = None,
+    tick_seconds: float | None = None,
+    requested_strategy_type: str | None = None,
+    support_request_id: str = "",
+    support_delivery_status: str | None = None,
 ) -> dict[str, Any]:
+    support_delivery_status = _episode_delivery_status(outcome, support_response, support_delivery_status)
     normalized_task_memory = _normalize_task_domain_memory(task_domain_memory)
     previous_task_state = TaskDomainState.from_dict(
         normalized_task_memory.get(task.task_family)
@@ -930,6 +996,7 @@ def update_experience_memory(
         outcome=outcome,
         help_effect_memory=help_effect_memory,
         support_response=support_response,
+        support_delivery_status=support_delivery_status,
     )
     updated_recent_buffer = update_recent_episode_buffer(
         task=task,
@@ -939,6 +1006,10 @@ def update_experience_memory(
         helplessness_delta=helplessness_delta,
         recent_episode_buffer=recent_episode_buffer,
         support_response=support_response,
+        tick_seconds=tick_seconds,
+        requested_strategy_type=requested_strategy_type,
+        support_request_id=support_request_id,
+        support_delivery_status=support_delivery_status,
     )
     response = _support_response_from_any(support_response)
     updated_rationale_memory = update_rationale_memory(
