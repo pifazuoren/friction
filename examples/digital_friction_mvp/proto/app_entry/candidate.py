@@ -20,6 +20,7 @@ def build_rollout_app_context_candidates(
     need_pressures: dict[str, float] | None = None,
     need_context_mapping: dict[str, tuple[str, ...] | list[str]] | None = None,
     top_k: int = 5,
+    allow_empty: bool = False,
 ) -> dict[str, float]:
     """Build a bounded candidate pool from observed calibration evidence.
 
@@ -84,6 +85,8 @@ def build_rollout_app_context_candidates(
 
     positive = {name: value for name, value in scores.items() if value > 0.0}
     if not positive:
+        if allow_empty:
+            return {}
         raise ValueError("rollout app-context candidate pool is empty")
     selected = sorted(
         positive.items(),

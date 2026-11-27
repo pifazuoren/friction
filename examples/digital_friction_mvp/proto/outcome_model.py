@@ -5,6 +5,7 @@ import json
 import math
 from typing import Any
 
+from .llm_trace import trace_record
 from .models import (
     AttemptOutcome,
     AttemptStrategy,
@@ -808,6 +809,7 @@ def sample_from_outcome_distribution(
         if roll < cumulative:
             selected = key
             break
+    trace_record("sample", module="outcome", draw=roll, distribution=normalized, action=selected)
     return selected, roll
 
 
@@ -913,6 +915,8 @@ def _resolve_attempt_outcome_rule_v1(
             else "failure_after_attempt"
         )
 
+    trace_record("sample", module="outcome", draw=roll, action=outcome_type,
+                 success_probability=success_probability, abandon_probability=abandon_probability)
     failure_count_after = (
         consecutive_failures + 1
         if outcome_type

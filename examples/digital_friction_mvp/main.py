@@ -50,6 +50,7 @@ from persistence import (
     write_stage_explanation_rows,
 )
 from proto.agent import DigitalHelplessnessAgent, SUPPORT_HELPER_REGISTRY_ATTRIBUTE
+from proto.paired_random import PairedRandomProvider
 from proto.app_entry.bundle_loader import get_replay_source
 from proto.logical_clock import (
     enable_proto_logical_clock,
@@ -1037,6 +1038,9 @@ async def log_step_status(simulation: AgentSociety):
     day4_replay_snapshot_map = await _safe_gather_status(
         simulation, "proto_day4_replay_snapshot", citizen_ids
     )
+    goal_ledgers = {}
+    if RUNTIME_CONFIG.proto_hourly_intention_mode == "opportunity_v1":
+        goal_ledgers = await _safe_gather_status(simulation, "proto_goal_state_json", citizen_ids)
     replay_mapping_audit_map = await _safe_gather_status(
         simulation, "proto_app_entry_replay_mapping_audit", citizen_ids
     )
@@ -1188,6 +1192,7 @@ async def log_step_status(simulation: AgentSociety):
         )
         reflection_count = int(_safe_float(reflection_count_map.get(agent_id, 0), 0.0))
         status_payload = {
+            **({"proto_goal_state_json": goal_ledgers.get(agent_id, {})} if goal_ledgers else {}),
             "stage": stage,
             "intention": intention,
             "friction_step_signal": friction_step_signal_map.get(agent_id, {}),
@@ -1589,6 +1594,9 @@ async def sync_interview_feedback(simulation: AgentSociety):
 async def init_status(simulation: AgentSociety):
     citizen_ids = await simulation.filter(types=EXPERIMENT_AGENT_CLASSES)
     citizen_ids = sorted(citizen_ids)
+    if RUNTIME_CONFIG.proto_paired_environment_seed is not None:
+        for agent_id in citizen_ids:
+            simulation._id2agent[agent_id].paired_random_provider = PairedRandomProvider(RUNTIME_CONFIG.proto_paired_environment_seed)
     replay_assignments = {}
     if RUNTIME_CONFIG.proto_task_entry_mode in {
         "app_context_replay_bundle",
@@ -2785,6 +2793,9 @@ def _write_run_metadata(
         "proto_logical_clock_enabled": bool(proto_logical_clock_enabled),
         "agent_plan_prompt_profile": AGENT_PLAN_PROMPT_PROFILE,
         "proto_task_entry_mode": RUNTIME_CONFIG.proto_task_entry_mode,
+        "proto_hourly_intention_mode": RUNTIME_CONFIG.proto_hourly_intention_mode,
+        "proto_paired_environment_seed": RUNTIME_CONFIG.proto_paired_environment_seed,
+        "proto_hourly_intention_max_defer_hours": RUNTIME_CONFIG.proto_hourly_intention_max_defer_hours,
         "entry_path_family": entry_path_family,
         "legacy_entry_path": not uses_replay_bundle,
         "uses_hourly_bundle": bool(uses_replay_bundle),

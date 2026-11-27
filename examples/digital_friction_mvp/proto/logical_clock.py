@@ -4,6 +4,11 @@ from types import MethodType
 from typing import Any
 
 
+def monotonic_sim_hour(simulation_day: int, tick_seconds: float) -> int:
+    """Use the engine's zero-based day and seconds within that day."""
+    return int(simulation_day) * 24 + int(float(tick_seconds) // 3600)
+
+
 def is_proto_logical_clock_enabled(environment: Any) -> bool:
     return bool(getattr(environment, "_proto_logical_clock_enabled", False))
 

@@ -79,6 +79,9 @@ FINGERPRINT_ENV_KEYS = (
     "PROTO_BAYESIAN_POLICY_LITE_LAMBDA_LLM",
     "PROTO_BAYESIAN_POLICY_LITE_MIN_LLM_CONFIDENCE",
     "PROTO_TASK_ENTRY_MODE",
+    "PROTO_HOURLY_INTENTION_MODE",
+    "PROTO_PAIRED_ENVIRONMENT_SEED",
+    "PROTO_HOURLY_INTENTION_MAX_DEFER_HOURS",
     "PROTO_SCHEDULED_LOGIN_HOUR",
     "PROTO_LOGIN_DIFFICULTY_ARM",
     "PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH",
@@ -272,6 +275,7 @@ def _write_manifest_csv(rows: list[dict[str, Any]], output_path: Path) -> None:
         "decision_interval_minutes",
         "decision_intervals_per_day",
         "proto_task_entry_mode",
+        "proto_hourly_intention_mode",
         "entry_path_family",
         "legacy_entry_path",
         "uses_hourly_bundle",
@@ -544,6 +548,7 @@ def main() -> None:
                         metadata.get("proto_task_entry_mode", "")
                     ),
                     "entry_path_family": str(metadata.get("entry_path_family", "")),
+                    "proto_hourly_intention_mode": metadata.get("proto_hourly_intention_mode", "legacy"),
                     "legacy_entry_path": int(bool(metadata.get("legacy_entry_path", False))),
                     "uses_hourly_bundle": int(
                         bool(metadata.get("uses_hourly_bundle", False))

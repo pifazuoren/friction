@@ -78,6 +78,11 @@ def trace_record(kind: str, *, module: str, **fields) -> None:
         "group_id": os.environ.get("PARALLEL_GROUP_NAME", ""),
         "timestamp": datetime.now(timezone.utc).isoformat(), **context, **fields,
     }
+    if os.environ.get("PROTO_HOURLY_INTENTION_MODE") == "opportunity_v1":
+        record.update(hourly_intention_mode="opportunity_v1",
+                      code_hash=os.environ.get("PROTO_RUN_SOURCE_SHA256"),
+                      plan_prompt_version=os.environ.get("PROTO_APP_ENTRY_PLAN_PROMPT_VERSION"),
+                      intention_schema_version="opportunity_v1")
     target = Path(directory) / f"llm-requests-{os.getpid()}.jsonl"
     try:
         data = json.dumps(_redact(record, tuple(keys)), ensure_ascii=False) + "\n"

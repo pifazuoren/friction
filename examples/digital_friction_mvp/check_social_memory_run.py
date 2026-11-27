@@ -5,6 +5,7 @@ from collections import Counter
 from contextlib import closing
 import csv
 import json
+import hashlib
 from pathlib import Path
 import sqlite3
 from uuid import UUID
@@ -61,7 +62,10 @@ def check_replay(conn, exp_id, agent, device):
         snapshot.get("created_at_hour") == 23, snapshot.get("completed_replay_days") == [1, 2, 3],
         snapshot.get("app_entry_habit_memory", {}).get("total_hours_seen") == 72,
     ))
-    return {"verified_hours": 72 - len(missing), "unverified_hours": missing, "day3_snapshot_ok": snapshot_ok}
+    # A continuous comparison may check this digest before attributing divergence to the mode.
+    snapshot_bytes = json.dumps(snapshot, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()
+    return {"verified_hours": 72 - len(missing), "unverified_hours": missing, "day3_snapshot_ok": snapshot_ok,
+            "day3_snapshot_sha256": hashlib.sha256(snapshot_bytes).hexdigest() if snapshot_ok else None}
 
 
 def read_attempts(conn, exp_id, agent):
@@ -195,7 +199,8 @@ def audit_trace(trace, group, agent, attempts, error_hours, expected_days=7):
 
 
 def check_run(folder, group, db, trace, expected_days=7):
-    report = {"group_id": group, "run_complete": False, "cross_day_status": "missing_evidence", "issues": []}
+    report = {"group_id": group, "run_complete": False, "acceptance_ok": False,
+              "cross_day_status": "missing_evidence", "issues": []}
     issues = report["issues"]
     try:
         expected_hours = rollout_hours(expected_days)
@@ -207,6 +212,11 @@ def check_run(folder, group, db, trace, expected_days=7):
                         decision_interval_minutes=60, proto_app_entry_replay_days="1,2,3",
                         proto_task_entry_mode="app_context_replay_then_llm_rollout", uses_forced_replay=1)
         mismatch = [k for k, v in expected.items() if manifest.get(k) != v]
+        snapshot_path = folder / "resolved_config.json"
+        if snapshot_path.exists():
+            archived_mode = json.loads(snapshot_path.read_text())["runtime"].get("proto_hourly_intention_mode", "legacy")
+            if archived_mode != manifest.get("proto_hourly_intention_mode", "legacy"):
+                mismatch.append("proto_hourly_intention_mode")
         if mismatch:
             issues.append("manifest mismatch: " + ", ".join(mismatch))
         replay, = load_rows(folder, "app_entry_replay_summary", group)
@@ -247,7 +257,11 @@ def check_run(folder, group, db, trace, expected_days=7):
             if replay_check["unverified_hours"] or not replay_check["day3_snapshot_ok"]:
                 issues.append("incomplete replay or incorrect handoff snapshot")
             attempts = read_attempts(conn, exp, agent)
-        report["exports_complete"] = not issues
+            report["exports_complete"] = not issues
+            if manifest.get("proto_hourly_intention_mode") == "opportunity_v1":
+                from check_hourly_intention_run import audit_intention_run
+                report["hourly_intention"] = audit_intention_run(
+                    folder, trace, conn, exp, agent, group, WORLD, expected_hours, set(failures))
         trace_check = report["cross_day"] = audit_trace(trace, group, agent, attempts, set(failures), expected_days)
         if trace_check["entry_errors_disagree_with_trace"]:
             issues.append("error export disagrees with actual hourly entry trace")
@@ -255,7 +269,14 @@ def check_run(folder, group, db, trace, expected_days=7):
             issues.append(f"incomplete actual App request trace for days 4–{expected_days}")
         report["run_complete"] = not issues
         statuses = {v["status"] for v in trace_check["modules"].values()}
-        if ("missing_evidence" in statuses or "technical_failure" in statuses
+        if "hourly_intention" in report:
+            issues.extend(report["hourly_intention"]["issues"])
+            report["cross_day_status"] = report["hourly_intention"]["cross_day_status"]
+            if trace_check["day5_completed_task_ticks_without_strategy_request"] or trace_check["day5_decision_db_disagreements"]:
+                issues.append("missing low-level execution evidence")
+        elif not successes and set(failures) == expected_hours:
+            report["cross_day_status"] = "technical_failure"
+        elif ("missing_evidence" in statuses or "technical_failure" in statuses
                 or trace_check["day5_completed_task_ticks_without_strategy_request"]
                 or trace_check["day5_decision_db_disagreements"]):
             issues.append("missing cross-day request evidence")
@@ -263,8 +284,27 @@ def check_run(folder, group, db, trace, expected_days=7):
             report["cross_day_status"] = "verified"
         else:
             report["cross_day_status"] = "no_natural_opportunity"
-    except (OSError, sqlite3.Error, ValueError, KeyError, TypeError, AttributeError) as exc:
+    except (OSError, sqlite3.Error, ValueError, KeyError, TypeError, AttributeError, StopIteration) as exc:
         issues.append(f"{type(exc).__name__}: {exc}")
+    if report["cross_day_status"] == "technical_failure" and not any("no valid" in x for x in issues):
+        issues.append("no valid hourly decision to test the mechanism")
+    report["acceptance_ok"] = report["run_complete"] and not issues
+    monitor = report.get("rollout", {})
+    expected_count = monitor.get("expected_hours", 0)
+    valid_count = report.get("hourly_intention", {}).get("valid_intention_decisions", monitor.get("valid_hours", 0))
+    rate = valid_count / expected_count if expected_count else None
+    blockers = []
+    if not report["acceptance_ok"]:
+        blockers.append("run evidence failed acceptance")
+    if rate is None or rate < 0.95:
+        blockers.append("valid decision rate below the 95% project threshold")
+    if report.get("hourly_intention", {}).get("low_level_technical_failure_hours"):
+        blockers.append("technical failure during task execution")
+    report["stability_gate"] = {
+        "valid_decision_rate": rate, "valid_decisions": valid_count, "expected_hours": expected_count,
+        "minimum_valid_rate": 0.95, "eligible_by_technical_stability": not blockers,
+        "blockers": blockers, "remaining_expansion_checks": ["paired behavioral effect vs repeat noise", "cost and latency budget"],
+    }
     return report
 
 
@@ -278,8 +318,10 @@ def main():
     report = check_run(args.run_dir, args.group_id, args.db, args.trace, args.expected_days)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"run_complete={report['run_complete']} cross_day_status={report['cross_day_status']} {args.output}")
-    return int(bool(report["issues"]))
+    print(f"run_complete={report['run_complete']} acceptance_ok={report['acceptance_ok']} "
+          f"cross_day_status={report['cross_day_status']} "
+          f"eligible_by_technical_stability={report['stability_gate']['eligible_by_technical_stability']} {args.output}")
+    return int(not report["acceptance_ok"])
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from tempfile import TemporaryDirectory
 from uuid import uuid4
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -55,18 +56,57 @@ SETTINGS = {
 }
 
 
+def checked_replay(config):
+    replay = get_replay_source(bundle_path=config.proto_app_entry_replay_bundle_path,
+                               device_mapping_path=config.proto_app_entry_replay_device_path,
+                               replay_days=config.proto_app_entry_replay_days)
+    device = replay.selected_devices[0][1]
+    for day in (1, 2, 3):
+        for hour in range(24):
+            replay.bundle_for_device(device_id=device, talkingdata_day=day, hour=hour)
+    return replay, device
+
+
+def use_shuffled_reference(settings, directory, seed):
+    from analysis_entry_calibration_comparison import write_shuffled_reference
+    output = directory / "shuffled_reference_day1_3.csv"
+    write_shuffled_reference(Path(SETTINGS["PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH"]), output, seed)
+    settings["PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH"] = str(output)
+    os.environ.update(settings)
+    config = load_runtime_config()
+    replay, device = checked_replay(config)
+    return config, replay, device
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Verify local resources without making model requests")
     parser.add_argument("--scheduled-login", action="store_true",
                         help="Run five days with a 09:00 login opportunity on days four and five")
+    parser.add_argument("--hourly-intention-mode", choices=("legacy", "opportunity_v1"), default="legacy",
+                        help="Select the legacy policy or give the hourly plan control of visible opportunities")
+    parser.add_argument("--max-defer-hours", type=int, default=24, help="Maximum future review interval")
+    parser.add_argument("--history-shuffle-seed", type=int,
+                        help="Permute day 1–3 hours within each device-day in the natural window")
+    parser.add_argument("--paired-environment-seed", type=int,
+                        help="Use matching opportunity/decision-keyed environment draws in the scheduled A/B study")
     args = parser.parse_args()
+    if args.max_defer_hours < 1:
+        parser.error("--max-defer-hours must be positive")
+    if args.history_shuffle_seed is not None and args.scheduled_login:
+        parser.error("use the history-shuffle control in the natural window")
+    if args.paired_environment_seed is not None and not args.scheduled_login:
+        parser.error("--paired-environment-seed requires --scheduled-login")
     os.chdir(ROOT)
     os.umask(0o077)
     for key in list(os.environ):
         if key.startswith(("PROTO_", "PARALLEL_")) or key.lower() in {"http_proxy", "https_proxy", "all_proxy"}:
             del os.environ[key]
     settings = SETTINGS.copy()
+    settings.update(PROTO_HOURLY_INTENTION_MODE=args.hourly_intention_mode,
+                    PROTO_HOURLY_INTENTION_MAX_DEFER_HOURS=str(args.max_defer_hours))
+    if args.paired_environment_seed is not None:
+        settings["PROTO_PAIRED_ENVIRONMENT_SEED"] = str(args.paired_environment_seed)
     if args.scheduled_login:
         settings.update(STAGE_DAYS="5", PROTO_SCHEDULED_LOGIN_HOUR="9",
                         PROTO_LLM_STRATEGY_PROMPT_FORMAT="field_rules_no_priors")
@@ -83,23 +123,26 @@ def main():
     heldout = REFERENCE_DIR / f"{PREFIX}validation_hourly_bundle_day4_7.csv"
     required_files = [Path(settings["MAP_FILE_PATH"]), Path(settings["DIGITAL_FRICTION_PROFILES_PATH"]),
                       Path(config.proto_task_occurrence_prior_path), EXAMPLE / "check_social_memory_run.py"]
+    if args.hourly_intention_mode == "opportunity_v1":
+        required_files.append(EXAMPLE / "check_hourly_intention_run.py")
     required_files.append(EXAMPLE / "check_scheduled_login.py" if args.scheduled_login else heldout)
     for required in required_files:
         if not required.is_file():
             parser.exit(2, f"缺少实验文件 {required}\n")
     if not os.access(DATA / "agentsociety-sim-oss", os.X_OK):
         parser.exit(2, "本地模拟器不存在或不能执行。\n")
-    replay = get_replay_source(bundle_path=config.proto_app_entry_replay_bundle_path,
-                               device_mapping_path=config.proto_app_entry_replay_device_path,
-                               replay_days=config.proto_app_entry_replay_days)
-    device = replay.selected_devices[0][1]
-    for day in (1, 2, 3):
-        for hour in range(24):
-            replay.bundle_for_device(device_id=device, talkingdata_day=day, hour=hour)
+    replay, device = checked_replay(config)
     print(f"已核对第 1 台设备的 72 个回放小时。glm-4-flashx，1 个基线世界，{days} 个模拟日。", flush=True)
+    print(f"小时决策模式 {config.proto_hourly_intention_mode}，延期窗口 {config.proto_hourly_intention_max_defer_hours} 小时。", flush=True)
+    if config.proto_paired_environment_seed is not None:
+        print(f"策略与结果的配对环境抽样种子为 {config.proto_paired_environment_seed}。", flush=True)
     if args.scheduled_login:
         print("第 4、5 天 09:00 各安排一次登录机会，模型评分、求助和任务结果按模拟流程执行。", flush=True)
     if args.check:
+        if args.history_shuffle_seed is not None:
+            with TemporaryDirectory() as temp:
+                use_shuffled_reference(settings, Path(temp), args.history_shuffle_seed)
+            print(f"已核对前三天的时段置乱对照，种子 {args.history_shuffle_seed}。")
         return
     key = os.environ.get("LLM_API_KEY") or os.environ.get("ZHIPUAI_API_KEY")
     if not key or not key.strip() or key.strip() == "<YOUR-API-KEY>":
@@ -108,6 +151,9 @@ def main():
         parser.exit(2, "未输入有效密钥，实验未启动。\n")
     os.environ["LLM_API_KEY"] = key.strip()
     folder.mkdir(parents=True)
+    original_reference_hash = replay.bundle_hash
+    if args.history_shuffle_seed is not None:
+        config, replay, device = use_shuffled_reference(settings, folder, args.history_shuffle_seed)
     print(f"本次结果目录：{folder}", flush=True)
     code_archive = folder / "experiment_source.zip"
     sources = [
@@ -115,6 +161,7 @@ def main():
             "main.py", "world_runner.py", "persistence.py", "config_runtime.py",
             "analysis_parallel_worlds.py", "analysis_entry_calibration_comparison.py",
             "run_social_memory_week.py", "check_social_memory_run.py",
+            "check_hourly_intention_run.py", "analysis_app_entry_validation.py",
         )
     ]
     sources.extend((EXAMPLE / "proto").rglob("*.py"))
@@ -125,12 +172,14 @@ def main():
             archive.write(path, path.relative_to(ROOT))
     snapshot = {
         "settings": settings, "runtime": asdict(config),
+        "history_shuffle_seed": args.history_shuffle_seed, "original_reference_hash": original_reference_hash,
         "reference_hash": replay.bundle_hash, "device_mapping_hash": replay.device_mapping_hash,
         "profiles_sha256": hashlib.sha256(Path(SETTINGS["DIGITAL_FRICTION_PROFILES_PATH"]).read_bytes()).hexdigest(),
         "task_priors_sha256": hashlib.sha256(Path(config.proto_task_occurrence_prior_path).read_bytes()).hexdigest(),
         "source_sha256": hashlib.sha256(code_archive.read_bytes()).hexdigest(),
     }
     (folder / "resolved_config.json").write_text(json.dumps(snapshot, indent=2, ensure_ascii=False))
+    os.environ["PROTO_RUN_SOURCE_SHA256"] = snapshot["source_sha256"]
     runner = [sys.executable, str(EXAMPLE / "world_runner.py"), "--group-id", group,
               "--seed-list", SEED, "--world-batch", WORLD, "--analysis-dir", str(folder), "--summarize"]
     with (folder / "run.log").open("w") as log, subprocess.Popen(
@@ -150,7 +199,7 @@ def main():
                             "--run-dir", str(folder), "--group-id", group, "--db", str(DATA / "sqlite.db"),
                             "--trace", str(folder / "trace"), "--output", str(report), "--expected-days", str(days)])
     evidence_status = 0
-    if args.scheduled_login:
+    if args.scheduled_login and args.hourly_intention_mode == "legacy":
         evidence_status = subprocess.run([sys.executable, str(EXAMPLE / "check_scheduled_login.py"),
                                           "--run-dir", str(folder), "--db", str(DATA / "sqlite.db")]).returncode
     rollout = folder / f"app_entry_rollout_hourly_{group}.csv"
@@ -160,8 +209,9 @@ def main():
         for day in range(4, 8):
             day_dir = folder / f"scores/day{day}"
             day_dir.mkdir(parents=True)
-            summary, hourly = compare(Path(config.proto_app_entry_replay_bundle_path), heldout,
-                                      [("glm-4-flashx", rollout, errors if errors.is_file() else None)], [device], day)
+            summary, hourly = compare(Path(SETTINGS["PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH"]), heldout,
+                                      [("glm-4-flashx", rollout, errors if errors.is_file() else None)], [device], day,
+                                      shuffle_seed=101 if args.history_shuffle_seed is None else args.history_shuffle_seed)
             write_csv(day_dir / "summary.csv", summary)
             write_csv(day_dir / "hourly.csv", hourly)
     print(f"实验验收与日志：{folder}", flush=True)

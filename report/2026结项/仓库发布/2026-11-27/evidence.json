@@ -1,0 +1,360 @@
+{
+  "date": "2026-11-27",
+  "paired_probe": {
+    "run_id": "intention_pairs_20261127_135449_85b5c6",
+    "archived_source_zip_sha256": "85c23485b1abaa35f2ba5e036b843358204e9c81d05ecd6f38d571d7db1459c6",
+    "model": "glm-4-flashx",
+    "plan_schema_for_opportunity_mode": "hourly_plan_compact_v3",
+    "profiles": 1,
+    "reported_day_1_based": 5,
+    "hour": 9,
+    "manipulated_yesterday_episode_fields": {
+      "success": {
+        "outcome_type": "success_self",
+        "negative_feedback": false
+      },
+      "failure": {
+        "outcome_type": "failure_after_attempt",
+        "negative_feedback": true
+      }
+    },
+    "fixed_pre_hour_psychology": {
+      "helplessness": 50.0,
+      "trust_in_apps": 50.0,
+      "avoidance_tendency": 50.0
+    },
+    "fixed_need_pressures": {
+      "social_need": 0.3,
+      "entertainment_need": 0.3,
+      "finance_need": 0.3,
+      "tool_need": 0.3,
+      "health_need": 0.3,
+      "habitual_check_need": 0.3,
+      "idle_browse_need": 0.3,
+      "avoidance_need": 0.3,
+      "no_app_need": 0.3
+    },
+    "fixed_dominant_need": "tool_need",
+    "fixed_visible_goal": "account_login_verification",
+    "known_deadline": null,
+    "temperature": 0.1,
+    "included_modes": {
+      "legacy": {
+        "recorded": 26,
+        "valid": 26,
+        "technical_failures": 0,
+        "actual_requests": 26,
+        "repair_requests": 0,
+        "accepted_policy_counts": {
+          "legacy_assigned": 26
+        },
+        "groups": {
+          "contrast": {
+            "pairs": 10,
+            "pairs_differing_by_measure": {
+              "app_counts": 2,
+              "any_rating": 0,
+              "reason_text": 10,
+              "admission": 0
+            }
+          },
+          "repeat": {
+            "pairs": 3,
+            "pairs_differing_by_measure": {
+              "app_counts": 0,
+              "any_rating": 0,
+              "reason_text": 3,
+              "admission": 0
+            }
+          }
+        }
+      },
+      "opportunity_v1": {
+        "recorded": 26,
+        "valid": 26,
+        "technical_failures": 0,
+        "actual_requests": 26,
+        "repair_requests": 0,
+        "accepted_policy_counts": {
+          "engage_goal": 26
+        },
+        "groups": {
+          "contrast": {
+            "pairs": 10,
+            "pairs_differing_by_measure": {
+              "app_counts": 0,
+              "any_rating": 5,
+              "reason_text": 7,
+              "admission": 0,
+              "accepted_intent_kind": 0
+            }
+          },
+          "repeat": {
+            "pairs": 3,
+            "pairs_differing_by_measure": {
+              "app_counts": 0,
+              "any_rating": 0,
+              "reason_text": 0,
+              "admission": 0,
+              "accepted_intent_kind": 0
+            }
+          }
+        }
+      }
+    },
+    "rule_choice": "engage_goal",
+    "external_human_validation": "not_measured",
+    "low_level_attempts": 0,
+    "help_dispatches": 0
+  },
+  "continuous_five_day_run": {
+    "run_id": "scheduled_login_20261127_140354_4bd541",
+    "archived_source_zip_sha256": "d4b3c020fa72ebf971b0819ab2a548e3a788e81070e06917635ef11277d36dfc",
+    "model": "glm-4-flashx",
+    "plan_schema_for_opportunity_mode": "hourly_plan_compact_v3",
+    "first_three_days_verified_reference_hours": 72,
+    "day3_snapshot_verified": true,
+    "cross_day_status": "verified",
+    "stability": {
+      "valid_decisions": 35,
+      "expected_hours": 48,
+      "minimum_valid_rate": 0.95,
+      "eligible_by_technical_stability": false
+    },
+    "day4_and_day5_counts": {
+      "4": {
+        "habitual_app": 8,
+        "engage_goal": 2,
+        "technical_failure": 13,
+        "continue_goal": 1
+      },
+      "5": {
+        "continue_goal": 9,
+        "engage_goal": 1,
+        "habitual_app": 13,
+        "no_app": 1
+      }
+    },
+    "channel_failure_reasons": {
+      "selected goal must use its required_channel during an active hour": 10,
+      "unknown app channel": 3
+    },
+    "failures_by_day_and_hour": [
+      [
+        4,
+        9
+      ],
+      [
+        4,
+        10
+      ],
+      [
+        4,
+        11
+      ],
+      [
+        4,
+        12
+      ],
+      [
+        4,
+        13
+      ],
+      [
+        4,
+        14
+      ],
+      [
+        4,
+        15
+      ],
+      [
+        4,
+        16
+      ],
+      [
+        4,
+        17
+      ],
+      [
+        4,
+        18
+      ],
+      [
+        4,
+        20
+      ],
+      [
+        4,
+        21
+      ],
+      [
+        4,
+        22
+      ]
+    ],
+    "simulated_task_totals": {
+      "distinct_tasks_entered": 3,
+      "low_level_decisions": 13,
+      "operations_started": 8,
+      "help_requests": 3,
+      "strategies": {
+        "seek_help_then_attempt": 3,
+        "attempt_self": 5,
+        "avoid": 5
+      },
+      "outcomes": {
+        "success_with_help": 1,
+        "abandon_midway": 4,
+        "avoid_without_attempt": 5,
+        "failure_after_attempt": 1,
+        "success_self": 2
+      },
+      "support_delivery": {
+        "delivered": 3,
+        "not_requested": 10
+      }
+    },
+    "traced_model_requests_by_module_and_phase": {
+      "app_needs": {
+        "initial": 49,
+        "repair": 49
+      },
+      "app_plan": {
+        "initial": 48,
+        "repair": 17
+      },
+      "attribution": {
+        "initial": 5
+      },
+      "helper": {
+        "initial": 3,
+        "repair": 3
+      },
+      "strategy": {
+        "initial": 13
+      },
+      "task_appraisal": {
+        "initial": 13
+      }
+    },
+    "different_day4_episodes_in_day5_midnight_plan": 3,
+    "simulated_opportunities": [
+      {
+        "source": "natural_context",
+        "task_family": "service_application_submission",
+        "published": [
+          4,
+          3
+        ],
+        "first_valid_selection_at": [
+          4,
+          4
+        ],
+        "last_observed_outcome_at": [
+          4,
+          4
+        ],
+        "last_observed_outcome": "success_with_help",
+        "count_of_strategy_decisions": 1
+      },
+      {
+        "source": "scheduled_login",
+        "task_family": "account_login_verification",
+        "published": [
+          4,
+          9
+        ],
+        "first_valid_selection_at": [
+          4,
+          19
+        ],
+        "last_observed_outcome_at": [
+          5,
+          8
+        ],
+        "last_observed_outcome": "success_self",
+        "count_of_strategy_decisions": 11
+      },
+      {
+        "source": "scheduled_login",
+        "task_family": "account_login_verification",
+        "published": [
+          5,
+          9
+        ],
+        "first_valid_selection_at": [
+          5,
+          9
+        ],
+        "last_observed_outcome_at": [
+          5,
+          9
+        ],
+        "last_observed_outcome": "success_self",
+        "count_of_strategy_decisions": 1
+      }
+    ]
+  },
+  "v4_independent_online_retest": {
+    "run_id": "channel_smoke_20261127_142509_fdf628",
+    "archived_source_zip_sha256": "af49c91c81a600fda9d2624f54d7fc9211808ff65a6c1165029ccb5e311f9bb7",
+    "original_run_id": "scheduled_login_20261127_140354_4bd541",
+    "model": "glm-4-flashx",
+    "plan_schema": "hourly_plan_compact_v4",
+    "first_valid": 2,
+    "final_valid": 2,
+    "http_requests": 2,
+    "repair_requests": 0,
+    "plan_only": true,
+    "independent_archived_scenes": true,
+    "hours": [
+      {
+        "reported_day_1_based": 4,
+        "hour": 9,
+        "action": "engage_goal@o1@open:public_service_context",
+        "additional_apps": [
+          "public_service_context"
+        ],
+        "selected_app_counts": {
+          "public_service_context": 2
+        },
+        "parse_status": "ok"
+      },
+      {
+        "reported_day_1_based": 4,
+        "hour": 20,
+        "action": "continue_goal@g1@open:public_service_context",
+        "additional_apps": [
+          "public_service_context"
+        ],
+        "selected_app_counts": {
+          "public_service_context": 2
+        },
+        "parse_status": "ok"
+      }
+    ]
+  },
+  "v4_offline_replay": {
+    "run_id": "channel_smoke_20261127_142442_417e02",
+    "archived_source_zip_sha256": "67031f9902927090322348efea7870575b56d71bcf5c42b83c80cf1b5d3e93df",
+    "original_run_id": "scheduled_login_20261127_140354_4bd541",
+    "hours": 48,
+    "archived_failed_pairs_rejected_by_v4": 13,
+    "archived_channel_failure_counts": {
+      "selected goal must use its required_channel during an active hour": 10,
+      "unknown app channel": 3
+    },
+    "archived_valid_reexpressed_in_v4": 35,
+    "equivalent_actions": {
+      "habitual_app": 21,
+      "engage_goal": 3,
+      "continue_goal": 10,
+      "no_app": 1
+    },
+    "archived_first_valid": 31,
+    "archived_repaired_valid": 4,
+    "new_model_choices": 0,
+    "online_requests": 0
+  }
+}

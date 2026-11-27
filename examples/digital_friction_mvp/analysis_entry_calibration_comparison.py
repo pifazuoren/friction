@@ -12,9 +12,12 @@ from __future__ import annotations
 
 import argparse
 import csv
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass
+import hashlib
+import json
 from pathlib import Path
+import random
 from statistics import mean, median
 
 from analysis_app_entry_validation import _parse_bool, _parse_context_counts
@@ -23,6 +26,10 @@ from proto.app_entry.bundle import NO_APP_CONTEXT, HourlyAppEntryBundle, derive_
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "agentsociety_data/elderly/10person_v3"
 HISTORY = "personal_history"
+COMMUNICATION = "communication_social_context"
+OVERALL = "personal_overall"
+CONSTANT = "constant_communication"
+SHUFFLED = "personal_history_shuffled"
 
 
 @dataclass(frozen=True)
@@ -105,6 +112,35 @@ def build_history(reference, keys):
     return history
 
 
+def shuffled_hours(device, day, seed):
+    """Map each destination hour to a source hour within the same replay day."""
+    order = list(range(24))
+    digest = hashlib.sha256(f"{seed}|{device}|{day}".encode()).digest()
+    random.Random(digest).shuffle(order)
+    return order
+
+
+def write_shuffled_reference(reference_path, output, seed):
+    """Permute complete activity records, retaining the destination date/hour keys."""
+    groups = defaultdict(dict)
+    for row in load_csv(reference_path):
+        day, hour = int(row["day_index"]), int(row["hour"])
+        group = groups[row["device_id"], day]
+        if day not in (1, 2, 3) or hour in group:
+            raise ValueError("expected unique reference hours from days 1–3")
+        group[hour] = row
+    result = []
+    time_columns = ("device_id", "day_index", "hour", "date", "hour_index", "hour_key")
+    for (device, day), group in sorted(groups.items()):
+        if set(group) != set(range(24)):
+            raise ValueError("cannot shuffle an incomplete device-day")
+        for hour, source in enumerate(shuffled_hours(device, day, seed)):
+            row = group[source].copy()
+            row.update({key: group[hour][key] for key in time_columns if key in row})
+            result.append(row)
+    write_csv(output, result)
+
+
 def summarize(observed, predictions, failures, selected, common):
     rows = []
     for method, model in predictions.items():
@@ -114,12 +150,29 @@ def summarize(observed, predictions, failures, selected, common):
             errors = [abs(model[k].count - observed[k].count) for k in evaluated]
             matches = sum(model[k].context == observed[k].context for k in evaluated)
             active = [k for k in evaluated if observed[k].count > 0]
+            idle = [k for k in evaluated if not observed[k].count]
+            predicted_idle = sum(model[k].count == 0 for k in evaluated)
+            idle_hits = sum(model[k].count == 0 for k in idle)
+            totals = Counter(observed[k].context for k in evaluated)
+            correct = Counter(observed[k].context for k in evaluated if observed[k].context == model[k].context)
+            recalls = {name: correct[name] / n for name, n in sorted(totals.items())}
+            non_comm = len(evaluated) - totals[COMMUNICATION]
             rows.append({
                 "method": method, "hour_scope": scope, "expected_hours": len(selected),
                 "valid_hours": len(matched), "error_hours": len(failed),
                 "missing_hours": len(selected) - len(matched) - len(failed),
                 "coverage": len(matched) / len(selected), "scored_hours": len(evaluated),
                 "exposure_mae": mean(errors) if errors else None,
+                "failure_rate": len(failed) / len(selected),
+                "idle_precision": idle_hits / predicted_idle if predicted_idle else None,
+                "idle_recall": idle_hits / len(idle) if idle else None,
+                "observed_idle_scored": len(idle), "predicted_idle_scored": predicted_idle,
+                "idle_correct": idle_hits, "non_communication_scored": non_comm,
+                "non_communication_recall": (matches - correct[COMMUNICATION]) / non_comm if non_comm else None,
+                "macro_recall": mean(recalls.values()) if recalls else None,
+                "class_recall_json": json.dumps(recalls, sort_keys=True),
+                "exposure_mae_observed_active": mean(abs(model[k].count - observed[k].count) for k in active) if active else None,
+                "exposure_mae_observed_idle": mean(model[k].count for k in idle) if idle else None,
                 "primary_correct": matches,
                 "primary_accuracy": matches / len(evaluated) if evaluated else None,
                 "observed_active_scored": len(active),
@@ -130,7 +183,7 @@ def summarize(observed, predictions, failures, selected, common):
     return rows
 
 
-def compare(reference_path, heldout_path, inputs, devices=(), day=4):
+def compare(reference_path, heldout_path, inputs, devices=(), day=4, shuffle_seed=101):
     if day not in (4, 5, 6, 7):
         raise ValueError("Held-out day must be one of 4, 5, 6, 7")
     reference = load_observations(reference_path, {1, 2, 3})
@@ -138,7 +191,7 @@ def compare(reference_path, heldout_path, inputs, devices=(), day=4):
     predictions, failures = {}, {}
     model_devices = set()
     for method, rollout, errors in inputs:
-        if method in predictions or method == HISTORY:
+        if method in predictions or method in {HISTORY, CONSTANT, OVERALL, SHUFFLED}:
             raise ValueError(f"Duplicate or reserved method name: {method}")
         valid, failed = load_model(rollout, errors, day)
         if (valid.keys() | failed) - observed.keys():
@@ -160,7 +213,22 @@ def compare(reference_path, heldout_path, inputs, devices=(), day=4):
     if not ref_keys <= reference.keys():
         raise ValueError("Each selected device must have 72 observed reference hours")
     predictions[HISTORY] = build_history(reference, keys)
-    failures[HISTORY] = set()
+    overall, constant, shuffled = {}, {}, {}
+    for device in devices:
+        records = [reference[device, d, h] for d in (1, 2, 3) for h in range(24)]
+        counts = Counter(r.context for r in records)
+        modal_context = max(counts, key=lambda ctx: (counts[ctx], ctx))
+        modal_count = int(median(r.count for r in records if r.context == modal_context))
+        typical_active = [r.count for r in records if r.count > 0]
+        active_count = int(median(typical_active)) if typical_active else 1
+        for h in range(24):
+            overall[device, day, h] = Prediction(modal_count, modal_context)
+            constant[device, day, h] = Prediction(active_count, COMMUNICATION)
+        for d in (1, 2, 3):
+            for h, src in enumerate(shuffled_hours(device, d, shuffle_seed)):
+                shuffled[device, d, h] = reference[device, d, src]
+    predictions.update({OVERALL: overall, CONSTANT: constant, SHUFFLED: build_history(shuffled, keys)})
+    failures.update({name: set() for name in (HISTORY, OVERALL, CONSTANT, SHUFFLED)})
     common = keys.copy()
     for model in predictions.values():
         common.intersection_update(model)

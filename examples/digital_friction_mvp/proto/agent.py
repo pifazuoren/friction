@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 import hashlib
 import json
 import os
@@ -9,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from agentsociety.cityagent import SocietyAgent
-from config_runtime import load_runtime_config
+from config_runtime import RuntimeConfig, load_runtime_config
 
 from .attempt_strategy import choose_attempt_strategy, compute_rule_strategy_weights
 from .attribution_inference import infer_event_attribution
@@ -43,7 +44,7 @@ from .experience_memory import (
     extract_memory_features,
     update_experience_memory,
 )
-from .models import HelplessnessUpdateInput
+from .models import DigitalTask, HelplessnessUpdateInput
 from .llm_psychology import (
     _extract_json_object,
     _query_json_payload,
@@ -56,7 +57,8 @@ from .llm_psychology import (
     resolve_task_appraisal,
     resolve_trajectory_appraisal,
 )
-from .logical_clock import is_proto_logical_clock_enabled
+from .hourly_intention import IntentionLedger, opportunity_id_for_task
+from .logical_clock import is_proto_logical_clock_enabled, monotonic_sim_hour
 from .memory.packet import (
     build_relevant_mastery_summary as _build_relevant_mastery_summary,
     build_task_relevant_memory_packet as _build_task_relevant_memory_packet,
@@ -85,6 +87,7 @@ from .runtime import (
     assign_task_with_entry_decision,
     build_stage_transition_updates,
     build_task_surface_updates,
+    clear_task_surface_updates,
     scheduled_login_difficulty_delta,
     scheduled_login_for_day,
 )
@@ -702,6 +705,13 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     "entry_audit": entry_decision.audit,
                 }
             )
+            routing = entry_decision.audit.get("hourly_routing")
+            if routing:
+                kind = routing["executed_choice"]
+                status_text = kind or "hourly intention unavailable"
+                step_type = "technical_failure" if routing["technical_failure"] else "hourly_intention"
+                payload.update(step_type=step_type, step_intention=kind, status_text=status_text,
+                               step_outcome="technical_failure" if routing["technical_failure"] else "no_task_execution")
             await self.memory.status.update(
                 "proto_mobile_entry_decision",
                 entry_decision.to_dict(),
@@ -812,6 +822,71 @@ class DigitalHelplessnessAgent(SocietyAgent):
             ),
         )
         await self.memory.status.update("proto_day4_replay_snapshot", snapshot)
+
+    def _publish_hourly_offer(
+        self, ledger: IntentionLedger, task: DigitalTask, *, source: str, sim_hour: int, channel: str | None = None
+    ) -> None:
+        new = opportunity_id_for_task(task.task_id) not in ledger.state["opportunities"]
+        offer = ledger.publish(task, source=source, sim_hour=sim_hour, required_channel=channel)
+        if new:
+            trace_record("opportunity_published", module="hourly_intention", **offer,
+                         task_id=task.task_id, queued_behind_goal=bool(ledger.goal))
+
+    async def _prepare_hourly_offers(
+        self, ledger: IntentionLedger, *, task: DigitalTask | None, day: int, tick: float,
+        env: dict, config: RuntimeConfig, episodes: list[dict], sim_hour: int,
+    ) -> None:
+        status = self.memory.status
+        if task is not None:
+            # Day-three pending work retains its original template, identity and prior episode IDs.
+            prior = await status.get("proto_mobile_entry_decision", {})
+            channel = prior.get("selected_app_context") if isinstance(prior, dict) else None
+            if not isinstance(prior, dict) or (prior.get("task") or {}).get("task_id") != task.task_id:
+                channel = None
+            new = opportunity_id_for_task(task.task_id) not in ledger.state["opportunities"]
+            ledger.restore_pending(task, sim_hour, episodes, required_channel=channel)
+            if new:
+                pending = ledger.state["opportunities"][opportunity_id_for_task(task.task_id)]
+                trace_record("opportunity_published", module="hourly_intention",
+                             **{k: v for k, v in pending.items() if k != "template"}, task_id=task.task_id)
+            await status.update("proto_goal_state_json", ledger.state)
+            for key, val in clear_task_surface_updates().items():
+                await status.update(key, val)
+        if config.proto_scheduled_login_hour is not None:
+            # The ledger is authoritative if publication succeeded before the day marker was written.
+            if any(o["source"] == "scheduled_login" and o["offered_at_sim_hour"] // 24 == day
+                   for o in ledger.state["opportunities"].values()):
+                await status.update("proto_last_scheduled_login_day", day)
+                return
+            login = scheduled_login_for_day(
+                hour=config.proto_scheduled_login_hour, agent_id=int(self.id), day=day, tick_seconds=tick,
+                env=env, existing_task=None, last_scheduled_day=await status.get("proto_last_scheduled_login_day", -1),
+                difficulty_arm=config.proto_login_difficulty_arm,
+            )
+            if login is not None:
+                self._publish_hourly_offer(ledger, login, source="scheduled_login", sim_hour=sim_hour)
+                await status.update("proto_goal_state_json", ledger.state)
+                await status.update("proto_last_scheduled_login_day", day)
+
+    def _route_hourly_plan(
+        self, result: AppEntryRolloutResult, ledger: IntentionLedger, *, sim_hour: int, max_defer_hours: int,
+    ) -> DigitalTask | None:
+        decision = result.decision
+        # Validate and resolve only the ID exposed before this Plan was sent.
+        task = ledger.apply(result.plan.intent, sim_hour=sim_hour, max_defer_hours=max_defer_hours)
+        if task is None and decision.task is not None:
+            self._publish_hourly_offer(ledger, decision.task, source="natural_context", sim_hour=sim_hour,
+                                       channel=result.bundle.primary_context)
+        decision.audit["natural_discovery_status"] = decision.entry_status
+        decision.audit["hourly_intent"] = dict(result.plan.intent)
+        decision.task = task
+        decision.task_generated = task is not None
+        decision.entry_status = "intention_" + result.plan.intent["kind"]
+        decision.mapped_task_family = task.task_family if task else None
+        decision.audit.update(task_generated=decision.task_generated, entry_status=decision.entry_status,
+                              mapped_task_family=decision.mapped_task_family,
+                              task_outcome_may_update_psychology=task is not None)
+        return task
 
     async def _persist_rollout_entry_state(
         self,
@@ -2129,13 +2204,47 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 0,
             )
         rollout_result: AppEntryRolloutResult | None = None
+        ledger = None
+        intention_args = {}
+        sim_hour = monotonic_sim_hour(current_day, float(t))
+        mode = getattr(runtime_config, "proto_hourly_intention_mode", "legacy")
+        max_defer_hours = getattr(runtime_config, "proto_hourly_intention_max_defer_hours", 24)
         talkingdata_day = simulation_day_to_talkingdata_day(int(day))
         if (
             runtime_config.proto_task_entry_mode
             == "app_context_replay_then_llm_rollout"
             and 4 <= talkingdata_day <= 7
         ):
-            if runtime_config.proto_scheduled_login_hour is not None:
+            hourly_episodes = recent_episode_buffer or extract_event_log_episodes(
+                event_log, simulation_day=int(day), tick_seconds=float(t),
+            )
+            if mode == "opportunity_v1":
+                ledger = IntentionLedger(await self.memory.status.get("proto_goal_state_json", {}))
+                if sim_hour <= ledger.state["last_decided_hour"]:
+                    return 0.0
+                bind_trace_context(mode=mode, monotonic_sim_hour=sim_hour, model=os.getenv("LLM_MODEL"))
+                await self._prepare_hourly_offers(
+                    ledger, task=task, day=current_day, tick=float(t), env=env, config=runtime_config,
+                    episodes=hourly_episodes, sim_hour=sim_hour,
+                )
+                for expired_id in ledger.expire(sim_hour):
+                    trace_record("opportunity_expired", module="hourly_intention", opportunity_id=expired_id)
+                task = None
+                goal_before = deepcopy(ledger.goal)
+                visible = ledger.visible(sim_hour)
+                intention_args = dict(hourly_intention_mode=mode, available_opportunities=visible,
+                                      current_intention=goal_before, goal_review_due=ledger.review_due(sim_hour),
+                                      max_defer_hours=max_defer_hours)
+                intention_audit = {
+                    "opportunity_ids": [item["opportunity_id"] for item in visible],
+                    "goal_state_before": goal_before, "raw_choice": None, "accepted_choice": None,
+                    "executed_choice": None, "task_started": False, "repair_count": 0,
+                    "parse_status": "not_received", "rejection_reason": None, "input_episode_ids": [],
+                    "visible_observation_hash": hashlib.sha256(
+                        json.dumps(intention_args, sort_keys=True).encode()
+                    ).hexdigest()[:16],
+                }
+            elif runtime_config.proto_scheduled_login_hour is not None:
                 login = scheduled_login_for_day(
                     hour=runtime_config.proto_scheduled_login_hour, agent_id=int(self.id),
                     day=current_day, tick_seconds=float(t), env=env, existing_task=task,
@@ -2174,9 +2283,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     recent_rollout_rows=await self.memory.status.get(
                         "proto_app_entry_rollout_rows_json", []
                     ),
-                    recent_task_episodes=recent_episode_buffer or extract_event_log_episodes(
-                        event_log, simulation_day=int(day), tick_seconds=float(t),
-                    ),
+                    recent_task_episodes=hourly_episodes,
                     latest_reflection=current_daily_reflection,
                     helplessness=helplessness,
                     trust=trust,
@@ -2212,10 +2319,39 @@ class DigitalHelplessnessAgent(SocietyAgent):
                         runtime_config.proto_task_occurrence_gate_multiplier
                     ),
                     existing_task_pending=task is not None,
+                    **intention_args,
                 )
+                if ledger is not None:
+                    plan = rollout_result.plan
+                    intention_audit.update(
+                        raw_choice=plan.audit.get("raw_choice"), repaired_choice=plan.audit.get("repaired_choice"),
+                        repair_count=plan.audit.get("repair_requests", 0), parse_status=plan.audit["parse_status"],
+                        input_episode_ids=plan.audit["input_episode_ids"],
+                        visible_observation_hash=plan.audit["input_packet_hash"],
+                    )
+                    # A rejected plan must leave the previous goal and its counters intact.
+                    routed_ledger = IntentionLedger(ledger.state)
+                    task = self._route_hourly_plan(
+                        rollout_result, routed_ledger, sim_hour=sim_hour, max_defer_hours=max_defer_hours,
+                    )
+                    ledger = routed_ledger
+                    intention_audit.update(accepted_choice=plan.intent, executed_choice=plan.intent["kind"],
+                                           task_started=task is not None)
             except TraceWriteError:
                 raise
             except Exception as exc:
+                if ledger is not None:
+                    rollout_result = None
+                    task = None
+                    failed_audit = getattr(exc, "audit", {})
+                    intention_audit.update(
+                        raw_choice=failed_audit.get("raw_choice", intention_audit["raw_choice"]),
+                        repaired_choice=failed_audit.get("repaired_choice"), rejection_reason=str(exc),
+                        visible_observation_hash=failed_audit.get("input_packet_hash", intention_audit["visible_observation_hash"]),
+                        input_episode_ids=failed_audit.get("input_episode_ids", intention_audit["input_episode_ids"]),
+                        repair_count=failed_audit.get("repair_requests", intention_audit["repair_count"]),
+                        parse_status=failed_audit.get("parse_status", "technical_failure"),
+                    )
                 entry_decision = failed_rollout_entry_decision(
                     agent_id=int(self.id),
                     device_id=replay_device_id,
@@ -2228,7 +2364,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 task_updates = {}
             else:
                 entry_decision = rollout_result.decision
-                if task is None:
+                if ledger is not None:
+                    task_updates = build_task_surface_updates(task=task, day=current_day, tick_seconds=float(t)) if task else {}
+                elif task is None:
                     task = entry_decision.task
                     task_updates = (
                         build_task_surface_updates(
@@ -2241,6 +2379,21 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     )
                 else:
                     task_updates = {}
+            if ledger is not None:
+                ledger.state["last_decided_hour"] = sim_hour
+                await self.memory.status.update("proto_goal_state_json", ledger.state)
+                target = ledger.state["goal"] if (ledger.goal or intention_audit["executed_choice"] == "drop_goal") else None
+                intention_audit.update(
+                    goal_state_after=deepcopy(target), goal_id=target["goal_id"] if target else None,
+                    opportunity_id=target["opportunity_id"] if target else None,
+                    task_id=task.task_id if task else None, decision_index=target["decision_index"] if target else 0,
+                    operation_attempt_count=target["operation_attempt_count"] if target else 0,
+                    next_review_at=target["next_review_at_sim_hour"] if target else None,
+                    technical_failure=rollout_result is None,
+                )
+                entry_decision.audit["hourly_routing"] = intention_audit
+                trace_record("hourly_intention", module="hourly_intention",
+                             status="technical_failure" if rollout_result is None else "accepted", **intention_audit)
         else:
             if (
                 runtime_config.proto_task_entry_mode
@@ -2627,6 +2780,23 @@ class DigitalHelplessnessAgent(SocietyAgent):
             + 31 * sum(ord(ch) for ch in world_name)
         )
         strategy_rng = random.Random(base_rng_seed + 17)
+        outcome_rng = random.Random(base_rng_seed + 29)
+        provider = getattr(self, "paired_random_provider", None)
+        if ledger is not None:
+            bind_trace_context(opportunity_id=ledger.goal["opportunity_id"], goal_id=ledger.goal["goal_id"],
+                               decision_index=ledger.goal["decision_index"])
+        if provider is not None and 4 <= talkingdata_day <= 7:
+            # Harness-only injection. IDs and ordinals are independent of treatment and execution time.
+            index = ledger.goal["decision_index"] if ledger is not None else 1 + int(task.defer_count)
+            profile_id = getattr(self, "paired_profile_id", self.id)
+            pair_key = (profile_id, opportunity_id_for_task(task.task_id), index)
+            strategy_rng = provider.rng(*pair_key, "strategy")
+            outcome_rng = provider.rng(*pair_key, "outcome")
+            bind_trace_context(paired_profile_id=profile_id, opportunity_id=pair_key[1],
+                               decision_index=index, environment_pair_seed=provider.pair_seed)
+            trace_record("paired_streams", module="task", mechanisms=["strategy", "outcome"],
+                         profile_id=profile_id, opportunity_id=pair_key[1], decision_index=index,
+                         pair_seed=provider.pair_seed)
         gated_lite_final_weights = None
         if runtime_config.proto_bayesian_policy_lite_mode == "gated_lite":
             candidate_weights = bayesian_policy_pre_audit.get("pi_final")
@@ -2704,6 +2874,15 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     "support_ecology_status": support_ecology_status,
                 },
             )
+            if ledger is not None:
+                ledger.settle(success=False, operation_started=False, episode_id=None)
+                await self.memory.status.update("proto_goal_state_json", ledger.state)
+                for key, val in clear_task_surface_updates().items():
+                    await self.memory.status.update(key, val)
+                trace_record("goal_outcome", module="hourly_intention", status="technical_failure",
+                             goal_state_after=deepcopy(ledger.goal), operation_started=False, episode_id=None,
+                             outcome_type=None, support_delivery_status=support_delivery_status)
+                return 0.0
             raise SupportTechnicalError(
                 f"Family support request {support_request_id} failed: {support_ecology_status}"
             )
@@ -2760,7 +2939,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             helplessness=helplessness,
             env=env,
             consecutive_failures=consecutive_failures,
-            rng=random.Random(base_rng_seed + 29),
+            rng=outcome_rng,
             outcome_model_mode=outcome_model_mode,
             task_appraisal=task_appraisal.to_dict(),
             memory_features=memory_features.to_dict(),
@@ -3659,8 +3838,17 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 "status_text": outcome.note,
             },
         )
+        if ledger is not None:
+            operation_started = outcome.outcome_type != "avoid_without_attempt"
+            ledger.settle(success=outcome.success, operation_started=operation_started, episode_id=episode_trace["episode_id"])
+            goal_after = ledger.state["goal"]
+            await self.memory.status.update("proto_goal_state_json", ledger.state)
+            trace_record("goal_outcome", module="hourly_intention", status="completed",
+                         outcome_type=outcome.outcome_type, operation_started=operation_started,
+                         operation_attempt_count=goal_after["operation_attempt_count"], goal_state_after=deepcopy(goal_after),
+                         strategy_type=strategy.strategy_type, **episode_trace)
         should_defer = (
-            outcome.outcome_type == "avoid_without_attempt" and int(task.defer_count) < 1
+            ledger is None and outcome.outcome_type == "avoid_without_attempt" and int(task.defer_count) < 1
         )
         if should_defer:
             task.defer_count += 1
@@ -3668,14 +3856,8 @@ class DigitalHelplessnessAgent(SocietyAgent):
             await self.memory.status.update("digital_todo_pending", 1)
             await self.memory.status.update("digital_todo_active_task_id", task.task_id)
         else:
-            await self.memory.status.update("proto_assigned_task_json", "")
-            await self.memory.status.update("digital_todo_pending", 0)
-            await self.memory.status.update("digital_todo_active_task_id", "")
-            await self.memory.status.update("digital_todo_active_day", -1)
-            await self.memory.status.update("digital_todo_active_t", 0.0)
-            await self.memory.status.update("digital_task_hint", "")
-            await self.memory.status.update("digital_task_hint_need", "")
-            await self.memory.status.update("digital_task_hint_pending", 0)
+            for key, value in clear_task_surface_updates().items():
+                await self.memory.status.update(key, value)
         await self._persist_completed_replay_hour(entry_decision)
         trace_record("decision", module="task", status="completed", **episode_trace,
                      action=strategy.strategy_type, outcome=outcome.outcome_type,

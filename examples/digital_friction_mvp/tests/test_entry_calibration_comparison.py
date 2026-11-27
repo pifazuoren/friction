@@ -68,3 +68,26 @@ def test_empty_rollout_explicit_cohort_and_no_truth_leakage(tmp_path, observatio
     write_csv(rollout, [dict(observed, talkingdata_day=4, uses_validation_data="true")])
     with pytest.raises(ValueError, match="used held-out data"):
         compare(reference, heldout, [("new", rollout, None)], [device])
+
+
+def test_shuffling_preserves_daily_activity_but_changes_timing_and_reports_idle_metrics(observations, tmp_path):
+    from collections import Counter
+    from analysis_entry_calibration_comparison import write_shuffled_reference
+
+    reference, heldout = observations
+    control = tmp_path / "shuffled.csv"
+    write_shuffled_reference(reference, control, 101)
+    rows, permuted = load_csv(reference), load_csv(control)
+    assert [(r["day_index"], r["hour"]) for r in rows] == [(r["day_index"], r["hour"]) for r in permuted]
+    for day in ("1", "2", "3"):
+        assert Counter(r["app_context_counts_json"] for r in rows if r["day_index"] == day) == Counter(
+            r["app_context_counts_json"] for r in permuted if r["day_index"] == day)
+    assert rows != permuted
+    summary, _ = compare(reference, heldout, [])
+    methods = {r["method"]: r for r in summary if r["level"] == "all" and r["hour_scope"] == "common_valid"}
+    assert methods["personal_history"]["idle_recall"] == 1
+    assert methods["personal_history"]["idle_precision"] == 1
+    assert methods["personal_history"]["non_communication_recall"] == 1
+    assert methods["constant_communication"]["idle_recall"] == 0
+    assert methods["constant_communication"]["idle_precision"] is None
+    assert methods["personal_history_shuffled"]["macro_recall"] < methods["personal_history"]["macro_recall"]

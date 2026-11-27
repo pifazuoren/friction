@@ -328,6 +328,10 @@ def build_proto_status_attributes() -> list[MemoryAttribute]:
             description="serialized assigned proto task",
         ),
         MemoryAttribute(
+            name="proto_goal_state_json", type=dict, default_or_value={},
+            description="private ledger of visible opportunities, task templates and the single persistent goal",
+        ),
+        MemoryAttribute(
             name="proto_last_scheduled_login_day",
             type=int,
             default_or_value=-1,
@@ -663,6 +667,7 @@ def build_initial_proto_status(
         "digital_task_hint_pending": 0,
         "proto_assigned_task_json": "",
         "proto_last_scheduled_login_day": -1,
+        "proto_goal_state_json": {},
         "proto_stage_attempt_rows_json": "[]",
         "proto_app_entry_replay_device_id": "",
         "proto_app_entry_replay_selected_rank": 0,

@@ -3,18 +3,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from ..logical_clock import monotonic_sim_hour
 from ..memory.packet import compact_recent_episodes, is_prior_episode
 from .bundle import HourlyAppEntryBundle
 from .bundle_loader import simulation_day_to_talkingdata_day
 from .candidate import build_rollout_app_context_candidates
 from .evaluator import evaluate_selected_app_context_bundle_for_agent
 from .habit_memory import build_calibrated_intensity_profile, build_rollout_intensity_profile
+from .intention_contract import intention_observation
 from .needs import (
     DIGITAL_NEED_TO_APP_CONTEXTS,
     DigitalNeedsBlock,
     DigitalNeedsResult,
 )
-from .planner import CALIBRATED_PLAN_VERSION, AppEntryPlanResult, DigitalAppEntryPlanBlock
+from .planner import CALIBRATED_PLAN_VERSION, AppEntryPlanResult, DigitalAppEntryPlanBlock, HourlyIntentionPlanError
 from .types import MobileEntryDecision, _stable_hash
 
 
@@ -138,6 +140,11 @@ def build_rollout_input_packet(
     avoidance: float,
     environment: dict[str, Any],
     intensity_profile: dict[str, Any],
+    hourly_intention_mode: str = "legacy",
+    available_opportunities: list[dict] | None = None,
+    current_intention: dict | None = None,
+    goal_review_due: bool = True,
+    max_defer_hours: int = 24,
 ) -> dict[str, Any]:
     hour_key = str(int(hour))
     active_row = habit_memory.get("active_by_hour", {}).get(hour_key, {})
@@ -186,6 +193,40 @@ def build_rollout_input_packet(
             environment,
             allowed_keys=_ENVIRONMENT_CUE_KEYS,
         ),
+    }
+    _assert_no_forbidden_evidence(packet)
+    return _with_plan_opportunities(
+        packet, hourly_intention_mode, available_opportunities, current_intention,
+        goal_review_due, max_defer_hours, recent_task_episodes,
+    )
+
+
+def _with_plan_opportunities(
+    base: dict, mode: str, opportunities: list[dict] | None, goal: dict | None,
+    review_due: bool, max_defer_hours: int, recent_task_episodes: Any,
+) -> dict:
+    if mode == "legacy":
+        return base
+    if mode != "opportunity_v1":
+        raise ValueError(f"unsupported hourly_intention_mode: {mode}")
+    day, tick = base["simulation_day"], base["hour"] * 3600
+    observation = intention_observation(
+        opportunities, goal, review_due, monotonic_sim_hour(day, tick), max_defer_hours,
+    )
+    families = {o["task_family"] for o in observation["available_opportunities"]}
+    if observation["current_intention"]:
+        families.add(observation["current_intention"]["task_family"])
+    episodes = recent_task_episodes if isinstance(recent_task_episodes, list) else []
+    related = compact_recent_episodes(
+        [row for row in episodes if isinstance(row, dict) and row.get("task_family") in families],
+        simulation_day=day, tick_seconds=tick,
+    )
+    # Include older task-specific evidence without showing a recent experience twice.
+    recent = base["recent_task_episodes"]
+    packet = {
+        **base, **observation,
+        "recent_task_episodes": [row for row in related if row not in recent] + recent,
+        "related_task_episode_ids": [row["episode_id"] for row in related if row.get("episode_id")],
     }
     _assert_no_forbidden_evidence(packet)
     return packet
@@ -240,6 +281,11 @@ async def run_app_entry_rollout_hour(
     task_occurrence_prior_path: str = "",
     task_occurrence_gate_multiplier: float = 1.0,
     existing_task_pending: bool = False,
+    hourly_intention_mode: str = "legacy",
+    available_opportunities: list[dict] | None = None,
+    current_intention: dict | None = None,
+    goal_review_due: bool = True,
+    max_defer_hours: int = 24,
 ) -> AppEntryRolloutResult:
     if llm is None:
         raise ValueError("Day 4-7 app-entry rollout requires an LLM client")
@@ -248,14 +294,18 @@ async def run_app_entry_rollout_hour(
     talkingdata_day = simulation_day_to_talkingdata_day(int(simulation_day))
     if talkingdata_day < 4 or talkingdata_day > 7:
         raise ValueError("LLM app-entry rollout only supports TalkingData days 4..7")
-    hour = int(round(float(tick_seconds))) // 3600 % 24
+    hour = (
+        monotonic_sim_hour(simulation_day, tick_seconds) % 24
+        if hourly_intention_mode == "opportunity_v1"
+        else int(round(float(tick_seconds))) // 3600 % 24
+    )
     if plan_prompt_version == CALIBRATED_PLAN_VERSION:
         intensity_profile = build_calibrated_intensity_profile(habit_memory, hour=hour)
     else:
         intensity_profile = build_rollout_intensity_profile(
             habit_memory, hour=hour, absolute_cap=int(absolute_exposure_cap)
         )
-    input_packet = build_rollout_input_packet(
+    needs_packet = build_rollout_input_packet(
         simulation_day=int(simulation_day),
         talkingdata_day=talkingdata_day,
         hour=hour,
@@ -270,11 +320,19 @@ async def run_app_entry_rollout_hour(
         environment=environment,
         intensity_profile=intensity_profile,
     )
+    # The controlled change is admission by the hourly Plan; Needs keeps its original observations.
+    input_packet = _with_plan_opportunities(
+        needs_packet, hourly_intention_mode, available_opportunities, current_intention,
+        goal_review_due, max_defer_hours, recent_task_episodes,
+    )
 
+    failure_identity = f"agent_id={int(agent_id)}, "
+    if hourly_intention_mode == "legacy":
+        failure_identity += f"device_id={device_id}, "
     try:
         needs = await DigitalNeedsBlock().forward(
             llm=llm,
-            input_payload=input_packet,
+            input_payload=needs_packet,
             prompt_version=str(needs_prompt_version),
             timeout=int(timeout),
             retries=int(retries),
@@ -283,7 +341,7 @@ async def run_app_entry_rollout_hour(
     except ValueError as exc:
         raise ValueError(
             "Day 4-7 DigitalNeedsBlock failed for "
-            f"agent_id={int(agent_id)}, device_id={str(device_id)}, "
+            f"{failure_identity}"
             f"talkingdata_day={talkingdata_day}, hour={hour}: {exc}"
         ) from exc
     candidate_contexts = build_rollout_app_context_candidates(
@@ -292,6 +350,7 @@ async def run_app_entry_rollout_hour(
         need_pressures=needs.need_pressures,
         need_context_mapping=DIGITAL_NEED_TO_APP_CONTEXTS,
         top_k=int(top_k),
+        allow_empty=hourly_intention_mode == "opportunity_v1",
     )
     try:
         plan = await DigitalAppEntryPlanBlock().forward(
@@ -306,10 +365,12 @@ async def run_app_entry_rollout_hour(
             retries=int(retries),
             json_attempts=int(json_attempts),
         )
+    except HourlyIntentionPlanError:
+        raise
     except ValueError as exc:
         raise ValueError(
             "Day 4-7 DigitalAppEntryPlanBlock failed for "
-            f"agent_id={int(agent_id)}, device_id={str(device_id)}, "
+            f"{failure_identity}"
             f"talkingdata_day={talkingdata_day}, hour={hour}: {exc}"
         ) from exc
     bundle = plan.to_bundle(
@@ -342,7 +403,7 @@ async def run_app_entry_rollout_hour(
         "app_context_counts": dict(bundle.app_context_counts),
         "primary_context": bundle.primary_context,
         "selected_app_context": bundle.primary_context,
-        "candidate_app_contexts": dict(candidate_contexts),
+        "candidate_app_contexts": dict(plan.audit.get("candidate_app_contexts", candidate_contexts)),
         "needs": needs.to_dict(include_audit=False),
         "plan": plan.to_dict(include_audit=False),
         "needs_hash": _stable_hash(needs.to_dict(include_audit=False))[:16],
@@ -362,6 +423,14 @@ async def run_app_entry_rollout_hour(
         "input_packet_hash": _stable_hash(input_packet)[:16],
         "primary_context_rule_version": "primary_context_max_count_lexical_v1",
     }
+    if hourly_intention_mode == "opportunity_v1":
+        rollout_audit["intention_validation"] = {
+            key: plan.audit.get(key) for key in (
+                "raw_choice", "repaired_choice", "repair_changed_choice", "accepted_choice",
+                "parse_status", "repair_requests", "technical_failure", "rejection_reason",
+            )
+        }
+    handling_goal = plan.intent is not None and plan.intent["kind"] in {"engage_goal", "continue_goal"}
     decision = evaluate_selected_app_context_bundle_for_agent(
         agent_id=int(agent_id),
         day=int(simulation_day),
@@ -377,7 +446,7 @@ async def run_app_entry_rollout_hour(
         task_occurrence_gate_enabled=bool(task_occurrence_gate_enabled),
         task_occurrence_prior_path=task_occurrence_prior_path,
         task_occurrence_gate_multiplier=float(task_occurrence_gate_multiplier),
-        existing_task_pending=bool(existing_task_pending),
+        existing_task_pending=bool(existing_task_pending) or handling_goal,
     )
     return AppEntryRolloutResult(
         bundle=bundle,

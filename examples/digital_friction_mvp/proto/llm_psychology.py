@@ -536,6 +536,9 @@ async def _query_json_payload(
     attempt_metadata_key: str | None = None,
     audit: dict[str, Any] | None = None,
     trace_module: str = "psychology",
+    on_raw_response: Callable[[str, str], None] | None = None,
+    repair_dialog_factory: Callable[[str, str], list[dict]] | None = None,
+    parse_response: Callable[[str], dict | None] = _extract_json_object,
 ) -> tuple[dict[str, Any] | None, str]:
     if audit is not None:
         audit.setdefault("json_attempts_configured", max(1, int(json_attempts)))
@@ -585,7 +588,9 @@ async def _query_json_payload(
                 str(raw).encode("utf-8")
             ).hexdigest()[:16]
 
-        parsed = _extract_json_object(str(raw))
+        if on_raw_response is not None:
+            on_raw_response("initial", str(raw))
+        parsed = parse_response(str(raw))
         if parsed is not None:
             sanitized, status = sanitize_fn(parsed)
             if sanitized is not None:
@@ -601,7 +606,7 @@ async def _query_json_payload(
             last_error = "parse_failed"
 
         trace.parsed(first_error)
-        repair_dialog = [
+        repair_dialog = repair_dialog_factory(str(raw), first_error) if repair_dialog_factory else [
             {
                 "role": "system",
                 "content": (
@@ -638,7 +643,9 @@ async def _query_json_payload(
             last_error = "request_error"
             continue
 
-        repaired_payload = _extract_json_object(str(repaired))
+        if on_raw_response is not None:
+            on_raw_response("repair", str(repaired))
+        repaired_payload = parse_response(str(repaired))
         if audit is not None:
             audit["last_repair_response_hash"] = hashlib.sha256(
                 str(repaired).encode("utf-8")

@@ -4,6 +4,16 @@
 
 研究问题是一次受挫如何影响下一次尝试。本仓库保存模拟机制、实验入口、测试以及可核查的结果。
 
+## 2026 年 11 月 27 日实验结果
+
+| 实验 | 观察结果 |
+|---|---|
+| V3 昨日登录成败的配对比较 | 在同一个人物、第 5 天 09:00 的同一提醒下，10 对成败比较都选择立即登录。5 对的自报评分有差异，7 对的理由文字有差异。实验止于任务接入，后续独立操作或求助需要另行观察。 |
+| V3 单人连续五天 | 前三天回放 App 活动，第 4、5 天逐小时决策。48 个小时里 35 个形成有效计划（72.9%）。13 个失败小时都出现任务与所选 App 渠道不匹配。 |
+| V4 渠道修复 | 用同一个模型重问两种错误各自最早出现的场景，两条均在首答选对渠道。另对原 48 小时做离线回放。V4 连续五天的有效率仍待实测。 |
+
+审阅时可以从[本期实验说明](report/2026结项/仓库发布/2026-11-27/README.md)和[机器可读结果](report/2026结项/仓库发布/2026-11-27/evidence.json)开始。机会模式的每小时决策从[智能体执行入口](examples/digital_friction_mvp/proto/agent.py)进入[规划模块](examples/digital_friction_mvp/proto/app_entry/planner.py)。[协议演变与测试记录](docs/superpowers/plans/2026-11-26-hourly-intention.md)
+
 ## 实验主线
 
 实验流程可以概括为：
@@ -54,6 +64,44 @@ app entry
 - 模型策略评分经过规则融合与抽样后才转成动作。帮助者响应、支持送达和最终任务成败有单独的记录。[策略生成](examples/digital_friction_mvp/proto/llm_psychology.py) · [动作抽样](examples/digital_friction_mvp/proto/attempt_strategy.py) · [帮助协议](examples/digital_friction_mvp/proto/support_protocol.py)
 
 公开材料提供源码、回归测试及去标识化汇总。复跑完整在线仿真还需要本地参考数据、地图、模拟器和智谱凭据。逐次模型请求及 SQLite 数据库存放于本地实验归档。
+
+## 可跨小时延期的登录机会
+
+默认模式为 `legacy`。选择 `opportunity_v1` 时，第 4 天起，老人会在原有 App 规划请求中看到已经出现的机会、自己的待办和过往经历。每人同一时间保留一项目标。只有接受或继续，才会进入操作策略、家庭帮助和结果模块。延期到点会重新选择；期间仍可使用其他 App。由本小时 App 活动发现的自然机会最早在下一小时可见。
+
+从仓库根目录使用含项目依赖的 Python。以下命令分别生成配对材料、检查五天受控窗口、检查七天自然窗口和检查前三天的时段置乱对照，均可离线运行。
+
+```bash
+python examples/digital_friction_mvp/run_hourly_intention_pairs.py
+python examples/digital_friction_mvp/run_social_memory_week.py --scheduled-login --hourly-intention-mode opportunity_v1 --paired-environment-seed 101 --check
+python examples/digital_friction_mvp/run_social_memory_week.py --hourly-intention-mode opportunity_v1 --check
+python examples/digital_friction_mvp/run_social_memory_week.py --hourly-intention-mode opportunity_v1 --history-shuffle-seed 101 --check
+```
+
+**先检查模型能否给出可执行的选择。** 在仓库根目录运行下列命令，会用第 1 台设备前三天的记录，准备两条第 5 天 09:00 的提示。一条提示写着昨天独立登录成功，另一条写着失败。两条都使用新版小时规划。仅准备材料时使用第一条。用智谱 `glm-4-flashx` 实测时使用第二条，按终端提示隐藏输入密钥。每条最多修复一次，两条合计最多 4 次 HTTP 请求。
+
+```bash
+python examples/digital_friction_mvp/run_hourly_intention_pairs.py --smoke
+python examples/digital_friction_mvp/run_hourly_intention_pairs.py --smoke --online
+```
+
+结果保存在 `agentsociety_data/runs/hourly_intention_smoke/` 的独立目录。`summary.json` 报告首答有效数、修复数和最终采纳数。`decisions.jsonl` 记录模型的动作以及任务是否进入执行入口。两条观测只用于检查回答格式和执行条件。
+
+公开仓库也支持用合成历史查看模型将收到的两条提示。在安装了项目依赖的环境中运行以下命令即可生成材料，模型请求数为 0。
+
+```bash
+python examples/digital_friction_mvp/run_hourly_intention_pairs.py --smoke --synthetic-history
+```
+
+新版将延期目标和复查时点合成一次选择。例如，选择“把这次登录推迟到明天 09:00”会同时保存目标和时点。只说“再等等”会触发一次格式修复。模型仍未选定时点时，该小时记为技术失败。在此期间的通讯等日常活动由模型另外给出。
+
+计数模式现在把“用公共服务 App 办理登录”列为一个完整选项。接受或继续目标时，该选项计一次打开。模型通过 `additional_apps` 填写同一小时的额外打开，仍可选择延期、放弃、日常使用或不用手机。要离线回放旧五天实验的全部 48 个规划小时，运行 `check_hourly_channel_replay.py` 并传入旧归档目录。要重问其中第 4 天 09:00 和 20:00 的真实场景，使用同目录的 `run_hourly_channel_smoke.py <旧归档目录> --online`。两条最多共发出 4 次 HTTP 请求。[实测与回放记录](docs/superpowers/plans/2026-11-26-hourly-intention.md#第-4-天两个渠道错误的定向复测)
+
+**正式配对实验。** 使用 `run_hourly_intention_pairs.py --online` 会运行 A 和 B 各 10 对昨日成败、3 对相同输入，合计 52 次首轮 Plan 请求。规则参照 C 在本地运行。配对实验观察是否接受、是否延期及任务是否进入执行入口。五天连续工作流另外记录实际发生的策略、求助送达与结果。运行五天或七天的线上工作流时去掉对应命令的 `--check`，A 组选 `--hourly-intention-mode legacy`。受控窗口与自然窗口各自评分。
+
+比较“昨天成功”和“昨天失败”时，应在同一个版本内比较实际行动，再用相同输入的重复结果估计模型波动。比较 A 与 B 时，小时任务接入方式、历史频次的呈现方式和模型的回答格式都发生了变化。
+
+[意图改造实施与离线验收记录](docs/superpowers/plans/2026-11-26-hourly-intention.md) · [配对实验入口](examples/digital_friction_mvp/run_hourly_intention_pairs.py) · [运行验收](examples/digital_friction_mvp/check_hourly_intention_run.py)
 
 ## 历史实验（截至 2026 年 11 月 25 日）
 

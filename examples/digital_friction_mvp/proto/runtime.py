@@ -36,6 +36,15 @@ def build_task_surface_updates(
     }
 
 
+def clear_task_surface_updates() -> dict[str, Any]:
+    return {
+        "proto_assigned_task_json": "", "digital_todo_pending": 0,
+        "digital_todo_active_task_id": "", "digital_todo_active_day": -1,
+        "digital_todo_active_t": 0.0, "digital_task_hint": "",
+        "digital_task_hint_need": "", "digital_task_hint_pending": 0,
+    }
+
+
 def scheduled_login_difficulty_delta(difficulty_arm: str | None, talkingdata_day: int) -> float:
     """Only the exposure days of the elevated arm receive a harder login."""
     return 0.20 if difficulty_arm == "elevated" and talkingdata_day in (4, 5, 6) else 0.0

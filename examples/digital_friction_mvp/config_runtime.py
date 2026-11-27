@@ -171,6 +171,9 @@ class RuntimeConfig:
     proto_bayesian_policy_lite_lambda_llm: float
     proto_bayesian_policy_lite_min_llm_confidence: float
     proto_task_entry_mode: str
+    proto_hourly_intention_mode: str
+    proto_hourly_intention_max_defer_hours: int
+    proto_paired_environment_seed: int | None
     proto_scheduled_login_hour: int | None
     proto_login_difficulty_arm: str | None
     proto_app_entry_replay_bundle_path: str
@@ -509,6 +512,16 @@ def load_runtime_config() -> RuntimeConfig:
             "PROTO_TASK_ENTRY_MODE must be one of: "
             + ", ".join(sorted(VALID_TASK_ENTRY_MODES))
         )
+    hourly_intention_mode = os.getenv("PROTO_HOURLY_INTENTION_MODE", "legacy").strip().lower()
+    if hourly_intention_mode not in {"legacy", "opportunity_v1"}:
+        raise ValueError("PROTO_HOURLY_INTENTION_MODE must be legacy or opportunity_v1")
+    if hourly_intention_mode == "opportunity_v1" and proto_task_entry_mode != "app_context_replay_then_llm_rollout":
+        raise ValueError("opportunity_v1 requires app_context_replay_then_llm_rollout")
+    max_defer_hours = int(os.getenv("PROTO_HOURLY_INTENTION_MAX_DEFER_HOURS", "24"))
+    paired_seed_raw = os.getenv("PROTO_PAIRED_ENVIRONMENT_SEED", "").strip()
+    paired_seed = int(paired_seed_raw) if paired_seed_raw else None
+    if max_defer_hours < 1:
+        raise ValueError("PROTO_HOURLY_INTENTION_MAX_DEFER_HOURS must be positive")
     login_hour_setting = os.getenv("PROTO_SCHEDULED_LOGIN_HOUR", "").strip()
     proto_scheduled_login_hour = int(login_hour_setting) if login_hour_setting else None
     if proto_scheduled_login_hour is not None:
@@ -944,6 +957,9 @@ def load_runtime_config() -> RuntimeConfig:
             proto_bayesian_policy_lite_min_llm_confidence
         ),
         proto_task_entry_mode=proto_task_entry_mode,
+        proto_hourly_intention_mode=hourly_intention_mode,
+        proto_hourly_intention_max_defer_hours=max_defer_hours,
+        proto_paired_environment_seed=paired_seed,
         proto_scheduled_login_hour=proto_scheduled_login_hour,
         proto_login_difficulty_arm=login_difficulty_arm,
         proto_app_entry_replay_bundle_path=proto_app_entry_replay_bundle_path,
