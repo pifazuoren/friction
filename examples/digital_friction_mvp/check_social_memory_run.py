@@ -1,7 +1,7 @@
 """Audit one five- or seven-day social-memory run from local exports and actual requests."""
 
 import argparse
-from collections import Counter
+from collections import Counter, defaultdict
 from contextlib import closing
 import csv
 import json
@@ -10,6 +10,7 @@ from pathlib import Path
 import sqlite3
 from uuid import UUID
 
+from proto.app_entry.bundle_loader import get_replay_source
 from proto.metrics import attempt_rows_table_name
 
 
@@ -98,11 +99,24 @@ def request_packet(row):
     raise ValueError("request missing user message")
 
 
-def audit_trace(trace, group, agent, attempts, error_hours, expected_days=7):
-    expected = rollout_hours(expected_days)
+def load_agent_traces(trace, group, agents):
     files = sorted(trace.glob("llm-requests-*.jsonl"))
     if not files:
         raise FileNotFoundError(f"missing trace in {trace}")
+    records = defaultdict(list)
+    for path in files:
+        with path.open(encoding="utf-8") as handle:
+            for line in handle:
+                row = json.loads(line)
+                agent = str(row.get("agent_id"))
+                if row.get("group_id") != group or row.get("world") != WORLD or agent not in agents:
+                    raise ValueError("request trace belongs to another run or agent")
+                records[agent].append(row)
+    return records
+
+
+def audit_trace(records, attempts, error_hours, expected_days=7):
+    expected = rollout_hours(expected_days)
     checks = {name: {"requests": 0, "evidence": None} for name in MODULES}
     app_hours = {name: set() for name in MODULES[:2]}
     day4_errors = []
@@ -114,61 +128,55 @@ def audit_trace(trace, group, agent, attempts, error_hours, expected_days=7):
     matched_ids = {name: set() for name in MODULES}
     completed_decisions = {}
     same_family = None
-    for path in files:
-        with path.open(encoding="utf-8") as handle:
-            for line in handle:
-                row = json.loads(line)
-                module = row.get("module")
-                if row.get("group_id") == group and str(row.get("agent_id")) == agent and row.get("world") == WORLD:
-                    time_key = (row["talkingdata_day"], row["hour"])
-                    if module == "app_entry" and row.get("kind") == "entry" and row.get("status") == "llm_rollout_error":
-                        traced_entry_errors.add(time_key)
-                    if row.get("kind") == "decision" and module == "task" and row.get("status") == "completed" and time_key[0] == 5:
-                        completed_decisions[row["episode_id"]] = {
-                            "episode_id": row["episode_id"], "tick_seconds": row["tick_seconds"],
-                            "strategy_type": row["action"], "outcome_type": row["outcome"],
-                        }
-                    if module == "app_needs":
-                        if row.get("kind") == "parse" and row.get("status") in {"ok", "ok_repaired"}:
-                            needs_successes.add(time_key)
-                        elif row.get("kind") in {"error", "parse"}:
-                            needs_errors.add(time_key)
-                if row.get("kind") == "decision" and module == "task" and row.get("status") == "technical_failure":
-                    if row.get("group_id") == group and row.get("talkingdata_day") == 4 and str(row.get("agent_id")) == agent:
-                        day4_errors.append(row.get("hour"))
-                if module not in checks or row.get("kind") != "request" or row.get("phase") != "initial":
-                    continue
-                if row.get("group_id") != group or row.get("world") != WORLD or str(row.get("agent_id")) != agent:
-                    raise ValueError("request trace belongs to another run or agent")
-                day = row["talkingdata_day"]
-                if row["simulation_day"] != day - 1 or not 0 <= row["hour"] <= 23:
-                    raise ValueError("inconsistent request clock")
-                if module in app_hours:
-                    if (day, row["hour"]) not in expected:
-                        raise ValueError("App request outside expected rollout hours")
-                    app_hours[module].add((day, row["hour"]))
-                if day != 5:
-                    continue
-                check = checks[module]
-                check["requests"] += 1
-                packet = request_packet(row)
-                if module == "strategy":
-                    strategy_traced_ticks.add(row["tick_seconds"])
-                    records = packet["task_relevant_memory"]["recent_task_episodes"]
-                else:
-                    records = packet["inputs"]["recent_task_episodes"]
-                for item in records:
-                    prior = attempts[3].get(item.get("episode_id"))
-                    if not prior or not all(item.get(k) == v for k, v in prior.items()):
-                        continue
-                    matched_ids[module].add(prior["episode_id"])
-                    evidence = {"call_id": row["call_id"], "day5_hour": row["hour"], **prior}
-                    if not check["evidence"]:
-                        check["evidence"] = evidence
-                    if module == "strategy" and packet["task"]["task_family"] == prior["task_family"]:
-                        for later in attempts[4].values():
-                            if later["task_id"] == packet["task"]["task_id"] and later["tick_seconds"] == row["tick_seconds"]:
-                                same_family = {"day4": evidence, "day5": later}
+    for row in records:
+        module = row.get("module")
+        time_key = (row["talkingdata_day"], row["hour"])
+        if module == "app_entry" and row.get("kind") == "entry" and row.get("status") == "llm_rollout_error":
+            traced_entry_errors.add(time_key)
+        if row.get("kind") == "decision" and module == "task" and row.get("status") == "completed" and time_key[0] == 5:
+            completed_decisions[row["episode_id"]] = {
+                "episode_id": row["episode_id"], "tick_seconds": row["tick_seconds"],
+                "strategy_type": row["action"], "outcome_type": row["outcome"],
+            }
+        if module == "app_needs":
+            if row.get("kind") == "parse" and row.get("status") in {"ok", "ok_repaired"}:
+                needs_successes.add(time_key)
+            elif row.get("kind") in {"error", "parse"}:
+                needs_errors.add(time_key)
+        if row.get("kind") == "decision" and module == "task" and row.get("status") == "technical_failure":
+            if row.get("talkingdata_day") == 4:
+                day4_errors.append(row.get("hour"))
+        if module not in checks or row.get("kind") != "request" or row.get("phase") != "initial":
+            continue
+        day = row["talkingdata_day"]
+        if row["simulation_day"] != day - 1 or not 0 <= row["hour"] <= 23:
+            raise ValueError("inconsistent request clock")
+        if module in app_hours:
+            if (day, row["hour"]) not in expected:
+                raise ValueError("App request outside expected rollout hours")
+            app_hours[module].add((day, row["hour"]))
+        if day != 5:
+            continue
+        check = checks[module]
+        check["requests"] += 1
+        packet = request_packet(row)
+        if module == "strategy":
+            strategy_traced_ticks.add(row["tick_seconds"])
+            episodes = packet["task_relevant_memory"]["recent_task_episodes"]
+        else:
+            episodes = packet["inputs"]["recent_task_episodes"]
+        for item in episodes:
+            prior = attempts[3].get(item.get("episode_id"))
+            if not prior or not all(item.get(k) == v for k, v in prior.items()):
+                continue
+            matched_ids[module].add(prior["episode_id"])
+            evidence = {"call_id": row["call_id"], "day5_hour": row["hour"], **prior}
+            if not check["evidence"]:
+                check["evidence"] = evidence
+            if module == "strategy" and packet["task"]["task_family"] == prior["task_family"]:
+                for later in attempts[4].values():
+                    if later["task_id"] == packet["task"]["task_id"] and later["tick_seconds"] == row["tick_seconds"]:
+                        same_family = {"day4": evidence, "day5": later}
     skipped_plan = (error_hours & traced_entry_errors & needs_errors) - needs_successes - app_hours["app_plan"]
     absent_requests = {"app_needs": sorted(expected - app_hours["app_needs"]),
                        "app_plan": sorted(expected - app_hours["app_plan"] - skipped_plan)}
@@ -198,36 +206,22 @@ def audit_trace(trace, group, agent, attempts, error_hours, expected_days=7):
             "missing_app_request_hours": absent_requests}
 
 
-def check_run(folder, group, db, trace, expected_days=7):
-    report = {"group_id": group, "run_complete": False, "acceptance_ok": False,
-              "cross_day_status": "missing_evidence", "issues": []}
+AUDIT_ERRORS = (OSError, sqlite3.Error, ValueError, KeyError, TypeError, AttributeError, StopIteration)
+
+
+def empty_report(group):
+    return {"group_id": group, "run_complete": False, "acceptance_ok": False,
+            "cross_day_status": "missing_evidence", "issues": []}
+
+
+def check_resident(folder, manifest, replay, rollout, errors, records, conn, expected_days):
+    group = manifest["group_id"]
+    exp = str(UUID(manifest["exp_id"]))
+    agent, device = replay["agent_id"], replay["device_id"]
+    expected_hours = rollout_hours(expected_days)
+    report = empty_report(group)
     issues = report["issues"]
     try:
-        expected_hours = rollout_hours(expected_days)
-        manifest, = json.loads((folder / f"exp_group_manifest_{group}.json").read_text(encoding="utf-8"))
-        exp = str(UUID(manifest["exp_id"]))
-        expected = dict(group_id=group, world_name=WORLD, status="ok", agent_count=1, return_code=0,
-                        qc_config_match=1, stage_mode="single", stage_count=1, stage_days=expected_days,
-                        total_days=expected_days,
-                        decision_interval_minutes=60, proto_app_entry_replay_days="1,2,3",
-                        proto_task_entry_mode="app_context_replay_then_llm_rollout", uses_forced_replay=1)
-        mismatch = [k for k, v in expected.items() if manifest.get(k) != v]
-        snapshot_path = folder / "resolved_config.json"
-        if snapshot_path.exists():
-            archived_mode = json.loads(snapshot_path.read_text())["runtime"].get("proto_hourly_intention_mode", "legacy")
-            if archived_mode != manifest.get("proto_hourly_intention_mode", "legacy"):
-                mismatch.append("proto_hourly_intention_mode")
-        if mismatch:
-            issues.append("manifest mismatch: " + ", ".join(mismatch))
-        replay, = load_rows(folder, "app_entry_replay_summary", group)
-        rollout = load_rows(folder, "app_entry_rollout_hourly", group)
-        errors = load_rows(folder, "app_entry_rollout_errors", group)
-        agent, device = replay["agent_id"], replay["device_id"]
-        for row in [replay, *rollout, *errors]:
-            if (row["group_id"], row["world_name"], row["exp_id"], row["agent_id"], row["device_id"]) != (
-                group, WORLD, exp, agent, device,
-            ):
-                raise ValueError("exports disagree on run, world, agent or device")
         if (not device or replay["replay_hours_seen"] != "72" or replay["uses_validation_data_any"] != "0"
                 or replay["day4_snapshot_created"] != "1"):
             issues.append("replay summary incomplete or used held-out data")
@@ -252,17 +246,16 @@ def check_run(folder, group, db, trace, expected_days=7):
                or r["config_fingerprint"] != manifest.get("config_fingerprint") or r["bundle_generated"] != "0"
                for r in errors):
             issues.append("invalid rollout error provenance")
-        with closing(sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True)) as conn:
-            replay_check = report["replay"] = check_replay(conn, exp, agent, device)
-            if replay_check["unverified_hours"] or not replay_check["day3_snapshot_ok"]:
-                issues.append("incomplete replay or incorrect handoff snapshot")
-            attempts = read_attempts(conn, exp, agent)
-            report["exports_complete"] = not issues
-            if manifest.get("proto_hourly_intention_mode") == "opportunity_v1":
-                from check_hourly_intention_run import audit_intention_run
-                report["hourly_intention"] = audit_intention_run(
-                    folder, trace, conn, exp, agent, group, WORLD, expected_hours, set(failures))
-        trace_check = report["cross_day"] = audit_trace(trace, group, agent, attempts, set(failures), expected_days)
+        replay_check = report["replay"] = check_replay(conn, exp, agent, device)
+        if replay_check["unverified_hours"] or not replay_check["day3_snapshot_ok"]:
+            issues.append("incomplete replay or incorrect handoff snapshot")
+        attempts = read_attempts(conn, exp, agent)
+        report["exports_complete"] = not issues
+        if manifest.get("proto_hourly_intention_mode") == "opportunity_v1":
+            from check_hourly_intention_run import audit_intention_run
+            report["hourly_intention"] = audit_intention_run(
+                folder, None, conn, exp, agent, group, WORLD, expected_hours, set(failures), records=records)
+        trace_check = report["cross_day"] = audit_trace(records, attempts, set(failures), expected_days)
         if trace_check["entry_errors_disagree_with_trace"]:
             issues.append("error export disagrees with actual hourly entry trace")
         if any(trace_check["missing_app_request_hours"].values()):
@@ -284,11 +277,15 @@ def check_run(folder, group, db, trace, expected_days=7):
             report["cross_day_status"] = "verified"
         else:
             report["cross_day_status"] = "no_natural_opportunity"
-    except (OSError, sqlite3.Error, ValueError, KeyError, TypeError, AttributeError, StopIteration) as exc:
+    except AUDIT_ERRORS as exc:
         issues.append(f"{type(exc).__name__}: {exc}")
     if report["cross_day_status"] == "technical_failure" and not any("no valid" in x for x in issues):
         issues.append("no valid hourly decision to test the mechanism")
-    report["acceptance_ok"] = report["run_complete"] and not issues
+    return finish_report(report)
+
+
+def finish_report(report):
+    report["acceptance_ok"] = report["run_complete"] and not report["issues"]
     monitor = report.get("rollout", {})
     expected_count = monitor.get("expected_hours", 0)
     valid_count = report.get("hourly_intention", {}).get("valid_intention_decisions", monitor.get("valid_hours", 0))
@@ -300,6 +297,9 @@ def check_run(folder, group, db, trace, expected_days=7):
         blockers.append("valid decision rate below the 95% project threshold")
     if report.get("hourly_intention", {}).get("low_level_technical_failure_hours"):
         blockers.append("technical failure during task execution")
+    if any(not resident["stability_gate"]["eligible_by_technical_stability"]
+           for resident in report.get("agents", {}).values()):
+        blockers.append("at least one resident failed the individual technical stability checks")
     report["stability_gate"] = {
         "valid_decision_rate": rate, "valid_decisions": valid_count, "expected_hours": expected_count,
         "minimum_valid_rate": 0.95, "eligible_by_technical_stability": not blockers,
@@ -308,14 +308,136 @@ def check_run(folder, group, db, trace, expected_days=7):
     return report
 
 
+def check_cohort_mapping(folder, snapshot, replays, count):
+    settings = snapshot["settings"]
+    if int(settings["AGENT_COUNT"]) != count:
+        raise ValueError("archived resident count differs from the requested count")
+    # Resolve against the archived input directory so copied runs remain auditable.
+    def archived_input(key):
+        configured = Path(settings[key])
+        local = folder / "inputs" / configured.name
+        return local if local.is_file() else configured
+
+    profiles_path = archived_input("DIGITAL_FRICTION_PROFILES_PATH")
+    if hashlib.sha256(profiles_path.read_bytes()).hexdigest() != snapshot["profiles_sha256"]:
+        raise ValueError("archived profile hash mismatch")
+    profiles = json.loads(profiles_path.read_text())[:count]
+    source = get_replay_source(bundle_path=str(archived_input("PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH")),
+                               device_mapping_path=str(archived_input("PROTO_APP_ENTRY_REPLAY_DEVICE_PATH")),
+                               replay_days=(1, 2, 3))
+    if (source.bundle_hash, source.device_mapping_hash) != (snapshot["reference_hash"], snapshot["device_mapping_hash"]):
+        raise ValueError("archived replay input hashes disagree")
+    assigned = source.assignments_for_agent_ids([profile["id"] for profile in profiles])
+    expected_cohort = {key: (item.selected_rank, item.device_id, key) for key, item in assigned.items()}
+    archived_cohort = {int(row["agent_id"]): (int(row["selected_rank"]), str(row["device_id"]), int(row["profile_id"]))
+                       for row in snapshot["cohort"]}
+    if (len(assigned) != count or len(snapshot["cohort"]) != count or archived_cohort != expected_cohort
+            or set(replays) != {str(agent) for agent in assigned}):
+        raise ValueError("exported residents or archived cohort disagree with the input profiles and device ranks")
+    for agent, row in replays.items():
+        rank, device, _ = expected_cohort[int(agent)]
+        if (int(row["selected_rank"]), row["device_id"], row["replay_bundle_hash"], row["device_mapping_hash"]) != (
+                rank, device, source.bundle_hash, source.device_mapping_hash):
+            raise ValueError(f"resident {agent} replay export disagrees with the archived device mapping")
+
+
+def summarize_residents(report, agents, expected_hours):
+    report["agents"] = agents
+    statuses = Counter(r["cross_day_status"] for r in agents.values())
+    report["cross_day_status_counts"] = dict(statuses)
+    report["cross_day_status"] = next(iter(statuses)) if len(statuses) == 1 else "mixed"
+    report["replay"] = {
+        "expected_hours": len(agents) * 72,
+        "verified_hours": sum(r.get("replay", {}).get("verified_hours", 0) for r in agents.values()),
+    }
+    report["rollout"] = {
+        "expected_hours": len(agents) * expected_hours,
+        **{key: sum(r.get("rollout", {}).get(key, 0) for r in agents.values())
+           for key in ("accounted_hours", "valid_hours")},
+        "error_hours_count": sum(len(r.get("rollout", {}).get("error_hours", [])) for r in agents.values()),
+    }
+    intentions = [r.get("hourly_intention", {}) for r in agents.values()]
+    report["hourly_intention"] = {
+        key: sum(row.get(key, 0) for row in intentions)
+        for key in ("valid_intention_decisions", "scheduled_login_opportunities", "published_opportunities",
+                    "visible_opportunities", "distinct_tasks_entered", "low_level_decisions",
+                    "operations_started", "help_requests")
+    }
+    report["hourly_intention"]["expected_scheduled_login_opportunities"] = 2 * len(agents)
+    report["run_complete"] = not report["issues"] and all(r["run_complete"] for r in agents.values())
+    report["exports_complete"] = not report["issues"] and all(r.get("exports_complete") for r in agents.values())
+    for agent, resident in agents.items():
+        report["issues"].extend(f"resident {agent}: {issue}" for issue in resident["issues"])
+
+
+def check_run(folder, group, db, trace, expected_days=7, expected_agents=1):
+    report = empty_report(group)
+    try:
+        expected_hours = rollout_hours(expected_days)
+        manifest, = json.loads((folder / f"exp_group_manifest_{group}.json").read_text(encoding="utf-8"))
+        exp = str(UUID(manifest["exp_id"]))
+        expected = dict(group_id=group, world_name=WORLD, status="ok", agent_count=expected_agents, return_code=0,
+                        qc_config_match=1, stage_mode="single", stage_count=1, stage_days=expected_days,
+                        total_days=expected_days, decision_interval_minutes=60, proto_app_entry_replay_days="1,2,3",
+                        proto_task_entry_mode="app_context_replay_then_llm_rollout", uses_forced_replay=1)
+        mismatch = [k for k, v in expected.items() if manifest.get(k) != v]
+        snapshot_path = folder / "resolved_config.json"
+        snapshot = json.loads(snapshot_path.read_text()) if snapshot_path.exists() else {}
+        if snapshot and snapshot["runtime"].get("proto_hourly_intention_mode", "legacy") != manifest.get(
+                "proto_hourly_intention_mode", "legacy"):
+            mismatch.append("proto_hourly_intention_mode")
+        if mismatch:
+            report["issues"].append("manifest mismatch: " + ", ".join(mismatch))
+        replay_rows = load_rows(folder, "app_entry_replay_summary", group)
+        replays = {row["agent_id"]: row for row in replay_rows}
+        if (expected_agents < 1 or len(replay_rows) != expected_agents or len(replays) != expected_agents
+                or len({row["device_id"] for row in replay_rows}) != expected_agents):
+            raise ValueError("expected one replay summary and one distinct device per resident")
+        if expected_agents > 1:
+            if (expected_days != 5 or manifest.get("proto_hourly_intention_mode") != "opportunity_v1"
+                    or snapshot["runtime"]["proto_scheduled_login_hour"] != 9):
+                raise ValueError("cohort audit requires the five-day scheduled opportunity-mode design")
+            check_cohort_mapping(folder, snapshot, replays, expected_agents)
+        rollout = defaultdict(list)
+        errors = defaultdict(list)
+        for rows, grouped in ((replay_rows, None), (load_rows(folder, "app_entry_rollout_hourly", group), rollout),
+                              (load_rows(folder, "app_entry_rollout_errors", group), errors)):
+            for row in rows:
+                agent = row["agent_id"]
+                if (agent not in replays or row["device_id"] != replays[agent]["device_id"]
+                        or (row["group_id"], row["world_name"], row["exp_id"]) != (group, WORLD, exp)):
+                    raise ValueError("exports disagree on run, world, agent or device")
+                if grouped is not None:
+                    grouped[agent].append(row)
+        records = load_agent_traces(trace, group, replays)
+        agents = {}
+        with closing(sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True)) as conn:
+            for agent, replay in replays.items():
+                resident = check_resident(folder, manifest, replay, rollout[agent], errors[agent],
+                                          records[agent], conn, expected_days)
+                if expected_agents == 1:
+                    if report["issues"]:
+                        resident["issues"][:0] = report["issues"]
+                        resident["run_complete"] = resident["exports_complete"] = False
+                    return finish_report(resident)
+                resident.update(agent_id=int(agent), selected_rank=int(replay["selected_rank"]),
+                                device_id=replay["device_id"])
+                agents[agent] = resident
+        summarize_residents(report, agents, len(expected_hours))
+    except AUDIT_ERRORS as exc:
+        report["issues"].append(f"{type(exc).__name__}: {exc}")
+    return finish_report(report)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for flag in ("run-dir", "db", "trace", "output"):
         parser.add_argument(f"--{flag}", required=True, type=Path)
     parser.add_argument("--group-id", required=True)
     parser.add_argument("--expected-days", type=int, choices=SUPPORTED_DAYS, default=7)
+    parser.add_argument("--expected-agents", type=int, default=1)
     args = parser.parse_args()
-    report = check_run(args.run_dir, args.group_id, args.db, args.trace, args.expected_days)
+    report = check_run(args.run_dir, args.group_id, args.db, args.trace, args.expected_days, args.expected_agents)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"run_complete={report['run_complete']} acceptance_ok={report['acceptance_ok']} "

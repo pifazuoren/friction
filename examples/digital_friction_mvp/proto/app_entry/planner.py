@@ -14,7 +14,10 @@ from .intention_contract import (
     COMPACT_PLAN_VERSION,
     COMPACT_PLAN_V2,
     COMPACT_PLAN_V3,
+    COMPACT_PLAN_V5,
+    COMPACT_PLAN_VERSIONS,
     COMPACT_SCORES,
+    OPENING_TOKEN_VERSIONS,
     compact_menu,
     compact_intent,
     compact_needs,
@@ -379,14 +382,24 @@ def _legacy_plan_prompt(
     return system_prompt, user_payload, output_keys, repair_text
 
 
-def _compact_system_prompt(calibrated: bool) -> str:
-    activity = (
-        "weights 是各所选频道的相对整数权重（0–100），不使用手机填空对象。实际次数由模拟器确定。"
-        if calibrated
-        else "选取带 @open: 的行动，就表示亲自打开该频道一次来办理所选目标。additional_apps 只列此外确实要打开的频道，"
-        "每多开一次就写一次，可以再开同一频道。其他行动本身不含打开，另做的手机活动全部列在 additional_apps。"
-        "没有额外打开填空列表，总打开次数不得超过 exposure_cap。"
-    )
+def _compact_system_prompt(calibrated: bool, version: str) -> str:
+    if calibrated:
+        activity = "weights 是各所选频道的相对整数权重（0–100），不使用手机填空对象。实际次数由模拟器确定。"
+    elif version == COMPACT_PLAN_V5:
+        activity = (
+            "频道选项的多少不代表该行为的概率。"
+            "选日常使用时，从 habitual_app@open: 的选项里选自己要先打开的频道。"
+            "凡带 @open: 的行动都已包含一次打开。additional_apps 只列此外要打开的频道，"
+            "每多开一次就写一次，可以重复频道。没有额外打开填 []。"
+            "延期或放弃时，另做的手机活动全部列在 additional_apps。no_app 填 []。"
+            "总打开次数不得超过 exposure_cap。"
+        )
+    else:
+        activity = (
+            "选取带 @open: 的行动，就表示亲自打开该频道一次来办理所选目标。additional_apps 只列此外确实要打开的频道，"
+            "每多开一次就写一次，可以再开同一频道。其他行动本身不含打开，另做的手机活动全部列在 additional_apps。"
+            "没有额外打开填空列表，总打开次数不得超过 exposure_cap。"
+        )
     return (
         "你扮演一位老年手机用户。结合此刻需求、前三天习惯、已有经历和待办，自己决定这一小时做什么。"
         "只输出决策 JSON。先决定行为种类；各类同等可选，清单顺序和时点个数不代表偏好或概率。"
@@ -406,15 +419,18 @@ def _compact_system_prompt(calibrated: bool) -> str:
 def decode_compact_plan(raw: dict, request_body: dict) -> dict:
     """Decode the exact model-selected action and activity from the transmitted contract."""
     calibrated = "exposures_if_active" in request_body
-    v4 = request_body["schema_version"] == COMPACT_PLAN_VERSION
-    if v4 and calibrated:
-        raise ValueError("v4 goal opening tokens require exposure-count mode")
-    field = "weights" if calibrated else ("additional_apps" if v4 else "apps")
-    required = {"action", field, "reason", *COMPACT_SCORES}
-    if request_body["schema_version"] == COMPACT_PLAN_V2:
-        required.add("review")
-    elif request_body["schema_version"] not in (COMPACT_PLAN_V3, COMPACT_PLAN_VERSION):
+    version = request_body["schema_version"]
+    if version not in COMPACT_PLAN_VERSIONS:
         raise ValueError("unsupported compact Plan schema version")
+    has_opening_tokens = version in OPENING_TOKEN_VERSIONS
+    if has_opening_tokens and calibrated:
+        raise ValueError("opening tokens require exposure-count mode")
+    field = "weights" if calibrated else (
+        "additional_apps" if has_opening_tokens else "apps"
+    )
+    required = {"action", field, "reason", *COMPACT_SCORES}
+    if version == COMPACT_PLAN_V2:
+        required.add("review")
     if not isinstance(raw, dict) or set(raw) != required:
         raise ValueError("expected decision fields: " + ", ".join(sorted(required)))
 
@@ -456,21 +472,21 @@ def decode_compact_plan(raw: dict, request_body: dict) -> dict:
 
 
 def _compact_plan_prompt(
-    input_payload, needs, candidates, cap, confidence_floor, calibrated
+    input_payload, needs, candidates, cap, confidence_floor, calibrated, version
 ):
     observation = compact_observation(input_payload)
-    version = COMPACT_PLAN_V3 if calibrated else COMPACT_PLAN_VERSION
+    channels = sorted(candidates)
     body = {
         "schema_version": version,
         "inputs": observation,
         "digital_needs": compact_needs(needs.to_dict(include_audit=False)),
-        **compact_menu(observation, version),
-        "channels": sorted(candidates),
+        **compact_menu(observation, version, channels),
+        "channels": channels,
         "exposures_if_active" if calibrated else "exposure_cap": cap,
         "minimum_confidence": confidence_floor,
     }
     keys = {"action", "weights" if calibrated else "additional_apps", "reason", *COMPACT_SCORES}
-    return _compact_system_prompt(calibrated), body, keys, ""
+    return _compact_system_prompt(calibrated, version), body, keys, ""
 
 
 class HourlyIntentionPlanError(ValueError):
@@ -495,6 +511,7 @@ class DigitalAppEntryPlanBlock:
         timeout: int = 30,
         retries: int = 1,
         json_attempts: int = 5,
+        compact_schema_version: str | None = None,
     ) -> AppEntryPlanResult:
         if not isinstance(needs, DigitalNeedsResult):
             raise ValueError("needs must be a DigitalNeedsResult")
@@ -523,6 +540,12 @@ class DigitalAppEntryPlanBlock:
         if not isinstance(intensity_profile, dict):
             raise ValueError("intensity_profile must be a dictionary")
         calibrated = prompt_version == CALIBRATED_PLAN_VERSION
+        version = COMPACT_PLAN_V3 if calibrated else COMPACT_PLAN_VERSION
+        if compact_schema_version is not None:
+            supported = {COMPACT_PLAN_V3} if calibrated else OPENING_TOKEN_VERSIONS
+            if not with_intent or compact_schema_version not in supported:
+                raise ValueError("compact schema version is incompatible with the selected Plan mode")
+            version = compact_schema_version
         volume_field = "exposures_if_active" if calibrated else "active_exposure_cap"
         try:
             cap = int(intensity_profile[volume_field])
@@ -546,6 +569,7 @@ class DigitalAppEntryPlanBlock:
                     cap,
                     confidence_floor,
                     calibrated,
+                    version,
                 )
             )
         else:
@@ -586,7 +610,7 @@ class DigitalAppEntryPlanBlock:
             prefix = "raw_" if phase == "initial" else "repaired_"
             for key in ("choice", "channels", "active", "activity"):
                 audit[prefix + key] = statement[key]
-            if user_payload["schema_version"] == COMPACT_PLAN_VERSION:
+            if user_payload["schema_version"] in OPENING_TOKEN_VERSIONS:
                 for key in ("opened_channel", "additional_activity"):
                     audit[prefix + key] = statement[key]
             if phase == "repair":
@@ -614,7 +638,7 @@ class DigitalAppEntryPlanBlock:
             for key in ("scores", "partial_apps", "partial_weights"):
                 if initial[key]:
                     repair["preserve"][key] = initial[key]
-            if user_payload["schema_version"] == COMPACT_PLAN_VERSION:
+            if user_payload["schema_version"] in OPENING_TOKEN_VERSIONS:
                 for key in ("opened_channel", "additional_activity"):
                     if initial[key] is not None:
                         repair["preserve"][key] = initial[key]

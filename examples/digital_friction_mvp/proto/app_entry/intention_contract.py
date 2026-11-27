@@ -264,10 +264,11 @@ def validate_intent(value: Any, plan: dict, observation: dict) -> dict:
 
 COMPACT_PLAN_V2 = "hourly_plan_compact_v2"
 COMPACT_PLAN_V3 = "hourly_plan_compact_v3"
-COMPACT_PLAN_VERSION = "hourly_plan_compact_v4"
-COMPACT_PLAN_VERSIONS = frozenset(
-    {COMPACT_PLAN_V2, COMPACT_PLAN_V3, COMPACT_PLAN_VERSION}
-)
+COMPACT_PLAN_V4 = "hourly_plan_compact_v4"
+COMPACT_PLAN_V5 = "hourly_plan_compact_v5"
+COMPACT_PLAN_VERSION = COMPACT_PLAN_V5
+OPENING_TOKEN_VERSIONS = frozenset({COMPACT_PLAN_V4, COMPACT_PLAN_V5})
+COMPACT_PLAN_VERSIONS = OPENING_TOKEN_VERSIONS | {COMPACT_PLAN_V2, COMPACT_PLAN_V3}
 COMPACT_SCORES = ("attitude", "subjective_norm", "perceived_control", "confidence")
 
 
@@ -326,12 +327,29 @@ def _v2_actions(observation: dict) -> list[str]:
     return sorted(actions)
 
 
-def compact_menu(observation: dict, schema_version: str = COMPACT_PLAN_VERSION) -> dict:
-    """List behavior families once. Each deferred target offers its entire legal time window."""
+def compact_menu(
+    observation: dict,
+    schema_version: str = COMPACT_PLAN_VERSION,
+    channels: list[str] | None = None,
+) -> dict:
+    """Build the menu for this wire version from the visible targets and allowed channels."""
+    if schema_version not in COMPACT_PLAN_VERSIONS:
+        raise ValueError("unsupported compact Plan schema version")
+    if schema_version == COMPACT_PLAN_V2:
+        return {"actions": _v2_actions(observation)}
     now = observation["monotonic_sim_hour"]
     offers = {o["opportunity_id"]: o for o in observation["available_opportunities"]}
     targets = {}
     actions = ["habitual_app", "no_app"]
+    if schema_version == COMPACT_PLAN_V5:
+        if (
+            not isinstance(channels, list)
+            or any(channel not in APP_CONTEXT_SET for channel in channels)
+            or len(channels) != len(set(channels))
+        ):
+            raise ValueError("v5 requires a list of distinct allowed app channels")
+        actions = [f"habitual_app@open:{channel}" for channel in sorted(channels)]
+        actions.append("no_app")
     windows = {}
     current = observation.get("current_intention")
     if current:
@@ -354,9 +372,11 @@ def compact_menu(observation: dict, schema_version: str = COMPACT_PLAN_VERSION) 
             continue
         targets[alias] = target_id
         handle = ("continue_goal@" if current else "engage_goal@") + alias
-        if schema_version == COMPACT_PLAN_VERSION:
+        if schema_version in OPENING_TOKEN_VERSIONS:
             channel = target.get("required_channel")
-            if channel not in APP_CONTEXT_SET:
+            if channel not in APP_CONTEXT_SET or (
+                schema_version == COMPACT_PLAN_V5 and channel not in channels
+            ):
                 raise ValueError(
                     "an actionable target must have a valid required_channel"
                 )
@@ -381,18 +401,20 @@ def compact_menu(observation: dict, schema_version: str = COMPACT_PLAN_VERSION) 
 
 
 def stated_open_channel(token: Any, body: dict) -> str | None:
-    """Only an explicitly selected, listed v4 action declares an embedded App opening."""
+    """Count one opening only when the selected, listed action explicitly contains it."""
+    version = body["schema_version"]
     if (
-        body["schema_version"] != COMPACT_PLAN_VERSION
+        version not in OPENING_TOKEN_VERSIONS
         or not isinstance(token, str)
         or token not in body["actions"]
     ):
         return None
-    kind, _, opening = token.partition("@")
-    if kind not in {"engage_goal", "continue_goal"}:
+    prefix, marker, channel = token.rpartition("@open:")
+    if not marker or channel not in body["channels"]:
         return None
-    _, marker, channel = opening.partition("@open:")
-    return channel if marker and channel in body["channels"] else None
+    if version == COMPACT_PLAN_V5 and prefix == "habitual_app":
+        return channel
+    return channel if prefix.startswith(("engage_goal@", "continue_goal@")) else None
 
 
 def _v3_action_fields(token: Any, body: dict) -> dict | None:
@@ -472,8 +494,11 @@ def _action_fields(token: Any) -> dict | None:
 
 
 def compact_intent(raw: dict, body: dict) -> dict:
-    if body["schema_version"] in (COMPACT_PLAN_V3, COMPACT_PLAN_VERSION):
-        menu = compact_menu(body["inputs"], body["schema_version"])
+    version = body["schema_version"]
+    if version not in COMPACT_PLAN_VERSIONS:
+        raise ValueError("unsupported compact Plan schema version")
+    if version != COMPACT_PLAN_V2:
+        menu = compact_menu(body["inputs"], version, body["channels"])
         if any(body.get(key) != value for key, value in menu.items()):
             raise ValueError(
                 "action menu is inconsistent with the observed targets or windows"
@@ -563,8 +588,11 @@ def read_compact_statement(raw_text: str, request_body: dict) -> dict:
     """Recover exact stated choices and volumes without mistaking an input echo for an action."""
     fields, partial, ambiguous = _response_fields(raw_text)
     action = fields.get("action")
-    v4 = request_body["schema_version"] == COMPACT_PLAN_VERSION
-    v3 = request_body["schema_version"] in (COMPACT_PLAN_V3, COMPACT_PLAN_VERSION)
+    version = request_body["schema_version"]
+    if version not in COMPACT_PLAN_VERSIONS:
+        raise ValueError("unsupported compact Plan schema version")
+    has_opening_tokens = version in OPENING_TOKEN_VERSIONS
+    v3 = version != COMPACT_PLAN_V2
     choice = _v3_action_fields(action, request_body) if v3 else _action_fields(action)
     old_token = v3 and choice is None and isinstance(action, str) and ":" in action
     if old_token:
@@ -628,7 +656,7 @@ def read_compact_statement(raw_text: str, request_body: dict) -> dict:
     additional = fields.get("additional_apps")
     additional_activity = None
     if (
-        v4
+        has_opening_tokens
         and isinstance(additional, list)
         and all(isinstance(channel, str) for channel in additional)
     ):
@@ -668,15 +696,21 @@ def read_compact_statement(raw_text: str, request_body: dict) -> dict:
         for a in _complete_list_items(partial.get("apps", ""))
         if isinstance(a, str) and a in request_body["channels"]
     )
-    partial_additional_apps = (
-        Counter(
-            a
-            for a in _complete_list_items(partial.get("additional_apps", ""))
-            if isinstance(a, str) and a in request_body["channels"]
+    partial_additional_apps = Counter()
+    if has_opening_tokens:
+        items = _complete_list_items(partial.get("additional_apps", ""))
+        if (
+            version == COMPACT_PLAN_V5
+            and isinstance(additional, list)
+            and additional_activity is None
+        ):
+            # A malformed element does not erase other complete channel names in the list.
+            items = additional
+        partial_additional_apps.update(
+            channel for channel in items
+            if isinstance(channel, str)
+            and (version == COMPACT_PLAN_V5 or channel in request_body["channels"])
         )
-        if v4
-        else {}
-    )
     partial_weights = {}
     for label in ("weights", count_field) if calibrated else (count_field,):
         if partial.get(label, "").startswith("{"):

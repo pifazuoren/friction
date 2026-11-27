@@ -8,6 +8,7 @@ import pytest
 from proto.app_entry.intention_contract import (
     COMPACT_PLAN_VERSION,
     COMPACT_PLAN_V3,
+    COMPACT_PLAN_V4,
     compact_menu,
     compact_observation,
 )
@@ -85,7 +86,7 @@ def response(intent, **fields):
     if intent["goal_id"] is not None:
         token += "@g1" if intent["goal_id"] == "goal:1" else "@unknown"
     handling = intent["kind"] in {"engage_goal", "continue_goal"}
-    if handling:
+    if handling or intent["kind"] == "habitual_app":
         token += "@open:" + CHANNEL
     if intent["next_review_at_sim_hour"] is not None:
         token += "@" + str(intent["next_review_at_sim_hour"])
@@ -141,7 +142,8 @@ def test_offered_channel_is_selectable_without_previous_use_and_no_hidden_inform
     assert CHANNEL in message["channels"]
     assert message["schema_version"] == COMPACT_PLAN_VERSION
     assert set(message["actions"]) == {
-        "habitual_app",
+        "habitual_app@open:communication_social_context",
+        "habitual_app@open:" + CHANNEL,
         "no_app",
         "engage_goal@o1@open:" + CHANNEL,
         "drop_goal@o1",
@@ -805,8 +807,8 @@ def test_historical_v3_count_reply_can_only_be_replayed_against_its_own_contract
         hourly_intention_mode="opportunity_v1", available_opportunities=[OFFER]
     )
     action = choice("engage_goal", "login:1")
-    v4 = response(action)
-    llm = FakeLLM([v4])
+    current = response(action)
+    llm = FakeLLM([current])
     plan(llm, observation)
     body = json.loads(llm.requests[0]["dialog"][1]["content"].split("\n", 1)[1])
     previous_request = {
@@ -814,7 +816,7 @@ def test_historical_v3_count_reply_can_only_be_replayed_against_its_own_contract
         "schema_version": COMPACT_PLAN_V3,
         **compact_menu(body["inputs"], COMPACT_PLAN_V3),
     }
-    older = json.loads(v4)
+    older = json.loads(current)
     older.pop("additional_apps")
     older.update(action="engage_goal@o1", apps=[CHANNEL])
     assert decode_compact_plan(older, previous_request)["app_context_counts"] == {
@@ -830,7 +832,6 @@ def test_historical_v3_count_reply_can_only_be_replayed_against_its_own_contract
 @pytest.mark.parametrize(
     "action,extras",
     [
-        (choice("habitual_app"), ["communication_social_context"]),
         (choice("defer_goal", "login:1", review=89), []),
         (choice("drop_goal", "login:1"), ["communication_social_context"]),
         (choice("no_app"), []),
@@ -848,3 +849,87 @@ def test_nonhandling_actions_only_open_the_explicitly_listed_apps(action, extras
         == result.app_context_counts
         == {app: 1 for app in extras}
     )
+
+
+@pytest.mark.parametrize("extras", [[], [CHANNEL, "communication_social_context", CHANNEL, CHANNEL]])
+def test_habitual_first_open_and_repeated_additional_apps_count_towards_the_cap(extras):
+    observation = packet(hourly_intention_mode="opportunity_v1", available_opportunities=[OFFER])
+    result = plan(FakeLLM([response(choice("habitual_app"), additional_apps=extras)]), observation)
+    expected = {channel: extras.count(channel) for channel in set(extras)}
+    expected[CHANNEL] = expected.get(CHANNEL, 0) + 1
+    assert result.intent == choice("habitual_app")
+    assert result.app_context_counts == result.audit["raw_activity"] == expected
+    assert result.audit["raw_opened_channel"] == CHANNEL
+    assert result.active and result.active_event_app_exposures == 1 + len(extras)
+    too_many = response(choice("habitual_app"), additional_apps=[CHANNEL] * 5)
+    with pytest.raises(HourlyIntentionPlanError, match="exposure cap"):
+        plan(FakeLLM([too_many] * 2), observation)
+
+
+@pytest.mark.parametrize(
+    "first_action", ["habitual_app", "habitual_app@open:unlisted", "habitual_app@open:communication_social_context"]
+)
+def test_repair_cannot_choose_or_replace_the_first_habitual_channel(first_action):
+    observation = packet(hourly_intention_mode="opportunity_v1", available_opportunities=[OFFER])
+    correct = response(choice("habitual_app"), additional_apps=[])
+    incomplete = {**json.loads(correct), "action": first_action}
+    del incomplete["attitude"]
+    with pytest.raises(HourlyIntentionPlanError) as caught:
+        plan(FakeLLM([json.dumps(incomplete), correct]), observation)
+    assert caught.value.audit["repair_changed_choice"]
+    assert caught.value.audit["accepted_choice"] is None
+    assert caught.value.audit["raw_choice"] == choice("habitual_app")
+
+
+@pytest.mark.parametrize("extra_fragment", ['["unlisted",', '["communication_social_context",false]'])
+def test_habitual_repair_preserves_complete_channel_names_in_a_malformed_extra_list(extra_fragment):
+    observation = packet(hourly_intention_mode="opportunity_v1", available_opportunities=[OFFER])
+    correct = response(choice("habitual_app"), additional_apps=[])
+    original = '{"action":"habitual_app@open:' + CHANNEL + '","additional_apps":' + extra_fragment
+    with pytest.raises(HourlyIntentionPlanError) as caught:
+        plan(FakeLLM([original, correct]), observation)
+    assert caught.value.audit["repair_changed_choice"]
+
+
+def test_historical_v4_habitual_decisions_are_revalidated_against_the_transmitted_menu():
+    observation = packet(hourly_intention_mode="opportunity_v1", available_opportunities=[OFFER])
+    old = response(choice("habitual_app"), action="habitual_app", additional_apps=[CHANNEL, CHANNEL])
+    historical = FakeLLM([old])
+    before = plan(historical, observation, compact_schema_version=COMPACT_PLAN_V4)
+    old_body = json.loads(historical.requests[0]["dialog"][1]["content"].split("\n", 1)[1])
+    new = response(choice("habitual_app"), additional_apps=[CHANNEL])
+    llm = FakeLLM([new])
+    after = plan(llm, observation)
+    new_body = json.loads(llm.requests[0]["dialog"][1]["content"].split("\n", 1)[1])
+    assert old_body["schema_version"] == COMPACT_PLAN_V4
+    assert before.app_context_counts == after.app_context_counts == {CHANNEL: 2}
+    assert before.audit["raw_opened_channel"] is None
+    assert after.audit["raw_opened_channel"] == CHANNEL
+    with pytest.raises(ValueError, match="available token"):
+        decode_compact_plan(json.loads(old), new_body)
+    with pytest.raises(ValueError, match="available token"):
+        decode_compact_plan(json.loads(new), old_body)
+    with pytest.raises(ValueError, match="active flag"):
+        decode_compact_plan({**json.loads(old), "additional_apps": []}, old_body)
+    forged = {**new_body, "actions": new_body["actions"] + ["habitual_app"]}
+    with pytest.raises(ValueError, match="menu is inconsistent"):
+        decode_compact_plan(json.loads(old), forged)
+
+
+def test_v5_with_no_channels_offers_only_no_app_and_zero_cap_stops_before_request():
+    llm = FakeLLM([response(choice("no_app"), additional_apps=[])])
+    options = dict(
+        llm=llm,
+        needs=_needs(),
+        input_payload=packet(hourly_intention_mode="opportunity_v1"),
+        candidate_contexts={},
+        intensity_profile={"active_exposure_cap": 1},
+    )
+    result = asyncio.run(DigitalAppEntryPlanBlock().forward(**options))
+    body = json.loads(llm.requests[0]["dialog"][1]["content"].split("\n", 1)[1])
+    assert body["actions"] == ["no_app"] and body["channels"] == []
+    assert not result.active
+    options["intensity_profile"] = {"active_exposure_cap": 0}
+    with pytest.raises(ValueError, match="must be >= 1"):
+        asyncio.run(DigitalAppEntryPlanBlock().forward(**options))
+    assert len(llm.requests) == 1

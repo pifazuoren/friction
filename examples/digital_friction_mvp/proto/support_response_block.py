@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from pydantic import BaseModel
@@ -36,7 +37,7 @@ except Exception:  # pragma: no cover - lightweight local-test fallback
         def set_agent(self, agent: Any) -> None:
             self._agent = agent
 
-from .llm_psychology import _query_json_payload
+from .llm_psychology import _extract_json_object, _query_json_payload
 from .support_protocol import (
     AUTONOMY_PRESERVATION_LEVELS,
     EMOTIONAL_TONES,
@@ -51,7 +52,7 @@ from .support_protocol import (
 )
 
 
-SUPPORT_RESPONSE_PROMPT_VERSION = "support_response_v1_family_helper"
+SUPPORT_RESPONSE_PROMPT_VERSION = "support_response_v2_family_helper"
 SUPPORT_RESPONSE_TIMEOUT_SECONDS = 45
 SUPPORT_RESPONSE_RETRIES = 1
 
@@ -68,13 +69,18 @@ class SupportResponseBlock(Block):
     description = "Generate bounded family helper support responses."
 
     async def generate_response(self, request: SupportRequest) -> SupportResponse:
+        context = _build_support_user_payload(request)
+        system_prompt = _build_support_system_prompt()
         payload, status = await _query_json_payload(
             trace_module="helper",
             llm=getattr(self, "llm", None),
-            system_prompt=_build_support_system_prompt(),
-            user_payload=_build_support_user_payload(request),
+            system_prompt=system_prompt,
+            user_payload=context,
             output_keys=SUPPORT_RESPONSE_KEYS,
-            repair_schema_text=_support_repair_schema_text(),
+            repair_schema_text="",
+            repair_dialog_factory=lambda raw, status: _support_repair_dialog(
+                system_prompt, context, raw, status
+            ),
             sanitize_fn=lambda value: _sanitize_support_payload(value, request.task_id),
             timeout=SUPPORT_RESPONSE_TIMEOUT_SECONDS,
             retries=SUPPORT_RESPONSE_RETRIES,
@@ -120,18 +126,30 @@ class SupportResponseBlock(Block):
 
 
 def _build_support_system_prompt() -> str:
-    return """You generate one structured family helper response for a simulated older adult digital task.
-You may decide whether help is enabling, substituting, dismissive, or unavailable.
-For unavailable help use responded=false, no_response, no instructions, and no proxy action.
-For a reply use responded=true and immediate or delayed. Report concrete guidance and proxy actions accurately.
-An enabling or substituting reply must provide guidance or take some proxy action.
-You must not decide the task outcome, success, helplessness, posterior belief, or scope spillover.
-Return exactly one JSON object with the requested keys and no extra text."""
+    choices = {
+        "support_style": SUPPORT_STYLES,
+        "instruction_quality": INSTRUCTION_QUALITIES,
+        "autonomy_preservation": AUTONOMY_PRESERVATION_LEVELS,
+        "proxy_completion_level": PROXY_COMPLETION_LEVELS,
+        "emotional_tone": EMOTIONAL_TONES,
+        "response_delay": RESPONSE_DELAYS,
+    }
+    labels = "\n".join(f"{key}: {' / '.join(sorted(values))}" for key, values in choices.items())
+    return (
+        f"Family helper decision, {SUPPORT_RESPONSE_PROMPT_VERSION}. The user supplies facts about "
+        "one request for help. Decide how the family helper responds. Output only a new, flat "
+        "JSON object. Do not copy the input or continue it. Use exactly these ten fields:\n"
+        f"{labels}\nconfidence: JSON number from 0 to 1\nresponded: JSON boolean\n"
+        "response_text: short helper utterance, or empty if unavailable\nrationale: brief reason\n"
+        "Unavailable requires responded=false, no_response, no instructions, no proxy action, "
+        "and not_applicable autonomy. For a reply use responded=true and immediate or delayed. "
+        "Enabling or substituting requires concrete guidance or a proxy action. "
+        "The task outcome and the older adult's psychological state are decided elsewhere."
+    )
 
 
 def _build_support_user_payload(request: SupportRequest) -> dict[str, Any]:
     return {
-        "prompt_version": SUPPORT_RESPONSE_PROMPT_VERSION,
         "task": {
             "task_id": request.task_id,
             "task_family": request.task_family,
@@ -147,52 +165,24 @@ def _build_support_user_payload(request: SupportRequest) -> dict[str, Any]:
         "env_context": request.env_context,
         "profile_summary": request.profile_summary,
         "relationship": request.relationship,
-        "allowed_labels": {
-            "support_style": sorted(SUPPORT_STYLES),
-            "instruction_quality": sorted(INSTRUCTION_QUALITIES),
-            "autonomy_preservation": sorted(AUTONOMY_PRESERVATION_LEVELS),
-            "proxy_completion_level": sorted(PROXY_COMPLETION_LEVELS),
-            "emotional_tone": sorted(EMOTIONAL_TONES),
-            "response_delay": sorted(RESPONSE_DELAYS),
-        },
-        "forbidden_outputs": [
-            "outcome_type",
-            "success",
-            "helplessness_delta",
-            "helplessness_after",
-            "posterior",
-            "C_family",
-            "scope_spillover_total",
-        ],
-        "required_json_schema": {
-            "support_style": "enabling|substituting|dismissive|unavailable",
-            "instruction_quality": "none|low|medium|high",
-            "autonomy_preservation": "low|medium|high|not_applicable",
-            "proxy_completion_level": "none|partial|full|not_applicable",
-            "emotional_tone": "patient|neutral|dismissive|not_applicable",
-            "response_delay": "immediate|delayed|no_response",
-            "confidence": "0.0 to 1.0",
-            "responded": "boolean",
-            "response_text": "short helper utterance for audit/replay only",
-            "rationale": "brief evidence note",
-        },
     }
 
 
-def _support_repair_schema_text() -> str:
-    return (
-        "Allowed support_style values: enabling, substituting, dismissive, unavailable.\n"
-        "Allowed instruction_quality values: none, low, medium, high.\n"
-        "Allowed autonomy_preservation values: low, medium, high, not_applicable.\n"
-        "Allowed proxy_completion_level values: none, partial, full, not_applicable.\n"
-        "Allowed emotional_tone values: patient, neutral, dismissive, not_applicable.\n"
-        "Allowed response_delay values: immediate, delayed, no_response.\n"
-        "Use a JSON boolean for responded and a finite number from 0 to 1 for confidence. "
-        "Unavailable requires responded=false, no_response, no instructions, no proxy action, "
-        "and not_applicable autonomy. Other styles require responded=true and immediate or delayed. "
-        "Enabling or substituting requires actual guidance or proxy action.\n"
-        "Do not include outcome_type, success, helplessness_delta, helplessness_after, posterior, C_family, or scope_spillover_total."
-    )
+def _support_repair_dialog(system_prompt: str, context: dict, raw: str, status: str) -> list[dict]:
+    # A truncated echo of the case has no helper judgment to reformat. Resending that
+    # text encouraged the model to finish copying the case during its repair turn.
+    parsed = _extract_json_object(raw) or {}
+    draft = {
+        key: value for key, value in parsed.items()
+        if key in SUPPORT_RESPONSE_KEYS and type(value) in (bool, str, int, float)
+    }
+    message = f"Your previous output failed validation ({status}).\nCase facts:\n"
+    message += json.dumps(context, ensure_ascii=False)
+    if draft:
+        message += "\nKeep any consistent decisions in these prior reply fields:\n"
+        message += json.dumps(draft, ensure_ascii=False)
+    message += "\nAnswer the request now with one complete ten-field helper reply."
+    return [{"role": "system", "content": system_prompt}, {"role": "user", "content": message}]
 
 
 def _sanitize_support_payload(payload: Any, task_id: str) -> tuple[dict[str, Any] | None, str]:

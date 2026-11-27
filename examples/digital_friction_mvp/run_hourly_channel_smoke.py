@@ -1,4 +1,4 @@
-"""Re-ask two failed Plan hours from a completed five-day run. Default is offline."""
+"""Re-ask two failed V3 Plan hours with the V4 count-mode interface. Default is offline."""
 
 import argparse
 import asyncio
@@ -12,7 +12,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from check_hourly_channel_replay import load_archive_hours, rebuild_plan_kwargs
 from check_hourly_intention_run import request_payload
-from proto.app_entry.intention_contract import COMPACT_PLAN_VERSION
+from proto.app_entry.intention_contract import COMPACT_PLAN_V4
 from proto.app_entry.planner import DigitalAppEntryPlanBlock, HourlyIntentionPlanError
 from proto.llm_trace import bind_trace_context, traced_agent_tick
 from run_hourly_intention_pairs import CapturePlan, SmokeRequestBudget, SMOKE_HTTP_LIMIT
@@ -51,7 +51,7 @@ async def prepare_cases(folder):
             or request["model"] != MODEL
         ):
             raise ValueError(f"Day 4 hour {hour} is not the expected failed GLM case")
-        kwargs = rebuild_plan_kwargs(events)
+        kwargs = {**rebuild_plan_kwargs(events), "compact_schema_version": COMPACT_PLAN_V4}
         recorder = CapturePlan("opportunity_v1")
         await DigitalAppEntryPlanBlock().forward(llm=recorder, **kwargs)
         (stimulus,) = recorder.requests
@@ -70,7 +70,7 @@ async def prepare_cases(folder):
             if old[field] != new[field]:
                 raise ValueError(f"Day 4 hour {hour} differs in {field}")
         if (
-            new["schema_version"] != COMPACT_PLAN_VERSION
+            new["schema_version"] != COMPACT_PLAN_V4
             or request["parameters"] != stimulus["parameters"]
         ):
             raise ValueError("Unexpected Plan version or changed sampling parameters")
@@ -163,7 +163,7 @@ async def main():
         folder / "design.json",
         {
             "model": MODEL,
-            "schema_version": COMPACT_PLAN_VERSION,
+            "schema_version": COMPACT_PLAN_V4,
             "source_archive": args.archive.name,
             "source_trace_sha256": {
                 f.name: sha256(f.read_bytes()).hexdigest()

@@ -20,7 +20,7 @@ class FamilyHelper:
         self.requests.append(request)
         if self.reply == "request_error":
             raise RuntimeError("simulated transport failure")
-        if self.reply == "parse_failed":
+        if self.reply in {"parse_failed", "invalid_schema"}:
             return SupportResponse.unavailable(request=request, source="llm_unavailable", audit_status=self.reply)
         if self.reply == "unavailable":
             return SupportResponse(
@@ -327,3 +327,37 @@ def test_failed_final_hour_does_not_freeze_or_double_count_on_retry(replay_hour)
     snap = data["proto_day4_replay_snapshot"]
     assert snap["app_entry_habit_memory"]["total_hours_seen"] == 1
     assert len(snap["recent_episode_buffer"]) == 1
+
+
+def test_opportunity_replay_records_exposure_and_isolates_helper_failure(replay_hour, monkeypatch, tmp_path):
+    agent, data, set_hour = replay_hour
+    monkeypatch.setenv("PROTO_HOURLY_INTENTION_MODE", "opportunity_v1")
+    monkeypatch.setenv("PROTO_LLM_TRACE_DIR", str(tmp_path))
+    helper = FamilyHelper("invalid_schema")
+    agent.set_support_helper_registry({20: helper})
+    prior = {k: deepcopy(data.get(k)) for k in ("helplessness_score", "trust_in_apps", "avoidance_tendency",
+             "help_effect_memory", "recent_episode_buffer", "proto_stage_attempt_rows_json", "help_request_count",
+             "success_count", "failure_count")}
+
+    for hour in (16, 23):
+        set_hour(hour, "finance_context")
+        asyncio.run(agent.forward())
+        # A repeated scheduler tick must not dispatch or count the same observation twice.
+        asyncio.run(agent.forward())
+        assert data["friction_step_signal"]["support_ecology_status"] == "invalid_schema"
+        assert data["friction_step_signal"]["step_type"] == "technical_failure"
+        assert data["proto_mobile_entry_decision"]["task_generated"]
+        assert not data["proto_assigned_task_json"] and not data["digital_todo_pending"]
+        assert {k: data.get(k) for k in prior} == prior
+
+    assert len(helper.requests) == 2
+    snapshot = data["proto_day4_replay_snapshot"]
+    assert snapshot["app_entry_habit_memory"]["total_hours_seen"] == 2
+    assert snapshot["recent_episode_buffer"] == prior["recent_episode_buffer"]
+    decisions = [json.loads(line) for path in tmp_path.glob("llm-requests-*.jsonl") for line in path.read_text().splitlines()]
+    failed = [row for row in decisions if (row["module"], row["kind"]) == ("task", "decision")]
+    assert [(row["talkingdata_day"], row["hour"], row["agent_id"]) for row in failed] == [(3, 16, 7), (3, 23, 7)]
+    for row, request in zip(failed, helper.requests):
+        assert row["status"] == "technical_failure" and row["support_status"] == "invalid_schema"
+        assert row["support_request_id"] == request.request_id
+        assert row["action"] is None and row["outcome"] is None

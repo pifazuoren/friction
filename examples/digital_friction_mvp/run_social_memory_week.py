@@ -1,4 +1,4 @@
-"""Run the single-device, seven-day social-memory experiment from a terminal."""
+"""Run the seven-day social-memory experiment or the five-day login opportunity study."""
 
 import argparse
 from dataclasses import asdict
@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from shutil import copyfile
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
@@ -67,6 +68,32 @@ def checked_replay(config):
     return replay, device
 
 
+def matched_cohort(replay, profiles_path, count):
+    """Validate the same profile IDs and ranked device assignment used by AgentSociety."""
+    profiles = json.loads(Path(profiles_path).read_text(encoding="utf-8"))
+    if not isinstance(profiles, list) or len(profiles) < count:
+        raise ValueError("Not enough distinct profiles for the requested residents")
+    ids = [int(p["id"]) for p in profiles[:count]]
+    if len(set(ids)) != count:
+        raise ValueError("Duplicate resident profile IDs")
+    assignments = replay.assignments_for_agent_ids(ids)
+    return [dict(agent_id=agent_id, profile_id=agent_id, selected_rank=assignment.selected_rank,
+                 device_id=assignment.device_id) for agent_id, assignment in assignments.items()]
+
+
+def freeze_cohort_inputs(folder, settings):
+    inputs = folder / "inputs"
+    inputs.mkdir()
+    for setting, filename in (
+        ("DIGITAL_FRICTION_PROFILES_PATH", "profiles.json"),
+        ("PROTO_APP_ENTRY_REPLAY_DEVICE_PATH", "devices.csv"),
+        ("PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH", "replay.csv"),
+    ):
+        frozen = inputs / filename
+        copyfile(settings[setting], frozen)
+        settings[setting] = str(frozen)
+
+
 def use_shuffled_reference(settings, directory, seed):
     from analysis_entry_calibration_comparison import write_shuffled_reference
     output = directory / "shuffled_reference_day1_3.csv"
@@ -83,6 +110,10 @@ def main():
     parser.add_argument("--check", action="store_true", help="Verify local resources without making model requests")
     parser.add_argument("--scheduled-login", action="store_true",
                         help="Run five days with a 09:00 login opportunity on days four and five")
+    parser.add_argument("--agents", type=int, choices=range(1, 11), default=1,
+                        help="Residents in one world (up to ten in the five-day opportunity study)")
+    parser.add_argument("--llm-concurrency", type=int, default=1,
+                        help="Maximum concurrent provider requests, shared across residents")
     parser.add_argument("--hourly-intention-mode", choices=("legacy", "opportunity_v1"), default="legacy",
                         help="Select the legacy policy or give the hourly plan control of visible opportunities")
     parser.add_argument("--max-defer-hours", type=int, default=24, help="Maximum future review interval")
@@ -91,6 +122,10 @@ def main():
     parser.add_argument("--paired-environment-seed", type=int,
                         help="Use matching opportunity/decision-keyed environment draws in the scheduled A/B study")
     args = parser.parse_args()
+    if args.llm_concurrency < 1:
+        parser.error("--llm-concurrency must be positive")
+    if args.agents > 1 and not (args.scheduled_login and args.hourly_intention_mode == "opportunity_v1"):
+        parser.error("cohort runs require --scheduled-login --hourly-intention-mode opportunity_v1")
     if args.max_defer_hours < 1:
         parser.error("--max-defer-hours must be positive")
     if args.history_shuffle_seed is not None and args.scheduled_login:
@@ -103,7 +138,8 @@ def main():
         if key.startswith(("PROTO_", "PARALLEL_")) or key.lower() in {"http_proxy", "https_proxy", "all_proxy"}:
             del os.environ[key]
     settings = SETTINGS.copy()
-    settings.update(PROTO_HOURLY_INTENTION_MODE=args.hourly_intention_mode,
+    settings.update(AGENT_COUNT=str(args.agents), LLM_CONCURRENCY=str(args.llm_concurrency),
+                    PROTO_HOURLY_INTENTION_MODE=args.hourly_intention_mode,
                     PROTO_HOURLY_INTENTION_MAX_DEFER_HOURS=str(args.max_defer_hours))
     if args.paired_environment_seed is not None:
         settings["PROTO_PAIRED_ENVIRONMENT_SEED"] = str(args.paired_environment_seed)
@@ -132,7 +168,11 @@ def main():
     if not os.access(DATA / "agentsociety-sim-oss", os.X_OK):
         parser.exit(2, "本地模拟器不存在或不能执行。\n")
     replay, device = checked_replay(config)
-    print(f"已核对第 1 台设备的 72 个回放小时。glm-4-flashx，1 个基线世界，{days} 个模拟日。", flush=True)
+    cohort = None
+    if args.agents > 1:
+        cohort = matched_cohort(replay, settings["DIGITAL_FRICTION_PROFILES_PATH"], args.agents)
+    print(f"已核对 {args.agents} 台设备各 72 个回放小时。glm-4-flashx，1 个基线世界，"
+          f"{args.agents} 位老人，{days} 个模拟日，模型并发上限 {args.llm_concurrency}。", flush=True)
     print(f"小时决策模式 {config.proto_hourly_intention_mode}，延期窗口 {config.proto_hourly_intention_max_defer_hours} 小时。", flush=True)
     if config.proto_paired_environment_seed is not None:
         print(f"策略与结果的配对环境抽样种子为 {config.proto_paired_environment_seed}。", flush=True)
@@ -152,6 +192,16 @@ def main():
     os.environ["LLM_API_KEY"] = key.strip()
     folder.mkdir(parents=True)
     original_reference_hash = replay.bundle_hash
+    if cohort is not None:
+        freeze_cohort_inputs(folder, settings)
+        os.environ.update(settings)
+        config = load_runtime_config()
+        previous_replay = replay
+        replay, device = checked_replay(config)
+        if (replay.bundle_hash != previous_replay.bundle_hash
+                or replay.device_mapping_hash != previous_replay.device_mapping_hash
+                or cohort != matched_cohort(replay, settings["DIGITAL_FRICTION_PROFILES_PATH"], args.agents)):
+            raise RuntimeError("The cohort inputs changed after preflight")
     if args.history_shuffle_seed is not None:
         config, replay, device = use_shuffled_reference(settings, folder, args.history_shuffle_seed)
     print(f"本次结果目录：{folder}", flush=True)
@@ -167,11 +217,14 @@ def main():
     sources.extend((EXAMPLE / "proto").rglob("*.py"))
     if args.scheduled_login:
         sources.append(EXAMPLE / "check_scheduled_login.py")
+    if cohort is not None:
+        sources.append(EXAMPLE / "analysis_five_day_cohort.py")
     with ZipFile(code_archive, "w", compression=ZIP_DEFLATED) as archive:
         for path in sorted(sources):
             archive.write(path, path.relative_to(ROOT))
     snapshot = {
         "settings": settings, "runtime": asdict(config),
+        **({"cohort": cohort} if cohort is not None else {}),
         "history_shuffle_seed": args.history_shuffle_seed, "original_reference_hash": original_reference_hash,
         "reference_hash": replay.bundle_hash, "device_mapping_hash": replay.device_mapping_hash,
         "profiles_sha256": hashlib.sha256(Path(SETTINGS["DIGITAL_FRICTION_PROFILES_PATH"]).read_bytes()).hexdigest(),
@@ -197,8 +250,12 @@ def main():
     report = folder / "acceptance.json"
     check = subprocess.run([sys.executable, str(EXAMPLE / "check_social_memory_run.py"),
                             "--run-dir", str(folder), "--group-id", group, "--db", str(DATA / "sqlite.db"),
-                            "--trace", str(folder / "trace"), "--output", str(report), "--expected-days", str(days)])
+                            "--trace", str(folder / "trace"), "--output", str(report), "--expected-days", str(days),
+                            *(["--expected-agents", str(args.agents)] if args.agents > 1 else [])])
     evidence_status = 0
+    if cohort is not None and report.is_file() and json.loads(report.read_text()).get("run_complete"):
+        evidence_status = subprocess.run([sys.executable, str(EXAMPLE / "analysis_five_day_cohort.py"),
+                                          "--run-dir", str(folder), "--db", str(DATA / "sqlite.db")]).returncode
     if args.scheduled_login and args.hourly_intention_mode == "legacy":
         evidence_status = subprocess.run([sys.executable, str(EXAMPLE / "check_scheduled_login.py"),
                                           "--run-dir", str(folder), "--db", str(DATA / "sqlite.db")]).returncode

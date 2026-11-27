@@ -166,7 +166,7 @@ def test_early_review_and_disappearing_pending_goal_are_detected(resident, tmp_p
     route = next(r for r in rows if r["kind"] == "hourly_intention" and r["hour"] == 10)
     original = json.loads(request["messages"][1]["content"].split("\n", 1)[1])
     original["inputs"]["goal_review_due"] = True
-    original.update(compact_menu(original["inputs"]))
+    original.update(compact_menu(original["inputs"], original["schema_version"], channels=original["channels"]))
     request["messages"][1]["content"] = json.dumps(original)
     route["visible_observation_hash"] = _stable_hash(original["inputs"])[:16]
     assert any(
@@ -180,7 +180,7 @@ def test_early_review_and_disappearing_pending_goal_are_detected(resident, tmp_p
     )
 
 
-@pytest.mark.parametrize("wire_version", [2, 3, 4])
+@pytest.mark.parametrize("wire_version", [2, 3, 4, 5])
 def test_review_time_in_received_action_matches_the_persisted_goal(resident, tmp_path, wire_version):
     step, data, _, helper = resident
     step(4, 9, "defer_goal", review=115)
@@ -197,8 +197,9 @@ def test_review_time_in_received_action_matches_the_persisted_goal(resident, tmp
     assert not data["proto_assigned_task_json"] and not helper.requests
     if wire_version in {2, 3}:
         raw["apps"] = raw.pop("additional_apps")
+    if wire_version < 5:
         payload["schema_version"] = f"hourly_plan_compact_v{wire_version}"
-    if wire_version == 3:
+    if wire_version in {3, 4}:
         payload.update(compact_menu(payload["inputs"], schema_version=payload["schema_version"]))
     elif wire_version == 2:
         oid = payload.pop("targets")["o1"]
@@ -207,7 +208,7 @@ def test_review_time_in_received_action_matches_the_persisted_goal(resident, tmp
             f"{kind}:opportunity:{oid}" for kind in ("engage_goal", "drop_goal", "defer_goal")
         ]
         raw.update(action=f"defer_goal:opportunity:{oid}", review=115)
-    if wire_version < 4:
+    if wire_version < 5:
         request["messages"][1]["content"] = json.dumps(payload)
         response["raw"] = json.dumps(raw)
     assert check_plan_calls(rows, route) == payload["inputs"]
@@ -392,7 +393,7 @@ def test_archived_nested_intent_still_revalidates_with_the_published_old_schema(
         )
 
 
-@pytest.mark.parametrize("damage", ["change_action", "remove_review_option"])
+@pytest.mark.parametrize("damage", ["change_action", "remove_review_option", "change_opened_channel", "change_extras"])
 def test_repair_receipt_includes_original_raw_commitments_and_identical_goal_constraints(
     resident, tmp_path, monkeypatch, damage
 ):
@@ -412,7 +413,10 @@ def test_repair_receipt_includes_original_raw_commitments_and_identical_goal_con
         return json.dumps({k: v for k, v in complete.items() if k != "confidence"})
 
     monkeypatch.setattr(llm, "atext_request", omit_confidence_in_first_plan)
-    step(3, 9, "defer_goal", review=102)
+    if damage in {"change_opened_channel", "change_extras"}:
+        step(3, 9, "habitual_app")
+    else:
+        step(3, 9, "defer_goal", review=102)
     rows = recorded(tmp_path)
 
     def audit():
@@ -425,7 +429,137 @@ def test_repair_receipt_includes_original_raw_commitments_and_identical_goal_con
     body = json.loads(correction["messages"][1]["content"])
     if damage == "change_action":
         body["preserve"]["action"] = "no_app"
-    else:
+    elif damage == "remove_review_option":
         body["defer_options"]["o1"].remove("defer_goal@o1@102")
+    elif damage == "change_opened_channel":
+        assert body["preserve"]["opened_channel"] == "communication_social_context"
+        body["preserve"]["opened_channel"] = "finance_context"
+    else:
+        assert body["preserve"]["additional_activity"] == {}
+        body["preserve"]["additional_activity"] = {"communication_social_context": 1}
     correction["messages"][1]["content"] = json.dumps(body)
     assert any("repair prompt changed" in e for e in audit()["issues"])
+
+
+def test_ten_resident_audit_partitions_shared_hours_and_checks_archived_device_mapping(
+    resident, run_task, replay_files, monkeypatch, tmp_path
+):
+    from copy import deepcopy
+    from proto.app_entry.bundle_loader import get_replay_source
+
+    def write_rows(path, rows):
+        with path.open("w", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+
+    folder = tmp_path
+    fixture_run(folder, "no_tasks", days=5)
+    manifest_path = folder / "exp_group_manifest_synthetic.json"
+    manifest, = json.loads(manifest_path.read_text())
+    manifest.update(agent_count=10, proto_hourly_intention_mode="opportunity_v1")
+    manifest_path.write_text(json.dumps([manifest]))
+    archive = folder / "experiment_source.zip"
+    archive.write_bytes(b"offline cohort source")
+    code_hash = sha256(archive.read_bytes()).hexdigest()
+    trace = folder / "cohort_trace"
+    monkeypatch.setenv("PROTO_RUN_SOURCE_SHA256", code_hash)
+    monkeypatch.setenv("PROTO_LLM_TRACE_DIR", str(trace))
+    monkeypatch.setenv("PARALLEL_GROUP_NAME", "synthetic")
+    source = get_replay_source(**replay_files, replay_days=(1, 2, 3))
+    assignments = source.assignments_for_agent_ids(range(1, 11))
+    profiles_path = folder / "profiles.json"
+    profiles_path.write_text(json.dumps([{"id": i} for i in assignments]))
+    snapshot = {
+        "settings": {"AGENT_COUNT": "10", "PROTO_HOURLY_INTENTION_MODE": "opportunity_v1",
+                     "DIGITAL_FRICTION_PROFILES_PATH": str(profiles_path),
+                     "PROTO_APP_ENTRY_REPLAY_DEVICE_PATH": replay_files["device_mapping_path"],
+                     "PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH": replay_files["bundle_path"]},
+        "runtime": {"proto_hourly_intention_mode": "opportunity_v1", "proto_scheduled_login_hour": 9},
+        "source_sha256": code_hash, "profiles_sha256": sha256(profiles_path.read_bytes()).hexdigest(),
+        "reference_hash": source.bundle_hash, "device_mapping_hash": source.device_mapping_hash,
+        "cohort": [dict(agent_id=i, profile_id=i, selected_rank=item.selected_rank, device_id=item.device_id)
+                   for i, item in assignments.items()],
+    }
+    (folder / "resolved_config.json").write_text(json.dumps(snapshot))
+    step, data, _, helper = resident
+    agent, _ = run_task
+    initial_state = deepcopy(data)
+    db = folder / "db"
+    status_table = "as_" + manifest["exp_id"].replace("-", "_") + "_mvp_status"
+    attempt_table = attempt_rows_table_name(manifest["exp_id"])
+    replay, rollout, errors = [], [], []
+    with sqlite3.connect(db) as conn:
+        base_states = conn.execute(f"SELECT day,t,status_json FROM {status_table}").fetchall()
+        conn.execute(f"DELETE FROM {status_table}")
+        for agent_id, item in assignments.items():
+            device = item.device_id
+            agent._id = agent_id
+            agent.step_count = 0
+            data.clear()
+            data.update(deepcopy(initial_state), proto_app_entry_replay_device_id=device,
+                        proto_app_entry_replay_selected_rank=item.selected_rank, family_helper_agent_id=agent_id+20)
+            agent.set_support_helper_registry({agent_id+20: helper})
+            identity = dict(group_id="synthetic", world_name=WORLD, exp_id=manifest["exp_id"],
+                            agent_id=agent_id, device_id=device)
+            replay.append(dict(**identity, selected_rank=item.selected_rank, replay_hours_seen=72,
+                               uses_validation_data_any=0, day4_snapshot_created=1,
+                               replay_bundle_hash=source.bundle_hash, device_mapping_hash=source.device_mapping_hash))
+            for day, tick, raw in base_states:
+                state = json.loads(raw)
+                state["proto_app_entry_habit_memory"]["device_id"] = device
+                if day == 3:
+                    state["proto_day4_replay_snapshot"].update(agent_id=agent_id, device_id=device)
+                conn.execute(f"INSERT INTO {status_table} VALUES (?,?,?,?)", (day, tick, agent_id, json.dumps(state)))
+            for day in (3, 4):
+                for hour in range(24):
+                    fails = agent_id == 10 and day == 4 and hour >= 21
+                    engage = agent_id == 1 and day == 3 and hour == 9
+                    action = "no_app"
+                    if engage:
+                        action = "engage_goal"
+                    if fails:
+                        action = "bad_id"
+                    step(day, hour, action)
+                    row = dict(**identity, simulation_day=day, talkingdata_day=day+1, hour=hour,
+                               uses_validation_data=0, config_fingerprint="fingerprint")
+                    if fails:
+                        errors.append(dict(**row, entry_status="llm_rollout_error", bundle_generated=0))
+                    else:
+                        rollout.append(dict(**row, source="llm_memory_rollout", needs_actual_requests=1,
+                                            plan_actual_requests=1))
+            if agent_id == 1:
+                completed = json.loads(data["proto_stage_attempt_rows_json"])
+    write_attempt_rows(db, attempt_table, completed)
+    replay_path = folder / "app_entry_replay_summary_synthetic.csv"
+    write_rows(replay_path, list(reversed(replay)))
+    write_rows(folder / "app_entry_rollout_hourly_synthetic.csv",
+               sorted(rollout, key=lambda r: (r["simulation_day"], r["hour"])))
+    write_rows(folder / "app_entry_rollout_errors_synthetic.csv", errors)
+    def check():
+        return check_run(folder, "synthetic", db, trace, expected_days=5, expected_agents=10)
+
+    report = check()
+    assert report["issues"] == [] and report["acceptance_ok"]
+    assert report["replay"] == {"expected_hours": 720, "verified_hours": 720}
+    assert report["rollout"] == {"expected_hours": 480, "accounted_hours": 480, "valid_hours": 477, "error_hours_count": 3}
+    assert report["hourly_intention"]["scheduled_login_opportunities"] == 20
+    assert report["cross_day_status_counts"] == {"verified": 1, "no_day4_completed_task": 9}
+    assert report["agents"]["1"]["cross_day_status"] == "verified"
+    assert report["stability_gate"]["valid_decision_rate"] == 477/480
+    assert not report["stability_gate"]["eligible_by_technical_stability"]
+    assert not report["agents"]["10"]["stability_gate"]["eligible_by_technical_stability"]
+    assert all(report["agents"][str(i)]["stability_gate"]["eligible_by_technical_stability"] for i in range(1, 10))
+    trace_file, = trace.glob("llm-requests-*.jsonl")
+    events = [json.loads(line) for line in trace_file.read_text().splitlines()]
+    # The cohort still has twenty publication records, but one resident gets another's 09:00 event.
+    event = next(row for row in events if row["agent_id"] == 2 and row["kind"] == "opportunity_published")
+    event["agent_id"] = 3
+    trace_file.write_text("".join(json.dumps(row) + "\n" for row in events))
+    damaged = check()
+    assert not damaged["acceptance_ok"]
+    assert all(damaged["agents"][str(i)]["issues"] for i in (2, 3))
+    assert all(not damaged["agents"][str(i)]["issues"] for i in (1, 4, 5, 6, 7, 8, 9, 10))
+    replay[0]["device_id"], replay[1]["device_id"] = replay[1]["device_id"], replay[0]["device_id"]
+    write_rows(replay_path, replay)
+    assert "archived device mapping" in check()["issues"][0]

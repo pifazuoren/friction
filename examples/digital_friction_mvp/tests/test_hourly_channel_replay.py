@@ -3,7 +3,7 @@ from copy import deepcopy
 import pytest
 
 from check_hourly_channel_replay import encode_valid_choice
-from proto.app_entry.intention_contract import compact_menu
+from proto.app_entry.intention_contract import COMPACT_PLAN_V4, compact_menu
 from proto.app_entry.planner import decode_compact_plan
 
 
@@ -45,7 +45,7 @@ def test_only_one_already_reported_opening_moves_into_the_explicit_target_token(
     assert raw == original
     assert converted["action"] == "engage_goal@o1@open:public_service_context"
     assert converted["additional_apps"] == ["health_service_context", "public_service_context"]
-    current = {**body, "schema_version": "hourly_plan_compact_v4", **compact_menu(body["inputs"])}
+    current = {**body, "schema_version": COMPACT_PLAN_V4, **compact_menu(body["inputs"], COMPACT_PLAN_V4)}
     assert decode_compact_plan(converted, current) == decode_compact_plan(raw, body)
 
 

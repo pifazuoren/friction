@@ -70,6 +70,39 @@ def test_invalid_schema_returns_unavailable() -> None:
     assert response.audit_status in {"invalid_schema", "parse_failed"}
 
 
+@pytest.mark.parametrize("second_echo", [False, True])
+def test_truncated_context_echo_needs_a_real_helper_reply(second_echo: bool) -> None:
+    first = '{"prompt_version":"old","task":{"task_id":"task"},"env_context":{"complexity_level":'
+    second = 'complexity_level":1},"required_json_schema":{"support_style":"enabling|substituting|'
+    absent_reply = {
+        "support_style": "unavailable", "instruction_quality": "none",
+        "autonomy_preservation": "not_applicable", "proxy_completion_level": "none",
+        "emotional_tone": "not_applicable", "response_delay": "no_response",
+        "confidence": 0.8, "responded": False, "response_text": "", "rationale": "Busy.",
+    }
+    dialogs = []
+    replies = iter((first, second if second_echo else json.dumps(absent_reply)))
+
+    class EchoLLM:
+        async def atext_request(self, dialog, **kwargs):
+            dialogs.append(dialog)
+            return next(replies)
+
+    block = SupportResponseBlock(toolbox=SimpleNamespace(llm=EchoLLM()), agent_memory=None)
+    response = asyncio.run(block.generate_response(_request()))
+    assert len(dialogs) == 2
+    initial, repair = (dialog[1]["content"] for dialog in dialogs)
+    assert "required_json_schema" not in initial
+    assert "Keep any consistent decisions" not in repair
+    assert first not in repair
+    assert '"task_family": "account_login_verification"' in repair
+    if second_echo:
+        assert classify_support_delivery(response) == "technical_failure"
+    else:
+        assert response.audit_status == "ok_repaired"
+        assert classify_support_delivery(response) == "not_delivered"
+
+
 @pytest.mark.parametrize("changes", [
     {"task_id": "different-task"}, {"task_id": "task", "request_id": "r1"},
     {"task_id": "task", "success": True}, {"task_id": "task", "responded": "true"},

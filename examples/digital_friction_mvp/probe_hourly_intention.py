@@ -1,4 +1,4 @@
-"""Day-five controlled Plan probe. A synthetic day-four episode is the only manipulation."""
+"""Day-five controlled V4 Plan probe with frozen or production-updated D4 feedback."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from proto.app_entry.bundle import HourlyAppEntryBundle, derive_primary_context
 from proto.app_entry.bundle_loader import get_replay_source
 from proto.app_entry.candidate import build_rollout_app_context_candidates
 from proto.app_entry.habit_memory import build_rollout_intensity_profile, update_habit_memory_from_bundle
+from proto.app_entry.intention_contract import COMPACT_PLAN_V4
 from proto.app_entry.needs import DIGITAL_NEED_TO_APP_CONTEXTS, DIGITAL_NEED_LABELS, DigitalNeedsResult
 from proto.app_entry.planner import DigitalAppEntryPlanBlock
 from proto.app_entry.rollout import build_rollout_input_packet
@@ -33,6 +34,11 @@ PROFILE = {
 ENVIRONMENT = {"friction_level": 1, "risk_level": 1, "assist_level": 1}
 EPISODE_ID = "controlled-day4-login-episode"
 MODES = ("legacy", "opportunity_v1")
+SCENES = ("S0", "S1")
+DEFERRABLE_SERVICE_DESCRIPTION = (
+    "Sign into your account to view general service information. "
+    "You can also view it tomorrow. Your benefits are unaffected if you do not check today."
+)
 # Controlled latent needs, shared across all cells. No Needs request is sent.
 NEEDS = DigitalNeedsResult.from_sanitized(
     {
@@ -104,7 +110,9 @@ def load_history(reference_dir: Path | None) -> SharedHistory:
     )
 
 
-def login_offer(day=DAY):
+def login_offer(day=DAY, *, scene="S0"):
+    if scene not in SCENES:
+        raise ValueError(f"Unknown login scene {scene!r}")
     task = scheduled_login_for_day(
         hour=HOUR,
         agent_id=PROFILE_ID,
@@ -116,6 +124,8 @@ def login_offer(day=DAY):
     )
     if task is None:
         raise RuntimeError(f"The scheduled Day {day + 1} login must be available at 09:00")
+    if scene == "S1":
+        task.visible_description = DEFERRABLE_SERVICE_DESCRIPTION
     ledger = IntentionLedger()
     offer = ledger.publish(task, source="scheduled_login", sim_hour=monotonic_sim_hour(day, TICK))
     return task, ledger, offer
@@ -139,11 +149,27 @@ def prior_episode(condition: str) -> dict:
     }
 
 
-async def run_plan(llm, *, mode: str, condition: str, history: SharedHistory):
+def checked_feedback_state(feedback_state, condition):
+    """Accept the in-memory branch or its JSON archive, always matched to the assigned arm."""
+    if feedback_state is None:
+        return None
+    from hourly_feedback_state import FeedbackState
+
+    if isinstance(feedback_state, dict):
+        feedback_state = FeedbackState.from_dict(feedback_state)
+    if not isinstance(feedback_state, FeedbackState) or feedback_state.condition != condition:
+        raise ValueError("D4 feedback state does not match the assigned condition")
+    return feedback_state
+
+
+async def run_plan(
+    llm, *, mode: str, condition: str, history: SharedHistory, scene: str = "S0", feedback_state=None,
+):
     """Call the same packet builder and Plan block as the continuous run; bypass only Needs."""
     if mode not in MODES:
         raise ValueError(f"Unknown intention condition {mode!r}")
-    _, ledger, _ = login_offer()
+    state = checked_feedback_state(feedback_state, condition)
+    _, ledger, _ = login_offer(scene=scene)
     intensity = build_rollout_intensity_profile(history.habits, hour=HOUR, absolute_cap=12)
     packet = build_rollout_input_packet(
         simulation_day=DAY,
@@ -152,11 +178,11 @@ async def run_plan(llm, *, mode: str, condition: str, history: SharedHistory):
         stable_profile=PROFILE,
         habit_memory=history.habits,
         recent_rollout_rows=[],
-        recent_task_episodes=[prior_episode(condition)],
+        recent_task_episodes=state.episodes if state else [prior_episode(condition)],
         latest_reflection={},
-        helplessness=50.0,
-        trust=50.0,
-        avoidance=50.0,
+        helplessness=state.helplessness if state else 50.0,
+        trust=state.trust if state else 50.0,
+        avoidance=state.avoidance if state else 50.0,
         environment=ENVIRONMENT,
         intensity_profile=intensity,
         hourly_intention_mode=mode,
@@ -178,6 +204,7 @@ async def run_plan(llm, *, mode: str, condition: str, history: SharedHistory):
         input_payload=packet,
         intensity_profile=intensity,
         prompt_version="app_entry_plan_v3",
+        compact_schema_version=COMPACT_PLAN_V4 if mode == "opportunity_v1" else None,
         min_confidence=0.5,
         timeout=45,
         retries=1,
@@ -187,22 +214,28 @@ async def run_plan(llm, *, mode: str, condition: str, history: SharedHistory):
 
 def routed_choice(mode, plan):
     """Stop exactly at the task admission boundary; no task strategy/help/outcome call."""
-    task, ledger, offer = login_offer()
     if mode == "legacy":
         # In the fixed-task control, assignment precedes the Plan, even if the Plan fails.
+        task, _, _ = login_offer()
         return {
             "policy_choice": "legacy_assigned",
             "choice_source": "legacy_scheduled_policy",
             "routed_task_id": task.task_id,
             "goal_after": None,
         }
+    return route_opportunity_choice(plan)[0]
+
+
+def route_opportunity_choice(plan, *, scene="S0"):
+    """Apply the chosen intent to a fresh ledger for the same advertised scene."""
+    task, ledger, offer = login_offer(scene=scene)
     if plan is None:
         return {
             "policy_choice": None,
             "choice_source": "technical_failure",
             "routed_task_id": None,
             "goal_after": None,
-        }
+        }, None
     selected = ledger.apply(plan.intent, sim_hour=SIM_HOUR)
     if selected and selected.task_id != task.task_id:
         raise RuntimeError(f"Intent did not route the advertised opportunity {offer['opportunity_id']}")
@@ -211,7 +244,7 @@ def routed_choice(mode, plan):
         "choice_source": "validated_model_intent",
         "routed_task_id": selected.task_id if selected else None,
         "goal_after": deepcopy(ledger.state["goal"]),
-    }
+    }, selected
 
 
 def _rule_step(history, sim_hour, ledger=None, offer=None):

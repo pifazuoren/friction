@@ -62,13 +62,13 @@ from .logical_clock import is_proto_logical_clock_enabled, monotonic_sim_hour
 from .memory.packet import (
     build_relevant_mastery_summary as _build_relevant_mastery_summary,
     build_task_relevant_memory_packet as _build_task_relevant_memory_packet,
-    compact_support_context as _compact_support_context,
     extract_cross_task_event_tail as _extract_cross_task_event_tail,
     extract_event_log_episodes,
     extract_same_task_event_tail as _extract_same_task_event_tail,
     support_snapshot_for_task as _support_snapshot_for_task,
 )
 from .psychology.helplessness import apply_helplessness_update
+from .support.routing import dispatch_family_support_request
 from .support.protocol import (
     SupportRequest,
     SupportResponse,
@@ -587,82 +587,13 @@ class DigitalHelplessnessAgent(SocietyAgent):
             -1,
         )
         registry = getattr(self, SUPPORT_HELPER_REGISTRY_ATTRIBUTE, {})
-        helper = registry.get(helper_id) if isinstance(registry, dict) else None
-        request = SupportRequest(
-            request_id=f"{int(self.id)}-{int(day)}-{int(float(tick))}-{task.task_id}",
-            requester_agent_id=int(self.id),
-            helper_agent_id=helper_id if helper_id >= 0 else None,
-            day=int(day),
-            tick=float(tick),
-            task_id=str(task.task_id),
-            task_family=str(task.task_family),
-            friction_type=str(task.friction_type),
-            difficulty=float(task.difficulty),
-            need_type=str(task.need_type),
-            support_sensitivity=float(task.support_sensitivity),
-            strategy_type=str(strategy.strategy_type),
-            support_need="help me complete the digital task while preserving my ability to learn",
-            task_appraisal={
-                "perceived_task_difficulty": float(
-                    getattr(task_appraisal, "perceived_task_difficulty", 50.0)
-                ),
-                "perceived_task_risk": float(
-                    getattr(task_appraisal, "perceived_task_risk", 50.0)
-                ),
-                "felt_control": float(getattr(task_appraisal, "felt_control", 50.0)),
-                "expected_help_effectiveness": float(
-                    getattr(task_appraisal, "expected_help_effectiveness", 50.0)
-                ),
-                "task_value": float(getattr(task_appraisal, "task_value", 50.0)),
-            },
-            memory_context=_compact_support_context(task_relevant_memory_packet),
-            env_context={
-                "digital_stage": str(env.get("digital_stage") or env.get("stage_name") or ""),
-                "friction_level": _safe_int(env.get("friction_level", 0), 0),
-                "complexity_level": _safe_int(env.get("complexity_level", 0), 0),
-                "risk_level": _safe_int(env.get("risk_level", 0), 0),
-                "assist_level": _safe_int(env.get("assist_level", 0), 0),
-                "human_support_level": _safe_int(env.get("human_support_level", 0), 0),
-                "accessibility_level": _safe_int(env.get("accessibility_level", 0), 0),
-            },
-            profile_summary={
-                "age_bucket": age_bucket(profile_summary.get("age", -1)),
-                "persona_tag": persona_bucket(profile_summary.get("persona", "")),
-                "education": _compact_status_text(
-                    profile_summary.get("education"),
-                    default="unknown",
-                ),
-            },
-            relationship={
-                "relationship_type": "family",
-                "mapped_helper_agent_id": helper_id,
-            },
+        request, response, status = await dispatch_family_support_request(
+            requester_id=self.id, helper_id=helper_id, registry=registry, task=task,
+            strategy=strategy, task_appraisal=task_appraisal, task_relevant_memory_packet=task_relevant_memory_packet,
+            env=env, profile_summary=profile_summary, day=day, tick=tick,
         )
-        if helper is None or not hasattr(helper, "provide_support"):
-            return (
-                request,
-                SupportResponse.unavailable(
-                    request=request,
-                    source="helper_unavailable",
-                    audit_status="helper_not_found",
-                ),
-                "helper_not_found",
-            )
-        try:
-            response = await helper.provide_support(request)
-        except TraceWriteError:
-            raise
-        except Exception as exc:
-            return (
-                request,
-                SupportResponse.unavailable(
-                    request=request,
-                    source="helper_unavailable",
-                    audit_status="request_error",
-                    rationale=str(exc)[:300],
-                ),
-                "request_error",
-            )
+        if status != "dispatched":
+            return request, response, status
         if (
             not isinstance(response, SupportResponse)
             or response.request_id != request.request_id
@@ -2063,6 +1994,15 @@ class DigitalHelplessnessAgent(SocietyAgent):
         has_existing_task = existing_task_raw not in (None, "", "null")
         runtime_config = load_runtime_config()
         entry_mode = runtime_config.proto_task_entry_mode
+        mode = getattr(runtime_config, "proto_hourly_intention_mode", "legacy")
+        talkingdata_day = simulation_day_to_talkingdata_day(current_day)
+        opportunity_replay = (mode == "opportunity_v1" and entry_mode == "app_context_replay_then_llm_rollout"
+                              and talkingdata_day in runtime_config.proto_app_entry_replay_days)
+        if opportunity_replay:
+            habit = await self.memory.status.get("proto_app_entry_habit_memory", {})
+            if (habit.get("last_updated_day"), habit.get("last_updated_hour")) == (
+                    talkingdata_day, monotonic_sim_hour(current_day, float(t)) % 24):
+                return 0.0
         is_entry_tick = (
             is_task_window_tick(float(t))
             if entry_mode == "fixed_assignment"
@@ -2207,9 +2147,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
         ledger = None
         intention_args = {}
         sim_hour = monotonic_sim_hour(current_day, float(t))
-        mode = getattr(runtime_config, "proto_hourly_intention_mode", "legacy")
         max_defer_hours = getattr(runtime_config, "proto_hourly_intention_max_defer_hours", 24)
-        talkingdata_day = simulation_day_to_talkingdata_day(int(day))
         if (
             runtime_config.proto_task_entry_mode
             == "app_context_replay_then_llm_rollout"
@@ -2882,6 +2820,12 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 trace_record("goal_outcome", module="hourly_intention", status="technical_failure",
                              goal_state_after=deepcopy(ledger.goal), operation_started=False, episode_id=None,
                              outcome_type=None, support_delivery_status=support_delivery_status)
+                return 0.0
+            if opportunity_replay:
+                # The device exposure was observed even when the simulated helper returned no usable answer.
+                for key, val in clear_task_surface_updates().items():
+                    await self.memory.status.update(key, val)
+                await self._persist_completed_replay_hour(entry_decision)
                 return 0.0
             raise SupportTechnicalError(
                 f"Family support request {support_request_id} failed: {support_ecology_status}"

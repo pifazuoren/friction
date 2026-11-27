@@ -26,6 +26,10 @@ class TraceWriteError(RuntimeError):
     """The current run requested an audit trail that cannot be persisted."""
 
 
+class LLMRunInterrupted(RuntimeError):
+    """The experiment transport stopped the run; downstream fallbacks must not advance it."""
+
+
 def traced_agent_tick(function):
     @wraps(function)
     async def wrapped(*args, **kwargs):

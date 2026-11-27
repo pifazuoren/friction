@@ -3,12 +3,13 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import math
 from typing import Any, Callable
 
 from config_runtime import load_runtime_config
 
 from .memory.packet import compact_recent_episodes
-from .llm_trace import LLMQueryTrace, TraceWriteError
+from .llm_trace import LLMQueryTrace, LLMRunInterrupted, TraceWriteError
 from .models import (
     AttemptOutcome,
     AttemptStrategy,
@@ -578,7 +579,7 @@ async def _query_json_payload(
                 retries=retries,
                 max_tokens=max_tokens,
             )
-        except TraceWriteError:
+        except (TraceWriteError, LLMRunInterrupted):
             raise
         except Exception:
             last_error = "request_error"
@@ -637,7 +638,7 @@ async def _query_json_payload(
                 retries=1,
                 max_tokens=max(220, int(max_tokens)),
             )
-        except TraceWriteError:
+        except (TraceWriteError, LLMRunInterrupted):
             raise
         except Exception:
             last_error = "request_error"
@@ -969,6 +970,46 @@ def _sanitize_daily_reflection(payload: Any) -> tuple[dict[str, Any] | None, str
         },
         "ok",
     )
+
+
+def _score_query_options(sanitize_fn, upper_bounds: dict[str, int], audit: dict | None) -> dict:
+    """Opt in to exact numeric ranges and preserve the two distinct provider responses."""
+    if audit is None:
+        return {"sanitize_fn": sanitize_fn}
+    audit.update(initial=None, repair=None)
+
+    def invalid_fields(payload):
+        return [
+            key for key, limit in upper_bounds.items()
+            if type(payload.get(key)) not in {int, float} or not 0 <= payload[key] <= limit
+        ]
+
+    def validate(payload):
+        if not isinstance(payload, dict) or invalid_fields(payload):
+            return None, "invalid_schema"
+        return sanitize_fn(payload)
+
+    def observe(phase, raw):
+        payload = _extract_json_object(raw)
+        if payload is None:
+            audit[phase] = {"status": "parse_failed", "reported_scores": None}
+            return
+        # The raw reply remains in the trace. Keep identifiable fields in the JSON
+        # result too, without emitting a non-standard NaN/Infinity JSON literal.
+        scores = {}
+        for key in sorted(upper_bounds.keys() & payload.keys()):
+            value = payload[key]
+            if isinstance(value, float) and not math.isfinite(value):
+                value = {"nonfinite_number": repr(value)}
+            elif isinstance(value, (list, dict)):
+                value = {"invalid_type": type(value).__name__}
+            scores[key] = value
+        audit[phase] = {
+            "status": validate(payload)[1], "reported_scores": scores,
+            "invalid_score_fields": sorted(invalid_fields(payload)),
+        }
+
+    return {"sanitize_fn": validate, "on_raw_response": observe, "audit": audit}
 
 
 def _sanitize_task_appraisal(payload: Any) -> tuple[dict[str, Any] | None, str]:
@@ -1362,6 +1403,7 @@ def _build_task_appraisal_cache_key(
     return (
         _TASK_APPRAISAL_PROMPT_VERSION,
         str(task.task_family),
+        task.visible_description,
         str(task.friction_type),
         _difficulty_bucket(float(task.difficulty)),
         str(stage_key or "none"),
@@ -1387,6 +1429,7 @@ def _build_task_appraisal_cache_key(
         _failure_bucket(int(float(recent.get("recent_failure_pressure", 0.0)) // 6.0)),
         _help_rate_bucket(float(recent.get("recent_negative_feedback_ratio", 0.0))),
         _same_task_history_bucket(task_memory),
+        json.dumps(compact_recent_episodes(task_memory.get("recent_task_episodes")), sort_keys=True),
         _profile_bucket(
             float(task_memory.get("same_task_controllable_success_memory", 0.0))
         ),
@@ -1611,6 +1654,7 @@ def _build_strategy_deliberation_cache_key(
     return (
         _STRATEGY_DELIBERATION_PROMPT_VERSION,
         str(task.task_family),
+        task.visible_description,
         _difficulty_bucket(float(task.difficulty)),
         _helplessness_bucket(float(effective_helplessness)),
         _self_efficacy_bucket(float(task_self_efficacy)),
@@ -1663,6 +1707,7 @@ async def resolve_task_appraisal(
     digital_emotion_state: Any,
     task_relevant_memory: Any = None,
     retrieved_episodic_memory: Any = None,
+    strict_score_audit: dict[str, Any] | None = None,
 ) -> TaskAppraisalResult:
     config = load_runtime_config()
     mode = str(config.proto_llm_psychology_mode)
@@ -1695,7 +1740,7 @@ async def resolve_task_appraisal(
         task_relevant_memory=task_relevant_memory,
         retrieved_episodic_memory=retrieved_episodic_memory,
     )
-    if bool(config.proto_llm_psychology_cache_enabled):
+    if config.proto_llm_psychology_cache_enabled and strict_score_audit is None:
         payload = _TASK_APPRAISAL_CACHE.get(cache_key)
         cache_hit = payload is not None
 
@@ -1725,7 +1770,11 @@ async def resolve_task_appraisal(
                 "- judge_confidence must be a float in [0,1]\n"
                 "- reason must be <= 120 chars"
             ),
-            sanitize_fn=_sanitize_task_appraisal,
+            **_score_query_options(
+                _sanitize_task_appraisal,
+                {**dict.fromkeys(_TASK_APPRAISAL_KEYS - {"reason"}, 100), "judge_confidence": 1},
+                strict_score_audit,
+            ),
             timeout=int(config.proto_llm_psychology_timeout),
             retries=int(config.proto_llm_psychology_retries),
         )
@@ -1740,7 +1789,7 @@ async def resolve_task_appraisal(
                 **neutral_payload,
             )
         payload = llm_payload
-        if bool(config.proto_llm_psychology_cache_enabled):
+        if config.proto_llm_psychology_cache_enabled and strict_score_audit is None:
             _TASK_APPRAISAL_CACHE[cache_key] = payload
 
     confidence = float(payload["judge_confidence"])
@@ -2194,6 +2243,7 @@ async def resolve_strategy_deliberation(
     recent_episode_summary: Any = None,
     retrieved_episodic_memory: Any = None,
     prompt_format: str = "scored_example",
+    strict_score_audit: dict[str, Any] | None = None,
 ) -> StrategyDeliberationResult:
     show_rule_weights = prompt_format != "field_rules_no_priors"
     output_format = prompt_format if show_rule_weights else "field_rules"
@@ -2249,7 +2299,7 @@ async def resolve_strategy_deliberation(
     )
     if prompt_format != "scored_example":
         cache_key = (*cache_key, prompt_format)
-    if bool(config.proto_llm_psychology_cache_enabled):
+    if config.proto_llm_psychology_cache_enabled and strict_score_audit is None:
         payload = _STRATEGY_DELIBERATION_CACHE.get(cache_key)
         cache_hit = payload is not None
 
@@ -2322,7 +2372,11 @@ async def resolve_strategy_deliberation(
                 "- judge_confidence must be a float in [0,1]\n"
                 "- reason must be <= 120 chars"
             ),
-            sanitize_fn=_sanitize_strategy_deliberation,
+            **_score_query_options(
+                _sanitize_strategy_deliberation,
+                dict.fromkeys(_STRATEGY_DELIBERATION_KEYS - {"dominant_strategy", "reason"}, 1),
+                strict_score_audit,
+            ),
             timeout=int(config.proto_llm_psychology_timeout),
             retries=int(config.proto_llm_psychology_retries),
         )
@@ -2341,7 +2395,7 @@ async def resolve_strategy_deliberation(
                 final_weights=copy.deepcopy(normalized_rule_weights),
             )
         payload = llm_payload
-        if bool(config.proto_llm_psychology_cache_enabled):
+        if config.proto_llm_psychology_cache_enabled and strict_score_audit is None:
             _STRATEGY_DELIBERATION_CACHE[cache_key] = payload
 
     confidence = float(payload["judge_confidence"])

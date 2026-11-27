@@ -1,3 +1,4 @@
+import json
 import sys
 
 import pytest
@@ -44,3 +45,33 @@ def test_new_mode_rejects_incompatible_entry_and_nonpositive_interval(monkeypatc
     monkeypatch.setenv("PROTO_HOURLY_INTENTION_MAX_DEFER_HOURS", "0")
     with pytest.raises(ValueError, match="MAX_DEFER_HOURS"):
         load_runtime_config()
+
+
+def test_ten_resident_inputs_match_engine_ids_and_survive_archiving(tmp_path, replay_files):
+    replay = week.get_replay_source(**replay_files, replay_days=(1, 2, 3))
+    profiles = tmp_path / "residents.json"
+    profiles.write_text(json.dumps([{"id": i} for i in range(10, 0, -1)]))
+    settings = {
+        "DIGITAL_FRICTION_PROFILES_PATH": str(profiles),
+        "PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH": replay_files["bundle_path"],
+        "PROTO_APP_ENTRY_REPLAY_DEVICE_PATH": replay_files["device_mapping_path"],
+    }
+    before = week.matched_cohort(replay, settings["DIGITAL_FRICTION_PROFILES_PATH"], 10)
+    assert len({p["device_id"] for p in before}) == len({p["profile_id"] for p in before}) == 10
+    assert [p["selected_rank"] for p in before] == list(range(1, 11))
+    week.freeze_cohort_inputs(tmp_path, settings)
+    archived = week.get_replay_source(
+        bundle_path=settings["PROTO_APP_ENTRY_REPLAY_BUNDLE_PATH"],
+        device_mapping_path=settings["PROTO_APP_ENTRY_REPLAY_DEVICE_PATH"],
+        replay_days=(1, 2, 3),
+    )
+    path = tmp_path / "inputs" / "profiles.json"
+    assert before == week.matched_cohort(archived, path, 10)
+    assert [p["profile_id"] for p in before] == list(range(1, 11))
+    assert archived.bundle_hash == replay.bundle_hash
+    assert archived.device_mapping_hash == replay.device_mapping_hash
+    original = json.loads(path.read_text())
+    original[1]["id"] = original[0]["id"]
+    path.write_text(json.dumps(original))
+    with pytest.raises(ValueError, match="Duplicate"):
+        week.matched_cohort(archived, path, 10)

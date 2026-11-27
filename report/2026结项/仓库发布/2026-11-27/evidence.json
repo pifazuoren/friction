@@ -6,6 +6,10 @@
     "model": "glm-4-flashx",
     "plan_schema_for_opportunity_mode": "hourly_plan_compact_v3",
     "profiles": 1,
+    "history_source": "reference_rank_1",
+    "history_reference_hours": 72,
+    "archived_reference_bundle_hash_prefix": "de012e766b9bac52",
+    "archived_reference_mapping_hash_prefix": "13cb32d3751ad02a",
     "reported_day_1_based": 5,
     "hour": 9,
     "manipulated_yesterday_episode_fields": {
@@ -87,6 +91,12 @@
               "reason_text": 7,
               "admission": 0,
               "accepted_intent_kind": 0
+            },
+            "mean_score_difference_failure_minus_success": {
+              "attitude": 0.09,
+              "subjective_norm": 0.06,
+              "perceived_control": 0.03,
+              "confidence": 0.12
             }
           },
           "repeat": {

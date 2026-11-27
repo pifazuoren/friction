@@ -1,4 +1,4 @@
-"""Prepare a paired Plan experiment or two-case schema smoke check. Only --online contacts GLM."""
+"""Prepare the paired Plan experiment or its two-case V4 smoke check. Only --online contacts GLM."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ from probe_hourly_intention import (
     run_plan,
 )
 from proto.llm_trace import bind_trace_context, traced_agent_tick
-from proto.app_entry.intention_contract import compact_needs, compact_observation
+from proto.app_entry.intention_contract import COMPACT_PLAN_V4, compact_needs, compact_observation
 from proto.paired_random import PairedRandomProvider
 from run_strategy_memory_pairs import (
     ENDPOINT,
@@ -56,12 +56,13 @@ SMOKE_HTTP_LIMIT = 4
 class SmokeRequestBudget:
     """Enforce the cap immediately before HTTP dispatch, including any extra client attempts."""
 
-    def __init__(self):
+    def __init__(self, *, limit=SMOKE_HTTP_LIMIT):
+        self.limit = limit
         self.dispatched = 0
         self.case_dispatched = 0
 
     async def before_send(self, request):
-        if self.dispatched >= SMOKE_HTTP_LIMIT or self.case_dispatched >= 2:
+        if self.dispatched >= self.limit or self.case_dispatched >= 2:
             raise RuntimeError("Schema smoke HTTP budget exhausted before dispatch")
         self.dispatched += 1
         self.case_dispatched += 1
@@ -71,8 +72,9 @@ class SmokeRequestBudget:
 class CapturePlan:
     """Offline double at the transport boundary; its valid, inert reply carries no study data."""
 
-    def __init__(self, mode):
+    def __init__(self, mode, *, action="no_app"):
         self.mode = mode
+        self.action = action
         self.requests = []
 
     async def atext_request(self, *, dialog, **parameters):
@@ -88,13 +90,13 @@ class CapturePlan:
         }
         if self.mode == "opportunity_v1":
             reply = {
-                "action": "no_app", "additional_apps": [], "reason": "Offline contract check.",
+                "action": self.action, "additional_apps": [], "reason": "Offline contract check.",
                 **{k: reply[k] for k in ("attitude", "subjective_norm", "perceived_control", "confidence")},
             }
         return json.dumps(reply)
 
 
-def verify_contrast(success, failure, mode):
+def verify_contrast(success, failure, mode, *, scene="S0"):
     """Compare the emitted HTTP messages, including exact instructions and sampling settings."""
     if success["parameters"] != failure["parameters"]:
         raise ValueError("The two treatments use different model parameters")
@@ -115,7 +117,7 @@ def verify_contrast(success, failure, mode):
         if mode == "legacy" and "intent" in body["output_schema"]["required"]:
             raise ValueError("The legacy Plan was asked for a high-level intent")
         if mode == "opportunity_v1":
-            _, _, offered = login_offer()
+            _, _, offered = login_offer(scene=scene)
             handles = [alias for alias, target in body["targets"].items() if target == offered["opportunity_id"]]
             if len(handles) != 1:
                 raise ValueError("The offered task must map to exactly one action handle")
@@ -125,7 +127,7 @@ def verify_contrast(success, failure, mode):
                 latest = min(latest, offered["known_deadline_sim_hour"])
             legal_deferrals = {f"defer_goal@{handle}@{h}" for h in range(now + 1, latest + 1)}
             admission = f"engage_goal@{handle}@open:{offered['required_channel']}"
-            if (body["schema_version"] != "hourly_plan_compact_v4" or "output_schema" in body
+            if (body["schema_version"] != COMPACT_PLAN_V4 or "output_schema" in body
                     or packet["available_opportunities"] != [offered] or packet["current_intention"]
                     or packet["monotonic_sim_hour"] != SIM_HOUR
                     or set(body["actions"]) != {"no_app", "habitual_app", f"drop_goal@{handle}", admission}
@@ -457,6 +459,7 @@ async def main():
             "expected_initial_plan_requests": len(orders),
             "purpose": SMOKE_PURPOSE if args.smoke else "paired_intention_study",
             "included_modes": list(stimuli),
+            "opportunity_plan_schema": COMPACT_PLAN_V4,
             "extra_repair_requests_max": len(orders),
             "sdk_retries": 0,
             "planned_needs_low_level_help_outcome_requests": 0,

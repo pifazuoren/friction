@@ -1,0 +1,223 @@
+{
+  "v4_continuous": {
+    "run_id": "scheduled_login_20261127_235942_2e1711",
+    "schema": "hourly_plan_compact_v4",
+    "model": "glm-4-flashx",
+    "source_zip_sha256": "c61bb06ab74a8e73a1e6f735e7e421dae1252b21b9ba693c829b1579f1051360",
+    "files_sha256": {
+      "acceptance.json": "4736cc75ae5f14f76c8f71199068a80c5d10de0ceae5c487c3bfdeda03e3d5c2",
+      "five_day_cohort_report.json": "79240511da707373837895d93a5919bb326c6169e5dfcc85f4e992e2b348b6cb"
+    },
+    "synthetic_residents": 10,
+    "days": 5,
+    "worlds": 1,
+    "replay_person_hours": {
+      "expected_hours": 720,
+      "verified_hours": 720
+    },
+    "day4_day5_plan_person_hours": {
+      "expected_hours": 480,
+      "accounted_hours": 480,
+      "valid_hours": 225,
+      "error_hours_count": 255
+    },
+    "valid_plan_fraction": 0.46875,
+    "minimum_valid_fraction": 0.95,
+    "individual_stability_checks_passed": 1,
+    "intention": {
+      "valid_intention_decisions": 225,
+      "scheduled_login_opportunities": 20,
+      "published_opportunities": 22,
+      "visible_opportunities": 22,
+      "distinct_tasks_entered": 17,
+      "low_level_decisions": 93,
+      "operations_started": 40,
+      "help_requests": 20,
+      "expected_scheduled_login_opportunities": 20
+    },
+    "day4_day5_outcomes_by_low_level_decision": {
+      "success_with_help": 6,
+      "abandon_midway": 20,
+      "avoid_without_attempt": 53,
+      "failure_after_attempt": 2,
+      "success_self": 8,
+      "failure_even_with_help": 4
+    },
+    "day4_day5_help": {
+      "dispatched": 20,
+      "delivered": 20,
+      "outcomes_after_delivery": {
+        "success_with_help": 6,
+        "abandon_midway": 10,
+        "failure_even_with_help": 4
+      }
+    },
+    "day5_memory_by_resident": {
+      "verified": 7,
+      "no_day4_completed_task": 3
+    },
+    "all_five_days_traced_llm_requests_by_module": {
+      "task_appraisal": 158,
+      "strategy": 161,
+      "attribution": 54,
+      "helper": 42,
+      "app_needs": 960,
+      "app_plan": 735
+    },
+    "day4_day5_needs": {
+      "initial_invalid_schema": 480,
+      "initial_replies_starting_with_input_envelope_and_missing_need_pressures": 480,
+      "repair_valid": 480
+    }
+  },
+  "v5_diagnostic": {
+    "run_id": "daily_channels_20261128_010437_3a43cc",
+    "schema": "hourly_plan_compact_v5",
+    "model": "glm-4-flashx",
+    "source_zip_sha256": "10aa58e4e2268dd1e612e3f349c7593fec69fcc72f37e0cde3344bdd4bfa49c2",
+    "files_sha256": {
+      "design.json": "516c4e14ee585e58ccf1fa09e4a2082a229587d231863dbc8f53508392c995a2",
+      "replay.json": "463bfd3ff0e296158531776a7db77a85ff1e450268a8fb53ec241ab3887ee607",
+      "stimuli.json": "6ee6b7e857b3a99cdd07476ddc2bcdc6377a8aa0a519b78e26d8e48e55eff8eb",
+      "summary.json": "cb5bb2bc5ec6279e67077a0ff05931c8415f61ba63d6258dd433a77d415be9a2"
+    },
+    "offline_replay": {
+      "hours": 480,
+      "archived_plan_requests": 735,
+      "equivalent_accepted": 225,
+      "equivalent_actions": {
+        "habitual_app": 31,
+        "no_app": 97,
+        "engage_goal": 17,
+        "drop_goal": 4,
+        "continue_goal": 76
+      },
+      "archived_first_valid": 225,
+      "archived_repaired_valid": 0,
+      "rejected_original_pairs": 255,
+      "original_failed_by_status": {
+        "changed_intent_on_repair": 228,
+        "invalid_intent": 26,
+        "low_confidence": 1
+      },
+      "failed_bare_habitual_empty_first_reply": 254,
+      "new_model_choices": 0,
+      "online_requests": 0
+    },
+    "online": {
+      "case_selection": "Earliest day/hour within each stratum; unused rank first, then lowest rank at a tied hour.",
+      "complete": true,
+      "http_requests": 6,
+      "http_limit": 12,
+      "initial_valid": 6,
+      "repair_requests": 0,
+      "number_of_daily_app_choices_per_stimulus": 5,
+      "number_of_no_app_choices_per_stimulus": 1,
+      "historical_days_per_stimulus": 3,
+      "by_source_group": {
+        "failed": {
+          "states": 4,
+          "first_valid": 4,
+          "final_valid": 4,
+          "initial_explicit_daily_token": 4,
+          "accepted_explicit_daily_token": 4
+        },
+        "controls": {
+          "states": 2,
+          "first_valid": 2,
+          "final_valid": 2,
+          "initial_explicit_daily_token": 2,
+          "accepted_explicit_daily_token": 2
+        }
+      },
+      "cases": [
+        {
+          "resident_rank": 5,
+          "day": 4,
+          "hour": 0,
+          "v4_first_action": "habitual_app",
+          "v4_first_additional_apps": [],
+          "v4_final_parse_status": "changed_intent_on_repair",
+          "v5_first_action": "habitual_app@open:communication_social_context",
+          "v5_first_parse_status": "ok",
+          "v5_planned_app_openings": {
+            "communication_social_context": 1
+          },
+          "same_hour_active_days_in_three_day_history": 3
+        },
+        {
+          "resident_rank": 6,
+          "day": 4,
+          "hour": 0,
+          "v4_first_action": "habitual_app",
+          "v4_first_additional_apps": [],
+          "v4_final_parse_status": "invalid_intent",
+          "v5_first_action": "habitual_app@open:communication_social_context",
+          "v5_first_parse_status": "ok",
+          "v5_planned_app_openings": {
+            "communication_social_context": 1
+          },
+          "same_hour_active_days_in_three_day_history": 3
+        },
+        {
+          "resident_rank": 1,
+          "day": 5,
+          "hour": 0,
+          "v4_first_action": "habitual_app",
+          "v4_first_additional_apps": [],
+          "v4_final_parse_status": "changed_intent_on_repair",
+          "v5_first_action": "habitual_app@open:health_service_context",
+          "v5_first_parse_status": "ok",
+          "v5_planned_app_openings": {
+            "health_service_context": 1
+          },
+          "same_hour_active_days_in_three_day_history": 2
+        },
+        {
+          "resident_rank": 3,
+          "day": 5,
+          "hour": 0,
+          "v4_first_action": "habitual_app",
+          "v4_first_additional_apps": [],
+          "v4_final_parse_status": "invalid_intent",
+          "v5_first_action": "habitual_app@open:finance_context",
+          "v5_first_parse_status": "ok",
+          "v5_planned_app_openings": {
+            "finance_context": 1
+          },
+          "same_hour_active_days_in_three_day_history": 2
+        },
+        {
+          "resident_rank": 4,
+          "day": 4,
+          "hour": 0,
+          "v4_first_action": "no_app",
+          "v4_first_additional_apps": [],
+          "v4_final_parse_status": "ok",
+          "v5_first_action": "habitual_app@open:finance_candidate_review",
+          "v5_first_parse_status": "ok",
+          "v5_planned_app_openings": {
+            "finance_candidate_review": 1
+          },
+          "same_hour_active_days_in_three_day_history": 2
+        },
+        {
+          "resident_rank": 2,
+          "day": 4,
+          "hour": 0,
+          "v4_first_action": "habitual_app",
+          "v4_first_additional_apps": [
+            "communication_social_context"
+          ],
+          "v4_final_parse_status": "ok",
+          "v5_first_action": "habitual_app@open:communication_social_context",
+          "v5_first_parse_status": "ok",
+          "v5_planned_app_openings": {
+            "communication_social_context": 1
+          },
+          "same_hour_active_days_in_three_day_history": 3
+        }
+      ]
+    }
+  }
+}

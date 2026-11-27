@@ -7,7 +7,9 @@ import json
 from proto.metrics import attempt_rows_table_name
 from proto.app_entry.types import _stable_hash
 from proto.app_entry.intention_contract import (
+    COMPACT_PLAN_V2,
     COMPACT_PLAN_VERSIONS,
+    OPENING_TOKEN_VERSIONS,
     compact_repair_changed,
     parse_compact_reply,
     read_compact_statement,
@@ -99,10 +101,11 @@ def check_compact_repair_request(call, original, initial_payload):
         else "exposure_cap"
     )
     constraint_keys = ["actions", "channels", volume, "minimum_confidence"]
-    if initial_payload["schema_version"] in {"hourly_plan_compact_v3", "hourly_plan_compact_v4"}:
+    version = initial_payload["schema_version"]
+    if version in COMPACT_PLAN_VERSIONS and version != COMPACT_PLAN_V2:
         constraint_keys.extend(("schema_version", "targets", "defer_options"))
         locked.update({key: before[key] for key in ("scores", "partial_apps", "partial_weights") if before[key]})
-    if initial_payload["schema_version"] == "hourly_plan_compact_v4":
+    if version in OPENING_TOKEN_VERSIONS:
         locked.update({key: before[key] for key in ("opened_channel", "additional_activity") if before[key] is not None})
         if before["partial_additional_apps"]:
             locked["partial_additional_apps"] = before["partial_additional_apps"]
@@ -543,6 +546,7 @@ def audit_hours(records, persisted, expected, error_hours, scheduled, code_hash)
         "cross_day_status": cross_day,
         "day5_memory_examples": day5_memory,
         "published_opportunities": len(published),
+        "scheduled_login_opportunities": sum(row.get("source") == "scheduled_login" for row in published.values()),
         "visible_opportunities": len(visible_hours),
         "valid_intention_decisions": sum(choices.values()),
         "choices": dict(choices),
@@ -570,7 +574,7 @@ def audit_hours(records, persisted, expected, error_hours, scheduled, code_hash)
 
 
 def audit_intention_run(
-    folder, trace, conn, exp_id, agent, group, world, expected, errors
+    folder, trace, conn, exp_id, agent, group, world, expected, errors, *, records=None
 ):
     snapshot = json.loads((folder / "resolved_config.json").read_text())
     code_hash = sha256((folder / "experiment_source.zip").read_bytes()).hexdigest()
@@ -580,26 +584,16 @@ def audit_intention_run(
         or snapshot["settings"]["PROTO_HOURLY_INTENTION_MODE"] != "opportunity_v1"
     ):
         raise ValueError("source archive or mode does not match the run snapshot")
-    records = []
-    for path in sorted(trace.glob("llm-requests-*.jsonl")):
-        with path.open() as handle:
-            for line in handle:
-                row = json.loads(line)
-                if (
-                    row.get("group_id"),
-                    row.get("world"),
-                    str(row.get("agent_id")),
-                ) != (group, world, agent):
-                    continue
-                if row["module"] in {
-                    "hourly_intention",
-                    "app_plan",
-                    "strategy",
-                    "helper",
-                    "task_appraisal",
-                    "outcome",
-                }:
-                    records.append(row)
+    if records is None:
+        records = []
+        for path in sorted(trace.glob("llm-requests-*.jsonl")):
+            with path.open() as handle:
+                for line in handle:
+                    row = json.loads(line)
+                    if (row.get("group_id"), row.get("world"), str(row.get("agent_id"))) == (group, world, agent):
+                        records.append(row)
+    audited_modules = {"hourly_intention", "app_plan", "strategy", "helper", "task_appraisal", "outcome"}
+    records = [row for row in records if row["module"] in audited_modules]
     table = attempt_rows_table_name(exp_id)
     attempts = defaultdict(list)
     for day, tick, task, strategy, outcome, raw in conn.execute(

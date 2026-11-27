@@ -38,7 +38,8 @@ class ResidentLLM:
             channel = (goal or offers[0])["required_channel"]
         target = next((alias for alias, stable_id in packet["targets"].items() if stable_id == (gid or oid)), None)
         token = f"{action}@{target}" if target else action
-        if action in {"engage_goal", "continue_goal"}:
+        opens_channel = action in {"engage_goal", "continue_goal", "habitual_app"}
+        if opens_channel:
             token += f"@open:{channel}"
         if action == "defer_goal" and self.review is not None:
             token += f"@{self.review}"
@@ -46,7 +47,7 @@ class ResidentLLM:
             token = "engage_goal@invisible"
         plan = {
             "action": token,
-            "additional_apps": [] if action in {"no_app", "engage_goal", "continue_goal"} else [channel],
+            "additional_apps": [] if action == "no_app" or opens_channel else [channel],
             "attitude": 0.7,
             "subjective_norm": 0.5,
             "perceived_control": 0.4,
@@ -189,6 +190,10 @@ def test_natural_opportunity_reaches_next_plan_then_executes_same_task(
     monkeypatch.delenv("PROTO_SCHEDULED_LOGIN_HOUR")
     step(3, 9, "habitual_app", app="finance_context")
     assert not llm.plans[-1]["inputs"]["available_opportunities"]
+    assert "habitual_app@open:finance_context" in llm.plans[-1]["actions"]
+    recorded = data["proto_app_entry_rollout_rows_json"][-1]
+    assert recorded["app_context_counts"] == {"finance_context": 1}
+    assert recorded["active_event_app_exposures"] == 1
     offers = data["proto_goal_state_json"]["opportunities"]
     (natural,) = offers.values()
     assert (
@@ -197,6 +202,8 @@ def test_natural_opportunity_reaches_next_plan_then_executes_same_task(
     )
     assert not data["recent_episode_buffer"] and not helper.requests
     step(3, 10, "engage_goal")
+    prior, = llm.plans[-1]["inputs"]["recent_simulated_bundles"]
+    assert (prior["hour"], prior["app_context_counts"]) == (9, {"finance_context": 1})
     assert (
         llm.plans[-1]["inputs"]["available_opportunities"][0]["opportunity_id"]
         == natural["opportunity_id"]

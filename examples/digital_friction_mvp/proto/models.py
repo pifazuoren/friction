@@ -68,9 +68,14 @@ class DigitalTask:
     support_sensitivity: float
     assigned_tick: int
     defer_count: int = 0
+    visible_description: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        payload = asdict(self)
+        # Existing tasks use the family description. Preserve their archived wire format.
+        if self.visible_description is None:
+            del payload["visible_description"]
+        return payload
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "DigitalTask":
@@ -83,6 +88,7 @@ class DigitalTask:
             support_sensitivity=float(payload.get("support_sensitivity", 0.5)),
             assigned_tick=int(payload.get("assigned_tick", 0)),
             defer_count=int(payload.get("defer_count", 0)),
+            visible_description=payload.get("visible_description"),
         )
 
 

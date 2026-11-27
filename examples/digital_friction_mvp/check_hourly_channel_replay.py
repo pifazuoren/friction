@@ -1,4 +1,4 @@
-"""Offline regression against the archived 48-hour count-mode Plan with separate action and apps."""
+"""Replay 48 archived V3 count-mode decisions against the V4 Plan interface offline."""
 
 import argparse
 import asyncio
@@ -10,6 +10,8 @@ from pathlib import Path
 
 from check_hourly_intention_run import check_plan_calls, request_payload
 from proto.app_entry.intention_contract import (
+    COMPACT_PLAN_V3,
+    COMPACT_PLAN_V4,
     compact_menu,
     compact_needs,
     compact_observation,
@@ -77,13 +79,13 @@ def load_archive_hours(folder):
     return dict(slots)
 
 
-def rebuild_plan_kwargs(events):
+def rebuild_plan_kwargs(events, expected_version=COMPACT_PLAN_V3):
     """Restore the inputs to the production Plan from its actual call and that hour's accepted Needs."""
     request = event(events, "app_plan", "request", phase="initial")
     body = request_payload(request)
     require(
-        body["schema_version"] == "hourly_plan_compact_v3" and "exposure_cap" in body,
-        "Expected an archived v3 count-based Plan",
+        body["schema_version"] == expected_version and "exposure_cap" in body,
+        f"Expected an archived {expected_version} count-based Plan",
     )
     accepted = [
         r
@@ -143,7 +145,7 @@ def encode_valid_choice(raw, old_body):
     if old_plan["intent"]["kind"] in {"engage_goal", "continue_goal"}:
         prefix = action + "@open:"
         (target,) = [
-            token for token in compact_menu(old_body["inputs"])["actions"] if token.startswith(prefix)
+            token for token in compact_menu(old_body["inputs"], COMPACT_PLAN_V4)["actions"] if token.startswith(prefix)
         ]
         additional.remove(target[len(prefix) :])  # One already observed opening is encoded in the v4 token.
         action = target
@@ -189,7 +191,9 @@ async def replay_archive(folder):
             encoded = encode_valid_choice(raw, old_body)
             replay = RecordedReplies([json.dumps(encoded, ensure_ascii=False)])
         try:
-            result = await DigitalAppEntryPlanBlock().forward(llm=replay, **rebuild_plan_kwargs(events))
+            result = await DigitalAppEntryPlanBlock().forward(
+                llm=replay, compact_schema_version=COMPACT_PLAN_V4, **rebuild_plan_kwargs(events)
+            )
         except HourlyIntentionPlanError as exc:
             require(
                 failed
@@ -214,7 +218,7 @@ async def replay_archive(folder):
             repaired_valid += route["repair_count"] == 1
         current = request_payload(replay.requests[0])
         require(
-            current["schema_version"] == "hourly_plan_compact_v4"
+            current["schema_version"] == COMPACT_PLAN_V4
             and all(
                 current[k] == old_body[k]
                 for k in ("inputs", "digital_needs", "channels", "exposure_cap", "minimum_confidence")

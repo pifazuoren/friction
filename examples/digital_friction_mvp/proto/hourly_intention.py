@@ -48,6 +48,11 @@ _PUBLIC_FIELDS = (
 )
 
 
+def visible_task_description(task: DigitalTask) -> str:
+    """Public wording shared by the opportunity menu and the admitted-task probe."""
+    return task.visible_description or _FAMILIES[task.task_family][0]
+
+
 def opportunity_id_for_task(task_id: str) -> str:
     # Scheduled logins are one opportunity per resident and day. The legacy policy
     # may assign it later if another task occupies 09:00. Its arrival tick is not its identity.
@@ -97,12 +102,12 @@ class IntentionLedger:
             raise ValueError("A known deadline must be an integer simulation hour")
         oid = opportunity_id_for_task(task.task_id)
         if oid not in self.state["opportunities"]:
-            description, default_channel = _FAMILIES[task.task_family]
+            _, default_channel = _FAMILIES[task.task_family]
             self.state["opportunities"][oid] = {
                 "opportunity_id": oid,
                 "source": source,
                 "task_family": task.task_family,
-                "visible_description": description,
+                "visible_description": visible_task_description(task),
                 "required_channel": required_channel or default_channel,
                 "offered_at_sim_hour": sim_hour,
                 "visible_from_sim_hour": sim_hour + int(source == "natural_context"),
