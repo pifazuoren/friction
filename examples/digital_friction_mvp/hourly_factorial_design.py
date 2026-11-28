@@ -117,7 +117,7 @@ def verify_design_stimuli(stimuli, *, feedback_states=None, frozen_stimuli=None)
             "current_intention": None,
         }
         if any(observation[k] != v for k, v in frozen.items()) or body["digital_needs"] != compact_needs(
-            NEEDS.to_dict(include_audit=False)
+            NEEDS.to_dict(include_audit=False), body["schema_version"]
         ):
             raise ValueError("The preregistered resident, observation time, psychology or Needs changed")
         only_offer, = observation["available_opportunities"]

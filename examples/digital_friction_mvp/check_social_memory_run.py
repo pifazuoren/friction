@@ -11,6 +11,7 @@ import sqlite3
 from uuid import UUID
 
 from proto.app_entry.bundle_loader import get_replay_source
+from proto.app_entry.intention_contract import DAILY_OPENING_VERSIONS, parse_compact_reply, stated_open_channel
 from proto.metrics import attempt_rows_table_name
 
 
@@ -97,6 +98,141 @@ def request_packet(row):
             content = message["content"]
             return json.loads(content[content.index("{"):])
     raise ValueError("request missing user message")
+
+
+def daily_opening_evidence(rows, parsed):
+    """Re-read the reply accepted by the model-call audit, including a repaired reply."""
+    initial = next((r for r in rows if (r["module"], r["kind"], r.get("phase")) == ("app_plan", "request", "initial")), None)
+    if initial is None:
+        raise ValueError("accepted daily action missing its initial Plan request")
+    packet = request_packet(initial)
+    if packet.get("schema_version") not in DAILY_OPENING_VERSIONS:
+        return False, None  # Earlier daily actions specified a bag of App counts without an opening.
+    replies = [r for r in rows if (r["module"], r["kind"]) == ("app_plan", "response")
+               and r.get("call_id") and r["call_id"] == parsed.get("call_id")]
+    raw = parse_compact_reply(replies[0].get("raw", "")) if len(replies) == 1 else None
+    return True, stated_open_channel((raw or {}).get("action"), packet)
+
+
+def count_stage_calls(rows, module, name, counts):
+    calls = [r for r in rows if (r["module"], r["kind"]) == (module, "request")]
+    counts[name + "_requests"] += len(calls)
+    counts[name + "_repair_requests"] += sum(r.get("phase") == "repair" for r in calls)
+    # Multiple JSON attempts may produce more than one request tagged initial.
+    initial = next((r for r in calls if r.get("phase") == "initial"), None)
+    if initial is None:
+        return
+    counts[name + "_hours_called"] += 1
+    linked = [r for r in rows if r.get("module") == module and r.get("call_id")
+              and r["call_id"] == initial.get("call_id")]
+    if any(r["kind"] == "parse" and r["status"] == "ok" for r in linked):
+        counts[name + "_first_pass_valid"] += 1
+    elif not any(r["kind"] in {"parse", "error"} for r in linked):
+        counts[name + "_first_result_unverified"] += 1
+    elif module == "app_needs":
+        # Detect the transmitted observation even when the response stops mid-JSON.
+        obs = request_packet(initial).get("inputs", {})
+        if obs:
+            prefix = '"inputs":' + json.dumps(obs, ensure_ascii=False, separators=(",", ":"))
+            prefix = "".join(prefix.split())[:100]
+            if any(r["kind"] == "response" and prefix in "".join(str(r.get("raw", "")).split())
+                   for r in linked):
+                counts["needs_first_reply_echoed_observation"] += 1
+
+
+def total_app_activity(metrics):
+    """Keep zero counts in the JSON so callers can distinguish zero from a missing audit."""
+    totals = Counter(dict.fromkeys((
+        "needs_first_pass_valid", "needs_first_result_unverified", "needs_hours_called",
+        "needs_requests", "needs_repair_requests", "needs_first_reply_echoed_observation",
+        "plan_first_pass_valid", "plan_first_result_unverified", "plan_hours_called",
+        "plan_requests", "plan_repair_requests", "accepted_daily_choices",
+        "daily_exports_verified", "daily_opening_exports_verified", "daily_legacy_counts_only",
+        "daily_at_run_end", "next_needs_verified", "next_plan_verified", "technical_failure_hours",
+        "failed_after_initial_daily_choice_without_channel", "route_missing_or_duplicate",
+    ), 0))
+    for row in metrics:
+        totals.update(row)
+    return dict(totals)
+
+
+def app_activity_flow(records, rollout, expected):
+    """Follow accepted habitual choices into their export and the next real model inputs."""
+    slots, exports = defaultdict(list), defaultdict(list)
+    for row in rollout:
+        exports[int(row["talkingdata_day"]), int(row["hour"])].append(row)
+    for row in records:
+        if row.get("module") in {"app_needs", "app_plan", "hourly_intention"}:
+            slots[row["talkingdata_day"], row["hour"]].append(row)
+    days = defaultdict(Counter)
+    issues = []
+    for day, hour in sorted(expected):
+        counts, rows = days[day], slots[day, hour]
+        counts["expected_hours"] += 1
+        for module, name in [("app_needs", "needs"), ("app_plan", "plan")]:
+            count_stage_calls(rows, module, name, counts)
+        routes = [r for r in rows if (r["module"], r["kind"]) == ("hourly_intention", "hourly_intention")]
+        if len(routes) != 1:
+            counts["route_missing_or_duplicate"] += 1
+            continue
+        route = routes[0]
+        if route["status"] == "technical_failure":
+            counts["technical_failure_hours"] += 1
+            checks = [r for r in rows if r["kind"] == "intent_validation" and r["module"] == "app_plan"]
+            if (len(checks) == 1 and (checks[0].get("raw_choice") or {}).get("kind") == "habitual_app"
+                    and checks[0].get("raw_activity") == {}):
+                counts["failed_after_initial_daily_choice_without_channel"] += 1
+            continue
+        if route.get("status") != "accepted" or route.get("executed_choice") != "habitual_app":
+            continue
+        counts["accepted_daily_choices"] += 1
+        parsed = [r for r in rows if (r["module"], r["kind"]) == ("app_plan", "parse")
+                  and r.get("status") in {"ok", "ok_repaired"} and isinstance(r.get("parsed"), dict)]
+        channels = parsed[0]["parsed"].get("app_context_counts") if len(parsed) == 1 else None
+        exported = exports[day, hour]
+        if (not isinstance(channels, dict) or not channels
+                or not all(type(n) is int and n > 0 for n in channels.values())
+                or len(exported) != 1 or exported[0].get("entry_status") != "intention_habitual_app"
+                or exported[0].get("active") != "1"
+                or exported[0].get("active_event_app_exposures") != str(sum(channels.values()))
+                or json.loads(exported[0].get("app_context_counts_json") or "null") != channels):
+            issues.append(f"day {day} hour {hour}: accepted daily App counts lack matching hourly export")
+            continue
+        counts["daily_exports_verified"] += 1
+        requires_opening, opening = daily_opening_evidence(rows, parsed[0])
+        if requires_opening:
+            counts["daily_with_explicit_opening"] += 1
+            if not opening or exported[0].get("opened_channel") != opening:
+                issues.append(f"day {day} hour {hour}: first opened App differs between reply and hourly export")
+                continue
+            counts["daily_opening_exports_verified"] += 1
+        else:
+            counts["daily_legacy_counts_only"] += 1
+        next_slot = (day + (hour + 1) // 24, (hour + 1) % 24)
+        if next_slot not in expected:
+            counts["daily_at_run_end"] += 1
+            continue
+        for module, name in [("app_needs", "needs"), ("app_plan", "plan")]:
+            calls = [r for r in slots[next_slot] if (r["module"], r["kind"], r.get("phase"))
+                     == (module, "request", "initial")]
+            if not calls:
+                counts["next_" + name + "_not_observed"] += 1
+                continue
+            # Check every sent initial prompt if this module repeated its JSON attempt.
+            matches = []
+            for call in calls:
+                bundles = request_packet(call).get("inputs", {}).get("recent_simulated_bundles") or []
+                prior = [b for b in bundles if (b.get("talkingdata_day"), b.get("hour")) == (day, hour)]
+                matches.append(len(prior) == 1 and prior[0].get("app_context_counts") == channels
+                               and prior[0].get("active") is True
+                               and prior[0].get("active_event_app_exposures") == sum(channels.values())
+                               and (not requires_opening or prior[0].get("opened_channel") == opening))
+            if all(matches):
+                counts["next_" + name + "_verified"] += 1
+            else:
+                issues.append(f"day {day} hour {hour}: daily App counts differ in next {name} observation")
+    return {"by_day": {str(d): total_app_activity([values]) for d, values in days.items()},
+            "totals": total_app_activity(days.values()), "issues": issues}
 
 
 def load_agent_traces(trace, group, agents):
@@ -255,6 +391,7 @@ def check_resident(folder, manifest, replay, rollout, errors, records, conn, exp
             from check_hourly_intention_run import audit_intention_run
             report["hourly_intention"] = audit_intention_run(
                 folder, None, conn, exp, agent, group, WORLD, expected_hours, set(failures), records=records)
+            report["app_activity_flow"] = app_activity_flow(records, rollout, expected_hours)
         trace_check = report["cross_day"] = audit_trace(records, attempts, set(failures), expected_days)
         if trace_check["entry_errors_disagree_with_trace"]:
             issues.append("error export disagrees with actual hourly entry trace")
@@ -264,6 +401,7 @@ def check_resident(folder, manifest, replay, rollout, errors, records, conn, exp
         statuses = {v["status"] for v in trace_check["modules"].values()}
         if "hourly_intention" in report:
             issues.extend(report["hourly_intention"]["issues"])
+            issues.extend(report["app_activity_flow"]["issues"])
             report["cross_day_status"] = report["hourly_intention"]["cross_day_status"]
             if trace_check["day5_completed_task_ticks_without_strategy_request"] or trace_check["day5_decision_db_disagreements"]:
                 issues.append("missing low-level execution evidence")
@@ -357,6 +495,9 @@ def summarize_residents(report, agents, expected_hours):
         "error_hours_count": sum(len(r.get("rollout", {}).get("error_hours", [])) for r in agents.values()),
     }
     intentions = [r.get("hourly_intention", {}) for r in agents.values()]
+    flows = [r["app_activity_flow"] for r in agents.values() if "app_activity_flow" in r]
+    report["app_activity_flow"] = {"residents_with_audit": len(flows),
+                                  "totals": total_app_activity(f["totals"] for f in flows)}
     report["hourly_intention"] = {
         key: sum(row.get(key, 0) for row in intentions)
         for key in ("valid_intention_decisions", "scheduled_login_opportunities", "published_opportunities",

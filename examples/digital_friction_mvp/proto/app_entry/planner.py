@@ -14,7 +14,9 @@ from .intention_contract import (
     COMPACT_PLAN_VERSION,
     COMPACT_PLAN_V2,
     COMPACT_PLAN_V3,
-    COMPACT_PLAN_V5,
+    COMPACT_PLAN_V8,
+    ACTIONABLE_CHANNEL_VERSIONS,
+    DAILY_OPENING_VERSIONS,
     COMPACT_PLAN_VERSIONS,
     COMPACT_SCORES,
     OPENING_TOKEN_VERSIONS,
@@ -23,6 +25,7 @@ from .intention_contract import (
     compact_needs,
     compact_observation,
     compact_repair_changed,
+    compact_repair_locks,
     include_required_channels,
     parse_compact_reply,
     read_compact_statement,
@@ -30,13 +33,14 @@ from .intention_contract import (
     validate_intent,
 )
 from .needs import DigitalNeedsResult
-from .types import APP_CONTEXT_SET, _stable_hash
+from .types import ACTIONABLE_APP_CONTEXTS, APP_CONTEXT_SET, HISTORICAL_CATEGORY_GUIDANCE, _stable_hash
 
 
 APP_ENTRY_PLAN_SCHEMA_VERSION = "app_entry_plan_v2"
 APP_ENTRY_PLAN_PROMPT_VERSION = "app_entry_plan_v3"
 CALIBRATED_PLAN_VERSION = "app_entry_plan_v4_calibrated"
 MAX_APP_ENTRY_PLAN_JSON_ATTEMPTS = 5
+PENDING_REVIEW_NOTICE_VERSION = "pending_review_v2"
 
 APP_ENTRY_PLAN_OUTPUT_KEYS = {
     "active",
@@ -309,7 +313,7 @@ def _legacy_plan_prompt(
         "prompt_version": str(prompt_version),
         "schema_version": APP_ENTRY_PLAN_SCHEMA_VERSION,
         "inputs": input_payload,
-        "digital_needs": needs.to_dict(include_audit=False),
+        "digital_needs": needs.to_dict(include_audit=False, legacy_tiebreak=True),
         "candidate_app_contexts": normalized_candidates,
         "intensity_profile": intensity_profile,
         "runtime_output_constraints": {
@@ -382,10 +386,27 @@ def _legacy_plan_prompt(
     return system_prompt, user_payload, output_keys, repair_text
 
 
-def _compact_system_prompt(calibrated: bool, version: str) -> str:
-    if calibrated:
+def _compact_system_prompt(calibrated: bool, version: str, *, waiting_actions: list[str] | None = None) -> str:
+    action_guidance = (
+        "action 只写一个完整行动，从 actions 或 defer_options 中选取。targets 将选项里的代号对应到真实机会或待办。"
+        "engage_goal 接受机会，continue_goal 继续待办，两者须实际使用该目标的 required_channel。"
+        "defer_goal 延期、drop_goal 放弃时也可用手机做别的事。habitual_app 日常使用手机，no_app 不用手机。"
+        "要延期，自己决定何时再看，原样复制对应时点的完整选项。若时点以区间显示，用该组 prefix 紧接所选范围内的整数小时。"
+    )
+    if waiting_actions is not None:
+        action_guidance = "已有待办按之前的预约保存。本小时的 action 从 actions 中原样选一个。"
+        if any(action.startswith("habitual_app@open:") for action in waiting_actions):
+            activity = (
+                "日常用手机与不用手机都可以，频道数量不代表偏好。"
+                "日常用手机就选 habitual_app@open: 对应的频道，该行动已包含一次打开。"
+                "additional_apps 只列额外打开的频道，每次打开列一次，可以重复。没有额外打开填 []。"
+                "不用手机就选 no_app，additional_apps 填 []。总打开次数不得超过 exposure_cap。"
+            )
+        else:
+            activity = "本小时的菜单仅含 no_app，表示不用手机。additional_apps 填 []。"
+    elif calibrated:
         activity = "weights 是各所选频道的相对整数权重（0–100），不使用手机填空对象。实际次数由模拟器确定。"
-    elif version == COMPACT_PLAN_V5:
+    elif version in DAILY_OPENING_VERSIONS:
         activity = (
             "频道选项的多少不代表该行为的概率。"
             "选日常使用时，从 habitual_app@open: 的选项里选自己要先打开的频道。"
@@ -403,11 +424,9 @@ def _compact_system_prompt(calibrated: bool, version: str) -> str:
     return (
         "你扮演一位老年手机用户。结合此刻需求、前三天习惯、已有经历和待办，自己决定这一小时做什么。"
         "只输出决策 JSON。先决定行为种类；各类同等可选，清单顺序和时点个数不代表偏好或概率。"
-        "action 只写一个完整行动，从 actions 或 defer_options 中选取。targets 将选项里的代号对应到真实机会或待办。"
-        "engage_goal 接受机会，continue_goal 继续待办，两者须实际使用该目标的 required_channel。"
-        "defer_goal 延期、drop_goal 放弃时也可用手机做别的事。habitual_app 日常使用手机，no_app 不用手机。"
-        "要延期，自己决定何时再看，原样复制对应时点的完整选项。若时点以区间显示，用该组 prefix 紧接所选范围内的整数小时。"
+        + action_guidance
         + activity
+        + (HISTORICAL_CATEGORY_GUIDANCE if version in ACTIONABLE_CHANNEL_VERSIONS else "")
         + "频道只能来自 channels。历史频率仅描述过去。attitude 是本人意愿，subjective_norm 是感到的社会期待，"
         "perceived_control 是自觉把握，confidence 是判断信心，分别给 0 到 1 的数字。reason 写一句本人的原因。"
         "不预设任务结果或帮助。只给下列字段：action、"
@@ -472,21 +491,47 @@ def decode_compact_plan(raw: dict, request_body: dict) -> dict:
 
 
 def _compact_plan_prompt(
-    input_payload, needs, candidates, cap, confidence_floor, calibrated, version
+    input_payload, needs, candidates, cap, confidence_floor, calibrated, version,
+    include_pending_review_notice, pending_review_notice_version,
 ):
     observation = compact_observation(input_payload)
     channels = sorted(candidates)
     body = {
         "schema_version": version,
         "inputs": observation,
-        "digital_needs": compact_needs(needs.to_dict(include_audit=False)),
+        "digital_needs": compact_needs(needs.to_dict(include_audit=False), version),
         **compact_menu(observation, version, channels),
         "channels": channels,
         "exposures_if_active" if calibrated else "exposure_cap": cap,
         "minimum_confidence": confidence_floor,
     }
+    goal = observation.get("current_intention") or {}
+    now = observation["monotonic_sim_hour"]
+    review = goal.get("next_review_at_sim_hour")
+    waiting_actions = None
+    if (
+        include_pending_review_notice
+        and version == COMPACT_PLAN_V8
+        and goal.get("status") == "deferred"
+        and not observation["goal_review_due"]
+        and not body["targets"]
+        and type(review) is int and review > now
+    ):
+        if pending_review_notice_version not in {"pending_review_v1", PENDING_REVIEW_NOTICE_VERSION}:
+            raise ValueError("Unknown pending review notice version")
+        if pending_review_notice_version == PENDING_REVIEW_NOTICE_VERSION:
+            waiting_actions = body["actions"]
+        body["pending_review_notice"] = {
+            "version": pending_review_notice_version,
+            "next_review_at_sim_hour": review,
+            "hours_until_review": review - now,
+            "message": (
+                f"你已约好第{review // 24 + 1}天{review % 24:02d}:00再看这项待办，距现在还有{review - now}小时。"
+                "本小时保留原预约。现在请按自己的意愿，从 actions 选择这一小时的日常手机活动或不用手机。"
+            ),
+        }
     keys = {"action", "weights" if calibrated else "additional_apps", "reason", *COMPACT_SCORES}
-    return _compact_system_prompt(calibrated, version), body, keys, ""
+    return _compact_system_prompt(calibrated, version, waiting_actions=waiting_actions), body, keys, ""
 
 
 class HourlyIntentionPlanError(ValueError):
@@ -512,6 +557,8 @@ class DigitalAppEntryPlanBlock:
         retries: int = 1,
         json_attempts: int = 5,
         compact_schema_version: str | None = None,
+        include_pending_review_notice: bool = True,
+        pending_review_notice_version: str = PENDING_REVIEW_NOTICE_VERSION,
     ) -> AppEntryPlanResult:
         if not isinstance(needs, DigitalNeedsResult):
             raise ValueError("needs must be a DigitalNeedsResult")
@@ -533,10 +580,6 @@ class DigitalAppEntryPlanBlock:
                 raise ValueError(f"candidate weight for {name} must be positive")
             normalized_candidates[name] = float(weight)
 
-        if with_intent:
-            normalized_candidates = include_required_channels(
-                normalized_candidates, input_payload
-            )
         if not isinstance(intensity_profile, dict):
             raise ValueError("intensity_profile must be a dictionary")
         calibrated = prompt_version == CALIBRATED_PLAN_VERSION
@@ -546,6 +589,13 @@ class DigitalAppEntryPlanBlock:
             if not with_intent or compact_schema_version not in supported:
                 raise ValueError("compact schema version is incompatible with the selected Plan mode")
             version = compact_schema_version
+        if with_intent:
+            if version in ACTIONABLE_CHANNEL_VERSIONS:
+                normalized_candidates = {
+                    name: weight for name, weight in normalized_candidates.items()
+                    if name in ACTIONABLE_APP_CONTEXTS
+                }
+            normalized_candidates = include_required_channels(normalized_candidates, input_payload)
         volume_field = "exposures_if_active" if calibrated else "active_exposure_cap"
         try:
             cap = int(intensity_profile[volume_field])
@@ -570,6 +620,8 @@ class DigitalAppEntryPlanBlock:
                     confidence_floor,
                     calibrated,
                     version,
+                    include_pending_review_notice,
+                    pending_review_notice_version,
                 )
             )
         else:
@@ -614,12 +666,13 @@ class DigitalAppEntryPlanBlock:
                 for key in ("opened_channel", "additional_activity"):
                     audit[prefix + key] = statement[key]
             if phase == "repair":
-                audit["repair_changed_choice"] = compact_repair_changed(
-                    statements["initial"], statement
-                )
+                locked, _ = compact_repair_locks(statements["initial"], user_payload)
+                audit["repair_changed_choice"] = compact_repair_changed(locked, statement)
 
         def repair_dialog(raw: str, error: str) -> list[dict]:
-            initial = statements["initial"]
+            initial, repair_field = compact_repair_locks(
+                statements["initial"], user_payload
+            )
             repair = {
                 "schema_version": user_payload["schema_version"],
                 "error": audit.get("last_validation_error", error),
@@ -635,6 +688,17 @@ class DigitalAppEntryPlanBlock:
                 "exposures_if_active" if calibrated else "exposure_cap": cap,
                 "minimum_confidence": confidence_floor,
             }
+            instruction = "修正上次输出的格式。保留已经表达的选择、目标、复查时间、实际使用量和已给评分。"
+            if repair_field:
+                repair["repair_field"] = repair_field
+                audit["repair_field"] = repair_field
+                if repair_field == "required_opening":
+                    instruction = "保留原先的行为、目标、使用量和评分。请按 preserve.action 补全唯一的必需频道。"
+                else:
+                    instruction = (
+                        "保留原先的延期行为、目标、使用量和评分。原先的复查时间超出范围，"
+                        "请自行从同一目标的 defer_options 中明确选择一个合法时点。"
+                    )
             for key in ("scores", "partial_apps", "partial_weights"):
                 if initial[key]:
                     repair["preserve"][key] = initial[key]
@@ -668,8 +732,7 @@ class DigitalAppEntryPlanBlock:
             return [
                 {
                     "role": "system",
-                    "content": system_prompt
-                    + "修正上次输出的格式。保留已经表达的选择、目标、复查时间、实际使用量和已给评分。",
+                    "content": system_prompt + instruction,
                 },
                 {"role": "user", "content": json.dumps(repair, ensure_ascii=False)},
             ]
@@ -682,7 +745,7 @@ class DigitalAppEntryPlanBlock:
                     )
                     return None, "changed_intent_on_repair"
                 try:
-                    return decode_compact_plan(raw, user_payload), "ok"
+                    decoded = decode_compact_plan(raw, user_payload)
                 except ValueError as exc:
                     audit["last_validation_error"] = str(exc)
                     return None, (
@@ -690,6 +753,9 @@ class DigitalAppEntryPlanBlock:
                         if "confidence is below" in str(exc)
                         else "invalid_intent"
                     )
+                if version in OPENING_TOKEN_VERSIONS:
+                    audit["accepted_opened_channel"] = stated_open_channel(raw["action"], user_payload)
+                return decoded, "ok"
             return sanitize_app_entry_plan_payload(
                 raw,
                 candidate_contexts=normalized_candidates,

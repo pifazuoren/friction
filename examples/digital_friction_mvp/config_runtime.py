@@ -547,13 +547,16 @@ def load_runtime_config() -> RuntimeConfig:
         "PROTO_APP_ENTRY_REPLAY_DAYS",
         DEFAULT_APP_ENTRY_REPLAY_DAYS,
     )
+    proto_app_entry_plan_prompt_version = os.getenv(
+        "PROTO_APP_ENTRY_PLAN_PROMPT_VERSION", "app_entry_plan_v3",
+    ).strip()
+    compact_needs = (
+        hourly_intention_mode == "opportunity_v1"
+        and proto_app_entry_plan_prompt_version != "app_entry_plan_v4_calibrated"
+    )
     proto_app_entry_needs_prompt_version = os.getenv(
         "PROTO_APP_ENTRY_NEEDS_PROMPT_VERSION",
-        "digital_needs_v1",
-    ).strip()
-    proto_app_entry_plan_prompt_version = os.getenv(
-        "PROTO_APP_ENTRY_PLAN_PROMPT_VERSION",
-        "app_entry_plan_v3",
+        "digital_needs_compact_v2" if compact_needs else "digital_needs_v1",
     ).strip()
     if not proto_app_entry_needs_prompt_version:
         raise ValueError("PROTO_APP_ENTRY_NEEDS_PROMPT_VERSION must not be empty")

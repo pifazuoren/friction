@@ -1,0 +1,373 @@
+{
+  "date": "2026-11-28",
+  "v7_continuous": {
+    "run_id": "scheduled_login_20261128_110629_662ef7",
+    "archived_source_zip_sha256": "daaee6b3634f5d994cdb088444aaa72b81e4392c330e7f2e0f9d91c5dc4ad397",
+    "model": "glm-4-flashx",
+    "plan_schema": "hourly_plan_compact_v7",
+    "cohort_size": 10,
+    "replayed_person_hours": 720,
+    "technical_acceptance": true,
+    "person_hours": {
+      "expected_hours": 480,
+      "accounted_hours": 480,
+      "valid_hours": 460,
+      "error_hours_count": 20
+    },
+    "per_day": {
+      "4": {
+        "valid": 239,
+        "failed": 1
+      },
+      "5": {
+        "valid": 221,
+        "failed": 19
+      }
+    },
+    "valid_hours_distribution_among_residents": {
+      "29": 1,
+      "47": 1,
+      "48": 8
+    },
+    "per_resident_target": {
+      "required_valid_hours_of_48": 46,
+      "residents_passing": 9,
+      "all_residents_eligible": false
+    },
+    "cross_day_status_counts": {
+      "verified": 10
+    },
+    "daily_and_model_call_audit": {
+      "needs_first_pass_valid": 473,
+      "needs_first_result_unverified": 0,
+      "needs_hours_called": 480,
+      "needs_requests": 487,
+      "needs_repair_requests": 7,
+      "needs_first_reply_echoed_observation": 0,
+      "plan_first_pass_valid": 459,
+      "plan_first_result_unverified": 0,
+      "plan_hours_called": 480,
+      "plan_requests": 501,
+      "plan_repair_requests": 21,
+      "accepted_daily_choices": 293,
+      "daily_exports_verified": 293,
+      "daily_opening_exports_verified": 293,
+      "daily_legacy_counts_only": 0,
+      "daily_at_run_end": 7,
+      "next_needs_verified": 286,
+      "next_plan_verified": 286,
+      "technical_failure_hours": 20,
+      "failed_after_initial_daily_choice_without_channel": 0,
+      "route_missing_or_duplicate": 0,
+      "expected_hours": 480,
+      "daily_with_explicit_opening": 293
+    },
+    "tasks": {
+      "valid_intention_decisions": 460,
+      "scheduled_login_opportunities": 20,
+      "published_opportunities": 34,
+      "visible_opportunities": 33,
+      "distinct_tasks_entered": 30,
+      "low_level_decisions": 163,
+      "operations_started": 75,
+      "help_requests": 41,
+      "expected_scheduled_login_opportunities": 20
+    },
+    "rejection_reasons_in_live_audit": {
+      "action must match an available token with its exact target": 1,
+      "defer_goal hour or target is outside the available options": 2,
+      "defer_goal requires a complete action token containing the chosen hour": 17
+    }
+  },
+  "app_activity_holdout": {
+    "same_valid_person_hours": 460,
+    "activity_label": "Presence of any recorded App exposure in the device hour. Simulated activity is derived from the executed Plan.",
+    "rows_reference_columns_prediction": {
+      "v7": {
+        "active": {
+          "active": 367,
+          "idle": 2
+        },
+        "idle": {
+          "active": 89,
+          "idle": 2
+        }
+      },
+      "within_device_same_hour_majority_over_prior_three_days": {
+        "active": {
+          "active": 319,
+          "idle": 50
+        },
+        "idle": {
+          "idle": 48,
+          "active": 43
+        }
+      }
+    },
+    "reference_labels_in_excluded_failure_hours": {
+      "idle": 2,
+      "active": 18
+    },
+    "valid_simulated_choices": {
+      "habitual_app": 293,
+      "engage_goal": 30,
+      "continue_goal": 133,
+      "defer_goal": 3,
+      "no_app": 1
+    },
+    "false_active_trace_audit": {
+      "hours": 89,
+      "no_app_action_present": 89,
+      "no_app_need_value_counts": {
+        "0.0": 33,
+        "0.1": 56
+      },
+      "actions": {
+        "habitual_app": 62,
+        "engage_goal": 5,
+        "continue_goal": 22
+      },
+      "daily_choices_with_no_actionable_target_in_menu": 62,
+      "all_three_reference_days_idle_at_this_hour": 24,
+      "illustrative_simulated_plans_at_false_active_hours": [
+        {
+          "synthetic_resident_number": 6,
+          "reported_day": 4,
+          "hour": 1,
+          "same_hour_active_in_three_day_history": 0,
+          "no_app_need": 0.0,
+          "selected": "habitual_app",
+          "first_opened_app_class": "communication_social_context",
+          "planned_exposures": 1
+        },
+        {
+          "synthetic_resident_number": 6,
+          "reported_day": 4,
+          "hour": 2,
+          "same_hour_active_in_three_day_history": 0,
+          "no_app_need": 0.0,
+          "selected": "habitual_app",
+          "first_opened_app_class": "communication_social_context",
+          "planned_exposures": 1
+        },
+        {
+          "synthetic_resident_number": 6,
+          "reported_day": 4,
+          "hour": 3,
+          "same_hour_active_in_three_day_history": 0,
+          "no_app_need": 0.0,
+          "selected": "habitual_app",
+          "first_opened_app_class": "communication_social_context",
+          "planned_exposures": 1
+        },
+        {
+          "synthetic_resident_number": 6,
+          "reported_day": 4,
+          "hour": 4,
+          "same_hour_active_in_three_day_history": 0,
+          "no_app_need": 0.0,
+          "selected": "habitual_app",
+          "first_opened_app_class": "communication_social_context",
+          "planned_exposures": 1
+        },
+        {
+          "synthetic_resident_number": 6,
+          "reported_day": 4,
+          "hour": 5,
+          "same_hour_active_in_three_day_history": 0,
+          "no_app_need": 0.0,
+          "selected": "habitual_app",
+          "first_opened_app_class": "communication_social_context",
+          "planned_exposures": 1
+        },
+        {
+          "synthetic_resident_number": 6,
+          "reported_day": 4,
+          "hour": 6,
+          "same_hour_active_in_three_day_history": 0,
+          "no_app_need": 0.0,
+          "selected": "habitual_app",
+          "first_opened_app_class": "communication_social_context",
+          "planned_exposures": 1
+        },
+        {
+          "synthetic_resident_number": 8,
+          "reported_day": 4,
+          "hour": 2,
+          "same_hour_active_in_three_day_history": 0,
+          "no_app_need": 0.0,
+          "selected": "habitual_app",
+          "first_opened_app_class": "media_entertainment_context",
+          "planned_exposures": 1
+        }
+      ]
+    },
+    "both_reference_and_simulation_idle": [
+      {
+        "synthetic_resident_number": 3,
+        "reported_day": 5,
+        "hour": 4,
+        "selected": "defer_goal"
+      },
+      {
+        "synthetic_resident_number": 10,
+        "reported_day": 4,
+        "hour": 0,
+        "selected": "no_app"
+      }
+    ]
+  },
+  "guidance_vs_proxy": {
+    "run_id": "help_pairs_20261128_023233_035494",
+    "archived_source_zip_sha256": "502712a0aefc9210f66060427474d3224151dd00247b99a82a5e6fd8751fba43",
+    "profiles": 10,
+    "recorded_independent_points": 80,
+    "model": "glm-4-flashx",
+    "admitted": 80,
+    "frozen_comparison": "Same two prior failed independent logins and then one successful helped login. Only who performed the code entry and final confirmation changes. Current psychology, availability and numerical rule inputs are held fixed.",
+    "sampled_actions_in_30_formal_points_per_condition": {
+      "proxy": {
+        "attempt_self": 13,
+        "seek_help_then_attempt": 15,
+        "avoid": 2
+      },
+      "guided": {
+        "attempt_self": 12,
+        "seek_help_then_attempt": 16,
+        "avoid": 2
+      }
+    },
+    "paired_disagreement": {
+      "contrast": {
+        "pairs": 30,
+        "different_plan_choice": 0,
+        "different_raw_strategy_scores": 13,
+        "different_sampled_action": 1
+      },
+      "repeat": {
+        "pairs": 10,
+        "different_plan_choice": 0,
+        "different_raw_strategy_scores": 2,
+        "different_sampled_action": 0
+      }
+    },
+    "technical": {
+      "invalid_plans": 0,
+      "missing_after_admission": 0,
+      "lower_fallbacks": 0
+    },
+    "local_help_request_receipts_all_80_points": 35,
+    "verified_strategy_draws": 80,
+    "requests": {
+      "app_plan": {
+        "initial": 80
+      },
+      "task_appraisal": {
+        "initial": 80
+      },
+      "strategy": {
+        "initial": 80
+      }
+    },
+    "total_http_requests": 240,
+    "observation_ends_at": "First sampled strategy / local help request receipt. Operation starts, delivery and completion are unobserved."
+  },
+  "v8_independent_retests": {
+    "parent_v7_run_id": "scheduled_login_20261128_110629_662ef7",
+    "initial_three_error_cases": {
+      "run_id": "three_plan_failures_20261128_114008_65088c",
+      "archived_source_zip_sha256": "3aaf1e28e40a588a0b4d312cbdbb2bd5b83a40d4961f7df1f7bd15235547875d",
+      "summary": {
+        "expected": 3,
+        "measured": 3,
+        "http_requests": 3,
+        "repairs_valid": 2,
+        "fresh_initial_valid": 0
+      },
+      "points": [
+        {
+          "case": "missing_open",
+          "day": 4,
+          "hour": 15,
+          "phase": "repair",
+          "status": "ok_repaired",
+          "new_http_requests": 1,
+          "accepted_intent": "engage_goal"
+        },
+        {
+          "case": "unavailable_hour",
+          "day": 5,
+          "hour": 3,
+          "phase": "repair",
+          "status": "ok_repaired",
+          "new_http_requests": 1,
+          "accepted_intent": "defer_goal"
+        },
+        {
+          "case": "before_scheduled_review",
+          "day": 5,
+          "hour": 7,
+          "phase": "initial",
+          "status": "invalid_first_response",
+          "new_http_requests": 1,
+          "accepted_intent": null
+        }
+      ]
+    },
+    "waiting_hours_with_restricted_menu_description": {
+      "run_id": "waiting_first_20261128_114342_33151d",
+      "archived_source_zip_sha256": "88f7e1e1c8a4237fd60a2ae55f4cd628cdceeffec3a871ceb20aec332ff3b08e",
+      "summary": {
+        "attempted": 3,
+        "scheduled": 3,
+        "http_requests": 3,
+        "first_valid": 3,
+        "daily_app": 0,
+        "no_phone": 3,
+        "failed": 0,
+        "not_reached": 0
+      },
+      "points": [
+        {
+          "case": "early",
+          "day": 5,
+          "hour": 7,
+          "phase": "initial",
+          "status": "ok",
+          "new_http_requests": 1,
+          "accepted_intent": "no_app",
+          "previously_retested_at_same_hour": true
+        },
+        {
+          "case": "middle",
+          "day": 5,
+          "hour": 15,
+          "phase": "initial",
+          "status": "ok",
+          "new_http_requests": 1,
+          "accepted_intent": "no_app",
+          "previously_retested_at_same_hour": false
+        },
+        {
+          "case": "late",
+          "day": 5,
+          "hour": 23,
+          "phase": "initial",
+          "status": "ok",
+          "new_http_requests": 1,
+          "accepted_intent": "no_app",
+          "previously_retested_at_same_hour": false
+        }
+      ]
+    },
+    "offline_frozen_reply_replay": {
+      "scope": "Replayed archived V7 responses at the same 480 recorded hours under V8. No new choices or trajectory.",
+      "source_archive_sha256": "daaee6b3634f5d994cdb088444aaa72b81e4392c330e7f2e0f9d91c5dc4ad397",
+      "accepted_equivalent": 460,
+      "daily_openings_equivalent": 293,
+      "hours_with_pending_review_notice": 17,
+      "original_failures_still_invalid": 20,
+      "network_requests": 0
+    }
+  }
+}

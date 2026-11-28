@@ -9,6 +9,8 @@ from proto.app_entry.intention_contract import (
     COMPACT_PLAN_VERSION,
     COMPACT_PLAN_V3,
     COMPACT_PLAN_V4,
+    COMPACT_PLAN_V7,
+    COMPACT_PLAN_V8,
     compact_menu,
     compact_observation,
 )
@@ -794,6 +796,7 @@ def test_goal_opening_may_not_be_counted_as_an_explicitly_stated_extra_open_on_r
     result = plan(llm, observation)
     assert result.audit["parse_status"] == "ok_repaired"
     assert result.audit["raw_active"] is True and result.audit["raw_activity"] is None
+    assert result.audit["accepted_opened_channel"] == CHANNEL
     assert (
         result.audit["repaired_activity"] == result.app_context_counts == {CHANNEL: 2}
     )
@@ -933,3 +936,84 @@ def test_v5_with_no_channels_offers_only_no_app_and_zero_cap_stops_before_reques
     with pytest.raises(ValueError, match="must be >= 1"):
         asyncio.run(DigitalAppEntryPlanBlock().forward(**options))
     assert len(llm.requests) == 1
+
+
+@pytest.mark.parametrize(
+    "first_token,correct_token,field",
+    [
+        ("engage_goal@o1", "engage_goal@o1@open:finance_context", "required_opening"),
+        ("continue_goal@g1", "continue_goal@g1@open:finance_context", "required_opening"),
+        ("defer_goal@g1@3", "defer_goal@g1@100", "review_hour"),
+        ("defer_goal@g1@5", "defer_goal@g1@105", "review_hour"),
+    ],
+)
+def test_model_can_complete_only_the_identified_missing_field(first_token, correct_token, field):
+    from check_hourly_intention_run import check_compact_repair_request, decode_received_plan
+
+    offer = {**OFFER, "required_channel": "finance_context", "known_deadline_sim_hour": None}
+    current = {**offer, "goal_id": "goal:1", "status": "needs_review"} if "@g1" in first_token else None
+    observation = packet(
+        hourly_intention_mode="opportunity_v1", available_opportunities=[offer],
+        current_intention=current, goal_review_due=bool(current),
+    )
+    observation["monotonic_sim_hour"] = 99
+    original = response(choice("no_app"), action=first_token, additional_apps=[])
+    corrected = response(choice("no_app"), action=correct_token, additional_apps=[])
+    for version in (COMPACT_PLAN_V7, COMPACT_PLAN_V8):
+        llm = FakeLLM([original, corrected])
+        if version == COMPACT_PLAN_V7:
+            with pytest.raises(HourlyIntentionPlanError) as caught:
+                plan(llm, observation, compact_schema_version=version)
+            assert caught.value.audit["parse_status"] == "changed_intent_on_repair"
+        else:
+            result = plan(llm, observation, compact_schema_version=version)
+            assert result.audit["parse_status"] == "ok_repaired"
+            assert result.audit["repair_field"] == field
+            assert result.audit["accepted_choice"] == result.intent
+        assert llm.calls == 2
+        body = json.loads(llm.requests[0]["dialog"][1]["content"].split("\n", 1)[1])
+        repair = json.loads(llm.requests[1]["dialog"][1]["content"])
+        check_compact_repair_request({"messages": llm.requests[1]["dialog"]}, original, body)
+        if version == COMPACT_PLAN_V7:
+            assert "repair_field" not in repair and repair["preserve"]["action"] == first_token
+            with pytest.raises(ValueError, match="repair changed"):
+                decode_received_plan(corrected, original, body, True)
+        elif field == "review_hour":
+            assert "action" not in repair["preserve"]
+            assert repair["preserve"]["choice"]["next_review_at_sim_hour"] is None
+            assert repair["preserve"]["choice"]["goal_id"] == "goal:1"
+            assert result.audit["raw_choice"]["next_review_at_sim_hour"] == int(first_token.split("@")[-1])
+            assert decode_received_plan(corrected, original, body, True)["intent"] == result.intent
+        else:
+            assert repair["preserve"]["action"] == correct_token
+            assert result.audit["raw_opened_channel"] is None
+            assert result.app_context_counts == {"finance_context": 1}
+            assert decode_received_plan(corrected, original, body, True)["intent"] == result.intent
+
+
+@pytest.mark.parametrize(
+    "first,second,has_window",
+    [
+        ("defer_goal@o1@3", "defer_goal@o2@90", True),
+        ("defer_goal@o1@3", "drop_goal@o1", True),
+        ("defer_goal@o1@3", "defer_goal@o1@3", True),
+        ("defer_goal@g1@3", "no_app", False),
+        ("defer_goal", "no_app", False),
+        ("engage_goal@o1", "engage_goal@o2@open:public_service_context", True),
+    ],
+)
+def test_repair_cannot_switch_targets_kinds_or_accept_an_unavailable_time(first, second, has_window):
+    current = None if has_window else {
+        **OFFER, "goal_id": "goal:1", "status": "deferred", "next_review_at_sim_hour": 104,
+    }
+    observation = packet(
+        hourly_intention_mode="opportunity_v1", current_intention=current, goal_review_due=False,
+        available_opportunities=[OFFER, {**OFFER, "opportunity_id": "other"}],
+    )
+    replies = [response(choice("no_app"), action=token, additional_apps=[]) for token in (first, second)]
+    llm = FakeLLM(replies)
+    with pytest.raises(HourlyIntentionPlanError) as caught:
+        plan(llm, observation)
+    assert llm.calls == 2 and caught.value.audit["accepted_choice"] is None
+    if not has_window:
+        assert "repair_field" not in caught.value.audit

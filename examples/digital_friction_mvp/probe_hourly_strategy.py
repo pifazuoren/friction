@@ -86,7 +86,14 @@ class _RequestReceiver:
 
 
 async def measure_admitted(
-    llm, *, task: DigitalTask, condition: str, sample_u: float, feedback_state=None
+    llm,
+    *,
+    task: DigitalTask,
+    condition: str,
+    sample_u: float,
+    feedback_state=None,
+    fact_resident=None,
+    stage_client=None,
 ) -> dict:
     """Appraise the routed task, sample the production strategy and observe dispatch."""
     config = _verify_runtime()
@@ -101,19 +108,41 @@ async def measure_admitted(
     # the standard implicit family description on historical S0 tasks.
     task = replace(task, visible_description=visible_task_description(task))
     state = checked_feedback_state(feedback_state, condition)
+    if state is not None and fact_resident is not None:
+        raise ValueError(
+            "Cannot combine a feedback-updated state and a fact-only intervention"
+        )
+    profile = fact_resident.profile if fact_resident else PROFILE
+    requester_id = fact_resident.profile_id if fact_resident else PROFILE_ID
+    helper_id = 10 + fact_resident.rank if fact_resident else 2
     if state is None:
         traits = {
-            key: PROFILE[key]
+            key: profile[key]
             for key in ("digital_experience", "vision_limit", "past_fraud_experience")
         }
         domain = build_initial_task_domain_memory(**traits)
         help_memory = build_initial_help_effect_memory()
         emotion = build_initial_digital_emotion_state(**traits)
         helplessness, consecutive_failures = 50.0, 0
-        feature_episodes, visible_episodes = [], [prior_episode(condition)]
+        if fact_resident is None:
+            feature_episodes, visible_episodes = [], [prior_episode(condition)]
+        else:
+            from help_mode_design import help_episodes
+
+            visible_episodes = help_episodes(requester_id, condition)
+            # The experienced outcomes and their ordering match across treatments. Compute
+            # numeric summaries from one common history; only the visible completion fact varies.
+            feature_episodes = help_episodes(requester_id, "guided")
     else:
-        domain, help_memory, emotion = state.domain_memory, state.help_memory, state.emotion
-        helplessness, consecutive_failures = state.helplessness, state.consecutive_failures
+        domain, help_memory, emotion = (
+            state.domain_memory,
+            state.help_memory,
+            state.emotion,
+        )
+        helplessness, consecutive_failures = (
+            state.helplessness,
+            state.consecutive_failures,
+        )
         feature_episodes = visible_episodes = state.episodes
     feature_inputs = dict(
         task=task,
@@ -147,18 +176,25 @@ async def measure_admitted(
     )
     if state is None:
         packet["aggregate_memory_scope"] = (
-            "Aggregate statistics summarize days 1–3. Recent episodes additionally include day 4."
+            (
+                "Domain and help statistics use fixed pre-intervention starting values. "
+                "The recent episode list and its summary describe the three controlled day 4 attempts."
+            )
+            if fact_resident
+            else (
+                "Aggregate statistics summarize days 1–3. Recent episodes additionally include day 4."
+            )
         )
     shared = dict(
-        llm=llm,
         task=task,
-        profile_summary=PROFILE,
+        profile_summary=profile,
         task_relevant_memory=packet,
         recent_episode_summary=recent,
         digital_emotion_state=emotion,
     )
     reply_audit = {"appraisal": {}, "strategy": {}}
     appraisal = await resolve_task_appraisal(
+        llm=stage_client("appraisal", None) if stage_client else llm,
         **shared,
         strict_score_audit=reply_audit["appraisal"],
         stage_key="baseline_low_friction",
@@ -167,8 +203,14 @@ async def measure_admitted(
         task_self_efficacy=baseline.task_self_efficacy,
         help_success_rate_smoothed=baseline.help_success_rate_smoothed,
     )
-    features = extract_memory_features(
-        **feature_inputs, task_appraisal_result=appraisal.to_dict()
+    # The facts-only design locks rule inputs before the new appraisal. The observed
+    # appraisal still reaches the strategy LLM, including under low-confidence fallback.
+    features = (
+        baseline
+        if fact_resident
+        else extract_memory_features(
+            **feature_inputs, task_appraisal_result=appraisal.to_dict()
+        )
     )
     features_used = {
         key: getattr(features, key)
@@ -188,6 +230,7 @@ async def measure_admitted(
     )
     rule_weights = compute_rule_strategy_weights(**rule_inputs)
     deliberation = await resolve_strategy_deliberation(
+        llm=stage_client("strategy", appraisal.to_dict()) if stage_client else llm,
         **shared,
         **features_used,
         strict_score_audit=reply_audit["strategy"],
@@ -205,15 +248,15 @@ async def measure_admitted(
     receiver = _RequestReceiver()
     if strategy.support_requested:
         request, reply, status = await dispatch_family_support_request(
-            requester_id=PROFILE_ID,
-            helper_id=2,
-            registry={2: receiver},
+            requester_id=requester_id,
+            helper_id=helper_id,
+            registry={helper_id: receiver},
             task=task,
             strategy=strategy,
             task_appraisal=appraisal,
             task_relevant_memory_packet=packet,
             env=ENVIRONMENT,
-            profile_summary=PROFILE,
+            profile_summary=profile,
             day=DAY,
             tick=TICK,
         )
@@ -247,6 +290,18 @@ async def measure_admitted(
             "avoid": deliberation.avoid_score,
         }
     return {
+        **(
+            {
+                "rule_inputs": rule_inputs,
+                "rule_input_source": "fixed_before_day5_appraisal",
+                "independent_strategy_selected": strategy.strategy_type
+                == "attempt_self",
+                "operation_started": None,
+                "task_outcome": None,
+            }
+            if fact_resident
+            else {}
+        ),
         "lower_valid": appraisal.source == "llm"
         and deliberation.source == "hybrid_blended",
         "reply_audit": reply_audit,

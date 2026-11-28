@@ -258,6 +258,7 @@ def build_report(folder, db):
                 raw = conn.execute(f"SELECT payload_json FROM {table} WHERE agent_id=? AND day=? ORDER BY t,id",
                                    (agent, d - 1))
                 summary = day_summary(traces[agent, d], [json.loads(row[0]) for row in raw], agent_id=int(agent))
+                summary["app_activity_flow"] = check.get("app_activity_flow", {}).get("by_day", {}).get(str(d))
                 offers = check.get("hourly_intention", {}).get("opportunities")
                 summary["distinct_visible_offers"] = None if offers is None else sum(
                     any(day == d for day, _ in offer["visible_hours"]) for offer in offers
@@ -315,6 +316,25 @@ def render(report):
                          f"{offers.get('natural_context', 0)}|{known(s['distinct_visible_offers'])}|{s['task_entries']}|"
                          f"{s['operations']}|{display_counts(s['outcomes'])}|{s['help_choices']} / {s['dispatched_help']} / "
                          f"{delivery.get('delivered', 0)}|{display_counts(s['outcomes_with_delivered_help'])}|")
+    lines += ["", "## 每小时需求、计划和日常 App 记录", "",
+              "首答按各模块实际发起请求的人小时计。请求数包含重答和因失败产生的调用。"
+              "复述指失败首答中可核对的原始观察开头。已写入要求模型采纳的类别与次数逐项匹配小时导出。"
+              "新版另核对首开类别。V4 日常动作仅记录类别和次数，首开顺序缺证。"
+              "次小时核对实际发送的需求与计划输入，最后一小时没有后续观察。", "",
+              "|编号|日|需求首答有效 / 已调用小时|需求复述|需求请求 / 重答|计划首答有效 / 已调用小时|计划请求 / 重答|日常首答缺类别且最终失败|日常选择 / 已写入 / 可验证首开|次小时读到（需求 / 计划）|",
+              "|---|---|---|---|---|---|---|---|---|---|"]
+    for p in profiles:
+        for d, s in p["days"].items():
+            metrics = s.get("app_activity_flow")
+            if metrics is None:
+                lines.append(f"|{p['rank']:02}|{d}|" + "缺证|" * 8)
+                continue
+            c = Counter(metrics)
+            lines.append(f"|{p['rank']:02}|{d}|{c['needs_first_pass_valid']} / {c['needs_hours_called']}|"
+                         f"{c['needs_first_reply_echoed_observation']}|{c['needs_requests']} / {c['needs_repair_requests']}|"
+                         f"{c['plan_first_pass_valid']} / {c['plan_hours_called']}|{c['plan_requests']} / {c['plan_repair_requests']}|"
+                         f"{c['failed_after_initial_daily_choice_without_channel']}|{c['accepted_daily_choices']} / {c['daily_exports_verified']} / {c['daily_opening_exports_verified']}|"
+                         f"{c['next_needs_verified']} / {c['next_plan_verified']}|")
     mapping = report["observed_helper_mapping"]
     relation = {True: "已观察到的目标一人对应一名助手", False: "已观察到助手对应关系冲突",
                 None: "可用证据不足以核实一人对应一名助手"}[mapping["observed_one_to_one"]]

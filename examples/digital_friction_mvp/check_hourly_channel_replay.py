@@ -104,7 +104,8 @@ def rebuild_plan_kwargs(events, expected_version=COMPACT_PLAN_V3):
     needs_input = request_payload(needs_request)["inputs"]
     needs = DigitalNeedsResult.from_sanitized(accepted[0]["parsed"])
     require(
-        compact_needs(needs.to_dict(include_audit=False)) == body["digital_needs"], "Needs disagree with Plan"
+        compact_needs(needs.to_dict(include_audit=False), body["schema_version"]) == body["digital_needs"],
+        "Needs disagree with Plan",
     )
     packet = {**body["inputs"], "day1_3_habit": needs_input["day1_3_habit"]}
     require(compact_observation(packet) == body["inputs"], "Could not reconstruct the Plan observation")

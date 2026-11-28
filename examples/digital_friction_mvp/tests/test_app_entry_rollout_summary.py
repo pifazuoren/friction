@@ -29,8 +29,9 @@ def test_rollout_summary_exports_unique_hourly_rows(tmp_path) -> None:
         "hour": 9,
         "active": True,
         "active_event_app_exposures": 3,
-        "app_context_counts": {"finance_context": 3},
+        "app_context_counts": {"finance_context": 2, "health_service_context": 1},
         "primary_context": "finance_context",
+        "opened_channel": "health_service_context",
         "source": "llm_memory_rollout",
         "dominant_need": "finance_need",
         "need_pressures": {"finance_need": 0.8},
@@ -81,7 +82,8 @@ def test_rollout_summary_exports_unique_hourly_rows(tmp_path) -> None:
     assert rows[0]["needs_actual_requests"] == 1
     assert rows[0]["plan_actual_requests"] == 3
     assert rows[0]["plan_repair_requests"] == 1
-    assert rows[0]["app_context_counts_json"] == '{"finance_context": 3}'
+    assert rows[0]["app_context_counts_json"] == '{"finance_context": 2, "health_service_context": 1}'
+    assert rows[0]["opened_channel"] == "health_service_context"
     conn.close()
 
 

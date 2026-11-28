@@ -865,6 +865,9 @@ class DigitalHelplessnessAgent(SocietyAgent):
             "input_packet_hash": str(audit.get("input_packet_hash", "")),
             "uses_validation_data": False,
         }
+        if "accepted_opened_channel" in rollout_result.plan.audit:
+            # The most frequent App can differ from the one the resident chose to open first.
+            row["opened_channel"] = rollout_result.plan.audit["accepted_opened_channel"]
         raw_rows = await self.memory.status.get(
             "proto_app_entry_rollout_rows_json", []
         )

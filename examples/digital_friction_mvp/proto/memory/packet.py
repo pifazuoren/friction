@@ -79,7 +79,7 @@ def compact_recent_episodes(
         "episode_id", "task_id", "day", "tick_seconds", "hour", "task_family",
         "requested_strategy_type", "strategy_type", "outcome_type", "avoid_reason",
         "help_used", "help_source", "support_request_id", "support_delivery_status", "support_mode",
-        "support_style", "autonomy_preservation", "proxy_completion_level",
+        "support_style", "autonomy_preservation", "proxy_completion_level", "completion_action",
         "instruction_quality", "negative_feedback", "event_level_uncontrollability",
         "helplessness_delta", "support_quality", "feedback_valence",
     )

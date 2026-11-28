@@ -11,6 +11,7 @@ from proto.app_entry.intention_contract import (
     COMPACT_PLAN_VERSIONS,
     OPENING_TOKEN_VERSIONS,
     compact_repair_changed,
+    compact_repair_locks,
     parse_compact_reply,
     read_compact_statement,
     changed_by_repair,
@@ -63,7 +64,7 @@ def decode_received_plan(raw, original, payload, compact):
         raise ValueError("no parseable Plan reply")
     if compact:
         if original is not None and compact_repair_changed(
-            read_compact_statement(original, payload),
+            compact_repair_locks(read_compact_statement(original, payload), payload)[0],
             read_compact_statement(raw, payload),
         ):
             raise ValueError("repair changed a stated action, target or activity")
@@ -89,7 +90,11 @@ def decode_received_plan(raw, original, payload, compact):
 def check_compact_repair_request(call, original, initial_payload):
     """Check the separately transmitted correction against the decision it purports to repair."""
     repair = request_payload(call)
-    before = read_compact_statement(original, initial_payload)
+    before, repair_field = compact_repair_locks(
+        read_compact_statement(original, initial_payload), initial_payload
+    )
+    if repair.get("repair_field") != repair_field:
+        raise ValueError("repair prompt does not identify the permitted correction")
     locked = {
         k: before[k]
         for k in ("action", "choice", "active", "activity")

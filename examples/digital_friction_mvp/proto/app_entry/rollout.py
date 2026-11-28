@@ -56,6 +56,7 @@ _RECENT_ROLLOUT_KEYS = (
     "active_event_app_exposures",
     "app_context_counts",
     "primary_context",
+    "opened_channel",
     "dominant_need",
     "entry_status",
     "task_generated",
@@ -344,6 +345,8 @@ async def run_app_entry_rollout_hour(
             f"{failure_identity}"
             f"talkingdata_day={talkingdata_day}, hour={hour}: {exc}"
         ) from exc
+    # Archived policies reuse their historical summaries when advancing a legacy trajectory.
+    needs.legacy_tiebreak = hourly_intention_mode == "legacy" or plan_prompt_version == CALIBRATED_PLAN_VERSION
     candidate_contexts = build_rollout_app_context_candidates(
         habit_memory=habit_memory,
         hour=hour,
@@ -351,6 +354,7 @@ async def run_app_entry_rollout_hour(
         need_context_mapping=DIGITAL_NEED_TO_APP_CONTEXTS,
         top_k=int(top_k),
         allow_empty=hourly_intention_mode == "opportunity_v1",
+        actionable_only=hourly_intention_mode == "opportunity_v1" and plan_prompt_version != CALIBRATED_PLAN_VERSION,
     )
     try:
         plan = await DigitalAppEntryPlanBlock().forward(

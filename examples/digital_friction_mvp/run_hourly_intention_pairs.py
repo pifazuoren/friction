@@ -151,7 +151,7 @@ def verify_shared_person(stimuli):
         shared = compact_observation(old["inputs"])
         if any(k not in new["inputs"] or new["inputs"][k] != v for k, v in shared.items()):
             raise ValueError("The two policies received different shared observations")
-        if compact_needs(old["digital_needs"]) != new["digital_needs"]:
+        if compact_needs(old["digital_needs"], new["schema_version"]) != new["digital_needs"]:
             raise ValueError("The two policies received different fixed Needs")
 
 
@@ -424,7 +424,7 @@ async def main():
             "profile_id": PROFILE_ID,
             "profile": PROFILE,
             "history": asdict(history),
-            "fixed_needs": NEEDS.to_dict(include_audit=False),
+            "fixed_needs": NEEDS.to_dict(include_audit=False, legacy_tiebreak=True),
             "opportunity": offer,
             "episode_source": "constructed independent Day 4 login; no downstream aggregate or state changes",
         },

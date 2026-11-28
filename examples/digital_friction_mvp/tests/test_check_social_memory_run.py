@@ -8,7 +8,7 @@ from uuid import uuid4
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from check_social_memory_run import WORLD, check_run
+from check_social_memory_run import WORLD, app_activity_flow, check_run
 from proto.metrics import ensure_attempt_rows_table, attempt_rows_table_name
 
 
@@ -167,3 +167,61 @@ def test_missing_input_writes_no_database(tmp_path):
     report = check_run(tmp_path, "absent", tmp_path / "db", tmp_path / "trace")
     assert not report["run_complete"] and report["issues"]
     assert not (tmp_path / "db").exists()
+
+
+def test_daily_app_flow_verifies_export_and_actual_next_inputs_across_midnight():
+    channel_counts = {"health_service_context": 2, "communication_social_context": 1}
+    # The person's first App differs from the most frequently used one in this hour.
+    opening = "communication_social_context"
+    token = "habitual_app@open:" + opening
+    menu = {"schema_version": "hourly_plan_compact_v6", "actions": [token], "channels": list(channel_counts)}
+    prior = dict(talkingdata_day=4, hour=23, active=True, active_event_app_exposures=3,
+                 app_context_counts=channel_counts, opened_channel=opening)
+    observation = dict(simulation_day=4, talkingdata_day=5, hour=0, recent_simulated_bundles=[prior])
+    packet = json.dumps({"inputs": observation})
+    def event(day, hour, module, kind, **values):
+        return dict(talkingdata_day=day, hour=hour, module=module, kind=kind, **values)
+    rows = [event(4, 23, "hourly_intention", "hourly_intention", status="accepted", executed_choice="habitual_app"),
+            event(4, 23, "app_plan", "request", phase="initial", call_id="daily",
+                  messages=[{"role": "user", "content": json.dumps(menu)}]),
+            event(4, 23, "app_plan", "response", phase="repair", call_id="daily-repair", raw=json.dumps({"action": token})),
+            event(4, 23, "app_plan", "parse", phase="repair", call_id="daily-repair",
+                  status="ok_repaired", parsed={"app_context_counts": channel_counts}),
+            event(5, 0, "hourly_intention", "hourly_intention", status="technical_failure"),
+            event(5, 0, "app_plan", "intent_validation", raw_choice={"kind": "habitual_app"}, raw_activity={})]
+    for module in ("app_needs", "app_plan"):
+        rows.append(event(5, 0, module, "request", phase="initial", call_id=module,
+                          messages=[{"role": "user", "content": packet}]))
+    rows += [event(5, 0, "app_needs", "response", phase="initial", call_id="app_needs", raw=packet[:-4]),
+             event(5, 0, "app_needs", "parse", phase="initial", call_id="app_needs", status="invalid_schema"),
+             event(5, 0, "app_needs", "request", phase="repair", call_id="repair"),
+             event(5, 0, "app_needs", "parse", phase="repair", call_id="repair", status="ok_repaired")]
+    hourly = [{"talkingdata_day": "4", "hour": "23", "entry_status": "intention_habitual_app", "active": "1",
+               "active_event_app_exposures": "3", "opened_channel": opening,
+               "app_context_counts_json": json.dumps(channel_counts)}]
+    expected = {(4, 23), (5, 0)}
+    result = app_activity_flow(rows, hourly, expected)
+    assert not result["issues"]
+    d4, d5 = result["by_day"]["4"], result["by_day"]["5"]
+    assert d4["daily_exports_verified"] == d4["next_needs_verified"] == d4["next_plan_verified"] == 1
+    assert d4["daily_opening_exports_verified"] == 1
+    assert d5["needs_first_reply_echoed_observation"] == d5["needs_repair_requests"] == 1
+    assert d5["needs_requests"] == 2 and d5.get("needs_first_pass_valid", 0) == 0
+    assert d5["failed_after_initial_daily_choice_without_channel"] == d5["technical_failure_hours"] == 1
+    assert not d5.get("accepted_daily_choices")
+    last = app_activity_flow(rows, hourly, {(4, 23)})
+    assert last["totals"]["daily_at_run_end"] == 1 and not last["totals"].get("next_plan_verified")
+    # An unverified following plan, a contradictory next observation and a missing
+    # hourly export are distinguishable from each other and from a valid decision.
+    plan_call = next(r for r in rows if (r["talkingdata_day"], r["module"], r["kind"]) == (5, "app_plan", "request"))
+    rows.remove(plan_call)
+    assert app_activity_flow(rows, hourly, expected)["totals"]["next_plan_not_observed"] == 1
+    plan_call["messages"] = [{"role": "user", "content": json.dumps({
+        "inputs": {"recent_simulated_bundles": [{**prior, "opened_channel": "health_service_context"}]}})}]
+    rows.append(plan_call)
+    broken = app_activity_flow(rows, hourly, expected)
+    assert broken["issues"] and not broken["totals"].get("next_plan_verified")
+    broken_export = app_activity_flow(rows, [], expected)
+    assert broken_export["issues"] and not broken_export["totals"].get("daily_exports_verified")
+    wrong_opening = app_activity_flow(rows, [{**hourly[0], "opened_channel": "health_service_context"}], expected)
+    assert wrong_opening["issues"] and not wrong_opening["totals"].get("daily_opening_exports_verified")

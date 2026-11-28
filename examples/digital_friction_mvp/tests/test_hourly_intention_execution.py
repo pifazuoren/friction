@@ -19,11 +19,15 @@ class ResidentLLM:
         self.action = "habitual_app"
         self.app = "communication_social_context"
         self.plans = []
+        self.needs = []
+        self.extra_opens = []
         self.review = None
 
     async def atext_request(self, *, dialog, **kwargs):
         packet = json.loads(dialog[1]["content"].split("\n", 1)[1])
         if "digital_needs" not in packet:
+            if "inputs" in packet:
+                self.needs.append(packet["inputs"])
             return json.dumps(_needs_payload())
         self.plans.append(packet)
         obs = packet["inputs"]
@@ -45,9 +49,12 @@ class ResidentLLM:
             token += f"@{self.review}"
         if action == "bad_id":
             token = "engage_goal@invisible"
+        additional_apps = [] if action == "no_app" else [channel]
+        if opens_channel:
+            additional_apps = self.extra_opens
         plan = {
             "action": token,
-            "additional_apps": [] if action == "no_app" or opens_channel else [channel],
+            "additional_apps": additional_apps,
             "attitude": 0.7,
             "subjective_norm": 0.5,
             "perceived_control": 0.4,
@@ -211,6 +218,33 @@ def test_natural_opportunity_reaches_next_plan_then_executes_same_task(
     assert (
         data["recent_episode_buffer"][-1]["task_id"] == natural["template"]["task_id"]
     )
+
+
+def test_first_app_in_an_hour_survives_later_openings_idle_and_failed_hours(resident, monkeypatch):
+    step, data, llm, _ = resident
+    monkeypatch.delenv("PROTO_SCHEDULED_LOGIN_HOUR")
+    first, extra = "communication_social_context", "finance_context"
+    llm.extra_opens = [extra, extra]
+    step(3, 22, "habitual_app", app=first)
+    assert not llm.plans[-1]["inputs"]["available_opportunities"]
+    row, = data["proto_app_entry_rollout_rows_json"]
+    assert row["opened_channel"] == first
+    assert row["primary_context"] == extra
+    assert row["app_context_counts"] == {first: 1, extra: 2}
+
+    llm.extra_opens = []
+    step(3, 23, "no_app")
+    assert llm.plans[-1]["inputs"]["available_opportunities"]
+    step(4, 0, "bad_id")
+    step(4, 1, "habitual_app", app=first)
+    for packet in (llm.plans[-1]["inputs"], llm.needs[-1]):
+        mixed, idle = packet["recent_simulated_bundles"]
+        assert (mixed["talkingdata_day"], mixed["hour"], mixed["opened_channel"]) == (4, 22, first)
+        assert mixed["app_context_counts"] == row["app_context_counts"]
+        assert (idle["hour"], idle["active"], idle["app_context_counts"]) == (23, False, {})
+        assert idle["opened_channel"] is None
+    failure, = data["proto_app_entry_rollout_error_rows_json"]
+    assert (failure["talkingdata_day"], failure["hour"], failure["bundle_generated"]) == (5, 0, False)
 
 
 def test_pending_replay_task_is_visible_but_never_bypasses_choice(resident):

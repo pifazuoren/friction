@@ -7,7 +7,8 @@ import re
 from collections import Counter
 from typing import Any
 
-from .types import APP_CONTEXT_SET
+from .needs import strongest_need
+from .types import ACTIONABLE_APP_CONTEXTS, APP_CONTEXT_SET
 
 
 KINDS = (
@@ -266,16 +267,24 @@ COMPACT_PLAN_V2 = "hourly_plan_compact_v2"
 COMPACT_PLAN_V3 = "hourly_plan_compact_v3"
 COMPACT_PLAN_V4 = "hourly_plan_compact_v4"
 COMPACT_PLAN_V5 = "hourly_plan_compact_v5"
-COMPACT_PLAN_VERSION = COMPACT_PLAN_V5
-OPENING_TOKEN_VERSIONS = frozenset({COMPACT_PLAN_V4, COMPACT_PLAN_V5})
+COMPACT_PLAN_V6 = "hourly_plan_compact_v6"
+COMPACT_PLAN_V7 = "hourly_plan_compact_v7"
+COMPACT_PLAN_V8 = "hourly_plan_compact_v8"
+COMPACT_PLAN_VERSION = COMPACT_PLAN_V8
+UNIQUE_NEED_VERSIONS = frozenset({COMPACT_PLAN_V7, COMPACT_PLAN_V8})
+ACTIONABLE_CHANNEL_VERSIONS = UNIQUE_NEED_VERSIONS | {COMPACT_PLAN_V6}
+DAILY_OPENING_VERSIONS = ACTIONABLE_CHANNEL_VERSIONS | {COMPACT_PLAN_V5}
+OPENING_TOKEN_VERSIONS = DAILY_OPENING_VERSIONS | {COMPACT_PLAN_V4}
 COMPACT_PLAN_VERSIONS = OPENING_TOKEN_VERSIONS | {COMPACT_PLAN_V2, COMPACT_PLAN_V3}
 COMPACT_SCORES = ("attitude", "subjective_norm", "perceived_control", "confidence")
 
 
-def compact_needs(needs: dict) -> dict:
+def compact_needs(needs: dict, schema_version: str = COMPACT_PLAN_VERSION) -> dict:
     return {
-        k: needs[k]
-        for k in ("need_pressures", "dominant_need", "active_intent", "intensity_hint")
+        "need_pressures": needs["need_pressures"],
+        "dominant_need": strongest_need(needs["need_pressures"], legacy_tiebreak=schema_version not in UNIQUE_NEED_VERSIONS),
+        "active_intent": needs["active_intent"],
+        "intensity_hint": needs["intensity_hint"],
     }
 
 
@@ -341,13 +350,14 @@ def compact_menu(
     offers = {o["opportunity_id"]: o for o in observation["available_opportunities"]}
     targets = {}
     actions = ["habitual_app", "no_app"]
-    if schema_version == COMPACT_PLAN_V5:
+    if schema_version in DAILY_OPENING_VERSIONS:
         if (
             not isinstance(channels, list)
             or any(channel not in APP_CONTEXT_SET for channel in channels)
+            or (schema_version in ACTIONABLE_CHANNEL_VERSIONS and any(channel not in ACTIONABLE_APP_CONTEXTS for channel in channels))
             or len(channels) != len(set(channels))
         ):
-            raise ValueError("v5 requires a list of distinct allowed app channels")
+            raise ValueError("daily activity requires a list of distinct allowed app channels")
         actions = [f"habitual_app@open:{channel}" for channel in sorted(channels)]
         actions.append("no_app")
     windows = {}
@@ -375,7 +385,7 @@ def compact_menu(
         if schema_version in OPENING_TOKEN_VERSIONS:
             channel = target.get("required_channel")
             if channel not in APP_CONTEXT_SET or (
-                schema_version == COMPACT_PLAN_V5 and channel not in channels
+                schema_version in DAILY_OPENING_VERSIONS and channel not in channels
             ):
                 raise ValueError(
                     "an actionable target must have a valid required_channel"
@@ -412,7 +422,7 @@ def stated_open_channel(token: Any, body: dict) -> str | None:
     prefix, marker, channel = token.rpartition("@open:")
     if not marker or channel not in body["channels"]:
         return None
-    if version == COMPACT_PLAN_V5 and prefix == "habitual_app":
+    if version in DAILY_OPENING_VERSIONS and prefix == "habitual_app":
         return channel
     return channel if prefix.startswith(("engage_goal@", "continue_goal@")) else None
 
@@ -447,6 +457,16 @@ def _v3_action_fields(token: Any, body: dict) -> dict | None:
     return fields
 
 
+def _defer_hour_available(token, options, review):
+    if isinstance(options, list):
+        return token in options
+    return (
+        isinstance(options, dict)
+        and token == f"{options['prefix']}{review}"
+        and options["first_hour"] <= review <= options["last_hour"]
+    )
+
+
 def _v3_intent(raw: dict, body: dict) -> dict:
     token = raw["action"]
     fields = _v3_action_fields(token, body)
@@ -465,16 +485,7 @@ def _v3_intent(raw: dict, body: dict) -> dict:
             )
         _, alias, _ = token.split("@")
         options = body["defer_options"].get(alias)
-        if isinstance(options, list):
-            valid = token in options
-        elif isinstance(options, dict):
-            valid = (
-                token == f"{options['prefix']}{review}"
-                and options["first_hour"] <= review <= options["last_hour"]
-            )
-        else:
-            valid = False
-        if not valid:
+        if not _defer_hour_available(token, options, review):
             raise ValueError(
                 "defer_goal hour or target is outside the available options"
             )
@@ -700,7 +711,7 @@ def read_compact_statement(raw_text: str, request_body: dict) -> dict:
     if has_opening_tokens:
         items = _complete_list_items(partial.get("additional_apps", ""))
         if (
-            version == COMPACT_PLAN_V5
+            version in DAILY_OPENING_VERSIONS
             and isinstance(additional, list)
             and additional_activity is None
         ):
@@ -709,7 +720,7 @@ def read_compact_statement(raw_text: str, request_body: dict) -> dict:
         partial_additional_apps.update(
             channel for channel in items
             if isinstance(channel, str)
-            and (version == COMPACT_PLAN_V5 or channel in request_body["channels"])
+            and (version in DAILY_OPENING_VERSIONS or channel in request_body["channels"])
         )
     partial_weights = {}
     for label in ("weights", count_field) if calibrated else (count_field,):
@@ -744,6 +755,38 @@ def read_compact_statement(raw_text: str, request_body: dict) -> dict:
         "additional_activity": additional_activity,
         "partial_additional_apps": dict(partial_additional_apps),
     }
+
+
+def compact_repair_locks(statement: dict, body: dict) -> tuple[dict, str | None]:
+    """Preserve every identified commitment except a V8 field the menu can resolve."""
+    if body["schema_version"] != COMPACT_PLAN_V8 or statement["ambiguous"]:
+        return statement, None
+    action = statement["action"]
+    if not isinstance(action, str):
+        return statement, None
+    parts = action.split("@")
+    if len(parts) == 2 and parts[0] in {"engage_goal", "continue_goal"}:
+        matches = [
+            option for option in body["actions"] if option.startswith(action + "@open:")
+        ]
+        if len(matches) == 1:
+            return {**statement, "action": matches[0]}, "required_opening"
+    if len(parts) == 3 and parts[0] == "defer_goal":
+        choice = statement["choice"]
+        options = body["defer_options"].get(parts[1])
+        hour = choice.get("next_review_at_sim_hour") if choice else None
+        if (
+            options
+            and type(hour) is int
+            and str(hour) == parts[2]
+            and not _defer_hour_available(action, options, hour)
+        ):
+            return {
+                **statement,
+                "action": None,
+                "choice": {**choice, "next_review_at_sim_hour": None},
+            }, "review_hour"
+    return statement, None
 
 
 def compact_repair_changed(first: dict, repaired: dict) -> bool:

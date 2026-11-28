@@ -53,6 +53,16 @@ APP_CONTEXT_SET: tuple[str, ...] = (
     "unknown_or_unmapped",
 )
 
+# These bins carry observed exposure mass but do not identify a usable application.
+AUDIT_ONLY_APP_CONTEXTS = frozenset(
+    {"finance_candidate_review", "taxonomy_profile_only", "unknown_or_unmapped"}
+)
+HISTORICAL_CATEGORY_GUIDANCE = (
+    "历史中的 finance_candidate_review、taxonomy_profile_only、unknown_or_unmapped 是待核实或未知类别，"
+    "只表明当时观察到了活动，不能据此推断本人想办什么。"
+)
+ACTIONABLE_APP_CONTEXTS = frozenset(APP_CONTEXT_SET) - AUDIT_ONLY_APP_CONTEXTS
+
 TASK_ELIGIBLE_APP_CONTEXTS: frozenset[str] = frozenset(
     {
         "finance_context",

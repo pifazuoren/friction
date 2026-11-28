@@ -4,6 +4,7 @@ from typing import Any
 
 from .task_templates import TASK_LIBRARY
 from .types import (
+    ACTIONABLE_APP_CONTEXTS,
     APP_CONTEXT_SET,
     MOBILE_INTENTION_SET,
     _normalize_distribution_for_keys,
@@ -21,6 +22,7 @@ def build_rollout_app_context_candidates(
     need_context_mapping: dict[str, tuple[str, ...] | list[str]] | None = None,
     top_k: int = 5,
     allow_empty: bool = False,
+    actionable_only: bool = False,
 ) -> dict[str, float]:
     """Build a bounded candidate pool from observed calibration evidence.
 
@@ -50,7 +52,7 @@ def build_rollout_app_context_candidates(
 
     # If this clock hour has no observed context, use the same device's overall
     # Day 1-3 observed contexts. This is still calibration evidence, not a prior.
-    if not observed:
+    if not observed or (actionable_only and not observed.keys() & ACTIONABLE_APP_CONTEXTS):
         total_counts = habit_memory.get("context_total_counts", {})
         if isinstance(total_counts, dict):
             for context, count in total_counts.items():
@@ -83,7 +85,8 @@ def build_rollout_app_context_candidates(
             if weight > 0.0:
                 scores[name] = scores.get(name, 0.0) + weight
 
-    positive = {name: value for name, value in scores.items() if value > 0.0}
+    positive = {name: value for name, value in scores.items()
+                if value > 0.0 and (not actionable_only or name in ACTIONABLE_APP_CONTEXTS)}
     if not positive:
         if allow_empty:
             return {}

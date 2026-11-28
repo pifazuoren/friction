@@ -167,7 +167,7 @@ def expand_smoke_context(context, shared):
     hour, habits = observed["hour"], shared["history"]["habits"]
     intensity = build_rollout_intensity_profile(habits, hour=hour, absolute_cap=12)
     require(intensity["active_exposure_cap"] == context["exposure_cap"], "Archived replay cap disagrees")
-    require(compact_needs(needs) == context["digital_needs"], "Archived fixed Needs disagree")
+    require(compact_needs(needs, context["schema_version"]) == context["digital_needs"], "Archived fixed Needs disagree")
     require(observed["available_opportunities"] == [shared["opportunity"]], "Archived visible opportunity differs")
     psychology = observed["pre_hour_psychology"]
     packet = build_rollout_input_packet(

@@ -80,12 +80,13 @@ def experiment_environment(values):
 class HTTPBudget:
     """Count dispatches at the wire, including format repairs and unsuccessful calls."""
 
-    def __init__(self):
+    def __init__(self, limit=MAX_HTTP_REQUESTS):
+        self.limit = limit
         self.count = 0
         self.case_start = 0
 
     async def before_send(self, _request):
-        if self.count >= MAX_HTTP_REQUESTS or self.count - self.case_start >= 6:
+        if self.count >= self.limit or self.count - self.case_start >= 6:
             raise RuntimeError("HTTP request budget exhausted before dispatch")
         self.count += 1
 
@@ -199,14 +200,18 @@ async def measure(transport, spec, history, *, feedback_state=None):
     }
 
 
-def prepare_archive(folder, history, prepared, *, online, feedback_mode="frozen"):
-    folder.mkdir(parents=True, exist_ok=False)
+def archive_source(folder):
     archive = folder / "experiment_source.zip"
     # Include the local program and its transitive experiment modules at execution time.
     with ZipFile(archive, "x", compression=ZIP_DEFLATED) as bundle:
         for path in sorted([*EXAMPLE.glob("*.py"), *(EXAMPLE / "proto").rglob("*.py")]):
             bundle.write(path, str(path.relative_to(EXAMPLE)))
-    source_hash = sha256(archive.read_bytes()).hexdigest()
+    return sha256(archive.read_bytes()).hexdigest()
+
+
+def prepare_archive(folder, history, prepared, *, online, feedback_mode="frozen"):
+    folder.mkdir(parents=True, exist_ok=False)
+    source_hash = archive_source(folder)
     for name, data in prepared.items():
         filename = {"manifest": "request_manifest"}.get(name, name)
         save_json(folder / f"{filename}.json", data)

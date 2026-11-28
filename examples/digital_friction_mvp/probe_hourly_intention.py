@@ -11,7 +11,7 @@ from proto.app_entry.bundle import HourlyAppEntryBundle, derive_primary_context
 from proto.app_entry.bundle_loader import get_replay_source
 from proto.app_entry.candidate import build_rollout_app_context_candidates
 from proto.app_entry.habit_memory import build_rollout_intensity_profile, update_habit_memory_from_bundle
-from proto.app_entry.intention_contract import COMPACT_PLAN_V4
+from proto.app_entry.intention_contract import ACTIONABLE_CHANNEL_VERSIONS, COMPACT_PLAN_V4
 from proto.app_entry.needs import DIGITAL_NEED_TO_APP_CONTEXTS, DIGITAL_NEED_LABELS, DigitalNeedsResult
 from proto.app_entry.planner import DigitalAppEntryPlanBlock
 from proto.app_entry.rollout import build_rollout_input_packet
@@ -65,8 +65,10 @@ class SharedHistory:
         )
 
 
-def load_history(reference_dir: Path | None) -> SharedHistory:
+def load_history(reference_dir: Path | None, *, selected_rank: int = 1) -> SharedHistory:
     """Use one audited set of 72 observations in all conditions, without raw device IDs."""
+    if type(selected_rank) is not int or selected_rank < 1:
+        raise ValueError("selected_rank must be a positive integer")
     source = None
     if reference_dir is not None:
         prefix = "talkingdata_elderly_10_"
@@ -75,7 +77,10 @@ def load_history(reference_dir: Path | None) -> SharedHistory:
             device_mapping_path=str(reference_dir / f"{prefix}selected_devices.csv"),
             replay_days=(1, 2, 3),
         )
-        device = source.selected_devices[0][1]
+        try:
+            device = dict(source.selected_devices)[selected_rank]
+        except KeyError as exc:
+            raise ValueError("No reference device for selected_rank") from exc
     observations, habits = {}, {}
     for day in (1, 2, 3):
         for hour in range(24):
@@ -83,7 +88,9 @@ def load_history(reference_dir: Path | None) -> SharedHistory:
                 bundle = source.bundle_for_device(device_id=device, talkingdata_day=day, hour=hour)
             else:
                 # Explicitly synthetic, deterministic alternative for a checkout without private data.
-                counts = {"communication_social_context": day} if hour in (9, 18, 20) else {}
+                offset = selected_rank - 1
+                active_hours = {(base + offset) % 24 for base in (9, 18, 20)}
+                counts = {"communication_social_context": day} if hour in active_hours else {}
                 bundle = HourlyAppEntryBundle(
                     "fixture",
                     day,
@@ -104,18 +111,18 @@ def load_history(reference_dir: Path | None) -> SharedHistory:
     return SharedHistory(
         habits,
         {h: by_hour["resident", DAY + 1, h] for h in range(24)},
-        "reference_rank_1" if source else "synthetic_72_hours",
+        f"reference_rank_{selected_rank}" if source else "synthetic_72_hours",
         source.bundle_hash if source else None,
         source.device_mapping_hash if source else None,
     )
 
 
-def login_offer(day=DAY, *, scene="S0"):
+def login_offer(day=DAY, *, scene="S0", profile_id=PROFILE_ID):
     if scene not in SCENES:
         raise ValueError(f"Unknown login scene {scene!r}")
     task = scheduled_login_for_day(
         hour=HOUR,
-        agent_id=PROFILE_ID,
+        agent_id=profile_id,
         day=day,
         tick_seconds=TICK,
         env=ENVIRONMENT,
@@ -169,20 +176,34 @@ async def run_plan(
     if mode not in MODES:
         raise ValueError(f"Unknown intention condition {mode!r}")
     state = checked_feedback_state(feedback_state, condition)
-    _, ledger, _ = login_offer(scene=scene)
+    return await plan_from_observation(
+        llm, history=history, mode=mode, scene=scene, profile_id=PROFILE_ID, profile=PROFILE,
+        episodes=state.episodes if state else [prior_episode(condition)],
+        helplessness=state.helplessness if state else 50.0,
+        trust=state.trust if state else 50.0, avoidance=state.avoidance if state else 50.0,
+        compact_schema_version=COMPACT_PLAN_V4 if mode == "opportunity_v1" else None,
+    )
+
+
+async def plan_from_observation(
+    llm, *, history, mode, scene, profile_id, profile, episodes, helplessness,
+    trust, avoidance, compact_schema_version=None,
+):
+    """Generate a fresh decision from an explicit resident, past and simulated state."""
+    _, ledger, _ = login_offer(scene=scene, profile_id=profile_id)
     intensity = build_rollout_intensity_profile(history.habits, hour=HOUR, absolute_cap=12)
     packet = build_rollout_input_packet(
         simulation_day=DAY,
         talkingdata_day=DAY + 1,
         hour=HOUR,
-        stable_profile=PROFILE,
+        stable_profile=profile,
         habit_memory=history.habits,
         recent_rollout_rows=[],
-        recent_task_episodes=state.episodes if state else [prior_episode(condition)],
+        recent_task_episodes=episodes,
         latest_reflection={},
-        helplessness=state.helplessness if state else 50.0,
-        trust=state.trust if state else 50.0,
-        avoidance=state.avoidance if state else 50.0,
+        helplessness=helplessness,
+        trust=trust,
+        avoidance=avoidance,
         environment=ENVIRONMENT,
         intensity_profile=intensity,
         hourly_intention_mode=mode,
@@ -190,12 +211,15 @@ async def run_plan(
         current_intention=ledger.goal,
         goal_review_due=ledger.review_due(SIM_HOUR),
     )
+    current_actions = mode == "opportunity_v1" and (compact_schema_version is None or compact_schema_version in ACTIONABLE_CHANNEL_VERSIONS)
     candidates = build_rollout_app_context_candidates(
         habit_memory=history.habits,
         hour=HOUR,
         need_pressures=NEEDS.need_pressures,
         need_context_mapping=DIGITAL_NEED_TO_APP_CONTEXTS,
         top_k=5,
+        allow_empty=current_actions,
+        actionable_only=current_actions,
     )
     return await DigitalAppEntryPlanBlock().forward(
         llm=llm,
@@ -204,7 +228,7 @@ async def run_plan(
         input_payload=packet,
         intensity_profile=intensity,
         prompt_version="app_entry_plan_v3",
-        compact_schema_version=COMPACT_PLAN_V4 if mode == "opportunity_v1" else None,
+        compact_schema_version=compact_schema_version,
         min_confidence=0.5,
         timeout=45,
         retries=1,
@@ -226,9 +250,9 @@ def routed_choice(mode, plan):
     return route_opportunity_choice(plan)[0]
 
 
-def route_opportunity_choice(plan, *, scene="S0"):
+def route_opportunity_choice(plan, *, scene="S0", profile_id=PROFILE_ID):
     """Apply the chosen intent to a fresh ledger for the same advertised scene."""
-    task, ledger, offer = login_offer(scene=scene)
+    task, ledger, offer = login_offer(scene=scene, profile_id=profile_id)
     if plan is None:
         return {
             "policy_choice": None,

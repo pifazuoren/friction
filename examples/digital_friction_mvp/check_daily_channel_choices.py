@@ -158,6 +158,7 @@ async def replay_hour(slot, events):
     request = event(events, "app_plan", "request", phase="initial")
     old = request_payload(request)
     kwargs = rebuild_plan_kwargs(events, expected_version=COMPACT_PLAN_V4)
+    kwargs["compact_schema_version"] = COMPACT_PLAN_V5
     first = event(events, "app_plan", "response", phase="initial")["raw"]
     replies = [first]
     if route["repair_count"]:
