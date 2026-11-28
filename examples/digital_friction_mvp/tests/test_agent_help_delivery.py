@@ -124,7 +124,8 @@ def test_forward_records_requested_and_effective_help_separately(run_task, reply
         assert row["outcome_type"] not in {"success_with_help", "failure_even_with_help"}
 
 
-def test_declined_help_reaches_next_day_app_and_strategy_in_two_forwards(run_task, monkeypatch):
+@pytest.mark.parametrize("guidance_then_takeover", [False, True], ids=["unavailable", "requested-guidance-got-proxy"])
+def test_help_exchange_reaches_next_day_app_and_strategy_in_two_forwards(run_task, monkeypatch, guidance_then_takeover):
     from proto import agent as agent_module
     from proto.attempt_strategy import choose_attempt_strategy
     from test_app_entry_rollout import _habit, _needs_payload, _plan_payload
@@ -133,16 +134,53 @@ def test_declined_help_reaches_next_day_app_and_strategy_in_two_forwards(run_tas
     agent, data = run_task
     agent.environment._day = 3  # TalkingData Day 4.
     helper = FamilyHelper("unavailable")
+    if guidance_then_takeover:
+        from proto.family_helper_agent import FamilyHelperAgent
+        from test_app_entry_rollout import FakeLLM
+        from test_family_helper_agent import _Memory, _Environment
+
+        helper_llm = RecordingLLM({
+            "support_style": "substituting", "instruction_quality": "low",
+            "autonomy_preservation": "low", "proxy_completion_level": "full",
+            "emotional_tone": "neutral", "response_delay": "immediate", "confidence": .9,
+            "responded": True, "response_text": "I'll do these steps for you.", "rationale": "Time is short.",
+        })
+        helper = FamilyHelperAgent(id=20, name="helper",
+            toolbox=SimpleNamespace(llm=helper_llm, environment=_Environment(), messager=None, embedding=None, database_writer=None),
+            memory=_Memory(), agent_params=None, blocks=[])
+
+        strategy_reply = {
+            "attempt_self_score": .1, "seek_help_score": .85, "avoid_score": .05,
+            "dominant_strategy": "seek_help_then_attempt", "judge_confidence": .95, "reason": "Ask family.",
+        }
+        agent._toolbox.llm = FakeLLM([json.dumps(strategy_reply), json.dumps({"requested_support_style": "guidance"})])
+        for key in ("TASK_APPRAISAL", "DAILY_REFLECTION", "EVENT_APPRAISAL"):
+            monkeypatch.setenv(f"PROTO_LLM_{key}_ENABLED", "false")
+        monkeypatch.setenv("PROTO_LLM_PSYCHOLOGY_MODE", "hybrid")
+        monkeypatch.setenv("PROTO_LLM_STRATEGY_DELIBERATION_ENABLED", "true")
+        monkeypatch.setenv("PROTO_LLM_PSYCHOLOGY_CACHE_ENABLED", "false")
     agent.set_support_helper_registry({20: helper})
     asyncio.run(agent.forward())
     prior, = data["recent_episode_buffer"]
     assert prior["day"] == 3 and prior["episode_id"]
-    assert prior["outcome_type"] in {"success_self", "failure_after_attempt", "abandon_midway"}
     assert prior["requested_strategy_type"] == "seek_help_then_attempt"
-    assert prior["strategy_type"] == "attempt_self" and not prior["help_used"]
-    assert prior["support_delivery_status"] == "not_delivered"
-    assert prior["support_request_id"] == helper.requests[0].request_id
-    assert data["help_effect_memory"]["overall"]["help_attempt_count"] == 0
+    facts = {}
+    if guidance_then_takeover:
+        exchange, = helper.memory.status.data["support_histories"]["7"]
+        assert exchange["request"]["requested_support_style"] == "guidance"
+        assert exchange["response"]["support_style"] == "substituting"
+        assert exchange["request"]["request_id"] == exchange["response"]["request_id"] == prior["support_request_id"]
+        facts = {"requested_support_style": "guidance", "requested_support_style_source": "llm",
+                 "support_style": "substituting", "proxy_completion_level": "full", "support_delivery_status": "delivered"}
+        row, = json.loads(data["proto_stage_attempt_rows_json"])
+        for record in (prior, data["event_log"][-1]["decision"], row, json.loads(row["payload_json"])):
+            assert {key: record[key] for key in facts} == facts
+    else:
+        assert prior["outcome_type"] in {"success_self", "failure_after_attempt", "abandon_midway"}
+        assert prior["strategy_type"] == "attempt_self" and not prior["help_used"]
+        assert prior["support_delivery_status"] == "not_delivered"
+        assert prior["support_request_id"] == helper.requests[0].request_id
+        assert data["help_effect_memory"]["overall"]["help_attempt_count"] == 0
     assert not data["proto_assigned_task_json"]
 
     # The same agent carries its actual Day 4 task memory into Day 5. Supply only
@@ -174,11 +212,12 @@ def test_declined_help_reaches_next_day_app_and_strategy_in_two_forwards(run_tas
         for key in ("episode_id", "day", "task_id", "requested_strategy_type", "strategy_type",
                     "support_request_id", "support_delivery_status", "help_used", "outcome_type"):
             assert record[key] == prior[key]
+        assert {key: record[key] for key in facts} == facts
     assert len(data["recent_episode_buffer"]) == 2
     assert data["recent_episode_buffer"][-1]["day"] == 4
     assert data["recent_episode_buffer"][-1]["task_id"] != prior["task_id"]
     assert data["proto_app_entry_rollout_rows_json"][-1]["task_generated"]
-    assert data["help_effect_memory"]["overall"]["help_success_count"] == 0
+    assert data["help_effect_memory"]["overall"]["help_success_count"] == int(prior["outcome_type"] == "success_with_help")
 
 
 def test_scheduled_login_reaches_real_task_flow_and_next_day_prompt(run_task, monkeypatch):

@@ -15,7 +15,7 @@ from proto.app_entry.needs import (
     DigitalNeedsResult,
     sanitize_digital_needs_payload,
 )
-from proto.app_entry.intention_contract import COMPACT_PLAN_VERSIONS, COMPACT_PLAN_V7, COMPACT_PLAN_V8, compact_needs
+from proto.app_entry.intention_contract import COMPACT_PLAN_VERSIONS, COMPACT_PLAN_V7, COMPACT_PLAN_V8, COMPACT_PLAN_V9, compact_needs
 from proto.app_entry.types import APP_CONTEXT_SET, _stable_hash
 
 
@@ -119,7 +119,7 @@ def test_only_a_unique_maximum_names_a_need_in_the_current_plan(high, current, a
     for version in COMPACT_PLAN_VERSIONS:
         rendered = compact_needs(needs.to_dict(), version)
         assert rendered["need_pressures"] == pressures
-        assert rendered["dominant_need"] == (current if version in {COMPACT_PLAN_V7, COMPACT_PLAN_V8} else archived)
+        assert rendered["dominant_need"] == (current if version in {COMPACT_PLAN_V7, COMPACT_PLAN_V8, COMPACT_PLAN_V9} else archived)
 
 
 def test_needs_block_exhausts_attempts_without_rule_fallback() -> None:

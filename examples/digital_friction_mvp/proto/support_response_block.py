@@ -52,7 +52,7 @@ from .support_protocol import (
 )
 
 
-SUPPORT_RESPONSE_PROMPT_VERSION = "support_response_v2_family_helper"
+SUPPORT_RESPONSE_PROMPT_VERSION = "support_response_v3_requested_style"
 SUPPORT_RESPONSE_TIMEOUT_SECONDS = 45
 SUPPORT_RESPONSE_RETRIES = 1
 
@@ -137,7 +137,9 @@ def _build_support_system_prompt() -> str:
     labels = "\n".join(f"{key}: {' / '.join(sorted(values))}" for key, values in choices.items())
     return (
         f"Family helper decision, {SUPPORT_RESPONSE_PROMPT_VERSION}. The user supplies facts about "
-        "one request for help. Decide how the family helper responds. Output only a new, flat "
+        "one request for help. The resident may ask for guidance (they operate), proxy help "
+        "(you operate), or express no preference (unspecified). Decide what help you actually "
+        "provide given the situation. Your response may differ from the request. Output only a new, flat "
         "JSON object. Do not copy the input or continue it. Use exactly these ten fields:\n"
         f"{labels}\nconfidence: JSON number from 0 to 1\nresponded: JSON boolean\n"
         "response_text: short helper utterance, or empty if unavailable\nrationale: brief reason\n"
@@ -160,6 +162,10 @@ def _build_support_user_payload(request: SupportRequest) -> dict[str, Any]:
         },
         "strategy_type": request.strategy_type,
         "support_need": request.support_need,
+        **(
+            {"requested_support_style": request.requested_support_style}
+            if request.requested_support_style is not None else {}
+        ),
         "task_appraisal": request.task_appraisal,
         "memory_context": request.memory_context,
         "env_context": request.env_context,

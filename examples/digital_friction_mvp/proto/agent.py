@@ -29,6 +29,7 @@ from .bayesian_policy_lite import (
     update_bayesian_policy_memory,
 )
 from .compat import apply_compatibility_updates
+from .app_entry import RESIDENT_DECISION_PLAN_VERSION
 from .app_entry.bundle import HourlyAppEntryBundle
 from .app_entry.bundle_loader import simulation_day_to_talkingdata_day
 from .app_entry.habit_memory import (
@@ -68,6 +69,7 @@ from .memory.packet import (
     support_snapshot_for_task as _support_snapshot_for_task,
 )
 from .psychology.helplessness import apply_helplessness_update
+from .support.preference import resolve_requested_support_style
 from .support.routing import dispatch_family_support_request
 from .support.protocol import (
     SupportRequest,
@@ -83,6 +85,7 @@ from .task_flow.outcome import (
     support_quality_from_env,
 )
 from .profile_buckets import age_bucket, persona_bucket
+from .retry_review import RETRY_REVIEW_VERSION, choose_retry_review
 from .runtime import (
     assign_task_with_entry_decision,
     build_stage_transition_updates,
@@ -582,6 +585,15 @@ class DigitalHelplessnessAgent(SocietyAgent):
             return None, None, "off"
         if strategy.strategy_type != "seek_help_then_attempt":
             return None, None, "not_requested"
+        style, style_source = await resolve_requested_support_style(
+            llm=getattr(self, "llm", None),
+            task=task,
+            profile_summary=profile_summary,
+            task_relevant_memory_packet=task_relevant_memory_packet,
+            enabled=(runtime_config.proto_llm_psychology_mode == "hybrid"
+                     and runtime_config.proto_llm_strategy_deliberation_enabled),
+            timeout=runtime_config.proto_llm_psychology_timeout,
+        )
         helper_id = _safe_int(
             await self.memory.status.get("family_helper_agent_id", -1),
             -1,
@@ -591,6 +603,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             requester_id=self.id, helper_id=helper_id, registry=registry, task=task,
             strategy=strategy, task_appraisal=task_appraisal, task_relevant_memory_packet=task_relevant_memory_packet,
             env=env, profile_summary=profile_summary, day=day, tick=tick,
+            requested_support_style=style, requested_support_style_source=style_source,
         )
         if status != "dispatched":
             return request, response, status
@@ -1612,6 +1625,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
         task: Any,
         strategy: Any,
         outcome: Any,
+        episode: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         task_label = _stream_task_label(getattr(task, "task_family", ""))
         if bool(getattr(outcome, "success", False)):
@@ -1625,6 +1639,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
             if _safe_int(getattr(outcome, "event_level_uncontrollability", 0)) > 0
             else "The experience still felt manageable."
         )
+        if episode and episode.get("support_delivery_status") == "delivered":
+            task_result = "was completed" if outcome.success else "was not completed"
+            description_text = f"I received family help with {task_label}. The task {task_result}."
+        else:
+            description_text = f"I tried {task_label} and {result_text}."
         description = (
             f"[digital_task_episode]"
             f"[family={_stream_text(getattr(task, 'task_family', 'unknown'))}]"
@@ -1634,7 +1653,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             f"[help={_stream_bool(getattr(outcome, 'help_used', False))}]"
             f"[negative={_stream_bool(getattr(outcome, 'negative_feedback', False))}]"
             f"[uncontrollability={_stream_uncontrollability(getattr(outcome, 'event_level_uncontrollability', 0))}] "
-            f"I tried {task_label} and {result_text}. {control_text}"
+            f"{description_text} {control_text}"
         )
         memory_id = await self.memory.stream.add(
             topic="digital_task_episode",
@@ -1648,15 +1667,23 @@ class DigitalHelplessnessAgent(SocietyAgent):
         task: Any,
         strategy: Any,
         outcome: Any,
+        episode: dict[str, Any] | None = None,
     ) -> dict[str, Any] | None:
         help_attempted = bool(getattr(outcome, "help_used", False)) or (
             str(getattr(strategy, "strategy_type", "")) == "seek_help_then_attempt"
-        )
+        ) or bool(episode and episode.get("support_request_id"))
         if not help_attempted:
             return None
         task_label = _stream_task_label(getattr(task, "task_family", ""))
         support_mode = _stream_text(getattr(outcome, "support_mode", "not_applicable"))
-        if str(getattr(outcome, "outcome_type", "")) == "success_with_help":
+        if episode and episode.get("support_request_id"):
+            requested = episode.get("requested_support_style") or "unrecorded"
+            delivery = episode["support_delivery_status"]
+            reply = episode.get("support_style") or "unrecorded"
+            takeover = episode.get("proxy_completion_level") or "unrecorded"
+            help_text = (f"my requested support style was {requested}. Delivery was {delivery}. "
+                         f"The family response was {reply} with proxy completion {takeover}")
+        elif str(getattr(outcome, "outcome_type", "")) == "success_with_help":
             help_text = "the help was useful enough for me to complete the task"
         elif support_mode == "enabling_support":
             help_text = "the help gave me some guidance, but the task was still difficult"
@@ -1683,6 +1710,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
         strategy: Any,
         outcome: Any,
         memory_features: Any,
+        episode: dict[str, Any] | None = None,
     ) -> dict[str, Any] | None:
         recent_failures = _safe_int(
             getattr(memory_features, "recent_same_task_failure_count", 0)
@@ -1703,6 +1731,11 @@ class DigitalHelplessnessAgent(SocietyAgent):
             if self_recovery
             else "After earlier failures, useful guidance helped me complete it and regain some confidence."
         )
+        if help_recovery and episode and episode.get("support_request_id"):
+            recovery_text = (
+                f"After earlier failures, the task was completed with family help. "
+                f"The helper's level of takeover was {episode.get('proxy_completion_level') or 'unrecorded'}."
+            )
         description = (
             f"[digital_recovery_episode]"
             f"[family={_stream_text(getattr(task, 'task_family', 'unknown'))}]"
@@ -1729,6 +1762,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
         strategy: Any,
         outcome: Any,
         memory_features: Any,
+        episode: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         enabled = bool(
             getattr(runtime_config, "proto_stream_episode_recording_enabled", True)
@@ -1745,12 +1779,14 @@ class DigitalHelplessnessAgent(SocietyAgent):
                 task=task,
                 strategy=strategy,
                 outcome=outcome,
+                episode=episode,
             )
         ]
         help_record = await self._record_help_episode_stream(
             task=task,
             strategy=strategy,
             outcome=outcome,
+            episode=episode,
         )
         if help_record is not None:
             records.append(help_record)
@@ -1759,6 +1795,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             strategy=strategy,
             outcome=outcome,
             memory_features=memory_features,
+            episode=episode,
         )
         if recovery_record is not None:
             records.append(recovery_record)
@@ -2185,6 +2222,8 @@ class DigitalHelplessnessAgent(SocietyAgent):
                         json.dumps(intention_args, sort_keys=True).encode()
                     ).hexdigest()[:16],
                 }
+                if runtime_config.proto_app_entry_plan_prompt_version == RESIDENT_DECISION_PLAN_VERSION:
+                    intention_audit["retry_review_version"] = RETRY_REVIEW_VERSION
             elif runtime_config.proto_scheduled_login_hour is not None:
                 login = scheduled_login_for_day(
                     hour=runtime_config.proto_scheduled_login_hour, agent_id=int(self.id),
@@ -2232,6 +2271,8 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     needs_prompt_version=(
                         runtime_config.proto_app_entry_needs_prompt_version
                     ),
+                    phone_use_needs_version=runtime_config.proto_app_entry_phone_use_needs_version,
+                    paired_environment_seed=runtime_config.proto_paired_environment_seed,
                     plan_prompt_version=(
                         runtime_config.proto_app_entry_plan_prompt_version
                     ),
@@ -2797,11 +2838,17 @@ class DigitalHelplessnessAgent(SocietyAgent):
             else "not_requested"
         )
         support_request_id = support_request.request_id if support_request is not None else ""
+        preference = {}
+        if support_request is not None:
+            preference = {
+                "requested_support_style": support_request.requested_support_style,
+                "requested_support_style_source": support_request.requested_support_style_source,
+            }
         if support_delivery_status == "technical_failure":
             trace_record("decision", module="task", status="technical_failure",
                          requested_action=requested_strategy.strategy_type, action=None,
                          outcome=None, support_request_id=support_request_id,
-                         support_status=support_ecology_status)
+                         support_status=support_ecology_status, **preference)
             await self.memory.status.update(
                 "friction_step_signal",
                 {
@@ -2813,6 +2860,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     "support_request_id": support_request_id,
                     "support_delivery_status": support_delivery_status,
                     "support_ecology_status": support_ecology_status,
+                    **preference,
                 },
             )
             if ledger is not None:
@@ -2822,7 +2870,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
                     await self.memory.status.update(key, val)
                 trace_record("goal_outcome", module="hourly_intention", status="technical_failure",
                              goal_state_after=deepcopy(ledger.goal), operation_started=False, episode_id=None,
-                             outcome_type=None, support_delivery_status=support_delivery_status)
+                             outcome_type=None, support_delivery_status=support_delivery_status, **preference)
                 return 0.0
             if opportunity_replay:
                 # The device exposure was observed even when the simulated helper returned no usable answer.
@@ -3130,6 +3178,7 @@ class DigitalHelplessnessAgent(SocietyAgent):
             requested_strategy_type=requested_strategy.strategy_type,
             support_request_id=support_request_id,
             support_delivery_status=support_delivery_status,
+            **preference,
         )
         bayesian_control_memory, bayesian_control_audit = (
             update_bayesian_control_memory(
@@ -3207,21 +3256,28 @@ class DigitalHelplessnessAgent(SocietyAgent):
             modulation_audit=huys_dayan_modulation_audit,
             after_audit=huys_dayan_after_audit,
         )
+        episode = memory_update["recent_episode_buffer"][-1]
         stream_episode_recording = await self._record_phase0_stream_episodes(
             runtime_config=runtime_config,
             task=task,
             strategy=strategy,
             outcome=outcome,
             memory_features=memory_features,
+            episode=episode,
         )
         stage_name = str(env.get("digital_stage") or env.get("stage_name") or "stage")
         positive_event = outcome.outcome_type in {"success_self", "success_with_help"}
         episode_trace = {
-            "episode_id": memory_update["recent_episode_buffer"][-1]["episode_id"],
+            "episode_id": episode["episode_id"],
             "requested_strategy_type": requested_strategy.strategy_type,
             "support_request_id": support_request_id,
             "support_delivery_status": support_delivery_status,
+            **preference,
         }
+        if support_request is not None:
+            for key in ("support_style", "instruction_quality", "autonomy_preservation", "proxy_completion_level"):
+                if key in episode:
+                    episode_trace[key] = episode[key]
         decision = {
             **episode_trace,
             "primary_reason": outcome.outcome_type,
@@ -3790,6 +3846,20 @@ class DigitalHelplessnessAgent(SocietyAgent):
             ledger.settle(success=outcome.success, operation_started=operation_started, episode_id=episode_trace["episode_id"])
             goal_after = ledger.state["goal"]
             await self.memory.status.update("proto_goal_state_json", ledger.state)
+            if runtime_config.proto_app_entry_plan_prompt_version == RESIDENT_DECISION_PLAN_VERSION:
+                # The completed outcome and episode are durable before asking for an appointment.
+                review = await choose_retry_review(
+                    llm=getattr(self, "llm", None), goal=goal_after, episode=episode, resident=profile_summary,
+                    sim_hour=sim_hour, max_defer_hours=max_defer_hours, timeout=runtime_config.proto_llm_psychology_timeout,
+                )
+                if review["status"] == "scheduled":
+                    ledger.schedule_retry(review["next_review_at_sim_hour"], sim_hour=sim_hour, max_defer_hours=max_defer_hours)
+                    await self.memory.status.update("proto_goal_state_json", ledger.state)
+                episode_trace["retry_review"] = review
+                attempt_payload = json.loads(attempt_row["payload_json"])
+                attempt_payload["retry_review"] = review
+                attempt_row["payload_json"] = json.dumps(attempt_payload, ensure_ascii=False)
+                await self.memory.status.update("proto_stage_attempt_rows_json", json.dumps(attempt_rows, ensure_ascii=False))
             trace_record("goal_outcome", module="hourly_intention", status="completed",
                          outcome_type=outcome.outcome_type, operation_started=operation_started,
                          operation_attempt_count=goal_after["operation_attempt_count"], goal_state_after=deepcopy(goal_after),

@@ -9,7 +9,7 @@ from proto.experience_memory import (
     update_experience_memory,
     update_help_effect_memory,
 )
-from proto.llm_psychology import clear_llm_psychology_caches, resolve_strategy_deliberation
+from proto.llm_psychology import clear_llm_psychology_caches, resolve_strategy_deliberation, resolve_task_appraisal
 from proto.memory.packet import build_task_relevant_memory_packet, compact_recent_episodes
 from proto.models import AttemptStrategy
 from proto.support_protocol import SupportResponse
@@ -194,7 +194,9 @@ def test_verified_family_delivery_source_preserves_existing_help_bucket():
         outcome=_make_outcome("success_with_help",help_used=True),day=3,tick_seconds=3600,helplessness_delta=-1,
         task_domain_memory={}, help_effect_memory={},recent_episode_buffer=[],rationale_memory=[],
         support_response=response)
-    assert result["recent_episode_buffer"][-1]["help_source"] == "family_helper"
+    episode = compact_recent_episodes(result["recent_episode_buffer"])[-1]
+    assert episode["help_source"] == "family_helper" and episode["support_style"] == "enabling"
+    assert "requested_support_style" not in episode and "requested_support_style_source" not in episode
     assert result["help_effect_memory"]["by_source"]["generic"]["help_success_count"] == 1
 
 @pytest.mark.parametrize("timestamps", [{}, {"tick_seconds":"", "hour":float("nan")}])
@@ -211,3 +213,231 @@ def test_sparse_legacy_row_remains_sparse_after_another_append(timestamps):
 def test_new_timed_attempt_rejects_invalid_clock(tick):
     with pytest.raises(ValueError, match="finite nonnegative"):
         record_attempt("success_self", tick)
+
+
+def test_requested_guidance_and_actual_takeover_reach_next_day_model_inputs(
+    monkeypatch,
+):
+    _set_hybrid_env(monkeypatch)
+    task = _make_task()
+    reply = SupportResponse(
+        request_id="help-4",
+        support_style="substituting",
+        proxy_completion_level="full",
+        instruction_quality="low",
+        autonomy_preservation="low",
+        emotional_tone="neutral",
+        response_delay="immediate",
+        confidence=0.9,
+        responded=True,
+        source="llm_family_helper",
+        audit_status="ok",
+    )
+    result = update_experience_memory(
+        task=task,
+        strategy=AttemptStrategy("seek_help_then_attempt"),
+        outcome=_make_outcome(
+            "success_with_help", help_used=True, support_mode="substituting_support"
+        ),
+        day=3,
+        tick_seconds=9 * 3600,
+        helplessness_delta=0,
+        task_domain_memory={},
+        help_effect_memory={},
+        recent_episode_buffer=[],
+        rationale_memory=[],
+        requested_support_style="guidance",
+        requested_support_style_source="llm",
+        support_response=reply,
+    )
+    # Write another completed attempt to exercise the persisted buffer's normalization.
+    history = record_attempt(
+        "success_self", 10 * 3600, result["recent_episode_buffer"]
+    )["recent_episode_buffer"]
+    app_llm = RecordingLLM(
+        _needs_payload(),
+        {
+            "action": "no_app",
+            "additional_apps": [],
+            "attitude": 0.3,
+            "subjective_norm": 0.3,
+            "perceived_control": 0.4,
+            "confidence": 0.9,
+            "reason": "Rest.",
+        },
+    )
+    asyncio.run(
+        run_app_entry_rollout_hour(
+            llm=app_llm,
+            agent_id=7,
+            simulation_day=4,
+            tick_seconds=9 * 3600,
+            environment={},
+            stable_profile={},
+            device_id="fixture",
+            selected_rank=1,
+            habit_memory=_habit(),
+            day4_snapshot={"schema_version": "fixture"},
+            recent_rollout_rows=[],
+            recent_task_episodes=history,
+            latest_reflection={},
+            helplessness=50,
+            trust=50,
+            avoidance=50,
+            hourly_intention_mode="opportunity_v1",
+            needs_prompt_version="digital_needs_compact_v2",
+            plan_prompt_version="app_entry_plan_v3",
+            json_attempts=1,
+            min_confidence=0.5,
+            top_k=5,
+            absolute_exposure_cap=8,
+            timeout=1,
+            retries=0,
+        )
+    )
+    strategy_llm = RecordingLLM(
+        {
+            "attempt_self_score": 0.45,
+            "seek_help_score": 0.4,
+            "avoid_score": 0.15,
+            "dominant_strategy": "attempt_self",
+            "judge_confidence": 0.9,
+            "reason": "test",
+        }
+    )
+    strategy_call(strategy_llm, history)
+    for records in [
+        history,
+        *[p["inputs"]["recent_task_episodes"] for p in app_llm.prompts],
+        strategy_llm.prompts[0]["task_relevant_memory"]["recent_task_episodes"],
+    ]:
+        requested, later = records
+        assert requested["requested_support_style"] == "guidance"
+        assert requested["requested_support_style_source"] == "llm"
+        assert requested["support_request_id"] == "help-4"
+        assert requested["support_delivery_status"] == "delivered"
+        assert (
+            requested["support_style"] == "substituting"
+            and requested["proxy_completion_level"] == "full"
+        )
+        assert requested["outcome_type"] == "success_with_help"
+        assert "requested_support_style" not in later
+
+
+@pytest.mark.parametrize(
+    ("preference", "source"),
+    [
+        ("proxy", "llm"),
+        ("unspecified", "llm"),
+        (None, "invalid_response"),
+        (None, None),
+    ],
+)
+def test_unavailable_helper_does_not_supply_or_invent_a_preference(preference, source):
+    unavailable = SupportResponse(
+        confidence=0.9, source="llm_family_helper", audit_status="ok"
+    )
+    result = record_attempt(
+        "failure_after_attempt",
+        3600,
+        requested_strategy_type="seek_help_then_attempt",
+        support_response=unavailable,
+        requested_support_style=preference,
+        requested_support_style_source=source,
+    )
+    (episode,) = compact_recent_episodes(result["recent_episode_buffer"])
+    assert episode["support_delivery_status"] == "not_delivered"
+    assert episode["support_style"] == "unavailable" and not episode["help_used"]
+    if preference is None:
+        assert "requested_support_style" not in episode
+    else:
+        assert episode["requested_support_style"] == preference
+    assert episode.get("requested_support_style_source") == source
+
+
+def test_support_preference_requires_a_help_seeking_decision():
+    with pytest.raises(ValueError, match="help-seeking"):
+        record_attempt(
+            "success_self",
+            3600,
+            requested_support_style="proxy",
+            requested_support_style_source="llm",
+        )
+
+
+def test_appraisal_does_not_reuse_another_preference_from_an_older_same_task_event(
+    monkeypatch,
+):
+    _set_hybrid_env(monkeypatch)
+    monkeypatch.setenv("PROTO_LLM_PSYCHOLOGY_CACHE_ENABLED", "true")
+    clear_llm_psychology_caches()
+    task = _make_task()
+    reply = {
+        "perceived_task_difficulty": 50,
+        "perceived_task_risk": 40,
+        "felt_control": 40,
+        "expected_help_effectiveness": 50,
+        "task_value": 70,
+        "judge_confidence": 0.9,
+        "reason": "test",
+    }
+    llm = RecordingLLM(reply, reply)
+    for preference in ("guidance", "proxy", "proxy"):
+        # After five unrelated tasks, only the same-family event lookup can recall yesterday's request.
+        log = [
+            {
+                "scenario": task.task_family,
+                "day": 3,
+                "t": 3600,
+                "decision": {
+                    "primary_reason": "success_with_help",
+                    "requested_support_style": preference,
+                    "requested_support_style_source": "llm",
+                    "support_style": "substituting",
+                    "proxy_completion_level": "full",
+                    "support_delivery_status": "delivered",
+                },
+            },
+            *[
+                {
+                    "scenario": "another_family",
+                    "day": 3,
+                    "t": 3600 * h,
+                    "outcome": "positive",
+                }
+                for h in range(2, 7)
+            ],
+        ]
+        packet = build_task_relevant_memory_packet(
+            task=task,
+            task_domain_memory={},
+            help_effect_memory={},
+            recent_episode_summary={},
+            event_log=log,
+            simulation_day=4,
+            tick_seconds=3600,
+        )
+        asyncio.run(
+            resolve_task_appraisal(
+                llm=llm,
+                task=task,
+                stage_key="steady",
+                world_context={},
+                profile_summary={},
+                helplessness_now=50,
+                task_self_efficacy=50,
+                help_success_rate_smoothed=0.5,
+                recent_episode_summary={},
+                digital_emotion_state={},
+                task_relevant_memory=packet,
+            )
+        )
+    recalled = [
+        p["Task-Specific Memory"]["recent_same_task_events_tail"][0]
+        for p in llm.prompts
+    ]
+    assert [r["requested_support_style"] for r in recalled] == ["guidance", "proxy"]
+    assert all(
+        r["support_style"] == "substituting" and r["proxy_completion_level"] == "full"
+        for r in recalled
+    )

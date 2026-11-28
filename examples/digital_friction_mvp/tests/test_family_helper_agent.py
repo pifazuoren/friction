@@ -6,7 +6,11 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from proto.family_helper_agent import FamilyHelperAgent
+from proto.llm_trace import LLMRunInterrupted
+from proto.support.routing import dispatch_family_support_request
 from proto.support_protocol import SupportRequest, SupportResponse
 
 
@@ -102,11 +106,25 @@ def _agent() -> _Helper:
 
 def test_provide_support_returns_structured_response_and_updates_history() -> None:
     agent = _agent()
-    response = asyncio.run(agent.provide_support(_request()))
+    task = _request()
+    request, response, status = asyncio.run(dispatch_family_support_request(
+        requester_id=10, helper_id=20, registry={20: agent}, task=task,
+        strategy=SimpleNamespace(strategy_type="seek_help_then_attempt"),
+        task_appraisal=SimpleNamespace(), task_relevant_memory_packet={}, env={},
+        profile_summary={}, day=0, tick=1.0,
+        requested_support_style="proxy", requested_support_style_source="llm",
+    ))
+    assert status == "dispatched"
+    assert request.requested_support_style == "proxy"
+    assert "learn" not in request.support_need
     assert response.support_style == "enabling"
     histories = asyncio.run(agent.memory.status.get("support_histories"))
+    assert histories["10"][0]["request"]["requested_support_style"] == "proxy"
+    assert histories["10"][0]["request"]["requested_support_style_source"] == "llm"
     assert histories["10"][0]["response"]["support_style"] == "enabling"
     assert "outcome_type" not in histories["10"][0]["response"]
+    chat = asyncio.run(agent.memory.status.get("chat_histories"))["10"][0]
+    assert (chat["requested_support_style"], chat["support_style"]) == ("proxy", "enabling")
 
 
 def test_technical_error_is_returned_without_becoming_a_family_exchange(monkeypatch):
@@ -120,6 +138,27 @@ def test_technical_error_is_returned_without_becoming_a_family_exchange(monkeypa
     assert response.audit_status == "request_error"
     assert agent.memory.status.data["support_histories"] == {}
     assert agent.memory.status.data["chat_histories"] == {}
+
+
+def test_experiment_stop_in_helper_propagates_through_dispatch():
+    class StoppedLLM:
+        async def atext_request(self, **kwargs):
+            raise LLMRunInterrupted("experiment stopped")
+
+    helper = FamilyHelperAgent(
+        id=20, name="helper",
+        toolbox=SimpleNamespace(llm=StoppedLLM(), environment=_Environment(), messager=None, embedding=None, database_writer=None),
+        memory=_Memory(), agent_params=None, blocks=[],
+    )
+    with pytest.raises(LLMRunInterrupted, match="experiment stopped"):
+        asyncio.run(dispatch_family_support_request(
+            requester_id=10, helper_id=20, registry={20: helper}, task=_request(),
+            strategy=SimpleNamespace(strategy_type="seek_help_then_attempt"),
+            task_appraisal=SimpleNamespace(), task_relevant_memory_packet={}, env={},
+            profile_summary={}, day=0, tick=1.0,
+            requested_support_style="guidance", requested_support_style_source="llm",
+        ))
+    assert helper.memory.status.data["support_histories"] == {}
 
 
 def test_do_chat_reuses_support_generation_logic() -> None:

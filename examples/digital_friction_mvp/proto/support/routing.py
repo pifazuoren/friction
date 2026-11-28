@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..llm_trace import TraceWriteError
+from ..llm_trace import LLMRunInterrupted, TraceWriteError
 from ..memory.packet import _compact_status_text, _safe_int, compact_support_context
 from ..profile_buckets import age_bucket, persona_bucket
 from .protocol import SupportRequest, SupportResponse
@@ -23,6 +23,8 @@ async def dispatch_family_support_request(
     profile_summary: dict,
     day: int,
     tick: float,
+    requested_support_style: str | None = None,
+    requested_support_style_source: str | None = None,
 ) -> tuple[SupportRequest, Any, str]:
     """Call the helper for a selected help action. The caller validates the returned response."""
     helper = registry.get(helper_id) if isinstance(registry, dict) else None
@@ -39,7 +41,9 @@ async def dispatch_family_support_request(
         need_type=str(task.need_type),
         support_sensitivity=float(task.support_sensitivity),
         strategy_type=str(strategy.strategy_type),
-        support_need="help me complete the digital task while preserving my ability to learn",
+        support_need="I would like help with this digital task.",
+        requested_support_style=requested_support_style,
+        requested_support_style_source=requested_support_style_source,
         task_appraisal={
             "perceived_task_difficulty": float(
                 getattr(task_appraisal, "perceived_task_difficulty", 50.0)
@@ -90,7 +94,7 @@ async def dispatch_family_support_request(
         )
     try:
         response = await helper.provide_support(request)
-    except TraceWriteError:
+    except (LLMRunInterrupted, TraceWriteError):
         raise
     except Exception as exc:
         return (

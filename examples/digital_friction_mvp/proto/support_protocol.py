@@ -14,6 +14,8 @@ class SupportTechnicalError(ValueError):
 
 
 SUPPORT_STYLES = {"enabling", "substituting", "dismissive", "unavailable"}
+REQUESTED_SUPPORT_STYLES = frozenset({"guidance", "proxy", "unspecified"})
+REQUESTED_SUPPORT_STYLE_SOURCES = {"llm", "disabled", "missing_llm", "invalid_response", "request_error"}
 INSTRUCTION_QUALITIES = {"none", "low", "medium", "high"}
 AUTONOMY_PRESERVATION_LEVELS = {"low", "medium", "high", "not_applicable"}
 PROXY_COMPLETION_LEVELS = {"none", "partial", "full", "not_applicable"}
@@ -52,6 +54,8 @@ SUPPORT_REQUEST_FIELDS = {
     "env_context",
     "profile_summary",
     "relationship",
+    "requested_support_style",
+    "requested_support_style_source",
 }
 
 SUPPORT_RESPONSE_FIELDS = {
@@ -135,15 +139,29 @@ class SupportRequest:
     env_context: dict[str, Any] = field(default_factory=dict)
     profile_summary: dict[str, Any] = field(default_factory=dict)
     relationship: dict[str, Any] = field(default_factory=dict)
+    requested_support_style: str | None = None
+    requested_support_style_source: str | None = None
 
     def __post_init__(self) -> None:
         payload = self.to_dict()
         _assert_no_forbidden_keys(payload)
         if self.strategy_type != "seek_help_then_attempt":
             raise ValueError("SupportRequest only supports seek_help_then_attempt")
+        style = self.requested_support_style
+        source = self.requested_support_style_source
+        if style is not None and (not isinstance(style, str) or style not in REQUESTED_SUPPORT_STYLES):
+            raise ValueError("unknown requested_support_style")
+        if source is not None:
+            if not isinstance(source, str) or source not in REQUESTED_SUPPORT_STYLE_SOURCES:
+                raise ValueError("unknown requested_support_style_source")
+            if (source == "llm") != (style is not None):
+                raise ValueError("requested_support_style must match the elicitation source")
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        payload = asdict(self)
+        if self.requested_support_style is None and self.requested_support_style_source is None:
+            del payload["requested_support_style"], payload["requested_support_style_source"]
+        return payload
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "SupportRequest":
@@ -180,6 +198,8 @@ class SupportRequest:
             env_context=dict(payload.get("env_context") or {}),
             profile_summary=dict(payload.get("profile_summary") or {}),
             relationship=dict(payload.get("relationship") or {}),
+            requested_support_style=payload.get("requested_support_style"),
+            requested_support_style_source=payload.get("requested_support_style_source"),
         )
 
 

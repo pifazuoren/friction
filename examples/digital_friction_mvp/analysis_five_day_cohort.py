@@ -1,19 +1,20 @@
-"""Describe each profile's five-day opportunity-mode run from the frozen local evidence."""
+"""Describe five- or seven-day opportunity-mode runs from the frozen local evidence."""
 
 import argparse
 from collections import Counter, defaultdict
 from contextlib import closing
+import hashlib
 import json
 from pathlib import Path
 import sqlite3
 from uuid import UUID
 
+from analysis_entry_calibration_comparison import build_history, load_observations, parse_bundle
 from check_social_memory_run import MODULES, WORLD, load_rows, request_packet
 from proto.metrics import attempt_rows_table_name
-from proto.support_protocol import classify_support_delivery
+from proto.support_protocol import REQUESTED_SUPPORT_STYLES, REQUESTED_SUPPORT_STYLE_SOURCES, classify_support_delivery
 
 
-DAYS = (4, 5)
 HELP = "seek_help_then_attempt"
 OUTCOMES = {
     "success_self": "自主成功", "success_with_help": "借助帮助成功",
@@ -24,6 +25,8 @@ MEMORY_STATUS = {
     "verified": "已核对", "no_day4_completed_task": "第4天无已结算经历",
     "no_day5_strategy_opportunity": "第5天无策略机会", "missing_evidence": "证据缺失",
     "technical_failure": "技术失败", "no_natural_opportunity": "无自然机会",
+    "no_source_task": "来源日无已结算任务", "no_valid_plan": "读取日无有效计划",
+    "not_observed": "未观察到读取", "mismatch": "经历不匹配",
 }
 HELPER_STATUS = {
     "verified": "请求人与助手均已核对", "prompt_only": "仅有帮助模型请求",
@@ -33,7 +36,7 @@ HELPER_STATUS = {
 }
 
 
-def trace_by_day(folder, group, agents):
+def trace_by_day(folder, group, agents, days=(4, 5)):
     """Keep routing and help evidence, leaving prompts and identifiers out of the report."""
     traces = defaultdict(list)
     for path in sorted((folder / "trace").glob("llm-requests-*.jsonl")):
@@ -43,7 +46,7 @@ def trace_by_day(folder, group, agents):
                 if (r.get("group_id"), r.get("world")) != (group, WORLD):
                     raise ValueError("trace group or world differs from the experiment manifest")
                 agent, day = str(r.get("agent_id")), r.get("talkingdata_day")
-                if day not in DAYS:
+                if day not in days:
                     continue
                 if agent not in agents:
                     raise ValueError("trace contains an unmapped elderly agent")
@@ -56,10 +59,27 @@ def trace_by_day(folder, group, agents):
                             packet = request_packet(r)
                             if packet["task"]["task_id"] == r["task_id"] and packet["relationship"]["relationship_type"] == "family":
                                 record["prompt_helper_id"] = packet["relationship"]["mapped_helper_agent_id"]
+                                style = packet.get("requested_support_style")
+                                record["prompt_requested_style"] = style if style is None or isinstance(style, str) else "invalid"
                         except (KeyError, ValueError, TypeError):
                             pass  # An unreadable on-wire target is reported as unverified.
                     traces[agent, day].append(record)
     return traces
+
+
+def measured_preference(request, styles_in_prompt):
+    """Attribute a preference only when the stored source and the helper's input agree."""
+    style = request.get("requested_support_style")
+    source = request.get("requested_support_style_source")
+    if style is None and styles_in_prompt == {None}:
+        if source is None:
+            return None, "unrecorded"
+        if isinstance(source, str) and source in REQUESTED_SUPPORT_STYLE_SOURCES and source != "llm":
+            return None, source
+    if (source == "llm" and isinstance(style, str) and style in REQUESTED_SUPPORT_STYLES
+            and styles_in_prompt == {style}):
+        return style, source
+    return None, "unverified"
 
 
 def day_summary(records, attempts, *, agent_id):
@@ -68,10 +88,12 @@ def day_summary(records, attempts, *, agent_id):
     accepted = [r for r in routes if r["status"] == "accepted"]
     offered = [r for r in records if r["kind"] == "opportunity_published"]
     helper_calls = defaultdict(set)
+    helper_prompt_styles = defaultdict(set)
     for r in records:
         if (r["module"], r["kind"], r.get("phase")) == ("helper", "request", "initial"):
             target = r.get("prompt_helper_id")
             helper_calls[r["tick_id"], r["task_id"]].add(target if type(target) is int and target >= 0 else None)
+            helper_prompt_styles[r["tick_id"], r["task_id"]].add(r.get("prompt_requested_style"))
     help_choices = [r for r in records if (r["module"], r["kind"], r.get("action")) == ("strategy", "sample", HELP)]
     failures = [r for r in records if (r["module"], r["kind"], r.get("status")) == ("task", "decision", "technical_failure")]
     decisions = {r["episode_id"]: r for r in records
@@ -87,6 +109,7 @@ def day_summary(records, attempts, *, agent_id):
         issues.append("任务决策与 SQLite 经历集合不同")
     outcomes, deliveries, after_help, strategies, fallbacks = Counter(), Counter(), Counter(), Counter(), Counter()
     helpers_dispatched = set()
+    style_pairs = Counter()
     operations = Counter()
     verified_requests = invalid_requests = invalid_failure_requests = 0
     for a in attempts:
@@ -142,6 +165,11 @@ def day_summary(records, attempts, *, agent_id):
             delivery = "unverified"
             issues.append("帮助响应与任务结果不一致")
         deliveries[delivery] += 1
+        verified_response = resp if delivery in {"delivered", "not_delivered"} else {}
+        helper_style = verified_response.get("support_style")
+        proxy_level = verified_response.get("proxy_completion_level", "unknown")
+        style, source = measured_preference(req, helper_prompt_styles[call])
+        style_pairs[style, source, delivery, helper_style, proxy_level] += 1
         if delivery == "delivered":
             after_help[result] += 1
     for r in failures:
@@ -157,6 +185,8 @@ def day_summary(records, attempts, *, agent_id):
         if expected_id and r.get("support_request_id") == expected_id and len(targets) == 1 and None not in targets:
             helpers_dispatched.add(call)
             deliveries["technical_failure"] += 1
+            style, source = measured_preference(r, helper_prompt_styles[call])
+            style_pairs[style, source, "technical_failure", None, "unknown"] += 1
         else:
             invalid_failure_requests += 1
             issues.append("失败求助缺少可与请求人、时刻和助手关联的证据")
@@ -174,6 +204,11 @@ def day_summary(records, attempts, *, agent_id):
         "task_technical_failures": len(failures),
         "help_choices": len(help_choices), "dispatched_help": len(helpers_dispatched),
         "delivery": dict(deliveries), "outcomes_with_delivered_help": dict(after_help),
+        "support_style_comparisons": [
+            {"requested_support_style": style, "preference_source": source, "delivery": delivery,
+             "helper_support_style": helper_style, "proxy_completion_level": proxy_level, "count": count}
+            for (style, source, delivery, helper_style, proxy_level), count in style_pairs.items()
+        ],
         "help_request_evidence": {"tasks_with_helper_call": len(helper_calls), "verified_persisted_requests": verified_requests,
                                   "unverified_persisted_requests": invalid_requests,
                                   "unverified_failed_requests": invalid_failure_requests,
@@ -227,12 +262,57 @@ def summarize_helper_mapping(profiles, resident_ids):
             "distinct_observed_helpers": len(owners), "status_counts": dict(status_counts)}
 
 
-def build_report(folder, db):
+def heldout_activity(folder, heldout, manifest, replay_rows, days):
+    """Score matched device hours only and keep failures separate from inactivity."""
+    group, exp = manifest["group_id"], manifest["exp_id"]
+    device_by_agent = {r["agent_id"]: r["device_id"] for r in replay_rows}
+    if (len(set(device_by_agent.values())) != len(replay_rows) or "" in device_by_agent.values()
+            or any(r["uses_validation_data_any"] != "0" for r in replay_rows)):
+        raise ValueError("expected unique device mappings and held-out-free replay")
+    observed = load_observations(heldout, days)
+    keys = {(device, d, h) for device in device_by_agent.values() for d in days for h in range(24)}
+    if not keys <= observed.keys():
+        raise ValueError("missing held-out device hours in evaluation cohort")
+    reference = load_observations(folder / "inputs" / "replay.csv", (1, 2, 3))
+    history = build_history(reference, keys)
+    exports = {}
+    for prefix, failure in (("app_entry_rollout_hourly", False), ("app_entry_rollout_errors", True)):
+        for row in load_rows(folder, prefix, group):
+            key = row["device_id"], int(row["talkingdata_day"]), int(row["hour"])
+            if (key not in keys or key in exports
+                    or (row["group_id"], row["world_name"], row["exp_id"]) != (group, WORLD, exp)
+                    or device_by_agent.get(row["agent_id"]) != key[0] or row["uses_validation_data"] != "0"
+                    or failure != (row["entry_status"] == "llm_rollout_error")):
+                raise ValueError("foreign, duplicate or invalid rollout entry in held-out evaluation")
+            exports[key] = None if failure else parse_bundle(row, key[1])
+    counts = {day: Counter() for day in days}
+    for key in keys:
+        count = counts[key[1]]
+        actual = "active" if observed[key].count else "idle"
+        count["expected_hours"] += 1
+        count["observed_" + actual] += 1
+        if key not in exports or exports[key] is None:
+            count[("technical_failure_" if key in exports else "missing_") + actual] += 1
+            continue
+        simulated = "active" if exports[key].count else "idle"
+        count["scored_hours"] += 1
+        count[f"observed_{actual}_simulated_{simulated}"] += 1
+        count["primary_context_correct"] += int(exports[key].context == observed[key].context)
+        count["history_primary_context_correct"] += int(history[key].context == observed[key].context)
+        count["history_idle_correct"] += int(actual == "idle" and history[key].count == 0)
+    return {"heldout_sha256": hashlib.sha256(heldout.read_bytes()).hexdigest(), "mapped_profiles": len(replay_rows),
+            "by_day": {str(day): dict(value) for day, value in counts.items()},
+            "total": dict(sum(counts.values(), Counter()))}
+
+
+def build_report(folder, db, heldout=None):
     group = folder.name
     manifest, = json.loads((folder / f"exp_group_manifest_{group}.json").read_text())
     exp = str(UUID(manifest["exp_id"]))
-    if (manifest["group_id"], manifest["world_name"], manifest["total_days"]) != (group, WORLD, 5):
-        raise ValueError("expected one matching five-day baseline world")
+    total_days = manifest["total_days"]
+    if (manifest["group_id"], manifest["world_name"]) != (group, WORLD) or total_days not in (5, 7):
+        raise ValueError("expected one matching five- or seven-day baseline world")
+    days = range(4, total_days + 1)
     rows = load_rows(folder, "app_entry_replay_summary", group)
     ranks = {r["agent_id"]: int(r["selected_rank"]) for r in rows}
     n = manifest["agent_count"]
@@ -247,14 +327,14 @@ def build_report(folder, db):
     people = audit.get("agents", {})
     if n == len(ranks) == 1 and not people and audit:
         people = {next(iter(ranks)): audit}
-    traces = trace_by_day(folder, group, ranks)
+    traces = trace_by_day(folder, group, ranks, days)
     profiles = []
     with closing(sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True)) as conn:
         table = attempt_rows_table_name(exp)
         for agent, rank in sorted(ranks.items(), key=lambda pair: pair[1]):
             check = people.get(agent, {})
             daily = {}
-            for d in DAYS:
+            for d in days:
                 raw = conn.execute(f"SELECT payload_json FROM {table} WHERE agent_id=? AND day=? ORDER BY t,id",
                                    (agent, d - 1))
                 summary = day_summary(traces[agent, d], [json.loads(row[0]) for row in raw], agent_id=int(agent))
@@ -267,18 +347,44 @@ def build_report(folder, db):
             intention = check.get("hourly_intention", {})
             examples = intention.get("day5_memory_examples")
             modules = check.get("cross_day", {}).get("modules", {})
-            profiles.append({
+            profile = {
                 "rank": rank, "verified_replay_hours": check.get("replay", {}).get("verified_hours"),
                 "audited": check.get("acceptance_ok"), "audit_issue_count": len(check.get("issues", [])),
                 "stable": check.get("stability_gate", {}).get("eligible_by_technical_stability"),
                 "days": daily, "day5_memory": {m: modules.get(m, {}).get("status", "missing_evidence") for m in MODULES},
                 "day4_episodes_in_valid_day5_plan": None if examples is None else len({x["episode_id"] for x in examples}),
                 "day5_valid_plan_hours_with_day4_episode": None if examples is None else len({x["day5_hour"] for x in examples}),
-            })
-    return {"group": group, "planned_profiles": n, "profiles": profiles,
+            }
+            if total_days == 7:
+                for field in ("memory_transitions", "day7_earlier_memory"):
+                    evidence = intention.get(field, {})
+                    profile[field] = {
+                        key: {"status": value["status"], "source_completed_tasks": value["source_completed_tasks"],
+                              "valid_target_plans": value["valid_target_plans"], "matched_episodes": len(set(value["matched_episode_ids"]))}
+                        for key, value in evidence.items()
+                    }
+            profiles.append(profile)
+    report = {"group": group, "planned_profiles": n, "profiles": profiles,
             "observed_helper_mapping": summarize_helper_mapping(profiles, {int(agent) for agent in ranks}),
             "stability_gate": audit.get("stability_gate"),
             "missing_ranks": sorted(set(range(1, n + 1)) - set(ranks.values())), "accepted": audit.get("acceptance_ok")}
+    if total_days == 7:
+        report["total_days"] = total_days
+        report["generated_by_day"] = {}
+        for d in days:
+            daily = [p["days"][str(d)] for p in profiles]
+            summary = {k: sum(s[k] for s in daily) for k in (
+                "valid_hours", "failed_hours", "operations", "recorded_decisions",
+                "task_technical_failures", "help_choices", "dispatched_help",
+            )}
+            summary["expected_hours"] = 24 * n
+            summary["missing_hours"] = sum(len(s["missing_hours"]) for s in daily) + 24 * len(report["missing_ranks"])
+            for field in ("choices", "outcomes", "delivery", "outcomes_with_delivered_help"):
+                summary[field] = dict(sum((Counter(s[field]) for s in daily), Counter()))
+            report["generated_by_day"][str(d)] = summary
+    if heldout:
+        report["heldout_activity"] = heldout_activity(folder, heldout, manifest, rows, days)
+    return report
 
 
 def display_counts(counts):
@@ -291,6 +397,10 @@ def known(value):
 
 def render(report):
     profiles = report["profiles"]
+    total_days = report.get("total_days", 5)
+    period = "第 4、5 天" if total_days == 5 else "第 4 至 7 天"
+    title = "五天单世界模拟结果" if total_days == 5 else "七天单世界模拟结果"
+    expected = (total_days - 3) * 24 * report["planned_profiles"]
     days = [s for p in profiles for s in p["days"].values()]
     valid = sum(s["valid_hours"] for s in days)
     outcomes, after_help = Counter(), Counter()
@@ -298,14 +408,22 @@ def render(report):
         outcomes.update(s["outcomes"])
         after_help.update(s["outcomes_with_delivered_help"])
     help_total = sum(s["dispatched_help"] for s in days)
-    lines = ["# 五天单世界模拟结果", "",
-             f"计划 {report['planned_profiles']} 名合成老人，取得 {len(profiles)} 人的回放映射。前三天回放设备活动，第 4、5 天由模拟产生任务和结果。",
-             "", f"第 4、5 天共有 {valid}/{48 * report['planned_profiles']} 个人小时取得有效决定，"
+    lines = [f"# {title}", "",
+             f"计划 {report['planned_profiles']} 名合成老人，取得 {len(profiles)} 人的回放映射。前三天回放设备活动，{period}由模拟产生任务和结果。",
+             "", f"{period}共有 {valid}/{expected} 个人小时取得有效决定，"
              f"留下 {sum(outcomes.values())} 条任务决策，实际开始操作 {sum(s['operations'] for s in days)} 次。"
              f"已记录的结果包括{display_counts(outcomes)}。可以核对的求助请求有 {help_total} 次，"
              f"其中 {sum(after_help.values())} 次收到帮助。"
-             f"第 5 天共有 {sum(bool(p['day5_valid_plan_hours_with_day4_episode']) for p in profiles)} 人的有效计划输入含有可核对的第 4 天经历。",
-             "", "## 按人和日期核对", "",
+             f"第 5 天共有 {sum(bool(p['day5_valid_plan_hours_with_day4_episode']) for p in profiles)} 人的有效计划输入含有可核对的第 4 天经历。"]
+    if total_days == 7:
+        lines += ["", "## 全组逐日结果", "",
+                  "|日|有效小时 / 应有|小时技术失败 / 缺失|已结算决策 / 开始操作|任务技术失败|选择求助 / 核实发出 / 送达|",
+                  "|---|---|---|---|---|---|"]
+        for day, s in report["generated_by_day"].items():
+            lines.append(f"|{day}|{s['valid_hours']} / {s['expected_hours']}|{s['failed_hours']} / {s['missing_hours']}|"
+                         f"{s['recorded_decisions']} / {s['operations']}|{s['task_technical_failures']}|"
+                         f"{s['help_choices']} / {s['dispatched_help']} / {s['delivery'].get('delivered', 0)}|")
+    lines += ["", "## 按人和日期核对", "",
              "发布按当天新机会计数，可见按当天实际计划输入中出现过的不同机会计数。启动含继续办理同一任务。实际操作排除了回避。",
              "", "|编号|日|有效小时 / 24|发布（登录 / 自然）|可见|启动|实际操作|已记录结果|求助选择 / 发出 / 送达|送达后的结果|",
              "|---|---|---|---|---|---|---|---|---|---|"]
@@ -316,6 +434,27 @@ def render(report):
                          f"{offers.get('natural_context', 0)}|{known(s['distinct_visible_offers'])}|{s['task_entries']}|"
                          f"{s['operations']}|{display_counts(s['outcomes'])}|{s['help_choices']} / {s['dispatched_help']} / "
                          f"{delivery.get('delivered', 0)}|{display_counts(s['outcomes_with_delivered_help'])}|")
+    lines += ["", "## 老人请求的帮助与家人的回应", "",
+              "下表按人、按天统计身份可核对的求助请求。请求偏好取自老人当次选择并核对家人实际收到的提示；"
+              "家人回应风格与代办程度分别取自经过送达核对的模拟回复。缺少代办程度的记录列为未知。", "",
+              "|编号|日|老人请求|回应风格|回复中的代办程度|送达状态|次数|", "|---|---|---|---|---|---|---|"]
+    style_labels = {"guidance": "请教我操作", "proxy": "请替我操作", "unspecified": "未指明帮法",
+                    "unrecorded": "缺少记录", "disabled": "未启用测量", "missing_llm": "模型不可用",
+                    "request_error": "偏好请求失败", "invalid_response": "偏好回答无效", "unverified": "证据不一致",
+                    "enabling": "指导", "substituting": "代办", "dismissive": "敷衍", "unavailable": "无法帮助"}
+    delivery_labels = {"delivered": "已送达", "not_delivered": "未送达",
+                       "technical_failure": "技术失败", "unverified": "未核实"}
+    proxy_labels = {"none": "未代办", "partial": "部分代办", "full": "全部代办",
+                    "not_applicable": "不适用", "unknown": "未知"}
+    for p in profiles:
+        for d, s in p["days"].items():
+            for r in s.get("support_style_comparisons", []):
+                requested = style_labels[r["requested_support_style"] or r["preference_source"]]
+                response = style_labels.get(r["helper_support_style"], "缺少可核实的回应")
+                level = proxy_labels.get(r.get("proxy_completion_level"), "未知")
+                lines.append(f"|{p['rank']:02}|{d}|{requested}|{response}|{level}|{delivery_labels[r['delivery']]}|{r['count']}|")
+    if not any(s.get("support_style_comparisons") for s in days):
+        lines += ["", "本轮没有可列出的已核对请求。"]
     lines += ["", "## 每小时需求、计划和日常 App 记录", "",
               "首答按各模块实际发起请求的人小时计。请求数包含重答和因失败产生的调用。"
               "复述指失败首答中可核对的原始观察开头。已写入要求模型采纳的类别与次数逐项匹配小时导出。"
@@ -357,8 +496,36 @@ def render(report):
         labels = "|".join(MEMORY_STATUS.get(m[k], m[k]) for k in MODULES)
         lines.append(f"|{p['rank']:02}|{known(p['verified_replay_hours'])}|{labels}|"
                      f"{known(p['day4_episodes_in_valid_day5_plan'])}|{known(p['day5_valid_plan_hours_with_day4_episode'])}|")
-    lines += ["", "“已核对”表示实际发给模型的输入包含可与该人 SQLite 经历逐项对应的记录。输入可见性不能单独说明经历改变了后续选择。", "",
-              "## 技术状态与证据覆盖", ""]
+    lines += ["", "“已核对”表示实际发给模型的输入包含可与该人 SQLite 经历逐项对应的记录。输入可见性不能单独说明经历改变了后续选择。"]
+    if total_days == 7:
+        lines += ["", "## 跨日经历能否进入有效计划", "",
+                  "每格记录该人物在目标日的有效计划中能否读到来源日的已结算任务经历。括号内为核对到的不同经历数。", "",
+                  "|编号|第4→5天|第5→6天|第6→7天|第4→7天|第5→7天|", "|---|---|---|---|---|---|"]
+        for p in profiles:
+            cells = []
+            links = {**p["memory_transitions"], **p["day7_earlier_memory"]}
+            for link in ("D4->D5", "D5->D6", "D6->D7", "D4->D7", "D5->D7"):
+                item = links.get(link)
+                cells.append(f"{MEMORY_STATUS.get(item['status'], item['status'])}（{item['matched_episodes']}）" if item else "缺证")
+            lines.append(f"|{p['rank']:02}|" + "|".join(cells) + "|")
+    comparison = report.get("heldout_activity")
+    if comparison:
+        lines += ["", "## 与留出设备活动的逐小时对照", "",
+                  f"按设备、日期和小时对齐 {comparison['mapped_profiles']} 台参考设备。活动指记录到 App 暴露。"
+                  "个人历史基准使用前三天相同时刻的中位活动量，以及有活动时的常见主类别。"
+                  "空闲识别与主类别命中仅统计双方都可评分的小时。", "",
+                  "|日|有效 / 应比较|技术失败 / 缺少导出|正确识别设备空闲 / 可评空闲|历史基准识别空闲|正确识别设备活跃 / 可评活跃|主类别命中（模拟 / 历史）|",
+                  "|---|---|---|---|---|---|---|"]
+        for day, values in [*comparison["by_day"].items(), ("合计", comparison["total"])]:
+            c = Counter(values)
+            idle_hits, active_hits = c["observed_idle_simulated_idle"], c["observed_active_simulated_active"]
+            failed = c["technical_failure_active"] + c["technical_failure_idle"]
+            missing = c["missing_active"] + c["missing_idle"]
+            lines.append(f"|{day}|{c['scored_hours']} / {c['expected_hours']}|{failed} / {missing}|"
+                         f"{idle_hits} / {idle_hits + c['observed_idle_simulated_active']}|{c['history_idle_correct']}|"
+                         f"{active_hits} / {active_hits + c['observed_active_simulated_idle']}|"
+                         f"{c['primary_context_correct']} / {c['history_primary_context_correct']}|")
+    lines += ["", "## 技术状态与证据覆盖", ""]
     audit_label = {True: "通过", False: "未通过", None: "缺证"}[report["accepted"]]
     lines.append(f"整体验收{audit_label}。各行仅汇总已取得的记录。")
     gate = report["stability_gate"] or {}
@@ -392,7 +559,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", required=True, type=Path)
     parser.add_argument("--db", required=True, type=Path)
+    parser.add_argument("--heldout", type=Path, help="Observed D4–D7 hourly bundle, for post-run scoring only.")
     args = parser.parse_args()
-    report = build_report(args.run_dir, args.db)
-    (args.run_dir / "five_day_cohort_report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
-    (args.run_dir / "five_day_cohort_report.md").write_text(render(report))
+    report = build_report(args.run_dir, args.db, args.heldout)
+    stem = "seven_day_cohort_report" if report.get("total_days") == 7 else "five_day_cohort_report"
+    (args.run_dir / f"{stem}.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
+    (args.run_dir / f"{stem}.md").write_text(render(report))

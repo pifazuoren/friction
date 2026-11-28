@@ -2813,6 +2813,7 @@ def _write_run_metadata(
         "proto_app_entry_needs_prompt_version": (
             RUNTIME_CONFIG.proto_app_entry_needs_prompt_version
         ),
+        "proto_app_entry_phone_use_needs_version": RUNTIME_CONFIG.proto_app_entry_phone_use_needs_version,
         "proto_app_entry_plan_prompt_version": (
             RUNTIME_CONFIG.proto_app_entry_plan_prompt_version
         ),

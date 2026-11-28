@@ -4,6 +4,17 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 
+if __package__:
+    from .proto.app_entry import (
+        DEFAULT_PHONE_USE_NEEDS_VERSION, PHONE_USE_NEEDS_V3, PHONE_USE_NEEDS_VERSION, PHONE_USE_NEEDS_V5,
+        RESIDENT_DECISION_PLAN_VERSION,
+    )
+else:
+    from proto.app_entry import (
+        DEFAULT_PHONE_USE_NEEDS_VERSION, PHONE_USE_NEEDS_V3, PHONE_USE_NEEDS_VERSION, PHONE_USE_NEEDS_V5,
+        RESIDENT_DECISION_PLAN_VERSION,
+    )
+
 
 VALID_EXPERIMENT_MODES = {"single_world", "parallel_worlds"}
 DEFAULT_WORLD_BATCH = (
@@ -180,6 +191,7 @@ class RuntimeConfig:
     proto_app_entry_replay_device_path: str
     proto_app_entry_replay_days: tuple[int, ...]
     proto_app_entry_needs_prompt_version: str
+    proto_app_entry_phone_use_needs_version: str
     proto_app_entry_plan_prompt_version: str
     proto_app_entry_rollout_json_attempts: int
     proto_app_entry_rollout_min_confidence: float
@@ -548,7 +560,8 @@ def load_runtime_config() -> RuntimeConfig:
         DEFAULT_APP_ENTRY_REPLAY_DAYS,
     )
     proto_app_entry_plan_prompt_version = os.getenv(
-        "PROTO_APP_ENTRY_PLAN_PROMPT_VERSION", "app_entry_plan_v3",
+        "PROTO_APP_ENTRY_PLAN_PROMPT_VERSION",
+        RESIDENT_DECISION_PLAN_VERSION if hourly_intention_mode == "opportunity_v1" else "app_entry_plan_v3",
     ).strip()
     compact_needs = (
         hourly_intention_mode == "opportunity_v1"
@@ -560,6 +573,9 @@ def load_runtime_config() -> RuntimeConfig:
     ).strip()
     if not proto_app_entry_needs_prompt_version:
         raise ValueError("PROTO_APP_ENTRY_NEEDS_PROMPT_VERSION must not be empty")
+    phone_use_needs_version = os.getenv("PROTO_APP_ENTRY_PHONE_USE_NEEDS_VERSION", DEFAULT_PHONE_USE_NEEDS_VERSION).strip()
+    if phone_use_needs_version not in (PHONE_USE_NEEDS_V3, PHONE_USE_NEEDS_VERSION, PHONE_USE_NEEDS_V5):
+        raise ValueError("Unknown PROTO_APP_ENTRY_PHONE_USE_NEEDS_VERSION")
     if not proto_app_entry_plan_prompt_version:
         raise ValueError("PROTO_APP_ENTRY_PLAN_PROMPT_VERSION must not be empty")
     proto_app_entry_rollout_json_attempts = max(
@@ -969,6 +985,7 @@ def load_runtime_config() -> RuntimeConfig:
         proto_app_entry_replay_device_path=proto_app_entry_replay_device_path,
         proto_app_entry_replay_days=proto_app_entry_replay_days,
         proto_app_entry_needs_prompt_version=proto_app_entry_needs_prompt_version,
+        proto_app_entry_phone_use_needs_version=phone_use_needs_version,
         proto_app_entry_plan_prompt_version=proto_app_entry_plan_prompt_version,
         proto_app_entry_rollout_json_attempts=proto_app_entry_rollout_json_attempts,
         proto_app_entry_rollout_min_confidence=proto_app_entry_rollout_min_confidence,

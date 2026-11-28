@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
@@ -70,6 +71,32 @@ def test_invalid_schema_returns_unavailable() -> None:
     assert response.audit_status in {"invalid_schema", "parse_failed"}
 
 
+def test_helper_can_take_over_when_resident_requested_guidance() -> None:
+    request = replace(_request(), requested_support_style="guidance", requested_support_style_source="llm")
+    dialogs = []
+
+    class HelperLLM:
+        async def atext_request(self, dialog, **kwargs):
+            dialogs.append(dialog)
+            return json.dumps({
+                "support_style": "substituting", "instruction_quality": "none",
+                "autonomy_preservation": "low", "proxy_completion_level": "full",
+                "emotional_tone": "neutral", "response_delay": "immediate",
+                "confidence": 0.9, "responded": True,
+                "response_text": "I'll enter the code for you.", "rationale": "Can complete this step.",
+            })
+
+    block = SupportResponseBlock(toolbox=SimpleNamespace(llm=HelperLLM()), agent_memory=None)
+    response = asyncio.run(block.generate_response(request))
+    assert len(dialogs) == 1
+    content = dialogs[0][1]["content"]
+    assert '"requested_support_style": "guidance"' in content
+    assert "requested_support_style_source" not in content
+    assert response.support_style == "substituting"
+    assert response.proxy_completion_level == "full"
+    assert classify_support_delivery(response) == "delivered"
+
+
 @pytest.mark.parametrize("second_echo", [False, True])
 def test_truncated_context_echo_needs_a_real_helper_reply(second_echo: bool) -> None:
     first = '{"prompt_version":"old","task":{"task_id":"task"},"env_context":{"complexity_level":'
@@ -89,9 +116,12 @@ def test_truncated_context_echo_needs_a_real_helper_reply(second_echo: bool) -> 
             return next(replies)
 
     block = SupportResponseBlock(toolbox=SimpleNamespace(llm=EchoLLM()), agent_memory=None)
-    response = asyncio.run(block.generate_response(_request()))
+    request = replace(_request(), requested_support_style_source="request_error")
+    response = asyncio.run(block.generate_response(request))
     assert len(dialogs) == 2
     initial, repair = (dialog[1]["content"] for dialog in dialogs)
+    assert all("requested_support_style" not in context and "request_error" not in context
+               for context in (initial, repair))
     assert "required_json_schema" not in initial
     assert "Keep any consistent decisions" not in repair
     assert first not in repair

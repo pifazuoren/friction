@@ -8,6 +8,7 @@ from collections import Counter
 from typing import Any
 
 from .needs import strongest_need
+from .wire import parse_compact_reply, response_fields as _response_fields
 from .types import ACTIONABLE_APP_CONTEXTS, APP_CONTEXT_SET
 
 
@@ -270,8 +271,9 @@ COMPACT_PLAN_V5 = "hourly_plan_compact_v5"
 COMPACT_PLAN_V6 = "hourly_plan_compact_v6"
 COMPACT_PLAN_V7 = "hourly_plan_compact_v7"
 COMPACT_PLAN_V8 = "hourly_plan_compact_v8"
+COMPACT_PLAN_V9 = "hourly_plan_compact_v9"
 COMPACT_PLAN_VERSION = COMPACT_PLAN_V8
-UNIQUE_NEED_VERSIONS = frozenset({COMPACT_PLAN_V7, COMPACT_PLAN_V8})
+UNIQUE_NEED_VERSIONS = frozenset({COMPACT_PLAN_V7, COMPACT_PLAN_V8, COMPACT_PLAN_V9})
 ACTIONABLE_CHANNEL_VERSIONS = UNIQUE_NEED_VERSIONS | {COMPACT_PLAN_V6}
 DAILY_OPENING_VERSIONS = ACTIONABLE_CHANNEL_VERSIONS | {COMPACT_PLAN_V5}
 OPENING_TOKEN_VERSIONS = DAILY_OPENING_VERSIONS | {COMPACT_PLAN_V4}
@@ -285,6 +287,8 @@ def compact_needs(needs: dict, schema_version: str = COMPACT_PLAN_VERSION) -> di
         "dominant_need": strongest_need(needs["need_pressures"], legacy_tiebreak=schema_version not in UNIQUE_NEED_VERSIONS),
         "active_intent": needs["active_intent"],
         "intensity_hint": needs["intensity_hint"],
+        **({"phone_use_decision": needs["phone_use_decision"]}
+           if schema_version == COMPACT_PLAN_V9 and "phone_use_decision" in needs else {}),
     }
 
 
@@ -336,10 +340,31 @@ def _v2_actions(observation: dict) -> list[str]:
     return sorted(actions)
 
 
+def _actionable_targets(observation: dict):
+    offers = {o["opportunity_id"]: o for o in observation["available_opportunities"]}
+    goal = observation.get("current_intention")
+    if goal:
+        if not observation["goal_review_due"]:
+            return []
+        target = {**offers.get(goal["opportunity_id"], {}), **goal}
+        targets = [("g1", goal["goal_id"], target)]
+    else:
+        targets = [(f"o{i}", oid, offers[oid]) for i, oid in enumerate(sorted(offers), 1)]
+    now = observation["monotonic_sim_hour"]
+    return [(alias, target_id, t) for alias, target_id, t in targets
+            if t.get("known_deadline_sim_hour") is None or t["known_deadline_sim_hour"] >= now]
+
+
+def has_actionable_target(observation: dict) -> bool:
+    return bool(_actionable_targets(observation))
+
+
 def compact_menu(
     observation: dict,
     schema_version: str = COMPACT_PLAN_VERSION,
     channels: list[str] | None = None,
+    *,
+    phone_use_decision: str | None = None,
 ) -> dict:
     """Build the menu for this wire version from the visible targets and allowed channels."""
     if schema_version not in COMPACT_PLAN_VERSIONS:
@@ -347,7 +372,6 @@ def compact_menu(
     if schema_version == COMPACT_PLAN_V2:
         return {"actions": _v2_actions(observation)}
     now = observation["monotonic_sim_hour"]
-    offers = {o["opportunity_id"]: o for o in observation["available_opportunities"]}
     targets = {}
     actions = ["habitual_app", "no_app"]
     if schema_version in DAILY_OPENING_VERSIONS:
@@ -362,24 +386,19 @@ def compact_menu(
         actions.append("no_app")
     windows = {}
     current = observation.get("current_intention")
-    if current:
-        eligible = [
-            (
-                "g1",
-                current["goal_id"],
-                {**offers.get(current["opportunity_id"], {}), **current},
-            )
-        ]
-        if not observation["goal_review_due"]:
-            eligible = []
-    else:
-        eligible = [
-            (f"o{i}", oid, offers[oid]) for i, oid in enumerate(sorted(offers), 1)
-        ]
+    eligible = _actionable_targets(observation)
+    if schema_version == COMPACT_PLAN_V9:
+        if eligible and phone_use_decision is not None:
+            raise ValueError("a task opportunity cannot be restricted by a prior phone-use decision")
+        if not eligible:
+            if phone_use_decision == "use_phone" and channels:
+                actions.remove("no_app")
+            elif phone_use_decision == "leave_phone" and not channels:
+                actions = ["no_app"]
+            else:
+                raise ValueError("expected channels consistent with the resident's prior phone-use decision")
     for alias, target_id, target in eligible:
         deadline = target.get("known_deadline_sim_hour")
-        if deadline is not None and deadline < now:
-            continue
         targets[alias] = target_id
         handle = ("continue_goal@" if current else "engage_goal@") + alias
         if schema_version in OPENING_TOKEN_VERSIONS:
@@ -509,7 +528,8 @@ def compact_intent(raw: dict, body: dict) -> dict:
     if version not in COMPACT_PLAN_VERSIONS:
         raise ValueError("unsupported compact Plan schema version")
     if version != COMPACT_PLAN_V2:
-        menu = compact_menu(body["inputs"], version, body["channels"])
+        menu = compact_menu(body["inputs"], version, body["channels"],
+                            phone_use_decision=body.get("digital_needs", {}).get("phone_use_decision"))
         if any(body.get(key) != value for key, value in menu.items()):
             raise ValueError(
                 "action menu is inconsistent with the observed targets or windows"
@@ -523,48 +543,6 @@ def compact_intent(raw: dict, body: dict) -> dict:
         "next_review_at_sim_hour": raw["review"],
         "reason": raw["reason"],
     }
-
-
-def _response_fields(text: str) -> tuple[dict, dict, bool]:
-    """Find top-level fields even after malformed scalars. Skip all nested evidence."""
-    decoder = json.JSONDecoder()
-    start = text.find("{")
-    fields, partial = {}, {}
-    if start < 0:
-        return fields, partial, False
-    depth = 1
-    want_key = True
-    seen = set()
-    index = start + 1
-    while index < len(text) and depth:
-        char = text[index]
-        if char == '"':
-            try:
-                token, end = decoder.raw_decode(text, index)
-            except ValueError:
-                break
-            if depth == 1 and want_key:
-                rest = text[end:].lstrip()
-                if rest.startswith(":"):
-                    if token in seen:
-                        return fields, partial, True
-                    seen.add(token)
-                    rest = rest[1:].lstrip()
-                    try:
-                        fields[token], _ = decoder.raw_decode(rest)
-                    except ValueError:
-                        partial[token] = rest
-                    want_key = False
-            index = end
-            continue
-        if char in "[{":
-            depth += 1
-        elif char in "]}":
-            depth -= 1
-        elif char == "," and depth == 1:
-            want_key = True
-        index += 1
-    return fields, partial, False
 
 
 def _complete_list_items(fragment: str) -> list:
@@ -820,25 +798,3 @@ def compact_repair_changed(first: dict, repaired: dict) -> bool:
         key in repaired["scores"] and repaired["scores"][key] != value
         for key, value in first["scores"].items()
     )
-
-
-def parse_compact_reply(text: str) -> dict | None:
-    """Accept one complete object, allowing an outer Markdown fence but no duplicate fields."""
-    content = text.strip()
-    fence = re.fullmatch(
-        r"```(?:json)?\s*(.*?)\s*```", content, flags=re.DOTALL | re.IGNORECASE
-    )
-    if fence:
-        content = fence[1]
-
-    def unique_fields(pairs):
-        fields = dict(pairs)
-        if len(fields) != len(pairs):
-            raise ValueError("duplicate JSON object field")
-        return fields
-
-    try:
-        obj = json.loads(content, object_pairs_hook=unique_fields)
-    except ValueError:
-        return None
-    return obj if isinstance(obj, dict) else None

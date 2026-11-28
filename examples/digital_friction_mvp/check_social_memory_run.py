@@ -10,9 +10,11 @@ from pathlib import Path
 import sqlite3
 from uuid import UUID
 
+from check_hourly_intention_run import support_exchange_facts, support_exchange_matches
 from proto.app_entry.bundle_loader import get_replay_source
 from proto.app_entry.intention_contract import DAILY_OPENING_VERSIONS, parse_compact_reply, stated_open_channel
 from proto.metrics import attempt_rows_table_name
+from proto.retry_review import RETRY_REVIEW_VERSIONS
 
 
 WORLD = "baseline_low_friction"
@@ -70,12 +72,12 @@ def check_replay(conn, exp_id, agent, device):
             "day3_snapshot_sha256": hashlib.sha256(snapshot_bytes).hexdigest() if snapshot_ok else None}
 
 
-def read_attempts(conn, exp_id, agent):
-    attempts = {3: {}, 4: {}}
+def read_attempts(conn, exp_id, agent, expected_days=5):
+    attempts = {day: {} for day in range(3, expected_days)}
     table = attempt_rows_table_name(exp_id)
     for day, tick, task, family, action, outcome, raw in conn.execute(
         f"SELECT day,t,task_id,task_family,strategy_type,outcome_type,payload_json FROM {table} "
-        "WHERE agent_id=? AND day IN (3,4) ORDER BY day,t,id", (agent,),
+        "WHERE agent_id=? AND day>=3 AND day<? ORDER BY day,t,id", (agent, expected_days),
     ):
         data = json.loads(raw)
         episode = data["episode_id"]
@@ -86,6 +88,7 @@ def read_attempts(conn, exp_id, agent):
             "task_family": family, "strategy_type": action, "outcome_type": outcome,
             "requested_strategy_type": data["requested_strategy_type"],
             "help_used": data["outcome"]["help_used"], "support_delivery_status": data["support_delivery_status"],
+            **support_exchange_facts(data),
         }
         if data.get("support_request_id"):
             attempts[day][episode]["support_request_id"] = data["support_request_id"]
@@ -157,7 +160,7 @@ def total_app_activity(metrics):
 
 
 def app_activity_flow(records, rollout, expected):
-    """Follow accepted habitual choices into their export and the next real model inputs."""
+    """Check explicit inactivity exports and follow habitual App use into subsequent observations."""
     slots, exports = defaultdict(list), defaultdict(list)
     for row in rollout:
         exports[int(row["talkingdata_day"]), int(row["hour"])].append(row)
@@ -183,7 +186,22 @@ def app_activity_flow(records, rollout, expected):
                     and checks[0].get("raw_activity") == {}):
                 counts["failed_after_initial_daily_choice_without_channel"] += 1
             continue
-        if route.get("status") != "accepted" or route.get("executed_choice") != "habitual_app":
+        if route.get("status") != "accepted":
+            continue
+        if (route.get("executed_choice") == "no_app" and route.get("retry_review_version") in RETRY_REVIEW_VERSIONS
+                and any(r["module"] == "app_needs" and (
+                    (r["kind"] == "parse" and r.get("status") in {"ok", "ok_repaired"}
+                     and (r.get("parsed") or {}).get("phone_use_decision") == "leave_phone")
+                    or (r["kind"] == "phone_use_resolution" and r["resolution"]["final_choice"] == "leave_phone")
+                ) for r in rows)):
+            exported = exports[day, hour]
+            if (len(exported) != 1 or exported[0].get("entry_status") != "intention_no_app"
+                    or exported[0].get("active") != "0" or exported[0].get("active_event_app_exposures") != "0"
+                    or json.loads(exported[0].get("app_context_counts_json") or "null") != {}
+                    or exported[0].get("opened_channel") != "" or exported[0].get("primary_context") != "no_app_context"):
+                issues.append(f"day {day} hour {hour}: accepted leave_phone lacks a matching inactive hourly export")
+            continue
+        if route.get("executed_choice") != "habitual_app":
             continue
         counts["accepted_daily_choices"] += 1
         parsed = [r for r in rows if (r["module"], r["kind"]) == ("app_plan", "parse")
@@ -251,95 +269,138 @@ def load_agent_traces(trace, group, agents):
     return records
 
 
-def audit_trace(records, attempts, error_hours, expected_days=7):
-    expected = rollout_hours(expected_days)
+def audit_target_day(target_day, rows, attempts, previous_errors):
+    """Link actual requests and completed decisions to the resident's persisted episodes."""
+    previous_day = target_day - 1
+    previous = attempts[target_day - 2]
+    current = attempts[target_day - 1]
+    earlier = {eid: record for day, episodes in attempts.items() if day < target_day - 1
+               for eid, record in episodes.items()}
     checks = {name: {"requests": 0, "evidence": None} for name in MODULES}
-    app_hours = {name: set() for name in MODULES[:2]}
-    day4_errors = []
-    traced_entry_errors = set()
-    needs_errors = set()
-    needs_successes = set()
-    strategy_ticks = {r["tick_seconds"] for r in attempts[4].values()}
-    strategy_traced_ticks = set()
     matched_ids = {name: set() for name in MODULES}
-    completed_decisions = {}
+    completed = {}
+    decision_errors = set()
+    strategy_ticks = set()
+    support_errors = []
+    fact_errors = []
     same_family = None
-    for row in records:
+    for row in rows:
         module = row.get("module")
-        time_key = (row["talkingdata_day"], row["hour"])
-        if module == "app_entry" and row.get("kind") == "entry" and row.get("status") == "llm_rollout_error":
-            traced_entry_errors.add(time_key)
-        if row.get("kind") == "decision" and module == "task" and row.get("status") == "completed" and time_key[0] == 5:
-            completed_decisions[row["episode_id"]] = {
-                "episode_id": row["episode_id"], "tick_seconds": row["tick_seconds"],
-                "strategy_type": row["action"], "outcome_type": row["outcome"],
-            }
-        if module == "app_needs":
-            if row.get("kind") == "parse" and row.get("status") in {"ok", "ok_repaired"}:
-                needs_successes.add(time_key)
-            elif row.get("kind") in {"error", "parse"}:
-                needs_errors.add(time_key)
-        if row.get("kind") == "decision" and module == "task" and row.get("status") == "technical_failure":
-            if row.get("talkingdata_day") == 4:
-                day4_errors.append(row.get("hour"))
-        if module not in checks or row.get("kind") != "request" or row.get("phase") != "initial":
-            continue
-        day = row["talkingdata_day"]
-        if row["simulation_day"] != day - 1 or not 0 <= row["hour"] <= 23:
-            raise ValueError("inconsistent request clock")
-        if module in app_hours:
-            if (day, row["hour"]) not in expected:
-                raise ValueError("App request outside expected rollout hours")
-            app_hours[module].add((day, row["hour"]))
-        if day != 5:
+        if (module, row["kind"], row.get("status")) == ("task", "decision", "completed"):
+            eid = row["episode_id"]
+            if eid in completed:
+                decision_errors.add(eid)
+            completed[eid] = {"episode_id": eid, "tick_seconds": row["tick_seconds"],
+                              "strategy_type": row["action"], "outcome_type": row["outcome"]}
+        if module not in checks or row["kind"] != "request" or row.get("phase") != "initial":
             continue
         check = checks[module]
         check["requests"] += 1
         packet = request_packet(row)
         if module == "strategy":
-            strategy_traced_ticks.add(row["tick_seconds"])
+            strategy_ticks.add(row["tick_seconds"])
             episodes = packet["task_relevant_memory"]["recent_task_episodes"]
         else:
             episodes = packet["inputs"]["recent_task_episodes"]
         for item in episodes:
-            prior = attempts[3].get(item.get("episode_id"))
-            if not prior or not all(item.get(k) == v for k, v in prior.items()):
+            eid = item.get("episode_id")
+            prior = earlier.get(eid)
+            if not prior:
                 continue
-            matched_ids[module].add(prior["episode_id"])
-            evidence = {"call_id": row["call_id"], "day5_hour": row["hour"], **prior}
+            reference = {"episode_id": eid, "call_id": row["call_id"], "module": module}
+            if not support_exchange_matches(prior, item):
+                support_errors.append(reference)
+                continue
+            if not all(item.get(k) == v for k, v in prior.items()):
+                fact_errors.append(reference)
+                continue
+            if eid not in previous:
+                continue
+            matched_ids[module].add(eid)
+            evidence = {"call_id": row["call_id"], f"day{target_day}_hour": row["hour"], **prior}
             if not check["evidence"]:
                 check["evidence"] = evidence
             if module == "strategy" and packet["task"]["task_family"] == prior["task_family"]:
-                for later in attempts[4].values():
+                for later in current.values():
                     if later["task_id"] == packet["task"]["task_id"] and later["tick_seconds"] == row["tick_seconds"]:
-                        same_family = {"day4": evidence, "day5": later}
-    skipped_plan = (error_hours & traced_entry_errors & needs_errors) - needs_successes - app_hours["app_plan"]
-    absent_requests = {"app_needs": sorted(expected - app_hours["app_needs"]),
-                       "app_plan": sorted(expected - app_hours["app_plan"] - skipped_plan)}
-    inconsistent = sorted(episode for episode in completed_decisions.keys() | attempts[4].keys()
-                          if episode not in completed_decisions or episode not in attempts[4]
-                          or any(attempts[4][episode].get(k) != v for k, v in completed_decisions[episode].items()))
+                        same_family = {f"day{previous_day}": evidence, f"day{target_day}": later}
+    for eid in completed.keys() | current.keys():
+        if eid not in completed or eid not in current or any(current[eid].get(k) != v for k, v in completed[eid].items()):
+            decision_errors.add(eid)
     for name, check in checks.items():
-        if check["evidence"]:
-            check["status"] = "verified"
-        elif name in app_hours and not check["requests"]:
+        if any(r["module"] == name for r in support_errors + fact_errors):
             check["status"] = "missing_evidence"
-        elif not attempts[3]:
-            check["status"] = "technical_failure" if day4_errors else "no_day4_completed_task"
-        elif name == "strategy" and not check["requests"] and not attempts[4]:
-            check["status"] = "no_day5_strategy_opportunity"
+        elif check["evidence"]:
+            check["status"] = "verified"
+        elif name in MODULES[:2] and not check["requests"]:
+            check["status"] = "missing_evidence"
+        elif not previous:
+            check["status"] = "technical_failure" if previous_errors else f"no_day{previous_day}_completed_task"
+        elif name == "strategy" and not check["requests"] and not current:
+            check["status"] = f"no_day{target_day}_strategy_opportunity"
         else:
             check["status"] = "missing_evidence"
-    return {"day4_completed_tasks": len(attempts[3]), "day5_completed_tasks": len(attempts[4]),
-            "modules": checks, "same_family_strategy_example": same_family,
-            "shared_day4_episode_ids": sorted(set.intersection(*matched_ids.values())),
-            "day4_technical_task_failure_hours": day4_errors,
-            "day5_decisions": list(completed_decisions.values()),
-            "day5_decision_db_disagreements": inconsistent,
-            "day5_completed_task_ticks_without_strategy_request": sorted(strategy_ticks - strategy_traced_ticks),
+    return {"modules": checks, "same_family_strategy_example": same_family,
+            "shared_episode_ids": sorted(set.intersection(*matched_ids.values())),
+            "completed_tasks": len(current), "decisions": list(completed.values()),
+            "decision_db_disagreements": sorted(decision_errors), "support_memory_disagreements": support_errors,
+            "episode_fact_disagreements": fact_errors,
+            "completed_task_ticks_without_strategy_request": sorted({r["tick_seconds"] for r in current.values()} - strategy_ticks)}
+
+
+def audit_trace(records, attempts, error_hours, expected_days=7):
+    expected = rollout_hours(expected_days)
+    by_day = defaultdict(list)
+    app_hours = {name: set() for name in MODULES[:2]}
+    task_errors = defaultdict(list)
+    traced_entry_errors = set()
+    needs_errors = set()
+    needs_successes = set()
+    no_channel = set()
+    new_policy_routes = set()
+    for row in records:
+        module = row.get("module")
+        day = row["talkingdata_day"]
+        key = (day, row["hour"])
+        by_day[day].append(row)
+        if module == "app_entry" and row.get("kind") == "entry" and row.get("status") == "llm_rollout_error":
+            traced_entry_errors.add(key)
+        if (module, row["kind"], row.get("status")) == ("app_plan", "channel_unavailable", "technical_failure"):
+            no_channel.add(key)
+        if (module, row["kind"]) == ("hourly_intention", "hourly_intention") and row.get("retry_review_version") in RETRY_REVIEW_VERSIONS:
+            new_policy_routes.add(key)
+        if module == "app_needs":
+            if row.get("kind") == "parse" and row.get("status") in {"ok", "ok_repaired"}:
+                needs_successes.add(key)
+            elif row.get("kind") in {"error", "parse"}:
+                needs_errors.add(key)
+        if (module, row["kind"], row.get("status")) == ("task", "decision", "technical_failure"):
+            task_errors[day].append(row["hour"])
+        if module not in MODULES or row["kind"] != "request" or row.get("phase") != "initial":
+            continue
+        if row["simulation_day"] != day - 1 or not 0 <= row["hour"] <= 23:
+            raise ValueError("inconsistent request clock")
+        if module in app_hours:
+            if key not in expected:
+                raise ValueError("App request outside expected rollout hours")
+            app_hours[module].add(key)
+    skipped_plan = (error_hours & traced_entry_errors & needs_errors) - needs_successes - app_hours["app_plan"]
+    # The intention audit separately verifies the raw use-phone answer and the channel-failure receipt.
+    channel_failure = (no_channel & new_policy_routes & error_hours & traced_entry_errors & needs_successes) - app_hours["app_plan"]
+    days = {str(d): audit_target_day(d, by_day[d], attempts, task_errors[d-1]) for d in range(5, expected_days+1)}
+    d5 = days["5"]
+    return {"by_target_day": days,
+            "day4_completed_tasks": len(attempts[3]), "day5_completed_tasks": d5["completed_tasks"],
+            "modules": d5["modules"], "same_family_strategy_example": d5["same_family_strategy_example"],
+            "shared_day4_episode_ids": d5["shared_episode_ids"], "day4_technical_task_failure_hours": task_errors[4],
+            "day5_decisions": d5["decisions"], "day5_decision_db_disagreements": d5["decision_db_disagreements"],
+            "day5_support_memory_disagreements": d5["support_memory_disagreements"],
+            "day5_completed_task_ticks_without_strategy_request": d5["completed_task_ticks_without_strategy_request"],
             "entry_errors_disagree_with_trace": sorted(error_hours ^ traced_entry_errors),
             "plan_skipped_after_recorded_needs_error": sorted(skipped_plan),
-            "missing_app_request_hours": absent_requests}
+            **({"plan_skipped_after_unavailable_channel": sorted(channel_failure)} if channel_failure else {}),
+            "missing_app_request_hours": {"app_needs": sorted(expected - app_hours["app_needs"]),
+                                         "app_plan": sorted(expected - app_hours["app_plan"] - skipped_plan - channel_failure)}}
 
 
 AUDIT_ERRORS = (OSError, sqlite3.Error, ValueError, KeyError, TypeError, AttributeError, StopIteration)
@@ -385,7 +446,7 @@ def check_resident(folder, manifest, replay, rollout, errors, records, conn, exp
         replay_check = report["replay"] = check_replay(conn, exp, agent, device)
         if replay_check["unverified_hours"] or not replay_check["day3_snapshot_ok"]:
             issues.append("incomplete replay or incorrect handoff snapshot")
-        attempts = read_attempts(conn, exp, agent)
+        attempts = read_attempts(conn, exp, agent, expected_days)
         report["exports_complete"] = not issues
         if manifest.get("proto_hourly_intention_mode") == "opportunity_v1":
             from check_hourly_intention_run import audit_intention_run
@@ -403,8 +464,6 @@ def check_resident(folder, manifest, replay, rollout, errors, records, conn, exp
             issues.extend(report["hourly_intention"]["issues"])
             issues.extend(report["app_activity_flow"]["issues"])
             report["cross_day_status"] = report["hourly_intention"]["cross_day_status"]
-            if trace_check["day5_completed_task_ticks_without_strategy_request"] or trace_check["day5_decision_db_disagreements"]:
-                issues.append("missing low-level execution evidence")
         elif not successes and set(failures) == expected_hours:
             report["cross_day_status"] = "technical_failure"
         elif ("missing_evidence" in statuses or "technical_failure" in statuses
@@ -415,6 +474,13 @@ def check_resident(folder, manifest, replay, rollout, errors, records, conn, exp
             report["cross_day_status"] = "verified"
         else:
             report["cross_day_status"] = "no_natural_opportunity"
+        for day, observed in trace_check["by_target_day"].items():
+            if observed["completed_task_ticks_without_strategy_request"] or observed["decision_db_disagreements"]:
+                issues.append(f"day {day}: missing low-level execution evidence")
+            if observed["support_memory_disagreements"] or observed["episode_fact_disagreements"]:
+                issues.append(f"day {day}: recalled episode or support exchange differs from SQLite")
+                if day == "5":
+                    report["cross_day_status"] = "missing_evidence"
     except AUDIT_ERRORS as exc:
         issues.append(f"{type(exc).__name__}: {exc}")
     if report["cross_day_status"] == "technical_failure" and not any("no valid" in x for x in issues):
@@ -504,7 +570,18 @@ def summarize_residents(report, agents, expected_hours):
                     "visible_opportunities", "distinct_tasks_entered", "low_level_decisions",
                     "operations_started", "help_requests")
     }
-    report["hourly_intention"]["expected_scheduled_login_opportunities"] = 2 * len(agents)
+    for key, summary_key in (("memory_transitions", "memory_transition_status_counts"),
+                             ("day7_earlier_memory", "day7_earlier_memory_status_counts")):
+        counts = defaultdict(Counter)
+        for audit in intentions:
+            for transition, result in audit.get(key, {}).items():
+                counts[transition][result["status"]] += 1
+        report["hourly_intention"][summary_key] = {transition: dict(totals) for transition, totals in counts.items()}
+    for field in ("phone_use_decision_counts", "retry_review_counts", "phone_use_llm_recommendation_counts",
+                  "phone_use_resolved_counts", "free_hour_execution_counts"):
+        if any(field in i for i in intentions):
+            report["hourly_intention"][field] = dict(sum((Counter(i.get(field)) for i in intentions), Counter()))
+    report["hourly_intention"]["expected_scheduled_login_opportunities"] = (expected_hours // 24) * len(agents)
     report["run_complete"] = not report["issues"] and all(r["run_complete"] for r in agents.values())
     report["exports_complete"] = not report["issues"] and all(r.get("exports_complete") for r in agents.values())
     for agent, resident in agents.items():
@@ -535,9 +612,12 @@ def check_run(folder, group, db, trace, expected_days=7, expected_agents=1):
                 or len({row["device_id"] for row in replay_rows}) != expected_agents):
             raise ValueError("expected one replay summary and one distinct device per resident")
         if expected_agents > 1:
-            if (expected_days != 5 or manifest.get("proto_hourly_intention_mode") != "opportunity_v1"
+            if (manifest.get("proto_hourly_intention_mode") != "opportunity_v1"
                     or snapshot["runtime"]["proto_scheduled_login_hour"] != 9):
-                raise ValueError("cohort audit requires the five-day scheduled opportunity-mode design")
+                raise ValueError("cohort audit requires the scheduled opportunity-mode design")
+            if expected_days == 7 and (snapshot["runtime"].get("proto_login_difficulty_arm") != "standard"
+                                       or snapshot["settings"].get("PROTO_LOGIN_DIFFICULTY_ARM") != "standard"):
+                raise ValueError("seven-day cohort requires the archived standard daily login schedule")
             check_cohort_mapping(folder, snapshot, replays, expected_agents)
         rollout = defaultdict(list)
         errors = defaultdict(list)

@@ -4,6 +4,10 @@ from collections import Counter, defaultdict
 from hashlib import sha256
 import json
 
+from check_hourly_choice_evidence import check_phone_choice, check_retry_review, request_payload
+from proto.app_entry import PHONE_USE_NEEDS_V5, RESIDENT_DECISION_PLAN_VERSION
+from proto.app_entry.needs import PHONE_USE_NEEDS_VERSION
+from proto.retry_review import RETRY_REVIEW_VERSIONS
 from proto.metrics import attempt_rows_table_name
 from proto.app_entry.types import _stable_hash
 from proto.app_entry.intention_contract import (
@@ -25,9 +29,28 @@ from proto.app_entry.planner import decode_compact_plan, sanitize_app_entry_plan
 from proto.llm_psychology import _extract_json_object
 
 
-def request_payload(request):
-    content = next(m["content"] for m in request["messages"] if m["role"] == "user")
-    return json.loads(content[content.index("{") :])
+_REQUEST_FACTS = ("requested_support_style", "requested_support_style_source")
+_RESPONSE_FACTS = ("support_style", "instruction_quality", "autonomy_preservation", "proxy_completion_level")
+
+
+def support_exchange_facts(payload):
+    """Read measured preferences and helper actions from the original exchange in SQLite."""
+    request = payload.get("support_request") or {}
+    response = payload.get("support_response") or {}
+    if not any(request.get(key) is not None for key in _REQUEST_FACTS):
+        if any(payload.get(key) is not None for key in _REQUEST_FACTS):
+            raise ValueError("support preference lacks its recorded request")
+        return {}  # Older runs did not ask the resident for a support preference.
+    return {
+        **{key: request.get(key) for key in _REQUEST_FACTS},
+        **{key: response.get(key) for key in _RESPONSE_FACTS},
+    }
+
+
+def support_exchange_matches(prior, recalled):
+    # Unmeasured legacy events have no exchange fields. A measured missing value
+    # must stay absent or null, so a failed model judgment cannot become a preference.
+    return all(recalled.get(k) == prior[k] for k in (*_REQUEST_FACTS, *_RESPONSE_FACTS) if k in prior)
 
 
 def decode_archived_plan(output, payload):
@@ -150,6 +173,9 @@ def check_plan_calls(rows, route):
     calls = [r for r in events if r["kind"] == "request"]
     failed = route["status"] == "technical_failure"
     if not calls:
+        if (failed and len(events) == 1 and events[0]["kind"] == "channel_unavailable"
+                and route.get("retry_review_version") in RETRY_REVIEW_VERSIONS):
+            return None  # The upstream phone decision and the failure marker are checked together.
         if events or not failed:
             raise ValueError("missing actual Plan request")
         return None
@@ -304,18 +330,58 @@ def check_goal_step(route, final_goal, observation, before_expected, check_previ
     )
 
 
-def audit_hours(records, persisted, expected, error_hours, scheduled, code_hash):
+def memory_window(source_day, target_day, persisted, valid_plans):
+    """Compare a completed SQLite episode with the actual input to an accepted Plan."""
+    source = {r["episode_id"]: r for (day, _), entries in persisted.items() if day == source_day
+              for r in entries}
+    matches = []
+    issues = []
+    for hour, call_id, action, episodes in valid_plans:
+        for recalled in episodes:
+            eid = recalled.get("episode_id")
+            prior = source.get(eid)
+            if prior is None:
+                continue
+            if not support_exchange_matches(prior, recalled):
+                issues.append(f"day {target_day} hour {hour}: recalled support exchange differs from SQLite for {eid}")
+                continue
+            facts = ("task_id", "outcome_type", "strategy_type", "support_delivery_status",
+                     "requested_strategy_type", "help_used")
+            if (any(recalled.get(k) != prior.get(k) for k in facts)
+                    or (recalled.get("support_request_id") or None) != (prior.get("support_request_id") or None)):
+                issues.append(f"day {target_day} hour {hour}: recalled task facts differ from SQLite for {eid}")
+                continue
+            matches.append({"episode_id": eid, "call_id": call_id, "target_hour": hour, "executed_choice": action})
+    if issues:
+        status = "mismatch"
+    elif not source:
+        status = "no_source_task"
+    elif not valid_plans:
+        status = "no_valid_plan"
+    elif matches:
+        status = "verified"
+    else:
+        status = "not_observed"
+    return {"status": status, "source_completed_tasks": len(source), "valid_target_plans": len(valid_plans),
+            "matched_episode_ids": sorted({r["episode_id"] for r in matches}),
+            "first_evidence": next(iter(matches), None)}, matches, issues
+
+
+def audit_hours(records, persisted, expected, error_hours, scheduled, code_hash, *,
+                login_hour=9, login_days=(4, 5), require_strategy=False, require_resident_choices=False,
+                phone_use_needs_version=None, replay_habit=None, paired_environment_seed=None):
     hours = defaultdict(list)
     published = {}
     visible_hours = defaultdict(set)
     by_opportunity = defaultdict(list)
-    issues = []
-    source_episodes = {}
-    day5_memory = []
+    issues = [f"{key}: persisted task outside the expected window" for key in persisted if key not in expected]
+    valid_plans = defaultdict(list)
     choices = Counter()
     strategies = Counter()
     outcome_counts = Counter()
     support_status = Counter()
+    phone_choices, retry_reviews = Counter(), Counter()
+    phone_recommendations, resolved_phone_choices, executed_phone_choices = Counter(), Counter(), Counter()
     last_goal_state = {}
     low_level_failures = []
     task_ids = set()
@@ -395,6 +461,27 @@ def audit_hours(records, persisted, expected, error_hours, scheduled, code_hash)
         oid = route.get("opportunity_id")
         try:
             packet = check_plan_calls(rows, route)
+            if require_resident_choices or route.get("retry_review_version") is not None:
+                if route.get("retry_review_version") not in RETRY_REVIEW_VERSIONS:
+                    raise ValueError("missing or unknown resident retry review version")
+                phone, resolution = check_phone_choice(
+                    rows, route, requests[0] if requests else None, expected_version=phone_use_needs_version,
+                    replay_habit=replay_habit, paired_environment_seed=paired_environment_seed,
+                )
+                if phone is not None:
+                    phone_choices[phone] += 1
+                    if resolution is not None:
+                        phone_recommendations[resolution["llm_recommendation"]] += 1
+                        resolved_phone_choices[resolution["final_choice"]] += 1
+                        execution = action if not technical else (
+                            phone if phone == "use_phone_channel_unavailable" else "plan_technical_failure"
+                        )
+                        executed_phone_choices[execution] += 1
+                    elif phone_use_needs_version == PHONE_USE_NEEDS_V5:
+                        executed_phone_choices["needs_unmeasured"] += 1
+                retry = check_retry_review(rows, route, goals, persisted.get(key, []), packet)
+                if retry is not None:
+                    retry_reviews[retry] += 1
             final_goal = (goals[0] if len(goals) == 1 else route).get(
                 "goal_state_after"
             )
@@ -445,37 +532,8 @@ def audit_hours(records, persisted, expected, error_hours, scheduled, code_hash)
                 issues.append(
                     f"{key}: task started without an observed opportunity or goal"
                 )
-            if key[0] == 5 and not technical:
-                episodes = {
-                    ep["episode_id"]: ep
-                    for ep in packet["recent_task_episodes"]
-                    if ep.get("episode_id")
-                }
-                for episode_id in episodes.keys() & source_episodes.keys():
-                    prior = source_episodes[episode_id]
-                    if all(
-                        episodes[episode_id].get(k) == prior.get(k)
-                        for k in (
-                            "task_id",
-                            "outcome_type",
-                            "strategy_type",
-                            "support_delivery_status",
-                            "requested_strategy_type",
-                            "help_used",
-                        )
-                    ) and (
-                        not prior.get("support_request_id")
-                        or episodes[episode_id].get("support_request_id")
-                        == prior["support_request_id"]
-                    ):
-                        day5_memory.append(
-                            dict(
-                                episode_id=episode_id,
-                                call_id=request["call_id"],
-                                day5_hour=key[1],
-                                executed_choice=action,
-                            )
-                        )
+            if not technical:
+                valid_plans[key[0]].append((key[1], request["call_id"], action, packet["recent_task_episodes"]))
         if technical:
             continue
         choices[action] += 1
@@ -494,6 +552,9 @@ def audit_hours(records, persisted, expected, error_hours, scheduled, code_hash)
         if starts and len(goals) == 1 and len(persisted.get(key, [])) == 1:
             (outcome,) = goals
             (db,) = persisted[key]
+            if require_strategy and not any((r["module"], r["kind"], r.get("phase")) == ("strategy", "request", "initial")
+                                            for r in rows):
+                issues.append(f"{key}: completed task missing actual strategy request")
             if (
                 not oid
                 or outcome["opportunity_id"] != oid
@@ -514,22 +575,39 @@ def audit_hours(records, persisted, expected, error_hours, scheduled, code_hash)
             support_status[db["support_delivery_status"]] += 1
             operations += int(db["outcome_type"] != "avoid_without_attempt")
             help_requests += int(bool(db.get("support_request_id")))
-            if key[0] == 4:
-                source_episodes[db["episode_id"]] = db
     if scheduled:
         offered = Counter(
             (row["talkingdata_day"], row["hour"])
             for row in published.values()
             if row.get("source") == "scheduled_login"
         )
-        if offered != {(4, 9): 1, (5, 9): 1}:
-            issues.append(
-                "scheduled opportunities must be published exactly once at D4/D5 09:00"
-            )
+        scheduled_slots = {(day, login_hour): 1 for day in login_days if (day, login_hour) in expected}
+        if offered != scheduled_slots:
+            issues.append(f"scheduled opportunities must be published exactly once at {sorted(scheduled_slots)}")
     if low_level_failures:
         issues.append(
             "technical failure in low-level execution; no behavioral outcome attributed"
         )
+    target_days = {day for day, _ in expected}
+    transitions = {}
+    earlier_day7 = {}
+    day5_memory = []
+    for target in sorted(target_days):
+        if target < 5:
+            continue
+        sources = [target - 1] if target != 7 else [target - 1, 4, 5]
+        for source in sources:
+            window, matches, mismatches = memory_window(source, target, persisted, valid_plans[target])
+            window["source_low_level_technical_failure_hours"] = sorted(h for d, h in low_level_failures if d == source)
+            window["target_technical_failure_hours"] = sorted(h for d, h in error_hours if d == target)
+            if window["status"] == "no_source_task" and window["source_low_level_technical_failure_hours"]:
+                window["status"] = "source_technical_failure"
+            issues.extend(mismatches)
+            collection = transitions if source == target - 1 else earlier_day7
+            collection[f"D{source}->D{target}"] = window
+            if target == 5:
+                day5_memory = [{"episode_id": r["episode_id"], "call_id": r["call_id"],
+                                "day5_hour": r["target_hour"], "executed_choice": r["executed_choice"]} for r in matches]
     valid = sum(choices.values())
     if not valid and error_hours >= expected:
         cross_day = "technical_failure"
@@ -537,7 +615,7 @@ def audit_hours(records, persisted, expected, error_hours, scheduled, code_hash)
         cross_day = "missing_evidence"
     elif day5_memory:
         cross_day = "verified"
-    elif source_episodes:
+    elif transitions.get("D4->D5", {}).get("source_completed_tasks"):
         cross_day = "missing_evidence"
         issues.append(
             "no day-four result linked to an actual day-five Plan input and action"
@@ -550,6 +628,8 @@ def audit_hours(records, persisted, expected, error_hours, scheduled, code_hash)
         "issues": issues,
         "cross_day_status": cross_day,
         "day5_memory_examples": day5_memory,
+        "memory_transitions": transitions,
+        "day7_earlier_memory": earlier_day7,
         "published_opportunities": len(published),
         "scheduled_login_opportunities": sum(row.get("source") == "scheduled_login" for row in published.values()),
         "visible_opportunities": len(visible_hours),
@@ -564,6 +644,12 @@ def audit_hours(records, persisted, expected, error_hours, scheduled, code_hash)
         "support_delivery": dict(support_status),
         "technical_failure_hours": sorted(error_hours),
         "low_level_technical_failure_hours": low_level_failures,
+        **({"phone_use_decision_counts": dict(phone_choices), "retry_review_counts": dict(retry_reviews)}
+           if require_resident_choices or phone_choices or retry_reviews else {}),
+        **({"phone_use_llm_recommendation_counts": dict(phone_recommendations),
+            "phone_use_resolved_counts": dict(resolved_phone_choices),
+            "free_hour_execution_counts": dict(executed_phone_choices)}
+           if phone_use_needs_version == PHONE_USE_NEEDS_V5 or phone_recommendations else {}),
         "opportunities": [
             {
                 "opportunity_id": oid,
@@ -597,7 +683,8 @@ def audit_intention_run(
                     row = json.loads(line)
                     if (row.get("group_id"), row.get("world"), str(row.get("agent_id"))) == (group, world, agent):
                         records.append(row)
-    audited_modules = {"hourly_intention", "app_plan", "strategy", "helper", "task_appraisal", "outcome"}
+    audited_modules = {"hourly_intention", "app_plan", "strategy", "helper", "task_appraisal", "outcome",
+                       "app_needs", "retry_review"}
     records = [row for row in records if row["module"] in audited_modules]
     table = attempt_rows_table_name(exp_id)
     attempts = defaultdict(list)
@@ -616,7 +703,26 @@ def audit_intention_run(
                 support_request_id=payload.get("support_request_id"),
                 requested_strategy_type=payload.get("requested_strategy_type"),
                 help_used=payload.get("outcome", {}).get("help_used"),
+                **({"retry_review": payload["retry_review"]} if "retry_review" in payload else {}),
+                **support_exchange_facts(payload),
             )
         )
-    scheduled = snapshot["runtime"]["proto_scheduled_login_hour"] is not None
-    return audit_hours(records, attempts, expected, errors, scheduled, code_hash)
+    runtime = snapshot["runtime"]
+    phone_version = runtime.get("proto_app_entry_phone_use_needs_version")
+    replay_habit = None
+    if (phone_version in (PHONE_USE_NEEDS_VERSION, PHONE_USE_NEEDS_V5)
+            and runtime.get("proto_app_entry_plan_prompt_version") == RESIDENT_DECISION_PLAN_VERSION):
+        status_table = f"as_{exp_id.replace('-', '_')}_mvp_status"
+        handoff = conn.execute(f"SELECT status_json FROM {status_table} WHERE agent_id=? AND day=3 ORDER BY t DESC LIMIT 1",
+                               (agent,)).fetchone()
+        if not handoff:
+            raise ValueError("missing day-3 handoff for the device history comparison")
+        replay_habit = json.loads(handoff[0])["proto_day4_replay_snapshot"]["app_entry_habit_memory"]
+    login_hour = runtime["proto_scheduled_login_hour"]
+    login_days = (4, 5, 6, 7) if runtime.get("proto_login_difficulty_arm") else (4, 5)
+    return audit_hours(records, attempts, expected, errors, login_hour is not None, code_hash,
+                       login_hour=login_hour, login_days=login_days,
+                       phone_use_needs_version=phone_version, replay_habit=replay_habit,
+                       paired_environment_seed=runtime.get("proto_paired_environment_seed"),
+                       require_resident_choices=runtime.get("proto_app_entry_plan_prompt_version") == RESIDENT_DECISION_PLAN_VERSION,
+                       require_strategy=bool(runtime.get("proto_llm_strategy_deliberation_enabled")))

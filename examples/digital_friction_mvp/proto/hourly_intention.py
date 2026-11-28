@@ -272,3 +272,13 @@ class IntentionLedger:
         status = "completed" if success else "needs_review"
         goal["status"] = status
         self.state["opportunities"][goal["opportunity_id"]]["status"] = status
+
+    def schedule_retry(self, review_hour: int, *, sim_hour: int, max_defer_hours: int) -> None:
+        """Set a reminder for a settled goal without re-entering it or counting an attempt."""
+        goal = self.goal
+        if not goal or goal["status"] != "needs_review":
+            raise ValueError("Only a settled unfinished goal can schedule a retry")
+        self.apply(
+            {"kind": "defer_goal", "goal_id": goal["goal_id"], "next_review_at_sim_hour": review_hour},
+            sim_hour=sim_hour, max_defer_hours=max_defer_hours,
+        )

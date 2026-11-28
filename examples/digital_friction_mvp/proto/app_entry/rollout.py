@@ -3,19 +3,24 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from ..llm_trace import trace_record
 from ..logical_clock import monotonic_sim_hour
 from ..memory.packet import compact_recent_episodes, is_prior_episode
+from . import DEFAULT_PHONE_USE_NEEDS_VERSION, PHONE_USE_NEEDS_V5, RESIDENT_DECISION_PLAN_VERSION
 from .bundle import HourlyAppEntryBundle
 from .bundle_loader import simulation_day_to_talkingdata_day
 from .candidate import build_rollout_app_context_candidates
 from .evaluator import evaluate_selected_app_context_bundle_for_agent
 from .habit_memory import build_calibrated_intensity_profile, build_rollout_intensity_profile
-from .intention_contract import intention_observation
+from .intention_contract import has_actionable_target, intention_observation
 from .needs import (
     DIGITAL_NEED_TO_APP_CONTEXTS,
+    PHONE_USE_NEEDS_V3,
+    PHONE_USE_NEEDS_VERSION,
     DigitalNeedsBlock,
     DigitalNeedsResult,
 )
+from .phone_policy import replay_activity_counts, resolve_phone_use
 from .planner import CALIBRATED_PLAN_VERSION, AppEntryPlanResult, DigitalAppEntryPlanBlock, HourlyIntentionPlanError
 from .types import MobileEntryDecision, _stable_hash
 
@@ -69,6 +74,46 @@ _FORBIDDEN_KEY_FRAGMENTS = (
     "current_hour_outcome",
     "world_name",
 )
+
+_DEVICE_CONTEXT_LABELS = {
+    "communication_social_context": "通讯社交",
+    "media_entertainment_context": "影音娱乐",
+    "finance_context": "金融",
+    "public_service_context": "公共服务",
+    "health_service_context": "医疗健康",
+    "shopping_lifestyle_context": "购物生活",
+    "navigation_transport_context": "导航出行",
+    "device_tool_context": "设备工具",
+    "education_work_context": "教育办公",
+}
+
+
+def phone_use_habit_fact(hour: int, same_hour_active: dict | None, same_hour_context_counts: dict | None) -> str:
+    """Describe observed same-clock replay activity and the most frequent identifiable categories."""
+    interval = f"{hour:02d}:00 至 {hour:02d}:59"
+    activity = replay_activity_counts(same_hour_active)
+    if activity is None:
+        return f"前三天 {interval} 的设备资料不足，无法判断这个时段是否有 App 活动。"
+    seen, active = activity
+    if active == 0:
+        return f"前三天 {interval} 有 {seen} 天设备记录，这 {seen} 天均未记录到 App 活动。"
+    fact = f"前三天 {interval} 有 {seen} 天设备记录，其中 {active} 天记录到 App 活动。"
+    counts = same_hour_context_counts if isinstance(same_hour_context_counts, dict) else {}
+    named = {label: counts[key] for key, label in _DEVICE_CONTEXT_LABELS.items()
+             if type(counts.get(key)) is int and counts[key] > 0}
+    if not named:
+        return fact
+    highest = max(named.values())
+    leaders = [name for name, count in named.items() if count == highest]
+    qualifier = "并列最多" if len(leaders) > 1 else "最多"
+    return fact + f"在能识别的 App 类别中，这个时段合计记录{qualifier}的是{'、'.join(leaders)}。"
+
+
+def with_phone_use_habit_fact(inputs: dict, same_hour_context_counts: dict | None) -> dict:
+    """Add the same replay fact to a live free-hour observation or its archived V3 counterpart."""
+    habit = inputs["day1_3_habit"]
+    fact = phone_use_habit_fact(inputs["hour"], habit.get("same_hour_active"), same_hour_context_counts)
+    return {**inputs, "day1_3_habit": {**habit, "device_history_fact": fact}}
 
 
 def _compact_mapping(
@@ -233,6 +278,30 @@ def _with_plan_opportunities(
     return packet
 
 
+def phone_use_observation(needs_packet: dict, plan_observation: dict, *, version: str = DEFAULT_PHONE_USE_NEEDS_VERSION) -> dict:
+    """Present the clock, actual same-hour history and preceding simulated activities before any menu."""
+    if has_actionable_target(plan_observation):
+        raise ValueError("phone-use decision requires an hour without an actionable task")
+    context = {"task_opportunity": "none_actionable"}
+    goal = plan_observation.get("current_intention") or {}
+    review = goal.get("next_review_at_sim_hour")
+    if not plan_observation["goal_review_due"] and type(review) is int:
+        context.update(next_review_at_sim_hour=review,
+                       hours_until_review=review - plan_observation["monotonic_sim_hour"])
+    habit = needs_packet["day1_3_habit"]
+    if version == PHONE_USE_NEEDS_V5 and any(
+        type(day) is not int or not 1 <= day <= 3 for day in habit.get("replay_days", [])
+    ):
+        raise ValueError("V5 phone-use history may only contain replay days 1..3")
+    inputs = {**needs_packet, "phone_use_context": context,
+              "day1_3_habit": {k: habit[k] for k in ("replay_days", "same_hour_active") if k in habit}}
+    if version == PHONE_USE_NEEDS_V3:
+        return inputs
+    if version not in (PHONE_USE_NEEDS_VERSION, PHONE_USE_NEEDS_V5):
+        raise ValueError("unsupported free-hour phone-use version")
+    return with_phone_use_habit_fact(inputs, habit.get("same_hour_context_counts"))
+
+
 @dataclass(slots=True)
 class AppEntryRolloutResult:
     bundle: HourlyAppEntryBundle
@@ -283,6 +352,8 @@ async def run_app_entry_rollout_hour(
     task_occurrence_gate_multiplier: float = 1.0,
     existing_task_pending: bool = False,
     hourly_intention_mode: str = "legacy",
+    phone_use_needs_version: str = DEFAULT_PHONE_USE_NEEDS_VERSION,
+    paired_environment_seed: int | None = None,
     available_opportunities: list[dict] | None = None,
     current_intention: dict | None = None,
     goal_review_due: bool = True,
@@ -321,11 +392,15 @@ async def run_app_entry_rollout_hour(
         environment=environment,
         intensity_profile=intensity_profile,
     )
-    # The controlled change is admission by the hourly Plan; Needs keeps its original observations.
     input_packet = _with_plan_opportunities(
         needs_packet, hourly_intention_mode, available_opportunities, current_intention,
         goal_review_due, max_defer_hours, recent_task_episodes,
     )
+    free_hour = (hourly_intention_mode == "opportunity_v1" and plan_prompt_version == RESIDENT_DECISION_PLAN_VERSION
+                 and not has_actionable_target(input_packet))
+    if free_hour:
+        needs_packet = phone_use_observation(needs_packet, input_packet, version=phone_use_needs_version)
+        needs_prompt_version = phone_use_needs_version
 
     failure_identity = f"agent_id={int(agent_id)}, "
     if hourly_intention_mode == "legacy":
@@ -345,6 +420,14 @@ async def run_app_entry_rollout_hour(
             f"{failure_identity}"
             f"talkingdata_day={talkingdata_day}, hour={hour}: {exc}"
         ) from exc
+    if free_hour and phone_use_needs_version == PHONE_USE_NEEDS_V5:
+        resolution = resolve_phone_use(
+            recommendation=needs.phone_use_decision, same_hour_active=needs_packet["day1_3_habit"]["same_hour_active"],
+            agent_id=agent_id, talkingdata_day=talkingdata_day, hour=hour, paired_environment_seed=paired_environment_seed,
+        )
+        needs.phone_use_resolution = resolution
+        needs.phone_use_decision = resolution["final_choice"]
+        trace_record("phone_use_resolution", module="app_needs", resolution=resolution)
     # Archived policies reuse their historical summaries when advancing a legacy trajectory.
     needs.legacy_tiebreak = hourly_intention_mode == "legacy" or plan_prompt_version == CALIBRATED_PLAN_VERSION
     candidate_contexts = build_rollout_app_context_candidates(

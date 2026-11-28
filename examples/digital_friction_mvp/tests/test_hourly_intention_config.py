@@ -1,5 +1,7 @@
 import json
 import sys
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -7,7 +9,11 @@ import run_social_memory_week as week
 from config_runtime import load_runtime_config
 
 
-def test_week_launcher_replaces_stale_overrides_before_agent_configuration(tmp_path, monkeypatch):
+@pytest.mark.parametrize(("days_option", "total_days", "arm"), [
+    ([], 5, None), (["--days", "5"], 5, None), (["--days", "7"], 7, "standard"),
+])
+def test_week_launcher_replaces_stale_overrides_before_agent_configuration(tmp_path, monkeypatch, days_option,
+                                                                           total_days, arm):
     # --check stops before credentials, experiment creation or model access.
     data = tmp_path / "data"
     data.mkdir()
@@ -20,8 +26,10 @@ def test_week_launcher_replaces_stale_overrides_before_agent_configuration(tmp_p
     monkeypatch.setitem(week.SETTINGS, "DIGITAL_FRICTION_PROFILES_PATH", str(data / "profiles.json"))
     monkeypatch.setitem(week.SETTINGS, "PROTO_TASK_OCCURRENCE_PRIOR_PATH", str(data / "prior.json"))
     monkeypatch.setenv("PROTO_HOURLY_INTENTION_MODE", "stale")
+    monkeypatch.setenv("PROTO_LOGIN_DIFFICULTY_ARM", "elevated")
     monkeypatch.setattr(sys, "argv", ["week", "--scheduled-login", "--check", "--hourly-intention-mode",
-                                      "opportunity_v1", "--max-defer-hours", "12", "--paired-environment-seed", "0"])
+                                      "opportunity_v1", "--max-defer-hours", "12", "--paired-environment-seed", "0",
+                                      *days_option])
     captured = []
     monkeypatch.setattr(week, "checked_replay", lambda config: (captured.append(config), "test-device"))
     # The launcher intentionally mutates its process environment for children; isolate it in this test.
@@ -30,10 +38,50 @@ def test_week_launcher_replaces_stale_overrides_before_agent_configuration(tmp_p
     week.main()
     config, = captured
     assert config.proto_hourly_intention_mode == "opportunity_v1"
+    assert config.proto_app_entry_plan_prompt_version == "app_entry_plan_v4"
+    assert config.proto_app_entry_phone_use_needs_version == "digital_needs_phone_use_v5"
     assert config.proto_hourly_intention_max_defer_hours == 12
     assert config.proto_paired_environment_seed == 0
     assert config.proto_scheduled_login_hour == 9
+    assert config.proto_login_difficulty_arm == arm
+    assert int(week.os.environ["STAGE_DAYS"]) == total_days
     assert not (data / "runs").exists()
+
+
+def test_opportunity_plan_default_and_explicit_older_version(monkeypatch):
+    monkeypatch.setenv("STAGE_MODE", "single")
+    monkeypatch.setenv("STAGE_DAYS", "7")
+    monkeypatch.setenv("PROTO_TASK_ENTRY_MODE", "app_context_replay_then_llm_rollout")
+    monkeypatch.setenv("PROTO_HOURLY_INTENTION_MODE", "opportunity_v1")
+    monkeypatch.delenv("PROTO_APP_ENTRY_PLAN_PROMPT_VERSION", raising=False)
+    assert load_runtime_config().proto_app_entry_plan_prompt_version == "app_entry_plan_v4"
+    monkeypatch.setenv("PROTO_APP_ENTRY_PLAN_PROMPT_VERSION", "app_entry_plan_v3")
+    assert load_runtime_config().proto_app_entry_plan_prompt_version == "app_entry_plan_v3"
+
+
+def test_free_hour_version_is_independent_of_task_hour_prompt(monkeypatch):
+    monkeypatch.setenv("PROTO_APP_ENTRY_NEEDS_PROMPT_VERSION", "digital_needs_compact_v2")
+    for version in ("digital_needs_phone_use_v3", "digital_needs_phone_use_v4", "digital_needs_phone_use_v5"):
+        monkeypatch.setenv("PROTO_APP_ENTRY_PHONE_USE_NEEDS_VERSION", version)
+        config = load_runtime_config()
+        assert config.proto_app_entry_phone_use_needs_version == version
+        assert config.proto_app_entry_needs_prompt_version == "digital_needs_compact_v2"
+    monkeypatch.setenv("PROTO_APP_ENTRY_PHONE_USE_NEEDS_VERSION", "unknown")
+    with pytest.raises(ValueError, match="PROTO_APP_ENTRY_PHONE_USE_NEEDS_VERSION"):
+        load_runtime_config()
+
+
+def test_preflight_rejects_a_missing_hour_on_the_tenth_device(tmp_path, replay_files):
+    rows = Path(replay_files["bundle_path"]).read_text().splitlines()
+    incomplete = tmp_path / "incomplete.csv"
+    missing = next(row for row in rows if row.startswith("synthetic-10,3,23,"))
+    rows.remove(missing)
+    incomplete.write_text("\n".join(rows) + "\n")
+    config = SimpleNamespace(proto_app_entry_replay_bundle_path=str(incomplete),
+                             proto_app_entry_replay_device_path=replay_files["device_mapping_path"],
+                             proto_app_entry_replay_days=(1, 2, 3))
+    with pytest.raises(ValueError, match="replay bundle missing hourly rows: synthetic-10"):
+        week.checked_replay(config)
 
 
 def test_new_mode_rejects_incompatible_entry_and_nonpositive_interval(monkeypatch):

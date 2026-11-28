@@ -166,6 +166,7 @@ class FamilyHelperAgent(CitizenAgentBase):
             {
                 "request_id": request.request_id,
                 "task_family": request.task_family,
+                "requested_support_style": request.requested_support_style,
                 "support_style": response.support_style,
                 "responded": response.responded,
                 "audit_status": response.audit_status,

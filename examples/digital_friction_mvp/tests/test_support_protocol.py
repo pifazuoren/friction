@@ -38,6 +38,38 @@ def test_support_request_round_trips() -> None:
     assert SupportRequest.from_dict(request.to_dict()).to_dict() == request.to_dict()
 
 
+@pytest.mark.parametrize("style", ["guidance", "proxy", "unspecified"])
+def test_requested_style_round_trips_independently_of_actual_help(style: str) -> None:
+    request = SupportRequest.from_dict({
+        **_request_payload(),
+        "requested_support_style": style,
+        "requested_support_style_source": "llm",
+    })
+    assert request.to_dict()["requested_support_style"] == style
+    assert SupportRequest.from_dict(request.to_dict()).requested_support_style_source == "llm"
+    assert "support_style" not in request.to_dict()
+
+
+def test_legacy_request_and_failed_preference_have_no_elicited_style() -> None:
+    old = SupportRequest.from_dict(_request_payload())
+    assert old.requested_support_style is None
+    assert old.requested_support_style_source is None
+    assert old.to_dict() == _request_payload()
+    failed = SupportRequest.from_dict({**_request_payload(), "requested_support_style_source": "request_error"})
+    assert failed.requested_support_style is None
+    assert failed.to_dict()["requested_support_style_source"] == "request_error"
+
+
+@pytest.mark.parametrize("style,source", [
+    ("substituting", "llm"), (None, "llm"), ("guidance", "request_error"), (None, "invented"),
+])
+def test_invalid_preference_is_rejected(style, source) -> None:
+    with pytest.raises(ValueError, match="requested_support_style"):
+        SupportRequest.from_dict({
+            **_request_payload(), "requested_support_style": style, "requested_support_style_source": source,
+        })
+
+
 def test_support_response_round_trips_and_maps_style() -> None:
     response = SupportResponse.from_dict(
         {

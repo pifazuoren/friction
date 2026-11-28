@@ -13,6 +13,7 @@ from check_hourly_intention_run import (
     audit_hours,
     audit_intention_run,
     check_plan_calls,
+    memory_window,
 )
 from check_social_memory_run import WORLD, check_run, rollout_hours
 from proto.app_entry.intention_contract import compact_menu
@@ -87,6 +88,19 @@ def test_continuous_controlled_window_matches_real_messages_and_database(
         assert report["distinct_tasks_entered"] == report["operations_started"] == 1
         assert report["help_requests"] == 1
         assert len(report["day5_memory_examples"]) == 24
+        # All other episode fields still match. Alter only the resident's original
+        # request in SQLite and keep the next-day model inputs untouched.
+        payload = json.loads(conn.execute(f"SELECT payload_json FROM {table}").fetchone()[0])
+        asked = payload["support_request"].get("requested_support_style")
+        payload["support_request"].update(
+            requested_support_style="proxy" if asked == "guidance" else "guidance",
+            requested_support_style_source="llm",
+        )
+        conn.execute(f"UPDATE {table} SET payload_json=?", (json.dumps(payload),))
+        mismatched = check()
+        assert mismatched["cross_day_status"] == "missing_evidence"
+        assert not mismatched["day5_memory_examples"]
+        assert any("recalled support exchange differs" in issue for issue in mismatched["issues"])
         conn.execute(f"DELETE FROM {table}")
         assert any("outcomes disagree" in issue for issue in check()["issues"])
 
@@ -97,6 +111,268 @@ def recorded(tmp_path):
         for p in sorted(tmp_path.glob("*.jsonl"))
         for line in p.read_text().splitlines()
     ]
+
+
+def test_free_hour_resolution_matches_raw_recommendation_history_seed_plan_and_execution(
+    resident, monkeypatch, tmp_path,
+):
+    from copy import deepcopy
+    from check_hourly_choice_evidence import request_payload
+    from proto.app_entry import PHONE_USE_NEEDS_V5, RESIDENT_DECISION_PLAN_VERSION
+
+    step, data, llm, _ = resident
+    monkeypatch.setenv("PROTO_APP_ENTRY_PLAN_PROMPT_VERSION", RESIDENT_DECISION_PLAN_VERSION)
+    monkeypatch.setenv("PROTO_APP_ENTRY_PHONE_USE_NEEDS_VERSION", PHONE_USE_NEEDS_V5)
+    monkeypatch.setenv("PROTO_PAIRED_ENVIRONMENT_SEED", "73")
+    archive = tmp_path / "experiment_source.zip"
+    archive.write_bytes(b"test policy")
+    code_hash = sha256(archive.read_bytes()).hexdigest()
+    monkeypatch.setenv("PROTO_RUN_SOURCE_SHA256", code_hash)
+    monkeypatch.setenv("PARALLEL_GROUP_NAME", "test-week")
+    # Two suggestions will be reversed by the sampled policy, one will be neutral.
+    activity = {"6": {"seen": 3, "active": 3}, "7": {"seen": 3, "active": 3}, "8": {"seen": 3, "active": 0}}
+    replay = data["proto_app_entry_habit_memory"]
+    replay["active_by_hour"].update(activity)
+    recommendations = {6: "follow_habit", 7: "leave_phone", 8: "use_phone"}
+    transport = llm.atext_request
+
+    async def choose(*, dialog, **kw):
+        wire = dialog[1]["content"]
+        packet = json.loads(wire[wire.index("{"):])
+        if packet.get("schema_version") == PHONE_USE_NEEDS_V5:
+            raw = await transport(dialog=dialog, **kw)
+            return json.dumps({**json.loads(raw), "phone_use_decision": recommendations[packet["inputs"]["hour"]],
+                               "intensity_hint": None})
+        if "actions" in packet:
+            llm.action = "no_app" if packet["actions"] == ["no_app"] else "habitual_app"
+        return await transport(dialog=dialog, **kw)
+
+    monkeypatch.setattr(llm, "atext_request", choose)
+    for hour in recommendations:
+        step(3, hour, "no_app")
+    slots = {(4, hour) for hour in recommendations}
+
+    def audit(records, seed=73, history=replay):
+        return audit_hours(records, {}, slots, set(), False, code_hash, require_resident_choices=True,
+                           phone_use_needs_version=PHONE_USE_NEEDS_V5, replay_habit=history,
+                           paired_environment_seed=seed)
+
+    rows = recorded(tmp_path)
+    result = audit(rows)
+    assert not result["issues"]
+    assert result["phone_use_llm_recommendation_counts"] == {"follow_habit": 1, "leave_phone": 1, "use_phone": 1}
+    markers = [r for r in rows if r["kind"] == "phone_use_resolution"]
+    assert [r["resolution"]["final_choice"] for r in markers][1:] == ["use_phone", "leave_phone"]
+    n_use = sum(r["resolution"]["final_choice"] == "use_phone" for r in markers)
+    assert result["phone_use_resolved_counts"] == {"leave_phone": 3 - n_use, "use_phone": n_use}
+    assert result["free_hour_execution_counts"] == {"no_app": 3 - n_use, "habitual_app": n_use}
+    # The formal weekly checker must obtain the seed and day-three baseline from the run archive.
+    config = {"source_sha256": code_hash, "settings": {"PROTO_HOURLY_INTENTION_MODE": "opportunity_v1"},
+              "runtime": {"proto_hourly_intention_mode": "opportunity_v1", "proto_scheduled_login_hour": None,
+                          "proto_app_entry_plan_prompt_version": RESIDENT_DECISION_PLAN_VERSION,
+                          "proto_app_entry_phone_use_needs_version": PHONE_USE_NEEDS_V5,
+                          "proto_paired_environment_seed": 73}}
+    (tmp_path / "resolved_config.json").write_text(json.dumps(config))
+    exp = str(uuid4())
+    db = tmp_path / "run.sqlite"
+    ensure_attempt_rows_table(db, attempt_rows_table_name(exp))
+    with closing(sqlite3.connect(db)) as conn:
+        table = f"as_{exp.replace('-', '_')}_mvp_status"
+        conn.execute(f"CREATE TABLE {table} (agent_id INTEGER, day INTEGER, t REAL, status_json TEXT)")
+        handoff = json.dumps({"proto_day4_replay_snapshot": {"app_entry_habit_memory": replay}})
+        conn.execute(f"INSERT INTO {table} VALUES(7,3,82801,?)", (handoff,))
+        assert audit_intention_run(tmp_path, tmp_path, conn, exp, "7", "test-week", WORLD, slots, set()) == result
+    assert audit(rows, seed=74)["issues"]
+    other_history = deepcopy(replay)
+    other_history["active_by_hour"]["7"]["active"] = 1
+    assert audit(rows, history=other_history)["issues"]
+    marker = markers[1]
+    idx = rows.index(marker)
+    for field, wrong in (("prior_use_probability", 0), ("odds_multiplier", 2), ("sample_u", 0.99),
+                         ("llm_recommendation", "use_phone"), ("final_choice", "leave_phone")):
+        damaged = deepcopy(rows)
+        damaged[idx]["resolution"][field] = wrong
+        assert audit(damaged)["issues"], field
+    assert audit([r for r in rows if r is not marker])["issues"]
+    assert audit([*rows, marker])["issues"]
+    assert audit([marker, *(r for r in rows if r is not marker)])["issues"]
+    damaged = deepcopy(rows)
+    plan = next(r for r in damaged if (r["kind"], r["module"], r["hour"]) == ("request", "app_plan", 7))
+    packet = request_payload(plan)
+    packet["digital_needs"]["phone_use_resolution"] = marker["resolution"]
+    plan["messages"][1]["content"] = json.dumps(packet)
+    assert audit(damaged)["issues"]
+
+
+def test_fourth_policy_free_hour_and_post_failure_appointment_match_actual_calls_and_sqlite(
+    resident, monkeypatch, tmp_path,
+):
+    from copy import deepcopy
+    import proto.agent as agent_module
+    from proto.app_entry import RESIDENT_DECISION_PLAN_VERSION
+    from proto.app_entry.needs import PHONE_USE_NEEDS_V1, PHONE_USE_NEEDS_V2, PHONE_USE_NEEDS_VERSION, HABIT_KEY, OBSERVED_HABIT_KEY
+    from proto.retry_review import LEGACY_RETRY_REVIEW_VERSION, RETRY_REVIEW_VERSION
+    from proto.models import AttemptStrategy
+    from check_social_memory_run import read_attempts
+
+    step, data, llm, _ = resident
+    transport = llm.atext_request
+    monkeypatch.setenv("PROTO_APP_ENTRY_PLAN_PROMPT_VERSION", RESIDENT_DECISION_PLAN_VERSION)
+    monkeypatch.setenv("PROTO_APP_ENTRY_PHONE_USE_NEEDS_VERSION", PHONE_USE_NEEDS_VERSION)
+    monkeypatch.setenv("PROTO_LLM_TRACE_DIR", str(tmp_path))
+    monkeypatch.setattr(agent_module, "choose_attempt_strategy", lambda **_: AttemptStrategy("avoid"))
+
+    async def choose(*, dialog, **kw):
+        msg = dialog[1]["content"]
+        body = json.loads(msg[msg.index("{"):])
+        if body.get("schema_version") == RETRY_REVIEW_VERSION:
+            return '": {"review_day":5,"review_hour":9}'
+        raw = await transport(dialog=dialog, **kw)
+        if body.get("schema_version") == PHONE_USE_NEEDS_VERSION:
+            phone = "leave_phone" if llm.action == "no_app" else "use_phone"
+            need = json.loads(raw)
+            if phone == "leave_phone":
+                need["intensity_hint"] = None
+            pressures = need["need_pressures"]
+            pressures[OBSERVED_HABIT_KEY] = pressures.pop(HABIT_KEY)
+            return json.dumps({**need, "phone_use_decision": phone})
+        return raw
+
+    monkeypatch.setattr(llm, "atext_request", choose)
+    step(3, 8, "no_app")
+    step(3, 9, "engage_goal")
+    step(3, 10, "habitual_app")
+    exp = str(uuid4())
+    table = attempt_rows_table_name(exp)
+    db = tmp_path / "attempts.sqlite"
+    ensure_attempt_rows_table(db, table)
+    write_attempt_rows(db, table, json.loads(data["proto_stage_attempt_rows_json"]))
+    with closing(sqlite3.connect(db)) as conn:
+        episodes = read_attempts(conn, exp, "7")[3]
+        episode, = episodes.values()
+        raw = json.loads(conn.execute(f"SELECT payload_json FROM {table}").fetchone()[0])
+        persisted = {(4, 9): [{**episode, "retry_review": raw["retry_review"]}]}
+    rows = recorded(tmp_path)
+    hours = {(4, 8), (4, 9), (4, 10)}
+
+    def audit(events):
+        return audit_hours(events, persisted, hours, set(), False, None, require_resident_choices=True)
+
+    original = audit(rows)
+    assert original["issues"] == []
+    assert original["phone_use_decision_counts"] == {"leave_phone": 1, "use_phone": 1}
+    assert original["retry_review_counts"] == {"scheduled": 1}
+    assert raw["retry_review"]["next_review_at_sim_hour"] == 105
+    plan = next(r for r in rows if (r["module"], r["kind"], r["hour"]) == ("app_plan", "request", 8))
+    def read_body(call):
+        text = call["messages"][1]["content"]
+        return json.loads(text[text.index("{"):])
+    assert read_body(plan)["digital_needs"]["intensity_hint"] is None
+    def audit_against_replay(events):
+        return audit_hours(events, persisted, hours, set(), False, None, require_resident_choices=True,
+                           phone_use_needs_version=PHONE_USE_NEEDS_VERSION, replay_habit=data["proto_app_entry_habit_memory"])
+    assert not audit_against_replay(rows)["issues"]
+    damaged = deepcopy(rows)
+    free_request = next(r for r in damaged if (r["module"], r["kind"], r["hour"]) == ("app_needs", "request", 8))
+    altered = read_body(free_request)
+    altered["inputs"]["day1_3_habit"]["device_history_fact"] = "这一小时曾记录到通讯社交活动。"
+    free_request["messages"][1]["content"] = json.dumps(altered)
+    assert any("differs from the replay handoff" in s for s in audit_against_replay(damaged)["issues"])
+    damaged = deepcopy(rows)
+    damaged_plan = damaged[rows.index(plan)]
+    altered_body = read_body(damaged_plan)
+    altered_body["digital_needs"]["intensity_hint"] = 0
+    damaged_plan["messages"][1]["content"] = json.dumps(altered_body)
+    assert any("preceding accepted phone choice" in error for error in audit(damaged)["issues"])
+    for module, kind, hour in (("app_needs", "response", 8), ("retry_review", "response", 9)):
+        damaged = deepcopy(rows)
+        response = next(r for r in damaged if (r["module"], r["kind"], r["hour"]) == (module, kind, hour))
+        change = {"phone_use_decision": "use_phone"} if hour == 8 else {"review_hour": 8}
+        wire = response["raw"]
+        response["raw"] = json.dumps({**json.loads(wire[wire.index("{"):]), **change})
+        assert audit(damaged)["issues"]
+    damaged = deepcopy(rows)
+    marker = next(r for r in damaged if r["kind"] == "pressure_key_normalized")
+    damaged.remove(marker)
+    assert any("normalization" in error for error in audit(damaged)["issues"])
+    # The same raw responses would not have been accepted by the earlier wire formats.
+    damaged = deepcopy(rows)
+    request = next(r for r in damaged if r["module"] == "app_needs" and r["kind"] == "request")
+    body = json.loads(request["messages"][1]["content"].split("\n", 1)[1])
+    body["schema_version"] = PHONE_USE_NEEDS_V1
+    del body["pressure_keys"]
+    request["messages"][1]["content"] = json.dumps(body)
+    assert any("invalid phone preference accepted" in error for error in audit(damaged)["issues"])
+    damaged = deepcopy(rows)
+    request = next(r for r in damaged if r["module"] == "app_needs" and r["kind"] == "request")
+    body = read_body(request)
+    body["schema_version"] = PHONE_USE_NEEDS_V2
+    request["messages"][1]["content"] = json.dumps(body)
+    assert any("invalid phone preference accepted" in error for error in audit(damaged)["issues"])
+    damaged = deepcopy(rows)
+    for event in damaged:
+        if event.get("retry_review_version"):
+            event["retry_review_version"] = LEGACY_RETRY_REVIEW_VERSION
+        if event.get("retry_review"):
+            event["retry_review"]["version"] = LEGACY_RETRY_REVIEW_VERSION
+        if event["module"] == "retry_review" and event["kind"] == "request":
+            body = json.loads(event["messages"][1]["content"])
+            body["schema_version"] = LEGACY_RETRY_REVIEW_VERSION
+            event["messages"][1]["content"] = json.dumps(body)
+    persisted[4, 9][0]["retry_review"]["version"] = LEGACY_RETRY_REVIEW_VERSION
+    assert any("invalid retry time accepted" in error for error in audit(damaged)["issues"])
+    persisted[4, 9][0]["retry_review"]["version"] = RETRY_REVIEW_VERSION
+    damaged = deepcopy(rows)
+    missing = next(r for r in damaged if r["kind"] == "hourly_intention")
+    del missing["retry_review_version"]
+    assert any("version" in error for error in audit(damaged)["issues"])
+    persisted[4, 9][0]["retry_review"] = {**raw["retry_review"], "next_review_at_sim_hour": 104}
+    assert any("SQLite" in error for error in audit(rows)["issues"])
+
+
+@pytest.mark.parametrize("version", ["digital_needs_phone_use_v3", "digital_needs_phone_use_v5"])
+@pytest.mark.parametrize("case", ["invalid_needs", "no_available_channel", "invalid_plan"])
+def test_technical_phone_measurement_is_separate_from_voluntary_inactivity(
+    resident, monkeypatch, tmp_path, case, version,
+):
+    from proto.app_entry import PHONE_USE_NEEDS_V5, RESIDENT_DECISION_PLAN_VERSION, rollout
+    from check_social_memory_run import audit_trace
+
+    step, _, llm, _ = resident
+    monkeypatch.setenv("PROTO_APP_ENTRY_PLAN_PROMPT_VERSION", RESIDENT_DECISION_PLAN_VERSION)
+    monkeypatch.setenv("PROTO_APP_ENTRY_PHONE_USE_NEEDS_VERSION", version)
+    transport = llm.atext_request
+
+    async def choose(*, dialog, **kw):
+        if case == "invalid_needs" or case == "invalid_plan" and '"digital_needs"' in dialog[1]["content"]:
+            return "{}"
+        raw = await transport(dialog=dialog, **kw)
+        return json.dumps({**json.loads(raw), "phone_use_decision": "use_phone"})
+
+    monkeypatch.setattr(llm, "atext_request", choose)
+    if case == "no_available_channel":
+        monkeypatch.setattr(rollout, "build_rollout_app_context_candidates", lambda **_: {})
+    step(3, 8, "habitual_app")
+    rows = recorded(tmp_path)
+    hour = {(4, 8)}
+    report = audit_hours(rows, {}, hour, hour, False, None, require_resident_choices=True,
+                         phone_use_needs_version=version)
+    assert not report["issues"] and report["choices"] == {}
+    key = {"invalid_needs": "unmeasured", "no_available_channel": "use_phone_channel_unavailable",
+           "invalid_plan": "use_phone"}[case]
+    assert report["phone_use_decision_counts"] == {key: 1}
+    if version == PHONE_USE_NEEDS_V5:
+        assert report["phone_use_llm_recommendation_counts"] == ({} if case == "invalid_needs" else {"use_phone": 1})
+        assert report["phone_use_resolved_counts"] == report["phone_use_llm_recommendation_counts"]
+        execution = {"invalid_needs": "needs_unmeasured", "no_available_channel": key,
+                     "invalid_plan": "plan_technical_failure"}[case]
+        assert report["free_hour_execution_counts"] == {execution: 1}
+    completeness = audit_trace(rows, {3: {}, 4: {}}, hour, 5)
+    assert (4, 8) not in completeness["missing_app_request_hours"]["app_plan"]
+    if case == "no_available_channel":
+        marker = next(r for r in rows if r["kind"] == "channel_unavailable")
+        marker["candidate_app_contexts"] = {"finance_context": 1}
+        assert audit_hours(rows, {}, hour, hour, False, None, require_resident_choices=True)["issues"]
 
 
 @pytest.mark.parametrize(
@@ -227,6 +503,21 @@ def test_entirely_failed_window_is_not_evidence_of_no_opportunity(resident, tmp_
     report = audit_hours(recorded(tmp_path), {}, {(4, 8)}, {(4, 8)}, False, None)
     assert not report["issues"] and not report["valid_intention_decisions"]
     assert report["cross_day_status"] == "technical_failure"
+
+
+def test_window_distinguishes_absent_recall_missing_measurement_and_wrong_recall():
+    episode = {"episode_id": "login-day6", "task_id": "login", "strategy_type": "attempt_self",
+               "outcome_type": "success_self", "requested_strategy_type": "attempt_self",
+               "support_delivery_status": "not_requested", "help_used": False}
+    source = {(6, 9): [episode]}
+    no_recall = [(0, "initial", "no_app", [])]
+    assert memory_window(6, 7, {}, no_recall)[0]["status"] == "no_source_task"
+    assert memory_window(6, 7, source, [])[0]["status"] == "no_valid_plan"
+    window, _, issues = memory_window(6, 7, source, no_recall)
+    assert window["status"] == "not_observed" and not issues
+    recalled = [(1, "later", "no_app", [episode]), (2, "wrong", "no_app", [dict(episode, help_used=True)])]
+    window, matches, issues = memory_window(6, 7, source, recalled)
+    assert window["status"] == "mismatch" and len(matches) == len(issues) == 1
 
 
 def test_natural_four_day_rollout_has_95_valid_idle_hours_and_one_failed_plan(
@@ -441,8 +732,9 @@ def test_repair_receipt_includes_original_raw_commitments_and_identical_goal_con
     assert any("repair prompt changed" in e for e in audit()["issues"])
 
 
+@pytest.mark.parametrize("days", [5, 7])
 def test_ten_resident_audit_partitions_shared_hours_and_checks_archived_device_mapping(
-    resident, run_task, replay_files, monkeypatch, tmp_path
+    resident, run_task, replay_files, monkeypatch, tmp_path, days
 ):
     from copy import deepcopy
     from proto.app_entry.bundle_loader import get_replay_source
@@ -454,7 +746,7 @@ def test_ten_resident_audit_partitions_shared_hours_and_checks_archived_device_m
             writer.writerows(rows)
 
     folder = tmp_path
-    fixture_run(folder, "no_tasks", days=5)
+    fixture_run(folder, "no_tasks", days=days)
     manifest_path = folder / "exp_group_manifest_synthetic.json"
     manifest, = json.loads(manifest_path.read_text())
     manifest.update(agent_count=10, proto_hourly_intention_mode="opportunity_v1")
@@ -481,6 +773,10 @@ def test_ten_resident_audit_partitions_shared_hours_and_checks_archived_device_m
         "cohort": [dict(agent_id=i, profile_id=i, selected_rank=item.selected_rank, device_id=item.device_id)
                    for i, item in assignments.items()],
     }
+    if days == 7:
+        monkeypatch.setenv("PROTO_LOGIN_DIFFICULTY_ARM", "standard")
+        snapshot["runtime"]["proto_login_difficulty_arm"] = "standard"
+        snapshot["settings"]["PROTO_LOGIN_DIFFICULTY_ARM"] = "standard"
     (folder / "resolved_config.json").write_text(json.dumps(snapshot))
     step, data, _, helper = resident
     agent, _ = run_task
@@ -511,9 +807,9 @@ def test_ten_resident_audit_partitions_shared_hours_and_checks_archived_device_m
                 if day == 3:
                     state["proto_day4_replay_snapshot"].update(agent_id=agent_id, device_id=device)
                 conn.execute(f"INSERT INTO {status_table} VALUES (?,?,?,?)", (day, tick, agent_id, json.dumps(state)))
-            for day in (3, 4):
+            for day in range(3, days):
                 for hour in range(24):
-                    fails = agent_id == 10 and day == 4 and hour >= 21
+                    fails = agent_id == 10 and day == days - 1 and hour >= (21 if days == 5 else 18)
                     engage = agent_id == 1 and day == 3 and hour == 9
                     action = "no_app"
                     if engage:
@@ -537,23 +833,40 @@ def test_ten_resident_audit_partitions_shared_hours_and_checks_archived_device_m
                sorted(rollout, key=lambda r: (r["simulation_day"], r["hour"])))
     write_rows(folder / "app_entry_rollout_errors_synthetic.csv", errors)
     def check():
-        return check_run(folder, "synthetic", db, trace, expected_days=5, expected_agents=10)
+        return check_run(folder, "synthetic", db, trace, expected_days=days, expected_agents=10)
 
     report = check()
     assert report["issues"] == [] and report["acceptance_ok"]
     assert report["replay"] == {"expected_hours": 720, "verified_hours": 720}
-    assert report["rollout"] == {"expected_hours": 480, "accounted_hours": 480, "valid_hours": 477, "error_hours_count": 3}
-    assert report["hourly_intention"]["scheduled_login_opportunities"] == 20
+    expected = (days - 3) * 24 * 10
+    failed = 3 if days == 5 else 6
+    assert report["rollout"] == {"expected_hours": expected, "accounted_hours": expected,
+                                 "valid_hours": expected - failed, "error_hours_count": failed}
+    intention = report["hourly_intention"]
+    assert intention["scheduled_login_opportunities"] == intention["expected_scheduled_login_opportunities"] == (days - 3) * 10
+    if days == 7:
+        assert intention["memory_transition_status_counts"] == {
+            "D4->D5": {"verified": 1, "no_source_task": 9},
+            "D5->D6": {"no_source_task": 10}, "D6->D7": {"no_source_task": 10},
+        }
+        assert intention["day7_earlier_memory_status_counts"] == {
+            "D4->D7": {"verified": 1, "no_source_task": 9}, "D5->D7": {"no_source_task": 10},
+        }
+        saved = report["agents"]["1"]["hourly_intention"]["day7_earlier_memory"]["D4->D7"]
+        assert saved["valid_target_plans"] == 24 and saved["source_completed_tasks"] == 1
+        assert saved["first_evidence"]["episode_id"] in saved["matched_episode_ids"]
+        assert saved["first_evidence"]["executed_choice"] == "no_app"
     assert report["cross_day_status_counts"] == {"verified": 1, "no_day4_completed_task": 9}
     assert report["agents"]["1"]["cross_day_status"] == "verified"
-    assert report["stability_gate"]["valid_decision_rate"] == 477/480
+    assert report["stability_gate"]["valid_decision_rate"] == (expected - failed) / expected
     assert not report["stability_gate"]["eligible_by_technical_stability"]
     assert not report["agents"]["10"]["stability_gate"]["eligible_by_technical_stability"]
     assert all(report["agents"][str(i)]["stability_gate"]["eligible_by_technical_stability"] for i in range(1, 10))
     trace_file, = trace.glob("llm-requests-*.jsonl")
     events = [json.loads(line) for line in trace_file.read_text().splitlines()]
-    # The cohort still has twenty publication records, but one resident gets another's 09:00 event.
-    event = next(row for row in events if row["agent_id"] == 2 and row["kind"] == "opportunity_published")
+    # Keep the total count intact but reassign one final-day scheduled event to another resident.
+    event = next(row for row in events if row["agent_id"] == 2 and row["kind"] == "opportunity_published"
+                 and row["talkingdata_day"] == days and row["source"] == "scheduled_login")
     event["agent_id"] = 3
     trace_file.write_text("".join(json.dumps(row) + "\n" for row in events))
     damaged = check()

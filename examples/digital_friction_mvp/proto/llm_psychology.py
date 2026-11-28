@@ -1430,6 +1430,7 @@ def _build_task_appraisal_cache_key(
         _help_rate_bucket(float(recent.get("recent_negative_feedback_ratio", 0.0))),
         _same_task_history_bucket(task_memory),
         json.dumps(compact_recent_episodes(task_memory.get("recent_task_episodes")), sort_keys=True),
+        json.dumps(compact_recent_episodes(task_memory.get("recent_same_task_events_tail"), limit=3), sort_keys=True),
         _profile_bucket(
             float(task_memory.get("same_task_controllable_success_memory", 0.0))
         ),

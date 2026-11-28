@@ -507,6 +507,8 @@ def _normalize_recent_episode_buffer(raw_value: Any) -> list[dict[str, Any]]:
                     normalized_item.pop(key, None)
         for key in (
             "feedback_valence",
+            "requested_support_style",
+            "requested_support_style_source",
             "support_style",
             "autonomy_preservation",
             "proxy_completion_level",
@@ -857,6 +859,8 @@ def update_recent_episode_buffer(
     requested_strategy_type: str | None = None,
     support_request_id: str = "",
     support_delivery_status: str | None = None,
+    requested_support_style: str | None = None,
+    requested_support_style_source: str | None = None,
 ) -> list[dict[str, Any]]:
     normalized = _normalize_recent_episode_buffer(recent_episode_buffer)
     response = _support_response_from_any(support_response)
@@ -890,6 +894,13 @@ def update_recent_episode_buffer(
             helplessness_delta=float(helplessness_delta),
         ).to_dict()
     )
+    if requested_support_style is not None or requested_support_style_source is not None:
+        if episode["requested_strategy_type"] != "seek_help_then_attempt":
+            raise ValueError("A support preference requires a help-seeking decision")
+        if requested_support_style is not None:
+            episode["requested_support_style"] = requested_support_style
+        if requested_support_style_source is not None:
+            episode["requested_support_style_source"] = requested_support_style_source
     if response is not None:
         episode.update(
             {
@@ -974,6 +985,8 @@ def update_experience_memory(
     requested_strategy_type: str | None = None,
     support_request_id: str = "",
     support_delivery_status: str | None = None,
+    requested_support_style: str | None = None,
+    requested_support_style_source: str | None = None,
 ) -> dict[str, Any]:
     support_delivery_status = _episode_delivery_status(outcome, support_response, support_delivery_status)
     normalized_task_memory = _normalize_task_domain_memory(task_domain_memory)
@@ -1010,6 +1023,8 @@ def update_experience_memory(
         requested_strategy_type=requested_strategy_type,
         support_request_id=support_request_id,
         support_delivery_status=support_delivery_status,
+        requested_support_style=requested_support_style,
+        requested_support_style_source=requested_support_style_source,
     )
     response = _support_response_from_any(support_response)
     updated_rationale_memory = update_rationale_memory(

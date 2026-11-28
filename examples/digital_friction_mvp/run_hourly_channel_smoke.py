@@ -143,6 +143,7 @@ async def main():
         for f in (
             "check_hourly_channel_replay.py",
             "check_hourly_intention_run.py",
+            "check_hourly_choice_evidence.py",
             "run_hourly_intention_pairs.py",
             "run_strategy_memory_pairs.py",
             "probe_hourly_intention.py",

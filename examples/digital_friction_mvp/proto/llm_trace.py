@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from .app_entry import RESIDENT_DECISION_PLAN_VERSION
+
 
 _context: ContextVar[dict | None] = ContextVar("friction_trace_context", default=None)
 _write_lock = threading.Lock()
@@ -85,7 +87,7 @@ def trace_record(kind: str, *, module: str, **fields) -> None:
     if os.environ.get("PROTO_HOURLY_INTENTION_MODE") == "opportunity_v1":
         record.update(hourly_intention_mode="opportunity_v1",
                       code_hash=os.environ.get("PROTO_RUN_SOURCE_SHA256"),
-                      plan_prompt_version=os.environ.get("PROTO_APP_ENTRY_PLAN_PROMPT_VERSION"),
+                      plan_prompt_version=os.environ.get("PROTO_APP_ENTRY_PLAN_PROMPT_VERSION", RESIDENT_DECISION_PLAN_VERSION),
                       intention_schema_version="opportunity_v1")
     target = Path(directory) / f"llm-requests-{os.getpid()}.jsonl"
     try:

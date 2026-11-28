@@ -8,6 +8,7 @@ from typing import Any
 
 from ..llm_psychology import _query_json_payload
 from ..llm_trace import trace_record
+from . import RESIDENT_DECISION_PLAN_VERSION
 from .bundle import HourlyAppEntryBundle, derive_primary_context
 from .candidate import app_context_candidate_hash
 from .intention_contract import (
@@ -15,6 +16,7 @@ from .intention_contract import (
     COMPACT_PLAN_V2,
     COMPACT_PLAN_V3,
     COMPACT_PLAN_V8,
+    COMPACT_PLAN_V9,
     ACTIONABLE_CHANNEL_VERSIONS,
     DAILY_OPENING_VERSIONS,
     COMPACT_PLAN_VERSIONS,
@@ -27,6 +29,7 @@ from .intention_contract import (
     compact_repair_changed,
     compact_repair_locks,
     include_required_channels,
+    has_actionable_target,
     parse_compact_reply,
     read_compact_statement,
     stated_open_channel,
@@ -496,11 +499,12 @@ def _compact_plan_prompt(
 ):
     observation = compact_observation(input_payload)
     channels = sorted(candidates)
+    decision = needs.phone_use_decision if version == COMPACT_PLAN_V9 else None
     body = {
         "schema_version": version,
         "inputs": observation,
         "digital_needs": compact_needs(needs.to_dict(include_audit=False), version),
-        **compact_menu(observation, version, channels),
+        **compact_menu(observation, version, channels, phone_use_decision=decision),
         "channels": channels,
         "exposures_if_active" if calibrated else "exposure_cap": cap,
         "minimum_confidence": confidence_floor,
@@ -511,7 +515,7 @@ def _compact_plan_prompt(
     waiting_actions = None
     if (
         include_pending_review_notice
-        and version == COMPACT_PLAN_V8
+        and version in (COMPACT_PLAN_V8, COMPACT_PLAN_V9)
         and goal.get("status") == "deferred"
         and not observation["goal_review_due"]
         and not body["targets"]
@@ -531,7 +535,27 @@ def _compact_plan_prompt(
             ),
         }
     keys = {"action", "weights" if calibrated else "additional_apps", "reason", *COMPACT_SCORES}
-    return _compact_system_prompt(calibrated, version, waiting_actions=waiting_actions), body, keys, ""
+    system = _compact_system_prompt(calibrated, version, waiting_actions=waiting_actions)
+    if decision is not None:
+        source = "你刚刚决定"
+        if needs.phone_use_resolution is not None:
+            source = ("根据你眼下的建议和前三天的同钟点习惯，模拟结果是"
+                      if needs.phone_use_resolution["source"] == "habit_plus_llm" else "同钟点记录不足，按你眼下的建议，")
+        if decision == "leave_phone":
+            instruction = source + "这小时不用手机。照此记录 action=no_app、additional_apps=[]。"
+        else:
+            instruction = (source + "这小时用手机。现在从 actions 选一个你要先打开的日常频道，"
+                           "该行动已含一次打开。additional_apps 只列额外打开，没有则填 []，总数不要超过 exposure_cap。")
+        system = (
+            instruction + "已有预约照原定时刻保留。reason 用一句话说明你的行动。"
+            "只输出 JSON，字段为 action、additional_apps、reason、attitude、subjective_norm、perceived_control、confidence。"
+            "后四项依次为本人意愿、感受到的社会期待、自觉把握和判断信心，各取 0 到 1 的数值。"
+        )
+        if "pending_review_notice" in body:
+            body["pending_review_notice"]["message"] = (
+                f"你已约好第{review // 24 + 1}天{review % 24:02d}:00再看这项待办。本小时保留预约。"
+            )
+    return system, body, keys, ""
 
 
 class HourlyIntentionPlanError(ValueError):
@@ -584,6 +608,8 @@ class DigitalAppEntryPlanBlock:
             raise ValueError("intensity_profile must be a dictionary")
         calibrated = prompt_version == CALIBRATED_PLAN_VERSION
         version = COMPACT_PLAN_V3 if calibrated else COMPACT_PLAN_VERSION
+        if prompt_version == RESIDENT_DECISION_PLAN_VERSION and with_intent:
+            version = COMPACT_PLAN_V9
         if compact_schema_version is not None:
             supported = {COMPACT_PLAN_V3} if calibrated else OPENING_TOKEN_VERSIONS
             if not with_intent or compact_schema_version not in supported:
@@ -595,7 +621,24 @@ class DigitalAppEntryPlanBlock:
                     name: weight for name, weight in normalized_candidates.items()
                     if name in ACTIONABLE_APP_CONTEXTS
                 }
-            normalized_candidates = include_required_channels(normalized_candidates, input_payload)
+            if version == COMPACT_PLAN_V9 and not has_actionable_target(input_payload):
+                if needs.phone_use_decision == "leave_phone":
+                    normalized_candidates = {}
+                elif needs.phone_use_decision == "use_phone" and not normalized_candidates:
+                    error = "resident chose to use the phone but no supported App channel is available"
+                    if needs.phone_use_resolution is not None:
+                        error = "phone-use policy selected use_phone but no supported App channel is available"
+                    audit = {"schema_version": version, "candidate_app_contexts": {},
+                             "phone_use_decision": "use_phone", "technical_failure": True,
+                             "parse_status": "channel_unavailable", "rejection_reason": error,
+                             "input_packet_hash": _stable_hash(compact_observation(input_payload))[:16],
+                             "actual_requests": 0, "repair_requests": 0}
+                    if needs.phone_use_resolution is not None:
+                        audit["phone_use_resolution"] = dict(needs.phone_use_resolution)
+                    trace_record("channel_unavailable", module="app_plan", status="technical_failure", **audit)
+                    raise HourlyIntentionPlanError(error, audit)
+            else:
+                normalized_candidates = include_required_channels(normalized_candidates, input_payload)
         volume_field = "exposures_if_active" if calibrated else "active_exposure_cap"
         try:
             cap = int(intensity_profile[volume_field])
